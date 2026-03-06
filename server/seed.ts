@@ -1,13 +1,49 @@
 import { db } from "./db";
-import { sessions, securityEvents, toolCalls, trustedServers, policyRules } from "@shared/schema";
+import { organizations, users, sessions, securityEvents, toolCalls, trustedServers, policyRules, dataRetentionPolicies } from "@shared/schema";
 import { sql } from "drizzle-orm";
+import { hashPassword } from "./auth";
 
 export async function seedDatabase() {
-  const [existing] = await db.select({ count: sql<number>`count(*)` }).from(sessions);
+  const [existing] = await db.select({ count: sql<number>`count(*)` }).from(organizations);
   if (Number(existing.count) > 0) return;
+
+  const [defaultOrg] = await db.insert(organizations).values({
+    name: "Aiglos Security",
+    slug: "aiglos",
+    plan: "enterprise",
+    maxUsers: 100,
+  }).returning();
+
+  await db.insert(users).values({
+    username: "admin",
+    password: hashPassword("admin123"),
+    role: "admin",
+    organizationId: defaultOrg.id,
+    displayName: "System Administrator",
+    email: "admin@aiglos.security",
+  });
+
+  await db.insert(users).values({
+    username: "analyst",
+    password: hashPassword("analyst123"),
+    role: "analyst",
+    organizationId: defaultOrg.id,
+    displayName: "Security Analyst",
+    email: "analyst@aiglos.security",
+  });
+
+  await db.insert(users).values({
+    username: "viewer",
+    password: hashPassword("viewer123"),
+    role: "viewer",
+    organizationId: defaultOrg.id,
+    displayName: "Read-Only User",
+    email: "viewer@aiglos.security",
+  });
 
   const sessionData = [
     {
+      organizationId: defaultOrg.id,
       modelId: "claude-3.5-sonnet",
       modelVersion: "20241022",
       initiatedBy: "vscode-extension",
@@ -20,6 +56,7 @@ export async function seedDatabase() {
       startTime: new Date(Date.now() - 45 * 60000),
     },
     {
+      organizationId: defaultOrg.id,
       modelId: "gpt-4-turbo",
       modelVersion: "2024-04-09",
       initiatedBy: "cursor-ide",
@@ -32,6 +69,7 @@ export async function seedDatabase() {
       startTime: new Date(Date.now() - 120 * 60000),
     },
     {
+      organizationId: defaultOrg.id,
       modelId: "claude-3-opus",
       modelVersion: "20240229",
       initiatedBy: "automation-pipeline",
@@ -45,6 +83,7 @@ export async function seedDatabase() {
       endTime: new Date(Date.now() - 4 * 3600000),
     },
     {
+      organizationId: defaultOrg.id,
       modelId: "gpt-4o",
       modelVersion: "2024-05-13",
       initiatedBy: "jetbrains-plugin",
@@ -58,6 +97,7 @@ export async function seedDatabase() {
       endTime: new Date(Date.now() - 22 * 3600000),
     },
     {
+      organizationId: defaultOrg.id,
       modelId: "claude-3.5-sonnet",
       modelVersion: "20241022",
       initiatedBy: "ci-runner",
@@ -75,6 +115,7 @@ export async function seedDatabase() {
 
   const eventData = [
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[3].id,
       eventType: "goal_drift",
       severity: "critical",
@@ -86,6 +127,7 @@ export async function seedDatabase() {
       timestamp: new Date(Date.now() - 23 * 3600000),
     },
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[3].id,
       eventType: "credential_detected",
       severity: "critical",
@@ -97,6 +139,7 @@ export async function seedDatabase() {
       timestamp: new Date(Date.now() - 22.5 * 3600000),
     },
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[1].id,
       eventType: "anomaly_detected",
       severity: "high",
@@ -108,6 +151,7 @@ export async function seedDatabase() {
       timestamp: new Date(Date.now() - 90 * 60000),
     },
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[1].id,
       eventType: "policy_violation",
       severity: "high",
@@ -119,6 +163,7 @@ export async function seedDatabase() {
       timestamp: new Date(Date.now() - 85 * 60000),
     },
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[0].id,
       eventType: "tool_call",
       severity: "info",
@@ -130,6 +175,7 @@ export async function seedDatabase() {
       timestamp: new Date(Date.now() - 30 * 60000),
     },
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[0].id,
       eventType: "agent_attested",
       severity: "info",
@@ -141,6 +187,7 @@ export async function seedDatabase() {
       timestamp: new Date(Date.now() - 44 * 60000),
     },
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[4].id,
       eventType: "credential_detected",
       severity: "high",
@@ -152,6 +199,7 @@ export async function seedDatabase() {
       timestamp: new Date(Date.now() - 10 * 60000),
     },
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[1].id,
       eventType: "behavioral_anomaly",
       severity: "medium",
@@ -163,6 +211,7 @@ export async function seedDatabase() {
       timestamp: new Date(Date.now() - 100 * 60000),
     },
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[2].id,
       eventType: "session_end",
       severity: "info",
@@ -174,6 +223,7 @@ export async function seedDatabase() {
       timestamp: new Date(Date.now() - 4 * 3600000),
     },
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[3].id,
       eventType: "command_injection",
       severity: "critical",
@@ -185,6 +235,7 @@ export async function seedDatabase() {
       timestamp: new Date(Date.now() - 23.2 * 3600000),
     },
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[0].id,
       eventType: "tool_call",
       severity: "info",
@@ -196,6 +247,7 @@ export async function seedDatabase() {
       timestamp: new Date(Date.now() - 20 * 60000),
     },
     {
+      organizationId: defaultOrg.id,
       sessionId: createdSessions[4].id,
       eventType: "tool_call",
       severity: "low",
@@ -211,36 +263,43 @@ export async function seedDatabase() {
   await db.insert(securityEvents).values(eventData);
 
   const toolCallData = [
-    { sessionId: createdSessions[0].id, serverId: "localhost:18789", toolName: "read_file", arguments: { path: "src/auth/oauth2.ts" }, allowed: true, timestamp: new Date(Date.now() - 30 * 60000) },
-    { sessionId: createdSessions[0].id, serverId: "localhost:18789", toolName: "write_file", arguments: { path: "src/auth/token-rotation.ts" }, allowed: true, timestamp: new Date(Date.now() - 20 * 60000) },
-    { sessionId: createdSessions[1].id, serverId: "localhost:18789", toolName: "execute_command", arguments: { command: "sudo cat /etc/shadow" }, allowed: false, blockedReason: "Policy: block_sudo", timestamp: new Date(Date.now() - 85 * 60000) },
-    { sessionId: createdSessions[1].id, serverId: "localhost:18789", toolName: "read_file", arguments: { path: "src/ws/connection.ts" }, allowed: true, timestamp: new Date(Date.now() - 115 * 60000) },
-    { sessionId: createdSessions[3].id, serverId: "localhost:18789", toolName: "execute_command", arguments: { command: "[REDACTED]; rm -rf /" }, allowed: false, blockedReason: "Command injection detected", timestamp: new Date(Date.now() - 23.2 * 3600000) },
-    { sessionId: createdSessions[4].id, serverId: "localhost:18789", toolName: "search", arguments: { pattern: "api_key|secret" }, allowed: true, timestamp: new Date(Date.now() - 12 * 60000) },
+    { organizationId: defaultOrg.id, sessionId: createdSessions[0].id, serverId: "localhost:18789", toolName: "read_file", arguments: { path: "src/auth/oauth2.ts" }, allowed: true, timestamp: new Date(Date.now() - 30 * 60000) },
+    { organizationId: defaultOrg.id, sessionId: createdSessions[0].id, serverId: "localhost:18789", toolName: "write_file", arguments: { path: "src/auth/token-rotation.ts" }, allowed: true, timestamp: new Date(Date.now() - 20 * 60000) },
+    { organizationId: defaultOrg.id, sessionId: createdSessions[1].id, serverId: "localhost:18789", toolName: "execute_command", arguments: { command: "sudo cat /etc/shadow" }, allowed: false, blockedReason: "Policy: block_sudo", timestamp: new Date(Date.now() - 85 * 60000) },
+    { organizationId: defaultOrg.id, sessionId: createdSessions[1].id, serverId: "localhost:18789", toolName: "read_file", arguments: { path: "src/ws/connection.ts" }, allowed: true, timestamp: new Date(Date.now() - 115 * 60000) },
+    { organizationId: defaultOrg.id, sessionId: createdSessions[3].id, serverId: "localhost:18789", toolName: "execute_command", arguments: { command: "[REDACTED]; rm -rf /" }, allowed: false, blockedReason: "Command injection detected", timestamp: new Date(Date.now() - 23.2 * 3600000) },
+    { organizationId: defaultOrg.id, sessionId: createdSessions[4].id, serverId: "localhost:18789", toolName: "search", arguments: { pattern: "api_key|secret" }, allowed: true, timestamp: new Date(Date.now() - 12 * 60000) },
   ];
 
   await db.insert(toolCalls).values(toolCallData);
 
   const serverData = [
-    { host: "localhost", port: 18789, alias: "dev-server", status: "allowed", reason: "Local development MCP server", toolManifestHash: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6", lastSeen: new Date(Date.now() - 5 * 60000) },
-    { host: "mcp.internal.corp", port: 443, alias: "corp-mcp", status: "allowed", reason: "Internal corporate MCP server", toolManifestHash: "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7", lastSeen: new Date(Date.now() - 2 * 3600000) },
-    { host: "evil-mcp.example.com", port: 443, alias: "blocked-exfil", status: "blocked", reason: "Known data exfiltration endpoint", toolManifestHash: null, lastSeen: null },
-    { host: "staging-mcp.internal.corp", port: 8765, alias: "staging", status: "audit", reason: "Staging environment - audit mode", toolManifestHash: "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8", lastSeen: new Date(Date.now() - 12 * 3600000) },
+    { organizationId: defaultOrg.id, host: "localhost", port: 18789, alias: "dev-server", status: "allowed", reason: "Local development MCP server", toolManifestHash: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6", lastSeen: new Date(Date.now() - 5 * 60000) },
+    { organizationId: defaultOrg.id, host: "mcp.internal.corp", port: 443, alias: "corp-mcp", status: "allowed", reason: "Internal corporate MCP server", toolManifestHash: "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7", lastSeen: new Date(Date.now() - 2 * 3600000) },
+    { organizationId: defaultOrg.id, host: "evil-mcp.example.com", port: 443, alias: "blocked-exfil", status: "blocked", reason: "Known data exfiltration endpoint", toolManifestHash: null, lastSeen: null },
+    { organizationId: defaultOrg.id, host: "staging-mcp.internal.corp", port: 8765, alias: "staging", status: "audit", reason: "Staging environment - audit mode", toolManifestHash: "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8", lastSeen: new Date(Date.now() - 12 * 3600000) },
   ];
 
   await db.insert(trustedServers).values(serverData);
 
   const policyData = [
-    { name: "Block sudo commands", description: "Prevents execution of any command using sudo or su escalation", pattern: "*sudo*|*su -*", action: "block", severity: "critical", enabled: true, category: "command_control" },
-    { name: "Block rm -rf", description: "Prevents recursive force deletion commands that could destroy filesystems", pattern: "*rm -rf*|*rm -fr*", action: "block", severity: "critical", enabled: true, category: "command_control" },
-    { name: "Block path traversal", description: "Detects and blocks directory traversal attempts in file operations", pattern: "*../*|*..\\\\*", action: "block", severity: "high", enabled: true, category: "file_security" },
-    { name: "Alert on .env access", description: "Generates alert when agent reads environment variable files", pattern: "*.env*|*.secret*", action: "alert", severity: "high", enabled: true, category: "credential_protection" },
-    { name: "Log SSH key access", description: "Logs any attempt to access SSH private keys", pattern: "*id_rsa*|*id_ed25519*|*.pem", action: "log", severity: "medium", enabled: true, category: "credential_protection" },
-    { name: "Block curl to external", description: "Blocks outbound HTTP requests to non-allowlisted domains", pattern: "*curl *|*wget *|*http.get*", action: "alert", severity: "medium", enabled: false, category: "network_security" },
-    { name: "Block eval/exec", description: "Prevents dynamic code evaluation which could enable injection attacks", pattern: "*eval(*|*exec(*|*Function(*", action: "block", severity: "high", enabled: true, category: "code_safety" },
+    { organizationId: defaultOrg.id, name: "Block sudo commands", description: "Prevents execution of any command using sudo or su escalation", pattern: "*sudo*|*su -*", action: "block", severity: "critical", enabled: true, category: "command_control" },
+    { organizationId: defaultOrg.id, name: "Block rm -rf", description: "Prevents recursive force deletion commands that could destroy filesystems", pattern: "*rm -rf*|*rm -fr*", action: "block", severity: "critical", enabled: true, category: "command_control" },
+    { organizationId: defaultOrg.id, name: "Block path traversal", description: "Detects and blocks directory traversal attempts in file operations", pattern: "*../*|*..\\\\*", action: "block", severity: "high", enabled: true, category: "file_security" },
+    { organizationId: defaultOrg.id, name: "Alert on .env access", description: "Generates alert when agent reads environment variable files", pattern: "*.env*|*.secret*", action: "alert", severity: "high", enabled: true, category: "credential_protection" },
+    { organizationId: defaultOrg.id, name: "Log SSH key access", description: "Logs any attempt to access SSH private keys", pattern: "*id_rsa*|*id_ed25519*|*.pem", action: "log", severity: "medium", enabled: true, category: "credential_protection" },
+    { organizationId: defaultOrg.id, name: "Block curl to external", description: "Blocks outbound HTTP requests to non-allowlisted domains", pattern: "*curl *|*wget *|*http.get*", action: "alert", severity: "medium", enabled: false, category: "network_security" },
+    { organizationId: defaultOrg.id, name: "Block eval/exec", description: "Prevents dynamic code evaluation which could enable injection attacks", pattern: "*eval(*|*exec(*|*Function(*", action: "block", severity: "high", enabled: true, category: "code_safety" },
   ];
 
   await db.insert(policyRules).values(policyData);
 
-  console.log("Database seeded with demo data");
+  await db.insert(dataRetentionPolicies).values([
+    { organizationId: defaultOrg.id, resourceType: "security_events", retentionDays: 90, enabled: true },
+    { organizationId: defaultOrg.id, resourceType: "sessions", retentionDays: 180, enabled: true },
+    { organizationId: defaultOrg.id, resourceType: "tool_calls", retentionDays: 60, enabled: true },
+    { organizationId: defaultOrg.id, resourceType: "audit_logs", retentionDays: 365, enabled: true },
+  ]);
+
+  console.log("Database seeded with enterprise demo data");
 }
