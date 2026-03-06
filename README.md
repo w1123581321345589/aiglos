@@ -24,6 +24,8 @@ AI agents have no security layer. They accept tool calls from any server, execut
 
 ## Architecture: Eight Security Layers
 
+> **On T-number gaps:** The original 22-task build plan used a different numbering scheme. As the architecture evolved, several original task numbers were consolidated or reassigned: original T3 (sanitization) and T4 (credential scan) merged into the T1 proxy; T5 (audit log) became T3; T10 (YAML policy) became T5; T13 (CMMC mapper) became T18; T14 (§1513 report) became T28; T16/T17 (React dashboard) became the `aiglos_dashboard/` scaffold; T20 (PyPI packaging) became `pyproject.toml`; T21/T22 (Docker + README) became infrastructure files. T12 (multi-agent trust) was renumbered T8. The current canonical numbering runs T1–T9, T11, T15, T18–T19, T21–T33, with no gaps in shipped code.
+
 ```
 LAYER 0  Core Types & Audit      T3
 LAYER 1  Real-Time Proxy         T1  T2  T4  T5  T7  T8  T11  T15  T25  T33
@@ -608,20 +610,37 @@ autonomous:
   report_interval_seconds: 86400
 ```
 
-Trust registry (`aiglos_trust.yaml`):
+Trust registry (`aiglos_trust.yaml`) — ships pre-populated with known-malicious packages:
 
 ```yaml
-allowed_servers:
-  - address: localhost:18789
-    alias: dev-server
-    fingerprint: sha256:abc123...
-
 blocked_packages:
-  - postmark-mcp-server
-  - mcp-postmark
+  - postmark-mcp-server       # npm exfiltration package (active threat)
+  - modelcontextprotocol-sdk  # impersonation package
 
+allowed_servers: []
 blocked_servers: []
 ```
+
+T30 (Registry Monitor) and T26 (SCA Scanner) append to this file automatically when they identify new threats during an intel refresh cycle.
+
+-----
+
+## CI/CD
+
+GitHub Actions pipeline (`.github/workflows/ci.yml`) runs three jobs on every push to `main`/`develop` and every pull request:
+
+**`test`** — matrix across Python 3.11 and 3.12:
+
+- `ruff check` lint
+- `mypy` type check
+- `pytest tests/ --cov=aiglos_core --cov-report=xml`
+- `aiglos --version` entry point smoke test
+
+**`security-scan`** — Bandit static security analysis on `aiglos_core` and `aiglos_cli`
+
+**`build`** — wheel build via `python -m build`, uploads dist artifacts
+
+T27 (ProbeEngine) integrates with CI/CD via exit code — add `aiglos probe` as a pipeline step to gate deployments on adversarial self-test results.
 
 -----
 
@@ -653,6 +672,25 @@ docker run -p 8765:8765 \
   aiglos/aiglos:latest
 ```
 
+**Docker Compose** (`docker-compose.yml` included in repo)
+
+```bash
+UPSTREAM_HOST=your-mcp-server docker compose up
+```
+
+The compose file mounts three config files as read-only volumes (`aiglos.yaml`, `aiglos_policy.yaml`, `aiglos_trust.yaml`) and persists the audit DB and attestation keys to a named volume (`aiglos_data`). Supported environment variables:
+
+|Variable            |Default    |Purpose                                            |
+|--------------------|-----------|---------------------------------------------------|
+|`UPSTREAM_HOST`     |`localhost`|MCP server host                                    |
+|`UPSTREAM_PORT`     |`18789`    |MCP server port                                    |
+|`DEPLOYMENT_TIER`   |`cloud`    |cloud / on_prem / gov                              |
+|`TRUST_MODE`        |`audit`    |strict / audit / permissive                        |
+|`ANTHROPIC_API_KEY` |—          |Enables T6 semantic path (LLM-evaluated goal drift)|
+|`AIGLOS_SIGNING_KEY`|—          |Injects RSA private key for air-gapped environments|
+
+A commented-out `event_exporter` sidecar in the compose file tails `aiglos_events.jsonl` for SIEM pickup in air-gapped/IL4/IL5 deployments where network-based SIEM forwarding is unavailable.
+
 **Air-gapped / gov**
 
 ```bash
@@ -678,9 +716,20 @@ aiglos/
 ├── aiglos.py                          Drop-in manifest — module map, CLI, Aiglos facade
 ├── aiglos_autonomous.py               Standalone autonomous engine entry point
 ├── aiglos_probe.py                    Red team probe entry point (T27)
-├── pyproject.toml                     PyPI packaging + entry points
-├── Dockerfile                         Multi-stage production image
-├── docker-compose.yml
+├── pyproject.toml                     PyPI packaging + entry points (pip install -e .)
+├── Dockerfile                         Multi-stage production image (python:3.12-slim)
+├── docker-compose.yml                 Full stack compose with volume mounts + env vars
+├── aiglos_trust.yaml                  Trust registry — ships with known-malicious blocklist
+├── .github/
+│   └── workflows/
+│       └── ci.yml                     3-job CI: test (3.11/3.12 matrix), security-scan, build
+│
+├── aiglos_dashboard/                  React dashboard scaffold (T16/T17)
+│   └── src/                           Components, hooks, lib, pages — structure in place;
+│       ├── components/                interactive pitch demo delivered as standalone HTML
+│       ├── hooks/                     artifact rather than running React app
+│       ├── lib/
+│       └── pages/
 │
 ├── aiglos_cli/
 │   └── main.py                        Installed CLI (proxy, scan, logs, tail, sessions,
