@@ -15,8 +15,8 @@ Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provide
 
 ## Enterprise Features
 1. **Authentication & RBAC** - Session-based login with 3 roles (admin, analyst, viewer)
-2. **Proxy Integration** - WebSocket + HTTP ingest API for Aiglos Python runtime events
-3. **Data Retention** - Configurable retention policies per resource type with manual purge
+2. **Proxy Integration** - WebSocket + HTTP ingest API for Aiglos Python runtime events (org-scoped broadcast)
+3. **Data Retention** - Configurable retention policies per resource type with scheduled enforcement (6h cycle) and manual purge
 4. **Audit Trail** - Logs all system mutations (who did what, when, from where)
 5. **Multi-tenancy** - Organization-scoped data isolation across all tables
 6. **API Security** - Rate limiting, helmet headers, API key validation, secure cookies

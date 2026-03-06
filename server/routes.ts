@@ -27,12 +27,13 @@ async function validateApiKey(apiKeyHeader: string | undefined): Promise<string 
   return apiKey.organizationId;
 }
 
-const connectedClients = new Set<WebSocket>();
+const connectedClients = new Map<WebSocket, string>();
 
 async function notifyClients(type: string, data: any) {
+  const orgId = data?.organizationId;
   const message = JSON.stringify({ type, data, timestamp: new Date().toISOString() });
-  for (const client of connectedClients) {
-    if (client.readyState === WebSocket.OPEN) {
+  for (const [client, clientOrgId] of connectedClients) {
+    if (client.readyState === WebSocket.OPEN && (!orgId || clientOrgId === orgId)) {
       client.send(message);
     }
   }
@@ -618,6 +619,36 @@ export async function registerRoutes(
     res.json(engine.getThreatPatterns());
   });
 
+  async function enforceRetentionPolicies() {
+    try {
+      const policies = await storage.getDataRetentionPolicies();
+      for (const policy of policies) {
+        if (!policy.enabled) continue;
+        const cutoff = new Date(Date.now() - policy.retentionDays * 24 * 60 * 60 * 1000);
+        const orgId = policy.organizationId || undefined;
+        switch (policy.resourceType) {
+          case "security_events":
+            await storage.deleteEventsBefore(cutoff, orgId);
+            break;
+          case "sessions":
+            await storage.deleteSessionsBefore(cutoff, orgId);
+            break;
+          case "tool_calls":
+            await storage.deleteToolCallsBefore(cutoff, orgId);
+            break;
+          case "audit_logs":
+            await storage.deleteAuditLogsBefore(cutoff, orgId);
+            break;
+        }
+      }
+    } catch (e) {
+      console.error("Retention enforcement error:", e);
+    }
+  }
+
+  setInterval(enforceRetentionPolicies, 6 * 60 * 60 * 1000);
+  setTimeout(enforceRetentionPolicies, 60 * 1000);
+
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
 
   wss.on("connection", async (ws, req) => {
@@ -631,7 +662,7 @@ export async function registerRoutes(
       return;
     }
 
-    connectedClients.add(ws);
+    connectedClients.set(ws, orgId);
     ws.send(JSON.stringify({ type: "connected", organizationId: orgId, timestamp: new Date().toISOString() }));
 
     ws.on("message", async (raw) => {
