@@ -227,4 +227,4 @@ aiglos/
 
 ## License
 
-Proprietary. Contact [will@aiglos.io](mailto:will@aiglos.io) for licensing.
+Proprietary. Contact [will@aiglos.dev](mailto:will@aiglos.dev) for licensing.
