@@ -12,6 +12,7 @@ import {
   insertSecurityEventSchema, insertSessionSchema,
 } from "@shared/schema";
 import { z } from "zod";
+import { getEngine, getEngineInstance } from "./engine";
 
 function hashApiKey(key: string): string {
   return createHash("sha256").update(key).digest("hex");
@@ -550,6 +551,71 @@ export async function registerRoutes(
       connectedClients: connectedClients.size,
       status: "running",
     });
+  });
+
+  app.get("/api/engine/status", requireAuth, (_req, res) => {
+    const engine = getEngineInstance();
+    if (!engine) return res.json({ state: "shutdown", threatLevel: "nominal", tasksDone: 0, tasksFailed: 0 });
+    res.json(engine.getStatus());
+  });
+
+  app.post("/api/engine/start", requireAuth, requireRole("admin"), async (req, res) => {
+    const existing = getEngineInstance();
+    if (existing && existing.getStatus().state === "running") {
+      return res.json({ message: "Engine already running", ...existing.getStatus() });
+    }
+    const engine = await getEngine(req.user?.organizationId);
+    await engine.start();
+    await auditLog(req, "engine", "start", "engine", {});
+    res.json({ message: "Engine started", ...engine.getStatus() });
+  });
+
+  app.post("/api/engine/stop", requireAuth, requireRole("admin"), async (req, res) => {
+    const engine = getEngineInstance();
+    if (!engine || engine.getStatus().state !== "running") {
+      return res.json({ message: "Engine not running" });
+    }
+    await engine.stop();
+    await auditLog(req, "engine", "stop", "engine", {});
+    res.json({ message: "Engine stopped" });
+  });
+
+  app.post("/api/engine/scan", requireAuth, requireRole("admin", "analyst"), async (req, res) => {
+    const engine = await getEngine(req.user?.organizationId);
+    if (engine.getStatus().state !== "running") {
+      await engine.start();
+    }
+    try {
+      const result = await engine.runScan();
+      await auditLog(req, "engine", "manual_scan", "engine", { findings: result.findings.length });
+      res.json(result);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.post("/api/engine/intel", requireAuth, requireRole("admin", "analyst"), async (req, res) => {
+    const engine = await getEngine(req.user?.organizationId);
+    if (engine.getStatus().state !== "running") {
+      await engine.start();
+    }
+    try {
+      const result = await engine.runIntel();
+      await auditLog(req, "engine", "manual_intel", "engine", { newRules: result.newRules });
+      res.json(result);
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
+
+  app.get("/api/engine/findings", requireAuth, (_req, res) => {
+    const engine = getEngineInstance();
+    res.json(engine ? engine.getFindings() : []);
+  });
+
+  app.get("/api/engine/patterns", requireAuth, async (req, res) => {
+    const engine = getEngineInstance() || await getEngine(req.user?.organizationId);
+    res.json(engine.getThreatPatterns());
   });
 
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });

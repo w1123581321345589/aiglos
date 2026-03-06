@@ -20,6 +20,7 @@ import Retention from "@/pages/retention";
 import Alerting from "@/pages/alerting";
 import UsersPage from "@/pages/users";
 import Reports from "@/pages/reports";
+import EnginePage from "@/pages/engine";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function Router() {
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/trust" component={TrustRegistry} />
       <Route path="/policies" component={Policies} />
       <Route path="/compliance" component={Compliance} />
+      <Route path="/engine" component={EnginePage} />
       <Route path="/audit" component={AuditLogs} />
       <Route path="/retention" component={Retention} />
       <Route path="/alerts" component={Alerting} />

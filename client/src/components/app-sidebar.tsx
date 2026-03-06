@@ -15,6 +15,7 @@ import {
   FileText,
   ClipboardList,
   LogOut,
+  Cpu,
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,6 +36,7 @@ import { useAuth } from "@/lib/auth";
 
 const monitoringItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Command Center", url: "/engine", icon: Cpu },
   { title: "Sessions", url: "/sessions", icon: Activity },
   { title: "Events", url: "/events", icon: AlertTriangle },
   { title: "Trust Registry", url: "/trust", icon: Server },
