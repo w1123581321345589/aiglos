@@ -142,6 +142,13 @@ All prefixed with `/api/`:
 - `server/middleware.ts` - Auth, RBAC, audit logging middleware
 - `client/src/pages/engine.tsx` - Command Center UI
 
+## Landing Page
+- **Route**: `/landing` — standalone vanilla HTML/CSS/JS landing page
+- **File**: `client/public/landing.html`
+- **Design**: cursor.com-inspired — near-white bg (#fafaf9), Inter font, dark product panels, extreme whitespace
+- **Sections**: Hero with live interceptor feed, logo strip, 3 feature sections (alternating layout), OSS callout, footer
+- **No pricing** on this page — pricing lives at `/pricing`
+
 ## Demo Credentials
 - admin / admin123 (full access)
 - analyst / analyst123 (monitoring + policies)

@@ -106,6 +106,10 @@ export async function registerRoutes(
 
   app.use(loadUser);
 
+  app.get("/landing", (_req, res) => {
+    res.sendFile("landing.html", { root: new URL("../client/public", import.meta.url).pathname });
+  });
+
   const loginSchema = z.object({
     username: z.string().min(1),
     password: z.string().min(1),

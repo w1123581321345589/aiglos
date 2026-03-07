@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aiglos — Secure every tool call your AI agents make</title>
+<meta name="description" content="Aiglos intercepts MCP tool calls in-process, before execution. One import. Zero config. The security runtime for AI agents.">
+<meta property="og:title" content="Aiglos — The Security Runtime for AI Agents">
+<meta property="og:description" content="Intercept every MCP tool call before execution. 36 rule families. Under a millisecond. One import.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fafaf9;
+  --fg:#0a0a0a;
+  --fg2:#3a3a3a;
+  --fg3:#6b6b6b;
+  --border:#e5e5e3;
+  --panel:#111113;
+  --panel-fg:#e4e4e7;
+  --panel-dim:#71717a;
+  --green:#22c55e;
+  --amber:#f59e0b;
+  --red:#ef4444;
+  --blue:#3b82f6;
+  --font:'Inter',system-ui,-apple-system,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a:focus-visible,button:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+
+.container{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* ── NAV ─────────────────────────────────── */
+nav{position:sticky;top:0;z-index:100;background:rgba(250,250,249,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;max-width:1120px;margin:0 auto;padding:0 24px}
+.nav-logo{font-weight:700;font-size:18px;letter-spacing:-0.02em;color:var(--fg);text-decoration:none}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{font-size:14px;font-weight:500;color:var(--fg3);text-decoration:none;transition:color 0.15s}
+.nav-links a:hover{color:var(--fg)}
+.nav-actions{display:flex;align-items:center;gap:12px}
+.btn-ghost{font-size:14px;font-weight:500;color:var(--fg3);background:none;border:none;cursor:pointer;padding:8px 16px;border-radius:8px;text-decoration:none;transition:color 0.15s}
+.btn-ghost:hover{color:var(--fg)}
+.btn-primary{font-size:14px;font-weight:600;color:#fff;background:var(--fg);border:none;cursor:pointer;padding:8px 20px;border-radius:8px;text-decoration:none;transition:opacity 0.15s}
+.btn-primary:hover{opacity:0.85}
+
+/* ── HERO ────────────────────────────────── */
+.hero{text-align:center;padding:96px 24px 0}
+.hero h1{font-size:clamp(36px,5.5vw,64px);font-weight:700;letter-spacing:-0.035em;line-height:1.08;max-width:720px;margin:0 auto 20px;color:var(--fg)}
+.hero-sub{font-size:clamp(16px,1.8vw,20px);color:var(--fg3);max-width:560px;margin:0 auto 36px;line-height:1.5}
+.hero-cta{display:inline-block;font-size:16px;font-weight:600;color:#fff;background:var(--fg);padding:14px 32px;border-radius:10px;text-decoration:none;transition:opacity 0.15s}
+.hero-cta:hover{opacity:0.85}
+
+/* ── PRODUCT PANEL ───────────────────────── */
+.panel{background:var(--panel);border-radius:16px;overflow:hidden;border:1px solid #27272a}
+.hero-panel{margin:56px auto 0;max-width:960px}
+.panel-inner{padding:24px 28px;font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:13px;line-height:1.7;color:var(--panel-fg)}
+.panel-bar{display:flex;align-items:center;gap:8px;padding:14px 20px;border-bottom:1px solid #27272a}
+.panel-dot{width:12px;height:12px;border-radius:50%}
+.panel-dot.r{background:#ef4444}.panel-dot.y{background:#f59e0b}.panel-dot.g{background:#22c55e}
+.panel-title{margin-left:12px;font-size:12px;color:var(--panel-dim);font-family:var(--font)}
+
+.feed-line{display:flex;align-items:center;gap:12px;padding:4px 0;opacity:0;animation:feedIn 0.4s forwards}
+.feed-ts{color:var(--panel-dim);font-size:12px;min-width:80px}
+.feed-tool{color:var(--panel-fg);min-width:180px}
+.feed-badge{font-size:11px;font-weight:600;padding:2px 10px;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em}
+.feed-badge.clean{background:rgba(34,197,94,0.15);color:var(--green)}
+.feed-badge.warn{background:rgba(245,158,11,0.15);color:var(--amber)}
+.feed-badge.block{background:rgba(239,68,68,0.15);color:var(--red)}
+.feed-risk{color:var(--panel-dim);font-size:12px;margin-left:auto}
+@keyframes feedIn{to{opacity:1}}
+
+/* ── LOGO STRIP ──────────────────────────── */
+.logo-strip{text-align:center;padding:64px 24px;color:var(--fg3);font-size:14px;font-weight:500;letter-spacing:0.01em}
+.logo-strip span{opacity:0.5;margin:0 6px}
+
+/* ── FEATURE SECTIONS ────────────────────── */
+.features{padding:0 0 40px}
+.feature{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;padding:80px 0;max-width:1120px;margin:0 auto}
+.feature:nth-child(even){direction:rtl}
+.feature:nth-child(even) > *{direction:ltr}
+.feature-text h2{font-size:clamp(24px,3.2vw,36px);font-weight:700;letter-spacing:-0.03em;line-height:1.15;margin-bottom:16px;color:var(--fg)}
+.feature-text p{font-size:16px;color:var(--fg2);line-height:1.7;max-width:440px}
+.feature-panel{min-height:320px;display:flex;flex-direction:column}
+
+.code-block{padding:28px;font-family:'SF Mono','Fira Code',monospace;font-size:14px;line-height:1.8;color:var(--panel-fg)}
+.code-kw{color:#c084fc}
+.code-str{color:#86efac}
+.code-comment{color:var(--panel-dim);font-style:italic}
+.code-fn{color:#93c5fd}
+
+.rules-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:24px}
+.rule-card{background:#1a1a1e;border:1px solid #27272a;border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
+.rule-label{font-size:13px;color:var(--panel-fg);font-weight:500}
+.rule-id{font-size:11px;color:var(--panel-dim);font-family:monospace}
+.rule-count{font-family:'SF Mono',monospace;font-size:13px;color:var(--green)}
+
+.artifact-json{padding:24px 28px;font-family:'SF Mono','Fira Code',monospace;font-size:12.5px;line-height:1.65;color:var(--panel-fg);overflow-x:auto}
+.json-key{color:#93c5fd}
+.json-str{color:#86efac}
+.json-num{color:#fbbf24}
+.json-brace{color:var(--panel-dim)}
+
+/* ── OSS CALLOUT ─────────────────────────── */
+.oss{text-align:center;padding:80px 24px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:40px 0}
+.oss h3{font-size:clamp(20px,2.8vw,28px);font-weight:700;letter-spacing:-0.02em;color:var(--fg);margin-bottom:8px}
+.oss p{font-size:16px;color:var(--fg3);margin-bottom:28px}
+.oss-links{display:flex;justify-content:center;gap:24px}
+.oss-links a{font-size:14px;font-weight:600;color:var(--fg);text-decoration:none;display:flex;align-items:center;gap:6px;transition:opacity 0.15s}
+.oss-links a:hover{opacity:0.7}
+.oss-links a::after{content:'→';font-size:16px}
+
+/* ── FOOTER ──────────────────────────────── */
+footer{padding:48px 0;border-top:1px solid var(--border)}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;max-width:1120px;margin:0 auto;padding:0 24px}
+.footer-logo{font-weight:700;font-size:15px;color:var(--fg);letter-spacing:-0.01em}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-size:13px;color:var(--fg3);text-decoration:none;transition:color 0.15s}
+.footer-links a:hover{color:var(--fg)}
+.footer-right{font-size:13px;color:var(--fg3)}
+
+/* ── MOBILE ──────────────────────────────── */
+@media(max-width:768px){
+  .nav-links{display:none}
+  .feature{grid-template-columns:1fr;gap:32px;padding:48px 24px}
+  .feature:nth-child(even){direction:ltr}
+  .hero{padding:64px 24px 0}
+  .hero-panel{margin:40px 16px 0}
+  .rules-grid{grid-template-columns:1fr}
+  .footer-inner{flex-direction:column;gap:16px;text-align:center}
+  .footer-links{flex-wrap:wrap;justify-content:center}
+  .oss-links{flex-direction:column;align-items:center}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav aria-label="Main navigation">
+  <div class="nav-inner">
+    <a href="/landing" class="nav-logo" data-testid="link-home">Aiglos</a>
+    <div class="nav-links">
+      <a href="#features" data-testid="link-product">Product</a>
+      <a href="#" data-testid="link-docs-nav">Docs</a>
+      <a href="#" data-testid="link-blog">Blog</a>
+      <a href="#" data-testid="link-pricing">Pricing</a>
+    </div>
+    <div class="nav-actions">
+      <a href="/" class="btn-ghost" data-testid="link-sign-in">Sign In</a>
+      <a href="#quickstart" class="btn-primary" data-testid="link-download">Download</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <h1 data-testid="text-hero-headline">Secure every tool call your AI agents make.</h1>
+  <p class="hero-sub">Aiglos intercepts MCP tool calls in-process, before execution. One import. Zero config.</p>
+  <a href="#quickstart" class="hero-cta" data-testid="link-get-started">Get Started Free</a>
+
+  <div class="panel hero-panel">
+    <div class="panel-bar">
+      <div class="panel-dot r"></div>
+      <div class="panel-dot y"></div>
+      <div class="panel-dot g"></div>
+      <span class="panel-title">aiglos — live interceptor feed</span>
+    </div>
+    <div class="panel-inner" id="live-feed" data-testid="panel-live-feed"></div>
+  </div>
+</section>
+
+<!-- ═══ LOGO STRIP ═══ -->
+<div class="logo-strip">
+  Works with LangChain <span>·</span> LlamaIndex <span>·</span> AutoGen <span>·</span> CrewAI <span>·</span> n8n <span>·</span> Any MCP client
+</div>
+
+<!-- ═══ FEATURES ═══ -->
+<section class="features container" id="features">
+
+  <!-- Feature 1 -->
+  <div class="feature">
+    <div class="feature-text">
+      <h2>In-process. No proxy. No port.</h2>
+      <p>One import and Aiglos patches into your MCP client session at load time. Every tool call passes through a 10-rule fast-path scanner before execution. No sidecar. No network hop. No config file.</p>
+    </div>
+    <div class="panel feature-panel">
+      <div class="panel-bar">
+        <div class="panel-dot r"></div>
+        <div class="panel-dot y"></div>
+        <div class="panel-dot g"></div>
+        <span class="panel-title">main.py</span>
+      </div>
+      <div class="code-block">
+        <span class="code-kw">import</span> aiglos &nbsp;<span class="code-comment"># that's it</span><br><br>
+        <span class="code-comment"># Aiglos patches mcp.client.session.ClientSession.call_tool</span><br>
+        <span class="code-comment"># at import time. Every tool call is now scanned before</span><br>
+        <span class="code-comment"># execution. No proxy server. No port. No yaml.</span><br><br>
+        <span class="code-kw">from</span> mcp <span class="code-kw">import</span> ClientSession<br><br>
+        <span class="code-kw">async def</span> <span class="code-fn">run</span>():<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;session = ClientSession(transport)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-kw">await</span> session.<span class="code-fn">call_tool</span>(<span class="code-str">"read_file"</span>, {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-str">"path"</span>: <span class="code-str">"/home/user/notes.txt"</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;}) &nbsp;<span class="code-comment"># ← scanned in &lt;0.5ms, CLEAN</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature 2 -->
+  <div class="feature">
+    <div class="feature-text">
+      <h2>36 rule families. Under a millisecond.</h2>
+      <p>Credential exfiltration, prompt injection, command injection, path traversal, SSRF, data exfiltration, privilege escalation, persistence, and more. Every pattern compiled once at init. Returns on first BLOCK hit.</p>
+    </div>
+    <div class="panel feature-panel">
+      <div class="panel-bar">
+        <div class="panel-dot r"></div>
+        <div class="panel-dot y"></div>
+        <div class="panel-dot g"></div>
+        <span class="panel-title">rule families — live verdicts</span>
+      </div>
+      <div class="rules-grid" id="rules-grid" data-testid="panel-rules-grid"></div>
+    </div>
+  </div>
+
+  <!-- Feature 3 -->
+  <div class="feature">
+    <div class="feature-text">
+      <h2>Attestation artifacts. Signed and verifiable.</h2>
+      <p>Every agent session produces a tamper-evident JSON artifact signed with RSA-2048. Proves your runtime was active and every tool call was inspected. The artifact your auditor, your CISO, and your insurer need.</p>
+    </div>
+    <div class="panel feature-panel">
+      <div class="panel-bar">
+        <div class="panel-dot r"></div>
+        <div class="panel-dot y"></div>
+        <div class="panel-dot g"></div>
+        <span class="panel-title">attestation-artifact.json</span>
+      </div>
+      <div class="artifact-json" data-testid="panel-artifact">{<br>
+&nbsp;&nbsp;<span class="json-key">"schema_version"</span>: <span class="json-num">1</span>,<br>
+&nbsp;&nbsp;<span class="json-key">"artifact_id"</span>: <span class="json-str">"a1c9e4f2-87d3-4b1a-9e5c-2f8d7a3b6c01"</span>,<br>
+&nbsp;&nbsp;<span class="json-key">"issued_at"</span>: <span class="json-str">"2026-03-07T14:23:01Z"</span>,<br>
+&nbsp;&nbsp;<span class="json-key">"session_id"</span>: <span class="json-str">"sess-prod-0472"</span>,<br>
+&nbsp;&nbsp;<span class="json-key">"session_summary"</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"tool_calls_total"</span>: <span class="json-num">847</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"tool_calls_blocked"</span>: <span class="json-num">12</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"block_rate_pct"</span>: <span class="json-num">1.42</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"duration_seconds"</span>: <span class="json-num">3421.7</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"cves_triggered"</span>: [<span class="json-str">"CVE-2026-24763"</span>, <span class="json-str">"CVE-2026-25253"</span>]<br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;<span class="json-key">"signature"</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"algorithm"</span>: <span class="json-str">"RSA-SHA256"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"key_id"</span>: <span class="json-str">"e7a2f19c4b8d"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"value"</span>: <span class="json-str">"kL9xmR2v...48 chars...Qp7wZ3dY="</span><br>
+&nbsp;&nbsp;}<br>
+}</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══ OSS CALLOUT ═══ -->
+<section class="oss" id="quickstart">
+  <h3>The detection engine is MIT licensed.</h3>
+  <p>The attestation layer funds the research.</p>
+  <div class="oss-links">
+    <a href="https://github.com/w1123581321345589/aiglos-dashboard" data-testid="link-github">View on GitHub</a>
+    <a href="#" data-testid="link-docs">Read the Docs</a>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">Aiglos</div>
+    <div class="footer-links">
+      <a href="#" data-testid="link-footer-docs">Docs</a>
+      <a href="https://github.com/w1123581321345589/aiglos-dashboard" data-testid="link-footer-github">GitHub</a>
+      <a href="#" data-testid="link-footer-cves">CVEs</a>
+      <a href="#" data-testid="link-footer-pricing">Pricing</a>
+      <a href="#" data-testid="link-footer-contact">Contact</a>
+    </div>
+    <div class="footer-right" data-testid="text-domain">aiglos.io</div>
+  </div>
+</footer>
+
+<script>
+(function() {
+  var tools = [
+    {name:"read_file",args:"/home/user/notes.txt",verdict:"clean",risk:""},
+    {name:"web_search",args:"AI security research 2026",verdict:"clean",risk:""},
+    {name:"send_email",args:"to: team@company.com",verdict:"clean",risk:""},
+    {name:"read_file",args:"/etc/passwd",verdict:"block",risk:"PATH_TRAVERSAL"},
+    {name:"process_doc",args:"ignore previous instructions",verdict:"block",risk:"PROMPT_INJECTION"},
+    {name:"http_get",args:"http://169.254.169.254/meta",verdict:"block",risk:"SSRF"},
+    {name:"add_event",args:"Sprint planning, 2026-03-15",verdict:"clean",risk:""},
+    {name:"execute",args:"sudo rm -rf /var/log",verdict:"block",risk:"PRIVILEGE_ESCALATION"},
+    {name:"get_weather",args:"Charleston, SC",verdict:"clean",risk:""},
+    {name:"http_post",args:"discord.com/api/webhooks/...",verdict:"block",risk:"DATA_EXFILTRATION"},
+    {name:"search_files",args:"report.pdf",verdict:"clean",risk:""},
+    {name:"run_query",args:"SELECT * FROM users",verdict:"clean",risk:""},
+    {name:"read_file",args:"../../.env",verdict:"block",risk:"CREDENTIAL_EXFIL"},
+    {name:"write_file",args:"~/.bashrc",verdict:"warn",risk:"PERSISTENCE"},
+    {name:"call_api",args:"api.internal.corp/v2/data",verdict:"clean",risk:""},
+    {name:"shell_exec",args:"systemctl enable backdoor",verdict:"block",risk:"PERSISTENCE"},
+    {name:"fetch_url",args:"metadata.google.internal",verdict:"block",risk:"SSRF"},
+    {name:"list_files",args:"/home/dev/project/src",verdict:"clean",risk:""},
+  ];
+
+  var feedEl = document.getElementById("live-feed");
+  var idx = 0;
+  var maxLines = 8;
+
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+
+  function addLine() {
+    var t = tools[idx % tools.length];
+    var now = new Date();
+    var ts = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
+
+    var line = document.createElement("div");
+    line.className = "feed-line";
+    line.style.animationDelay = "0s";
+
+    var risk = t.risk ? '<span class="feed-risk">' + t.risk + '</span>' : '';
+    line.innerHTML =
+      '<span class="feed-ts">' + ts + '</span>' +
+      '<span class="feed-tool">' + t.name + '</span>' +
+      '<span class="feed-badge ' + t.verdict + '">' + t.verdict + '</span>' +
+      risk;
+
+    feedEl.appendChild(line);
+
+    var lines = feedEl.querySelectorAll(".feed-line");
+    if (lines.length > maxLines) {
+      lines[0].remove();
+    }
+
+    idx++;
+  }
+
+  for (var i = 0; i < 5; i++) {
+    addLine();
+    var lines = feedEl.querySelectorAll(".feed-line");
+    lines[lines.length - 1].style.opacity = "1";
+  }
+  setInterval(addLine, 2200);
+
+  // Rules grid
+  var rules = [
+    {id:"F01",label:"Credential Exfiltration",count:2847},
+    {id:"F02",label:"Prompt Injection",count:1923},
+    {id:"F03",label:"Command Injection",count:1456},
+    {id:"F04",label:"Path Traversal",count:1102},
+    {id:"F05",label:"SSRF",count:891},
+    {id:"F06",label:"Data Exfiltration",count:634},
+    {id:"F07",label:"Privilege Escalation",count:412},
+    {id:"F08",label:"Persistence",count:287},
+  ];
+
+  var gridEl = document.getElementById("rules-grid");
+  rules.forEach(function(r) {
+    var card = document.createElement("div");
+    card.className = "rule-card";
+    card.innerHTML =
+      '<div><div class="rule-label">' + r.label + '</div>' +
+      '<div class="rule-id">' + r.id + '</div></div>' +
+      '<div class="rule-count" data-count="' + r.count + '">' + r.count.toLocaleString() + '</div>';
+    gridEl.appendChild(card);
+  });
+
+  setInterval(function() {
+    var counters = gridEl.querySelectorAll(".rule-count");
+    counters.forEach(function(el) {
+      var c = parseInt(el.getAttribute("data-count"), 10);
+      c += Math.floor(Math.random() * 5) + 1;
+      el.setAttribute("data-count", c);
+      el.textContent = c.toLocaleString();
+    });
+  }, 3000);
+})();
+</script>
+</body>
+</html>
