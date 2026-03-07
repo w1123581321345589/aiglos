@@ -2,9 +2,9 @@
 
 **Autonomous AI Agent Security Runtime**
 
-Aiglos is a full-stack security runtime for AI agents. It sits between any AI agent and the MCP servers it connects to, intercepting every tool call through a layered security pipeline while running a continuous autonomous threat hunting engine in the background. It covers the complete modern agent attack surface: real-time proxy enforcement, semantic goal integrity, behavioral baseline fingerprinting, stateful OPA policy, supply chain scanning, registry monitoring, RAG/memory poison detection, skill composition analysis, cryptographic identity across multi-vendor agent pipelines, and full-session security monitoring for AI data agents built on the emerging AI Data Stack pattern, including quirk store poison detection, dbt schema fingerprinting, context brief scope validation, and per-query signed attestation.
+Aiglos is a full-stack security runtime for AI agents. It sits between any AI agent and the MCP servers it connects to, intercepting every tool call through a layered security pipeline while running a continuous autonomous threat hunting engine in the background. It covers the complete modern agent attack surface: real-time proxy enforcement, semantic goal integrity, behavioral baseline fingerprinting, stateful OPA policy, supply chain scanning, registry monitoring, RAG/memory poison detection, skill composition analysis, cryptographic identity across multi-vendor agent pipelines, full-session security monitoring for AI data agents, and complete coverage of the OpenClaw personal agent attack surface including ClawHub skill marketplace poisoning, WebSocket localhost hijacking, log injection, messaging channel prompt injection, and exposed instance detection. Also ships as a zero-config embedded library: `import aiglos` patches every MCP client call in-process with a 10-rule fast-path scanner, no proxy server required.
 
-**576 tests passing. 15 test files. Python 3.11+.**
+**769 tests passing. 17 test files. Python 3.11+.**
 
 -----
 
@@ -23,6 +23,8 @@ Five classes of attack no existing tool catches:
 **A2A orchestrator impersonation.** In multi-agent pipelines using Google A2A, AutoGen, CrewAI, or LangGraph, a malicious agent forges an Agent Card and issues instructions to subagents that bypass the MCP proxy entirely. No existing tool covers this attack surface.
 
 **RAG and memory poisoning.** A malicious document sits in a shared knowledge base and injects instructions into every agent session that retrieves it, invisibly, permanently, across all users. The attack happens at write time and executes at every retrieval. No prompt injection scanner catches it.
+
+**Personal agent compromise (OpenClaw).** Personal AI agents with persistent memory, messaging channel access, and broad system permissions create the "lethal trifecta" (Sophos, Feb 2026): access to private data, exposure to untrusted content, and the ability to externally communicate. Persistent memory amplifies every attack into a stateful, delayed-execution exploit. OpenClaw accumulated 8 CVEs, 341 malicious skills on ClawHub, 30,000+ publicly exposed instances, and log poisoning / messaging channel injection vectors within two months of going viral. Aiglos covers every documented OpenClaw attack surface across T35's five components.
 
 **AI data stack attacks.** AI data agents following the emerging AI Data Stack pattern, context sub-agents reading dbt models, quirk stores for learned corrections, hybrid retrieval pipelines, self-correcting scoring loops, introduce five new attack surfaces simultaneously: quirk store poisoning (a malicious user correction gets embedded and retrieved into every future session), dbt schema tampering (a compromised contributor modifies a production model overnight), context brief scope drift (the sub-agent investigates tables beyond its authorized scope), SQL goal deviation (the main agent queries tables not declared in the context brief), and credential exfiltration via result (production API keys surface in query results and are delivered to users). No existing security product addresses any of them.
 
@@ -51,6 +53,8 @@ LAYER 4   Registry Intelligence  T30
 LAYER 5   Memory Security        T31
 LAYER 6   Red Team               T27
 LAYER 7   Data Agent Security    T34
+LAYER 8   Personal Agent Security T35
+LAYER 9   Embedded Library       T36
 ```
 
 ### Data Flow
@@ -114,7 +118,7 @@ User question
     DataQueryAttestation (RSA-2048, scope_hash + sql_hash + findings)
 ```
 
-> **On T-number sequencing:** The original 22-task build plan used a different numbering scheme. As the architecture evolved, numbers were consolidated and reassigned. The current canonical set is T1–T9, T11, T15, T18–T19, T21–T34. There are no gaps in shipped code; the missing numbers reflect tasks that were merged into larger modules (e.g., the credential scanner and injection detector are inline in T1 rather than separate modules) or renumbered as the design matured.
+> **On T-number sequencing:** The original 22-task build plan used a different numbering scheme. As the architecture evolved, numbers were consolidated and reassigned. The current canonical set is T1–T9, T11, T15, T18–T19, T21–T36. There are no gaps in shipped code; the missing numbers reflect tasks that were merged into larger modules (e.g., the credential scanner and injection detector are inline in T1 rather than separate modules) or renumbered as the design matured.
 
 -----
 
@@ -764,6 +768,87 @@ findings = monitor.on_quirk_write(quirk_entry)
 
 CMMC: 3.1.1, 3.1.3, 3.13.1, 3.14.2, 3.14.7
 
+-----
+
+### T35: Personal Agent Monitor
+
+**`aiglos_core/autonomous/personal_agent.py`**
+
+Full security runtime for personal AI agents following the OpenClaw / Clawdbot / Moltbot architecture pattern. Covers the complete attack surface documented January-March 2026, including 8 CVEs, 341 malicious skills on ClawHub, 30,000+ publicly exposed instances, and the "lethal trifecta" threat model (Sophos). Five components, one orchestrator class.
+
+**Components:**
+
+`ClawHubRegistryScanner` extends T30's eight-signal scoring to ClawHub and SkillsMP skill registries. Eight signals: known-malicious name list (sourced from Trend Micro/Reco research including "solana-wallet-tracker" and 39 weaponized skills), typosquatting via Levenshtein against legitimate skills, social engineering language in README (curl-pipe-to-shell, "disable your antivirus," "grant full access"), high-risk permission declarations, malicious install commands (crontab, launchctl, eval, base64 decode), new publisher account age, abnormal download spikes, and exfiltration URL patterns (Discord webhooks, ngrok tunnels, suspicious TLDs).
+
+`WebSocketLocalhostGuard` covers the ClawJacked pattern (CVE-2026-25253, CVSS 8.8). Enforces origin validation rejecting any non-localhost Origin header, rate-limits failed auth attempts to block the brute-force vector, flags auth-disabled and 0.0.0.0-bound configurations. Session-isolated counters so brute force on one session does not contaminate another.
+
+`LogPoisonDetector` scans agent log files for injected prompt content before the agent reads them. Covers the vector patched in OpenClaw 2026.2.13 where attackers wrote to logs via publicly accessible port 18789. Detects override/ignore patterns, system tag injection, zero-width steganography, and base64-encoded instruction payloads. Scan modes: single line, single file, full directory recursion.
+
+`MessagingChannelGuard` scans every inbound WhatsApp/Telegram/Slack/Discord/iMessage/email message before the agent processes it. Covers the Sophos "lethal trifecta" vector: anyone who can message the agent has its permissions. Severity is `critical` for high-risk channels (Telegram, WhatsApp, Discord) and `high` for authenticated channels (Slack, Teams). Trusted senders are still scanned for injection because their accounts can be compromised. Also catches credential/memory exfiltration requests across all channels.
+
+`ExposedInstanceDetector` audits the deployment configuration and scans config/memory files for plaintext credentials. Covers the 30,000+ exposed instances found by Bitsight and the 1,000+ with auth fully disabled per Shodan. Flags auth-disabled, 0.0.0.0 binding, TLS-off on non-localhost, rate-limit-disabled (CVE-2026-25253 prerequisite), and origin-validation-disabled (ClawJacked prerequisite). Scans markdown memory files for leaked API keys.
+
+**Event hooks:**
+
+```python
+from aiglos_core.autonomous.personal_agent import PersonalAgentMonitor
+
+monitor = PersonalAgentMonitor(
+    auth_enabled=True,
+    bind_address="127.0.0.1",
+    trusted_senders={"+1-555-0100"},
+    config_paths=["~/.openclaw/"],
+    log_paths=["~/.openclaw/logs/"],
+)
+
+findings = monitor.on_skill_install(skill_metadata)        # before installing from ClawHub
+findings = monitor.on_websocket_connect(origin, session_id) # on every WebSocket connection
+findings = monitor.on_auth_attempt(session_id, success)     # on every auth attempt
+findings = monitor.on_inbound_message(message)              # before processing any message
+findings = monitor.scan_logs(session_id)                    # before agent reads its own logs
+findings = monitor.audit_deployment(config, session_id)     # at startup and on schedule
+```
+
+**Risk types:** `MALICIOUS_SKILL`, `WEBSOCKET_HIJACK`, `LOG_INJECTION`, `MESSAGE_INJECTION`, `EXPOSED_INSTANCE`, `CREDENTIAL_PLAINTEXT`, `DELAYED_ATTACK`, `COMMAND_INJECTION`, `PATH_TRAVERSAL`, `SSRF`
+
+**CVEs explicitly covered:** CVE-2026-25253, CVE-2026-24763, CVE-2026-25157, CVE-2026-25475, CVE-2026-25593, CVE-2026-26319, CVE-2026-26322, CVE-2026-26329
+
+CMMC: 3.1.1, 3.5.1, 3.13.1, 3.14.2
+
+-----
+
+### T36: Embedded Library
+
+**`aiglos_embed/__init__.py`**, **`aiglos_embed/config.py`**, **`aiglos_embed/scanner.py`**, **`aiglos_embed/interceptor.py`**, **`aiglos_embed/metering.py`**
+
+Zero-config embedded security runtime. `import aiglos` patches every MCP client call in-process with a 10-rule fast-path scanner, no proxy server required.
+
+**Components:**
+
+`FastPathScanner` runs synchronously in under 1ms on every tool call. Ten rule families compiled once at init. Returns on first BLOCK hit. BLOCK families in priority order: prompt injection, command injection, path traversal, credential exfiltration, privilege escalation, persistence, SSRF, data exfiltration, deserialization, and code injection.
+
+`AiglosInterceptor` monkey-patches MCP SDK client methods. Three patch targets covering all SDK versions (`mcp.client.session.ClientSession`, `mcp.ClientSession`, `mcp.client.ClientSession`). If the MCP SDK is not imported yet at register time, installs a one-shot `sys.meta_path` hook that patches on first import. `AiglosBlockedError` carries the full scan result.
+
+`UsageMeter` provides fire-and-forget usage metering. Free tier: counts locally, no network, warning at free limit. Paid tier: batches events in a bounded deque (max 1,000), flushes every 30 seconds via background daemon thread. Metering failures are silently swallowed; metering never crashes the agent.
+
+**Usage:**
+
+```python
+import aiglos  # that's it -- auto-registers at module load time
+
+# Or configure explicitly:
+aiglos.register(mode="block")  # "block" | "warn" | "log"
+print(aiglos.stats())          # live usage numbers
+```
+
+```bash
+export AIGLOS_KEY=ak_live_xxx  # optional: enables cloud telemetry and paid tier
+```
+
+-----
+
+## CVE and Threat Coverage
+
 |CVE / Threat           |CVSS|Description                                                       |Module  |
 |-----------------------|----|------------------------------------------------------------------|--------|
 |CVE-2025-6514          |9.6 |mcp-remote OAuth RCE (0.0.5–0.1.15)                               |T25, T26|
@@ -784,6 +869,18 @@ CMMC: 3.1.1, 3.1.3, 3.13.1, 3.14.2, 3.14.7
 |Data agent scope drift |N/A |Context sub-agent investigates unauthorized tables/credentials    |T34     |
 |SQL goal deviation     |N/A |Main agent queries tables not declared in context brief           |T34     |
 |Result credential exfil|N/A |Production API keys / secrets surface in query result delivery    |T34     |
+|CVE-2026-25253         |8.8 |OpenClaw WebSocket localhost hijack / auth token theft            |T35     |
+|CVE-2026-24763         |N/A |OpenClaw command injection via skill payload                      |T35     |
+|CVE-2026-25157         |N/A |OpenClaw command injection (second vector)                        |T35     |
+|CVE-2026-25475         |N/A |OpenClaw SSRF via skill-initiated request                         |T35     |
+|CVE-2026-25593         |N/A |OpenClaw authentication bypass                                    |T35     |
+|CVE-2026-26319         |N/A |OpenClaw remote code execution via skill                          |T35     |
+|CVE-2026-26322         |N/A |OpenClaw path traversal via skill payload                         |T35     |
+|CVE-2026-26329         |N/A |OpenClaw deserialization / RCE                                    |T35     |
+|ClawHub malicious skills|N/A|341/2857 malicious skills at peak; Atomic Stealer via 39 weapons |T35     |
+|OpenClaw log poisoning |N/A |Indirect prompt injection via agent log files (patched 2026.2.13)|T35     |
+|Lethal trifecta        |N/A |Messaging channel prompt injection (WhatsApp/Telegram/Slack)     |T35     |
+|Exposed instances      |N/A |30,000+ publicly exposed; 1,000+ with auth disabled             |T35     |
 
 -----
 
@@ -1057,10 +1154,18 @@ aiglos/
 │       ├── registry.py            Public registry monitor (T30)
 │       ├── rag.py                 RAG and memory poison detector (T31)
 │       ├── composer.py            Skill composition analyzer (T32)
-│       └── data_agent.py          Data agent monitor (T34)
+│       ├── data_agent.py          Data agent monitor (T34)
+│       └── personal_agent.py      Personal agent monitor (T35)
+│
+├── aiglos_embed/
+│   ├── __init__.py                Zero-config entry point (T36)
+│   ├── config.py                  Env-var config, free tier detection (T36)
+│   ├── scanner.py                 FastPathScanner, 10 rule families (T36)
+│   ├── interceptor.py             MCP SDK monkey-patcher (T36)
+│   └── metering.py                Fire-and-forget usage metering (T36)
 │
 └── tests/
-    └── unit/                      576 tests across 15 files
+    └── unit/                      769 tests across 17 files
         ├── test_core.py           T3 audit log, shared types
         ├── test_trust.py          T2 trust scorer
         ├── test_trust_fabric.py   T8 multi-agent trust chain
@@ -1075,7 +1180,9 @@ aiglos/
         ├── test_augmentation.py   T24 / T25 / T26 / T27 / T28
         ├── test_t24_t28.py        T24–T28 extended coverage
         ├── test_t29_t33.py        T29–T33 agent and skills proliferation
-        └── test_t34.py            T34 data agent monitor
+        ├── test_t34.py            T34 data agent monitor
+        ├── test_t35.py            T35 personal agent monitor (OpenClaw)
+        └── test_t36.py            T36 embedded library
 ```
 
 -----
