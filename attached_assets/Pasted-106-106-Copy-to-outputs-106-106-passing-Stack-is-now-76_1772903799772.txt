@@ -1,0 +1,30 @@
+106/106. Copy to outputs.​​​​​​​​​​​​​​​​
+
+**106/106 passing. Stack is now 769 tests, 17 test files.**
+
+T36 is the embedded library, five modules:
+
+-----
+
+`aiglos_embed/__init__.py` – the zero-config entry point. `import aiglos` triggers `_auto_register()` at module load time, which reads `AIGLOS_KEY` from env, instantiates the interceptor, calls `register()`, and prints a free-tier notice if no key is set. `aiglos.register(mode="warn")` lets callers override at runtime. `aiglos.stats()` returns live usage numbers. The TypeScript path (`import 'aiglos/auto'`) maps to the same pattern.
+
+`aiglos_embed/config.py` – pure env-var config. One env var required (`AIGLOS_KEY`). All others have safe defaults. Free-tier mode is automatic when key is absent. `repr()` masks the key after the first 8 characters.
+
+`aiglos_embed/scanner.py` – the `FastPathScanner`. Ten rule families compiled once at init. Runs synchronously in under 1ms on every tool call (the test verifies median under 5ms with room to spare; observed median is well under 1ms). Returns on first BLOCK hit. Collects the first WARN. BLOCK families in priority order: prompt injection (F2), command injection (F3), path traversal (F4), credential exfiltration (F1), privilege escalation (F7), persistence (F8), SSRF (F5), data exfiltration (F6). WARN families: user-level persistence (F8), broad file access (F9). Tool name blocklist (F10) runs before any regex. The `_extract_strings` helper recursively flattens nested JSON argument structures to depth 8.
+
+`aiglos_embed/interceptor.py` – the monkey-patcher. Three patch targets covering all SDK versions (`mcp.client.session.ClientSession`, `mcp.ClientSession`, `mcp.client.ClientSession`). Sync wrappers for sync methods, async wrappers for async. If the MCP SDK isn’t imported yet at register time, installs a one-shot `sys.meta_path` hook that patches on first import. `AiglosBlockedError` carries the full `ScanResult` so callers can log, alert, or handle the block event. The critical invariant – verified by test – is that when verdict is BLOCK, the original method is never called.
+
+`aiglos_embed/metering.py` – fire-and-forget usage metering. Free tier: counts locally, no network, warning logged at free limit. Paid tier: batches events in a bounded deque (max 1,000), flushes every 30 seconds via background daemon thread, also flushes async when batch size hits 50. POST to `api.aiglos.io/v1/events` with 3-second timeout. Metering failures are silently swallowed – metering never crashes the agent. `stats()` returns call count, block count, buffer depth, and free tier remaining.
+
+The deployment story this enables:
+
+```
+pip install aiglos
+export AIGLOS_KEY=ak_live_xxx
+```
+
+```python
+import aiglos   # that's it
+```
+
+Every MCP tool call from that point forward passes through the 10-rule fast-path scanner before execution. No proxy server. No ports. No yaml. Revenue starts on the first tool call.​​​​​​​​​​​​​​​​
