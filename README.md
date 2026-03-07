@@ -4,7 +4,7 @@
 
 Aiglos is a full-stack security runtime for AI agents. It sits between any AI agent and the MCP servers it connects to, intercepting every tool call through a layered security pipeline while running a continuous autonomous threat hunting engine in the background. It covers the complete modern agent attack surface: real-time proxy enforcement, semantic goal integrity, behavioral baseline fingerprinting, stateful OPA policy, supply chain scanning, registry monitoring, RAG/memory poison detection, skill composition analysis, cryptographic identity across multi-vendor agent pipelines, full-session security monitoring for AI data agents, and complete coverage of the OpenClaw personal agent attack surface including ClawHub skill marketplace poisoning, WebSocket localhost hijacking, log injection, messaging channel prompt injection, and exposed instance detection. Also ships as a zero-config embedded library: `import aiglos` patches every MCP client call in-process with a 10-rule fast-path scanner, no proxy server required.
 
-**875 tests passing. 18 test files. Python 3.11+.**
+**955 tests passing. 19 test files. Python 3.11+.**
 
 -----
 
@@ -160,7 +160,7 @@ Set one environment variable:
 export AIGLOS_KEY=ak_live_xxx
 ```
 
-The first MCP tool call through any Aiglos-wrapped client auto-registers your account and starts the usage meter. No server. No ports. No yaml. No ops.
+The free tier runs entirely local — unlimited tool call inspection, no network, no account required. The first attempt to generate an attestation artifact or connect the cloud dashboard auto-starts a 30-day Developer Pro trial. No server. No ports. No yaml. No ops.
 
 The embedded model is more powerful than the proxy model for detection purposes. In-process means Aiglos sees the full call stack, the agent's goal state, and the arguments before serialization. The proxy sees wire-format JSON. Richer data, zero deployment friction.
 
@@ -189,15 +189,41 @@ The embedded model is more powerful than the proxy model for detection purposes.
 
 ## Pricing
 
-|Tier                |Model                          |Price |
-|--------------------|-------------------------------|------|
-|Free                |First 10,000 tool calls/month  |$0    |
-|Pay-as-you-go       |Per tool call intercepted      |$0.001|
-|Blocked threat      |Per confirmed block event      |$0.01 |
-|Attestation artifact|Per signed session record      |$0.05 |
-|Compliance report   |Per CMMC/§1513 report generated|$50   |
+|Tier                    |Price     |What You Get                                                                                                  |
+|------------------------|----------|--------------------------------------------------------------------------------------------------------------|
+|Open Core (Free)        |$0        |Local-only. Unlimited tool call inspection. Full T1–T36 detection stack. Zero attestation artifacts. Zero cloud telemetry.|
+|Developer Pro           |$20/mo    |Cloud telemetry. Unlimited attestation artifacts. Compliance dashboard. 30-day free trial auto-activates on first gated feature attempt.|
+|Team                    |$200/mo   |Up to 10 agents. Unlimited attestations. Webhook / SIEM integration. SOC 2 report. Monthly compliance PDF.     |
+|Enterprise / Defense    |$12K+/mo  |On-prem or air-gap. CMMC evidence. §1513 compliance. C3PAO audit support. Program contracts $5M–$20M TCV.      |
 
-A solo developer costs nothing. A team of 10 agents running all day costs approximately $30/month. An enterprise with 100 concurrent agent sessions generates usage that triggers an enterprise contract conversation at flat-rate pricing. The free tier is the hook. The usage-based tier is the discovery mechanism. The flat-rate enterprise tier is where the money is.
+The free tier is the distribution engine — every developer gets the full detection runtime with zero friction. The conversion mechanism is the feature gate: attestation artifacts and cloud telemetry are locked on the free tier. The first attempt to generate an attestation artifact or connect the cloud dashboard triggers a persistent (non-blocking) upgrade prompt and auto-starts a 30-day Developer Pro trial. No opt-in, no credit card, no sales call.
+
+During the 30-day trial, the developer experiences the full product — cloud dashboard, signed attestation artifacts, compliance PDFs. By day 30, they already know exactly what they lose if they do not convert. This is the Cursor playbook: let the product prove its value before the paywall, then make the ask.
+
+Usage-based pricing exists only inside the Enterprise / Defense tier, where procurement conversations already involve math. The bottom of the funnel is flat and frictionless.
+
+-----
+
+## Open Source Strategy
+
+Aiglos follows the dual-license model: open source for adoption, proprietary for monetization. The detection engine is MIT-licensed. The enterprise features require a commercial license. This is the HashiCorp/Terraform model applied to AI agent security.
+
+**Open Source — MIT License:**
+
+- **aiglos-core**: The full T1–T36 detection engine. All 10 rule families. Every module shipped.
+- **aiglos-sdk**: Python and TypeScript packages (`import aiglos` / `import 'aiglos/auto'`).
+- **aiglos-cves**: Complete CVE database with proof-of-concept code and Aiglos patch notes.
+- Community contributions welcome. PRs from Anthropic, OpenAI, Cloudflare, and framework maintainers expand the detection surface for everyone.
+
+**Proprietary — Commercial License:**
+
+- Cloud telemetry and the live threat dashboard (aiglos.io/threats).
+- RSA-2048 attestation artifact generation and cryptographic signing.
+- CMMC Level 2 and §1513 compliance report generation.
+- Enterprise admin console, SIEM integration, multi-tenant management.
+- Air-gap deployment container for DoD and classified environments.
+
+The open source engine is the distribution mechanism. Every developer who installs aiglos-core gets the full detection stack for free, forever. The proprietary layer is the monetization mechanism — attestation signing, cloud telemetry, and compliance reporting cannot be self-hosted without a commercial license. The feature gate (attestation artifacts locked on free tier) is the bridge between the two.
 
 -----
 
@@ -989,7 +1015,7 @@ export AIGLOS_KEY=ak_live_xxx
 ```
 
 ```python
-import aiglos  # one line, in-process interception, usage-based billing starts immediately
+import aiglos  # one line, in-process interception, free tier runs local-only
 ```
 
 Target: individual developers, data engineering teams. No infrastructure required.
@@ -1046,7 +1072,7 @@ Target: enterprise security teams, air-gap-capable deployments.
 
 Custom integration, C3PAO evidence package, performance guarantee. Revenue is $5-20M TCV per contract. Target: DoD-adjacent prime contractors.
 
-Tiers 1-3 are self-serve. A developer discovers Aiglos via PyPI or the MCP registry, activates it in minutes, their enterprise upgrades them to tier 3, and the tier 3 relationship is the on-ramp to tier 4. The DoD channel does not require cold outreach; it requires tier 3 enterprise customers who are already defense-adjacent.
+Tiers 1–3 are self-serve. A developer discovers Aiglos via PyPI or the MCP registry, installs the free tier in seconds, hits the attestation gate, and auto-enters a 30-day Developer Pro trial. Their enterprise upgrades the team to the Team tier ($200/mo), which is the forcing function for the first enterprise contract conversation. The tier 3 enterprise relationship is the on-ramp to tier 4 DoD program contracts. The DoD channel does not require cold outreach; it requires tier 3 enterprise customers who are already defense-adjacent.
 
 **Air-gapped / gov:**
 
@@ -1164,8 +1190,12 @@ aiglos/
 │   ├── interceptor.py             MCP SDK monkey-patcher (T36)
 │   └── metering.py                Fire-and-forget usage metering (T36)
 │
+├── aiglos_licensing.py               Tier state machine, trial auto-start
+├── aiglos_gates.py                   Feature gates (attestation, telemetry, compliance, SIEM)
+├── aiglos_attest.py                  RSA-2048 signed attestation artifact generator
+│
 └── tests/
-    └── unit/                      875 tests across 18 files
+    └── unit/                      955 tests across 19 files
         ├── test_core.py           T3 audit log, shared types
         ├── test_trust.py          T2 trust scorer
         ├── test_trust_fabric.py   T8 multi-agent trust chain
@@ -1182,7 +1212,8 @@ aiglos/
         ├── test_t29_t33.py        T29–T33 agent and skills proliferation
         ├── test_t34.py            T34 data agent monitor
         ├── test_t35.py            T35 personal agent monitor (OpenClaw)
-        └── test_t36.py            T36 embedded library
+        ├── test_t36.py            T36 embedded library
+        └── test_licensing.py      Licensing, gates, attestation artifacts
 ```
 
 -----
