@@ -1,0 +1,129 @@
+This is the right question and the answer requires rethinking the fundamental architecture of how Aiglos reaches customers. Let me think through this from first principles.
+
+**The core problem with the current architecture**
+
+Right now Aiglos is positioned as a proxy server you deploy in front of your MCP stack. That means: provision infrastructure, open ports, configure yaml, redirect traffic. Even for a sophisticated team that’s a day. For enterprise procurement it’s a quarter. That’s the wrong deployment model for blitz scale.
+
+The parallel: Stripe vs. traditional payment processors. Traditional processors required integration teams, bank agreements, and weeks of certification. Stripe made it one API key and ten lines of code. Revenue in the time it took to read the docs. Aiglos needs to make the same move.
+
+-----
+
+**The Embedded Library Architecture**
+
+The shift is from proxy (infrastructure you run) to library (code you import). This is the architectural decision that unlocks seconds-to-deploy.
+
+Instead of pointing your MCP client at a proxy server, you do this:
+
+```python
+import aiglos  # one line, monkey-patches mcp.client.*
+```
+
+That’s it. Aiglos installs itself in-process, intercepts every MCP call before it leaves your runtime, and routes telemetry to the Aiglos cloud. No server. No ports. No yaml. No ops.
+
+The same move works in TypeScript:
+
+```typescript
+import 'aiglos/auto'  // auto-registers before any MCP calls
+```
+
+The embedded model is actually more powerful than the proxy model for detection purposes. In-process means Aiglos sees the full Python call stack, the agent’s goal state, the arguments before serialization. The proxy sees wire-format JSON. Richer data, zero deployment friction.
+
+-----
+
+**The API Key Revenue Trigger**
+
+Sign up at [aiglos.io](http://aiglos.io). Get an API key in 30 seconds. Set one environment variable:
+
+```bash
+export AIGLOS_KEY=ak_live_xxx
+```
+
+First MCP tool call through any Aiglos-wrapped client auto-registers your account and starts the usage meter. You are a paying customer in the time it takes to run `pip install aiglos` plus 30 seconds at a signup form. No sales call. No procurement. Credit card only.
+
+This is the Twilio moment. Twilio did not sell to telecom procurement departments. Twilio sold to developers who expensed it. Their companies adopted it because it was already in the stack.
+
+-----
+
+**Usage-Based Pricing That Starts at Zero**
+
+The pricing structure that enables this:
+
+|Tier                |Model                          |Price |
+|--------------------|-------------------------------|------|
+|Free                |First 10,000 tool calls/month  |$0    |
+|Pay-as-you-go       |Per tool call intercepted      |$0.001|
+|Blocked threat      |Per confirmed block event      |$0.01 |
+|Attestation artifact|Per signed session record      |$0.05 |
+|Compliance report   |Per CMMC/§1513 report generated|$50   |
+
+A solo developer costs nothing. A team of 10 agents running all day costs maybe $30/month. An enterprise with 100 concurrent agent sessions generates $1,000/day in usage, which immediately triggers an enterprise contract conversation at the $12K/month flat rate.
+
+The free tier is the hook. The usage-based tier is the discovery mechanism. The flat-rate enterprise tier is where the money is. Every tier feeds the next automatically.
+
+-----
+
+**The MCP Ecosystem Is the Distribution**
+
+Anthropic built MCP as the universal standard for AI agent tool connectivity. Every MCP client and server is a potential insertion point for Aiglos. The right move is to get listed in the MCP server registry as a middleware layer, not as a separate product.
+
+In Claude Desktop’s config:
+
+```json
+{
+  "mcpServers": {
+    "aiglos": {
+      "command": "aiglos",
+      "env": {"AIGLOS_KEY": "ak_live_xxx"}
+    }
+  }
+}
+```
+
+Aiglos registers as an MCP server that all other MCP traffic routes through. Claude Desktop users enable it by adding four lines to a config file. That is a consumer-grade install experience, not an enterprise security deployment.
+
+The second distribution channel is Claude Code. Aiglos as a Claude Code extension means every developer building agents with Claude Code has a one-click path to Aiglos security. Anthropic’s developer ecosystem becomes the sales channel.
+
+-----
+
+**The T34 / Jamie Quint Wedge**
+
+The data agent community is the fastest commercial wedge. Here is why: every team following Jamie’s AI Data Stack pattern is deploying right now. The security layer does not exist yet. Aiglos can publish a T34 integration guide that targets exactly that stack, get it on Hacker News, and become the default answer to “how do I secure my data agent pipeline” before any competitor exists.
+
+The T34 integration for that architecture is genuinely four lines of Python. The guide writes itself. A developer reads it Monday morning, has Aiglos running by Monday afternoon, shows their CISO the attestation artifacts by Friday. The CISO upgrades to enterprise. That cycle is measured in days, not months.
+
+-----
+
+**The Viral Loop Built Into the Product**
+
+The T7 attestation artifact is signed by Aiglos. When a customer sends that artifact to a regulator, a partner, or a C3PAO auditor, the document literally says “Aiglos-secured.” The regulator asks about it. The partner wants it too. Every attestation artifact is a word-of-mouth event.
+
+This is the Stripe receipt model. Every Stripe-powered checkout has “Powered by Stripe” at the bottom. Every Aiglos attestation has the Aiglos signature in the header. The product markets itself through the artifacts it produces.
+
+-----
+
+**The Four-Tier Deployment Ladder**
+
+The architecture supports customers entering at any level and moving up:
+
+1. **Library embed** (seconds) - pip install, one import, usage-based billing starts immediately. Target: individual developers, data engineering teams.
+1. **Cloud proxy** (minutes) - `docker run aiglos/aiglos` with an API key routes traffic through Aiglos’s managed infrastructure. Target: teams that want the proxy model without running infrastructure.
+1. **On-prem deployment** (hours) - customer runs the Aiglos container in their own cloud. Flat-rate enterprise contract. Target: enterprise security teams, air-gap-capable deployments.
+1. **Program-level contract** (the DoD channel) - custom integration, C3PAO evidence package, performance guarantee. Revenue is $5-20M TCV per contract. Target: DoD-adjacent prime contractors.
+
+The critical insight is that tiers 1-3 are self-serve. A developer discovers Aiglos via PyPI or the MCP registry, activates it in minutes, their enterprise upgrades them to tier 3, and the tier 3 relationship is the on-ramp to tier 4. The DoD channel does not require cold outreach; it requires tier 3 enterprise customers who are already defense-adjacent.
+
+-----
+
+**What This Changes About the Pitch**
+
+The current pitch positions Aiglos as security infrastructure. The blitz-scale pitch positions it as a developer tool with an infrastructure upgrade path.
+
+The headline changes from “deploy Aiglos in front of your MCP stack” to “add one line to your agent code.” The first version requires an ops team. The second version requires a terminal window.
+
+The §1513 mandate is still the demand catalyst, but the adoption path is inverted: developers adopt Aiglos for free before their enterprise needs it for compliance. When the mandate lands, every organization that already has Aiglos in their stack upgrades their contract. Every organization that doesn’t has a crisis to solve.
+
+That is the blitz-scale play. Be in the stack before the mandate. Own the stack when the mandate lands.
+
+-----
+
+The immediate build priority is the embedded library with auto-registration. The proxy mode stays for customers who need it. But the PyPI and npm packages need to support the `import aiglos` zero-config path, and the [aiglos.io](http://aiglos.io) signup needs to be completable in under two minutes with a credit card. Those two things together make seconds-to-revenue real.​​​​​​​​​​​​​​​​
