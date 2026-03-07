@@ -110,6 +110,10 @@ export async function registerRoutes(
     res.sendFile("landing.html", { root: new URL("../client/public", import.meta.url).pathname });
   });
 
+  app.get("/pricing", (_req, res) => {
+    res.sendFile("pricing.html", { root: new URL("../client/public", import.meta.url).pathname });
+  });
+
   const loginSchema = z.object({
     username: z.string().min(1),
     password: z.string().min(1),

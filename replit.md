@@ -149,6 +149,13 @@ All prefixed with `/api/`:
 - **Sections**: Hero with live interceptor feed, logo strip, 3 feature sections (alternating layout), OSS callout, footer
 - **No pricing** on this page — pricing lives at `/pricing`
 
+## Pricing Page
+- **Route**: `/pricing` — standalone vanilla HTML/CSS/JS pricing page
+- **File**: `client/public/pricing.html`
+- **Design**: Same near-white bg, Geist font, minimal layout
+- **Tiers**: Pro ($39/mo per developer) + Enterprise (custom/contact)
+- **Features**: Two-column pricing grid, 6-item FAQ accordion, email signup modal with confirmation flow
+
 ## Demo Credentials
 - admin / admin123 (full access)
 - analyst / analyst123 (monitoring + policies)
