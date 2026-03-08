@@ -145,14 +145,14 @@ All prefixed with `/api/`:
 ## Landing Page
 - **Route**: `/landing` — standalone vanilla HTML/CSS/JS landing page
 - **File**: `client/public/landing.html`
-- **Design**: cursor.com-inspired — near-white bg (#fafaf9), Inter font, dark product panels, extreme whitespace
+- **Design**: cursor.com aesthetic — warm bg (#F7F7F4), text (#26251E), borders (#E6E5E0), Helvetica Neue system font stack, pill buttons (border-radius: 9999px), dark product panels (#111113)
 - **Sections**: Hero with live interceptor feed, logo strip, 3 feature sections (alternating layout), OSS callout, footer
 - **No pricing** on this page — pricing lives at `/pricing`
 
 ## Pricing Page
 - **Route**: `/pricing` — standalone vanilla HTML/CSS/JS pricing page
 - **File**: `client/public/pricing.html`
-- **Design**: Same near-white bg, Geist font, minimal layout
+- **Design**: Same cursor.com warm palette, Helvetica Neue system font, pill buttons, sharp-cornered inputs (border-radius: 0)
 - **Tiers**: Pro ($39/mo per developer) + Enterprise (custom/contact)
 - **Features**: Two-column pricing grid, 6-item FAQ accordion, email signup modal with confirmation flow
 
