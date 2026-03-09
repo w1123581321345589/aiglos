@@ -11,7 +11,7 @@ Tier hierarchy:
 
 Gated features:
   ATTESTATION      — RSA-2048 signed artifact generation
-  CLOUD_TELEMETRY  — sending events to api.aiglos.io
+  CLOUD_TELEMETRY  — sending events to api.aiglos.dev
   COMPLIANCE_PDF   — monthly compliance report generation
   SIEM_WEBHOOK     — webhook/SIEM integration
   MULTI_AGENT      — multi-agent centralized management
@@ -48,8 +48,8 @@ log = logging.getLogger("aiglos.licensing")
 TRIAL_DURATION_DAYS   = 30
 STATE_FILE_PATH       = Path.home() / ".aiglos" / "license.json"
 STATE_FILE_VERSION    = 2
-AIGLOS_SIGNUP_URL     = "https://aiglos.io/pricing"
-AIGLOS_TRIAL_URL      = "https://aiglos.io/trial"
+AIGLOS_SIGNUP_URL     = "https://aiglos.dev/pricing"
+AIGLOS_TRIAL_URL      = "https://aiglos.dev/trial"
 
 
 # ── Enums ──────────────────────────────────────────────────────────────────────
