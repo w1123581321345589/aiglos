@@ -248,7 +248,7 @@ class AttestationGate(_BaseGate):
 
 class TelemetryGate(_BaseGate):
     """
-    Guards cloud telemetry: event upload to api.aiglos.io and the
+    Guards cloud telemetry: event upload to api.aiglos.dev and the
     live threat dashboard feed.
 
     Free tier: local-only.  First cloud telemetry attempt auto-starts trial
