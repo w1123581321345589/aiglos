@@ -4,8 +4,8 @@
 
   If you have discovered a vulnerability in an MCP-based agent runtime — OpenClaw, NanoClaw, LangChain MCP, LlamaIndex MCP, AutoGen, CrewAI, n8n, or any framework using the MCP SDK — report it here.
 
-  **Email:** security@aiglos.io  
-  **PGP key:** Available at aiglos.io/pgp  
+  **Email:** security@aiglos.dev  
+  **PGP key:** Available at aiglos.dev/pgp  
   **Response SLA:** 48 hours for acknowledgment, 7 days for triage
 
   We will:
