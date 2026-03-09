@@ -537,7 +537,7 @@ class TestUpgradePrompt:
         )
         _emit_upgrade_prompt(result)
         captured = capsys.readouterr()
-        assert "aiglos.io" in captured.err or "Upgrade" in captured.err
+        assert "aiglos.dev" in captured.err or "Upgrade" in captured.err
 
 
 # ══════════════════════════════════════════════════════════════════════════════
