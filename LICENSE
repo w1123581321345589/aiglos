@@ -24,4 +24,4 @@ SOFTWARE.
 
 NOTE: The detection engine in this repository is MIT licensed.
 The attestation signing module (RSA-2048, §1513 PDF reports) is
-proprietary and available under a commercial license. See aiglos.dev/pricing.
+proprietary and available under a commercial license. See aiglos.io/pricing.
