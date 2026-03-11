@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.0] — Planned
+
+### Added
+- T06-CAMPAIGN: session-level sensitivity accumulation detector — catches 1M-context reconnaissance campaigns where each individual call is clean but the session pattern reveals a credential sweep
+- T22 extension: local inference endpoint risk scoring — vLLM (8000), Ollama (11434), LM Studio (1234) and private IP servers treated as higher-baseline-risk sessions (no provider guardrails)
+- SessionContext: per-session credential-surface map, sensitivity score accumulation, and campaign artifact export
+- `campaign_context` block in signed session artifacts — auditable chain-of-custody for the full reconnaissance path, not just the triggering call
+- Nemotron Super threat row in CVE database (T06 / T22 / T27)
+- Why Now: seventh event added — Nvidia Nemotron Super structural context window threat
+
+### Why this matters
+Nvidia Nemotron Super (Mar 11 2026): 1M token context, 120B parameters, open weights, 5x faster. An agent running locally on open weights has no API provider, no rate limits, no endpoint to monitor, and no provider-side safety filters. It can load an entire codebase into one context window, reason across the full credential surface, and emit a single minimally suspicious tool call. T06-CAMPAIGN is the module that catches it.
+
+---
+
+
 All notable changes to Aiglos are documented here.
 
 ---
