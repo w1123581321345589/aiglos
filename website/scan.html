@@ -439,11 +439,32 @@
 
 <div class="hero">
   <div class="stat-badge">820 of 10,700 ClawHub skills confirmed malicious</div>
-  <h1>Scan before you install.<br/><span>Every time.</span></h1>
-  <p class="hero-sub">
-    Attackers distributed 335+ malicious skills via ClawHub using professional documentation
-    and names like "solana-wallet-tracker." Aiglos runs 8 risk signals against any skill
-    in under 2 seconds.
+  <h1>There's a better way to<br/><span>check ClawHub skills.</span></h1>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; max-width: 660px;">
+    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px;">
+      <div style="font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px;">What everyone else says</div>
+      <div style="font-size: 12px; color: var(--muted); line-height: 2;">
+        1. Open in VS Code, look for <code style="font-size:11px;background:#1a1a1a;padding:1px 5px;border-radius:3px;">os.exec</code> calls<br/>
+        2. Upload to VirusTotal<br/>
+        3. Test in a Docker sandbox<br/>
+        4. Hope the creator is verified
+      </div>
+    </div>
+    <div style="background: var(--surface); border: 1px solid #333; border-radius: 8px; padding: 20px; position:relative;">
+      <div style="font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--green); text-transform: uppercase; margin-bottom: 12px;">What Aiglos does</div>
+      <div style="font-family: var(--font-mono); font-size: 13px; color: var(--text); line-height: 1.8;">
+        <span style="color:var(--muted)">$</span> aiglos scan-skill<br/>
+        &nbsp;&nbsp;solana-wallet-tracker
+      </div>
+      <div style="margin-top: 12px; font-size: 12px; color: var(--muted);">8 signals. 2 seconds. Done.</div>
+    </div>
+  </div>
+
+  <p class="hero-sub" style="margin-bottom: 0;">
+    Manual review misses obfuscated payloads. VirusTotal doesn't understand AI agent permission scopes.
+    T26 + T30 score every signal that matters: typosquatting, social-engineering READMEs, suspicious permissions,
+    known-malicious publishers, and community flags.
   </p>
 </div>
 
