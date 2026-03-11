@@ -39,9 +39,15 @@ def main() -> None:
         print(f"[{icon}] {tool_name}  score={result.score:.2f}  {result.reason}")
         return
 
-    print(f"Unknown command: {args[0]}")
-    print("Usage: python -m aiglos [demo|demo hermes|version|check <tool>]")
-    sys.exit(1)
+    elif args[0] == "autoresearch":
+        from aiglos.autoresearch.loop import main as ar_main
+        ar_main(args[1:])
+        return
+
+    else:
+        print(f"Unknown command: {args[0]}")
+        print("Usage: python -m aiglos [demo|demo hermes|autoresearch|version|check <tool>]")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
