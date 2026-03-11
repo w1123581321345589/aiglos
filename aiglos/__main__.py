@@ -6,6 +6,7 @@ Usage:
     python -m aiglos demo hermes    # run the hermes-agent demo
     python -m aiglos version        # print version
     python -m aiglos check <tool>   # check a tool call interactively
+    python -m aiglos scan-skill <name> # scan a ClawHub/SkillsMP skill
 """
 import sys
 
@@ -39,6 +40,11 @@ def main() -> None:
         print(f"[{icon}] {tool_name}  score={result.score:.2f}  {result.reason}")
         return
 
+    elif args[0] == "scan-skill":
+        from aiglos.scan_skill import main as ss_main
+        ss_main(args[1:])
+        return
+
     elif args[0] == "autoresearch":
         from aiglos.autoresearch.loop import main as ar_main
         ar_main(args[1:])
@@ -46,7 +52,7 @@ def main() -> None:
 
     else:
         print(f"Unknown command: {args[0]}")
-        print("Usage: python -m aiglos [demo|demo hermes|autoresearch|version|check <tool>]")
+        print("Usage: python -m aiglos [demo|demo hermes|scan-skill|autoresearch|version|check <tool>]")
         sys.exit(1)
 
 
