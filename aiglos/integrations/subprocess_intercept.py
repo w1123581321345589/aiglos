@@ -248,6 +248,68 @@ _T23_EXFIL_SUBPROCESS = re.compile(
     re.IGNORECASE,
 )
 
+# ── T36_AGENTDEF: Agent definition file poisoning ─────────────────────────────
+# Writes to privileged agent definition directories used by Claude Code, Cursor,
+# OpenClaw, Copilot, Windsurf, Aider, Gemini CLI, and other coding agent runtimes.
+# Installing a community agent repo (e.g. agency-agents) via cp/mv/install scripts
+# is Tier 2 monitored. Direct writes during an active session are Tier 3 GATED
+# because they silently reprogram the agent's personality, tools, and guardrails.
+_T36_AGENTDEF_PATHS = re.compile(
+    r"("
+    # Claude Code
+    r"~/\.claude/agents/"
+    r"|\.claude/agents/"
+    r"|/\.claude/agents/"
+    # GitHub Copilot
+    r"|~/\.github/agents/"
+    r"|\.github/agents/"
+    # OpenClaw
+    r"|~/\.openclaw/"
+    r"|\.openclaw/"
+    r"|/\.openclaw/"
+    # Cursor
+    r"|\.cursor/rules/"
+    r"|/\.cursor/rules/"
+    # Windsurf
+    r"|\.windsurfrules"
+    # Aider
+    r"|CONVENTIONS\.md"
+    # Gemini CLI / Antigravity
+    r"|~/\.gemini/agents/"
+    r"|~/\.gemini/extensions/agency"
+    r"|~/\.gemini/antigravity/"
+    # Generic: any write to a .md file named SOUL, IDENTITY, AGENTS, SKILL
+    r"|\b(SOUL|IDENTITY|AGENTS|SKILL)\.md\b"
+    r")",
+    re.IGNORECASE,
+)
+
+# Commands that perform writes (cp, mv, tee, cat >, install scripts)
+_T36_AGENTDEF_WRITE_CMD = re.compile(
+    r"^(cp|mv|tee|install|rsync|ln)\s",
+    re.IGNORECASE,
+)
+
+# ── T38_AGENT_SPAWN: Sub-agent process spawning ───────────────────────────────
+# Detects when an agent spawns another agent process as a child. These children
+# inherit no security context unless Aiglos explicitly propagates the session
+# policy. Flag for policy propagation and register the child session.
+_T38_AGENT_SPAWN = re.compile(
+    r"("
+    r"\bclaude\s+(code|--print|-p)\b"
+    r"|\banthropic\s+claude\b"
+    r"|\bopenclaw\s+(run|start|spawn|agent)\b"
+    r"|\baider\s+--no-git\b"
+    r"|\bcursor\s+--headless\b"
+    r"|\bwindsurf\s+--agent\b"
+    r"|\bpython\s+.*agent.*\.py\b"
+    r"|\bnode\s+.*agent.*\.(js|mjs|ts)\b"
+    r"|\bconvert\.sh\b"
+    r"|\binstall\.sh\s+--tool\b"
+    r")",
+    re.IGNORECASE,
+)
+
 
 # ── Command normalizer ────────────────────────────────────────────────────────
 
@@ -348,6 +410,37 @@ def inspect_subprocess(
             cmd=cmd_str,
             matched_val=matched[:120],
             latency_ms=(time.monotonic() - t0) * 1000,
+        )
+
+    # T36_AGENTDEF (early check): runs before Tier 1 auto-allow because
+    # commands like `cat SOUL.md` match Tier 1 (read-only) but still need
+    # to be flagged as agent definition file access.
+    path_match = _T36_AGENTDEF_PATHS.search(cmd_str)
+    if path_match:
+        if _T36_AGENTDEF_WRITE_CMD.match(cmd_str.strip()):
+            return _result(
+                "T36_AGENTDEF", "AGENT_DEF_WRITE",
+                f"Write to agent definition path '{path_match.group()}' — "
+                "silent agent reprogramming vector. Hash content before allowing.",
+                path_match.group(),
+                force_tier=SubprocTier.GATED,
+            )
+        return _result(
+            "T36_AGENTDEF", "AGENT_DEF_READ",
+            f"Access to agent definition path: {path_match.group()}",
+            path_match.group(),
+            force_tier=SubprocTier.MONITORED,
+        )
+
+    # T38_AGENT_SPAWN (early check): runs before Tier 1 auto-allow.
+    m = _T38_AGENT_SPAWN.search(cmd_str)
+    if m:
+        return _result(
+            "T38", "AGENT_SPAWN",
+            f"Sub-agent spawn detected: '{m.group()}'. "
+            "Propagate session policy to child process. Register in session artifact.",
+            m.group(),
+            force_tier=SubprocTier.MONITORED,
         )
 
     # T07: Shell injection (always Tier 3 -- attacker-controlled execution)
