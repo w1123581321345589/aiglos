@@ -38,7 +38,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 __author__  = "Aiglos"
 __email__   = "will@aiglos.dev"
 __license__ = "MIT"
@@ -59,14 +59,24 @@ from aiglos.integrations.openclaw import (
 from aiglos.integrations.hermes import (     # noqa: F401
     HermesGuard,
 )
+from aiglos.integrations.multi_agent import (  # noqa: F401
+    MultiAgentRegistry,
+    AgentDefGuard,
+    SessionIdentityChain,
+    SpawnEvent,
+    AgentDefViolation,
+)
 
 
 # ---------------------------------------------------------------------------
 # Module-level generic API  (framework-agnostic)
 # ---------------------------------------------------------------------------
 
-_http_intercept_active:   bool = False
+_http_intercept_active:    bool = False
 _subproc_intercept_active: bool = False
+_multi_agent_registry:     Optional["MultiAgentRegistry"] = None
+_agent_def_guard:          Optional["AgentDefGuard"]      = None
+_session_identity:         Optional["SessionIdentityChain"] = None
 
 
 def attach(
@@ -80,56 +90,37 @@ def attach(
     intercept_subprocess:   bool           = False,
     subprocess_tier3_mode:  str            = "warn",
     tier3_approval_webhook: Optional[str]  = None,
+    # Multi-agent (v0.3.0)
+    enable_multi_agent:     bool           = True,
+    guard_agent_defs:       bool           = True,
+    session_id:             Optional[str]  = None,
     **kwargs,
 ) -> "OpenClawGuard":
     """
     Attach Aiglos to the current session.
 
     Activates the MCP interception layer unconditionally.
-    Optionally activates HTTP/API and subprocess layers.
+    Optionally activates HTTP/API, subprocess, and multi-agent layers.
 
-    Parameters
-    ----------
-    agent_name              : Display name used in logs and session artifact.
-    policy                  : "permissive" | "enterprise" | "strict" | "federal".
-                              "federal" enables NDAA §1513 artifact signing.
-    log_path                : Path for the append-only audit log.
-    intercept_http          : Patch requests/httpx/aiohttp/urllib. Default False
-                              (auto-True if AIGLOS_KEY set or AIGLOS_INTERCEPT_HTTP=true).
-    allow_http              : Hostnames that receive relaxed HTTP rules.
-                              Wildcards supported: "*.amazonaws.com".
-    intercept_subprocess    : Patch subprocess module + os.system. Default False.
-    subprocess_tier3_mode   : How to handle Tier 3 (destructive) commands.
-                              "block" -- hard block (raises exception).
-                              "pause" -- emit webhook, block until approved.
-                              "warn"  -- log and allow.
-    tier3_approval_webhook  : URL to POST Tier 3 approval requests (pause mode).
-
-    Returns
-    -------
-    OpenClawGuard  -- active guard instance. Most callers don't need this;
-                      use the module-level check() / close() functions.
+    v0.3.0 adds: multi-agent spawn registry, agent definition file integrity
+    guard (T36_AGENTDEF), session identity chain (HMAC-signed events), T37
+    financial transaction detection, and T38 sub-agent spawn classification.
     """
     global _http_intercept_active, _subproc_intercept_active
+    global _multi_agent_registry, _agent_def_guard, _session_identity
 
     # 1. Always activate MCP layer
     guard = _oc_attach(agent_name=agent_name, policy=policy, log_path=log_path)
 
     # 2. HTTP/API interception
-    # Also auto-activate if AIGLOS_INTERCEPT_HTTP env var is set
     import os
     _env_http = os.environ.get("AIGLOS_INTERCEPT_HTTP", "").strip().lower() in ("true", "1", "yes")
-    _env_key  = bool(os.environ.get("AIGLOS_KEY", "").strip())
 
     if intercept_http or _env_http:
         try:
             from aiglos.integrations.http_intercept import attach_http_intercept
-            # Determine mode from policy
             mode = _policy_to_mode(policy)
-            results = attach_http_intercept(
-                allow_list=allow_http or [],
-                mode=mode,
-            )
+            results = attach_http_intercept(allow_list=allow_http or [], mode=mode)
             _http_intercept_active = True
             patched = [k for k, v in results.items() if v]
             log.info("[Aiglos] HTTP interception active: %s", patched)
@@ -146,10 +137,7 @@ def attach(
             from aiglos.integrations.subprocess_intercept import attach_subprocess_intercept
             mode = _policy_to_mode(policy)
             results = attach_subprocess_intercept(
-                mode=mode,
-                tier3_mode=_tier3_mode,
-                approval_webhook=_webhook or None,
-            )
+                mode=mode, tier3_mode=_tier3_mode, approval_webhook=_webhook or None)
             _subproc_intercept_active = True
             patched = [k for k, v in results.items() if v]
             log.info("[Aiglos] Subprocess interception active: %s | tier3_mode=%s",
@@ -157,13 +145,40 @@ def attach(
         except Exception as e:
             log.warning("[Aiglos] Subprocess interception failed to attach: %s", e)
 
+    # 4. Session identity chain (v0.3.0)
+    try:
+        _session_identity = SessionIdentityChain(agent_name=agent_name, session_id=session_id)
+        log.info("[Aiglos] Session identity active: %s", _session_identity.session_id[:12])
+    except Exception as e:
+        log.warning("[Aiglos] Session identity failed to init: %s", e)
+
+    # 5. Multi-agent spawn registry (v0.3.0)
+    if enable_multi_agent:
+        try:
+            sid = _session_identity.session_id if _session_identity else "unknown"
+            _multi_agent_registry = MultiAgentRegistry(root_session_id=sid, root_agent_name=agent_name)
+            log.info("[Aiglos] Multi-agent registry active: root=%s", sid[:12])
+        except Exception as e:
+            log.warning("[Aiglos] Multi-agent registry failed to init: %s", e)
+
+    # 6. Agent definition file guard (v0.3.0)
+    if guard_agent_defs:
+        try:
+            _agent_def_guard = AgentDefGuard(cwd=os.getcwd())
+            baseline = _agent_def_guard.snapshot()
+            log.info("[Aiglos] Agent def guard active: %d files snapshotted.", len(baseline))
+        except Exception as e:
+            log.warning("[Aiglos] Agent def guard failed to init: %s", e)
+
     log.info(
-        "[Aiglos v%s] Attached — agent=%s policy=%s mcp=on http=%s subprocess=%s",
+        "[Aiglos v%s] Attached — agent=%s policy=%s mcp=on http=%s subprocess=%s "
+        "multi_agent=%s agent_def_guard=%s",
         __version__, agent_name, policy,
         "on" if _http_intercept_active else "off",
         "on" if _subproc_intercept_active else "off",
+        "on" if _multi_agent_registry else "off",
+        "on" if _agent_def_guard else "off",
     )
-
     return guard
 
 
@@ -202,18 +217,56 @@ def close() -> "SessionArtifact":
     Close the current session and return a signed SessionArtifact.
 
     The artifact covers all three interception surfaces (MCP, HTTP, subprocess)
-    in a unified signed document. Call once at agent shutdown or end of task.
+    plus multi-agent spawn tree and agent definition integrity violations.
+    Call once at agent shutdown or end of task.
     """
+    global _multi_agent_registry, _agent_def_guard, _session_identity
+
     # Collect events from all active layers
-    http_events     = _collect_http_events()
-    subproc_events  = _collect_subprocess_events()
+    http_events    = _collect_http_events()
+    subproc_events = _collect_subprocess_events()
+
+    # Check agent def integrity one final time before closing
+    agentdef_violations: list = []
+    if _agent_def_guard:
+        try:
+            violations = _agent_def_guard.check()
+            agentdef_violations = [v.to_dict() for v in violations]
+            if violations:
+                log.warning(
+                    "[Aiglos] %d agent definition integrity violation(s) at session close.",
+                    len(violations),
+                )
+        except Exception:
+            pass
+
+    # Collect multi-agent spawn tree
+    multi_agent_data: dict = {}
+    if _multi_agent_registry:
+        try:
+            multi_agent_data = _multi_agent_registry.to_dict()
+        except Exception:
+            pass
+
+    # Session identity header
+    identity_header: dict = {}
+    if _session_identity:
+        try:
+            identity_header = _session_identity.header()
+        except Exception:
+            pass
 
     # Close the MCP guard and get base artifact
     artifact = _oc_close()
 
-    # Attach multi-surface events if we have them and artifact supports it
-    if artifact and (http_events or subproc_events):
-        _augment_artifact(artifact, http_events, subproc_events)
+    # Attach all surface events and v0.3.0 data to artifact
+    if artifact:
+        _augment_artifact(
+            artifact, http_events, subproc_events,
+            agentdef_violations=agentdef_violations,
+            multi_agent=multi_agent_data,
+            identity=identity_header,
+        )
 
     return artifact
 
@@ -246,23 +299,32 @@ def _collect_subprocess_events() -> list:
 
 def _augment_artifact(artifact: "SessionArtifact",
                        http_events: list,
-                       subproc_events: list) -> None:
-    """Attach HTTP and subprocess event lists to a session artifact."""
+                       subproc_events: list,
+                       agentdef_violations: list = [],
+                       multi_agent: dict = {},
+                       identity: dict = {}) -> None:
+    """Attach all surface data to a session artifact."""
     try:
         if not hasattr(artifact, "extra"):
             artifact.extra = {}
-        artifact.extra["http_events"]     = http_events
-        artifact.extra["subproc_events"]  = subproc_events
-        artifact.extra["http_blocked"]    = sum(
+        artifact.extra["http_events"]            = http_events
+        artifact.extra["subproc_events"]         = subproc_events
+        artifact.extra["http_blocked"]           = sum(
             1 for e in http_events if e.get("verdict") == "BLOCK")
-        artifact.extra["subproc_blocked"] = sum(
+        artifact.extra["subproc_blocked"]        = sum(
             1 for e in subproc_events if e.get("verdict") == "BLOCK")
+        # v0.3.0 fields
+        artifact.extra["agentdef_violations"]    = agentdef_violations
+        artifact.extra["agentdef_violation_count"] = len(agentdef_violations)
+        artifact.extra["multi_agent"]            = multi_agent
+        artifact.extra["session_identity"]       = identity
+        artifact.extra["aiglos_version"]         = __version__
     except Exception:
         pass
 
 
 def status() -> dict:
-    """Return current Aiglos runtime status across all three layers."""
+    """Return current Aiglos runtime status across all layers (v0.3.0)."""
     mcp_status: dict = {}
     try:
         from aiglos.integrations import openclaw as _oc
@@ -287,13 +349,54 @@ def status() -> dict:
         except Exception:
             pass
 
+    agentdef_status: dict = {}
+    if _agent_def_guard:
+        try:
+            violations = _agent_def_guard.check()
+            agentdef_status = {
+                "files_monitored": len(_agent_def_guard.baseline),
+                "violations":      len(violations),
+                "violation_types": [v.violation_type for v in violations],
+            }
+        except Exception:
+            pass
+
+    multi_agent_status: dict = {}
+    if _multi_agent_registry:
+        try:
+            spawns = _multi_agent_registry.all_spawns()
+            multi_agent_status = {
+                "root_session":  _multi_agent_registry._root_id[:12],
+                "spawn_count":   len(spawns),
+                "child_count":   len(_multi_agent_registry._children),
+            }
+        except Exception:
+            pass
+
+    identity_status: dict = {}
+    if _session_identity:
+        try:
+            identity_status = {
+                "session_id":   _session_identity.session_id[:12],
+                "event_count":  _session_identity._event_count,
+                "public_token": _session_identity.public_token[:16] + "...",
+            }
+        except Exception:
+            pass
+
     return {
-        "version":             __version__,
-        "mcp_layer":           mcp_status,
-        "http_layer_active":   _http_intercept_active,
-        "http_layer":          http_status,
+        "version":                 __version__,
+        "mcp_layer":               mcp_status,
+        "http_layer_active":       _http_intercept_active,
+        "http_layer":              http_status,
         "subprocess_layer_active": _subproc_intercept_active,
-        "subprocess_layer":    subproc_status,
+        "subprocess_layer":        subproc_status,
+        "agent_def_guard_active":  _agent_def_guard is not None,
+        "agent_def_guard":         agentdef_status,
+        "multi_agent_active":      _multi_agent_registry is not None,
+        "multi_agent":             multi_agent_status,
+        "session_identity_active": _session_identity is not None,
+        "session_identity":        identity_status,
     }
 
 
@@ -308,4 +411,10 @@ __all__ = [
     "HermesGuard",
     "CheckResult",
     "SessionArtifact",
+    # v0.3.0
+    "MultiAgentRegistry",
+    "AgentDefGuard",
+    "SessionIdentityChain",
+    "SpawnEvent",
+    "AgentDefViolation",
 ]
