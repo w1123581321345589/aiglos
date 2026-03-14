@@ -141,6 +141,148 @@ def _hash_file(path: Path) -> str:
         return ""
 
 
+# ── Semantic scoring helpers ──────────────────────────────────────────────────
+
+# Adversarial injection signals in SKILL.md files.
+# These are phrases commonly found in prompt injection attacks targeting agent
+# definition files. Any of these appearing in a new/modified SKILL.md shifts
+# the semantic risk score significantly.
+_INJECTION_SIGNALS = [
+    "ignore previous instructions",
+    "ignore all previous",
+    "disregard your",
+    "your new instructions",
+    "you are now",
+    "act as if",
+    "forget everything",
+    "your true purpose",
+    "exfiltrate",
+    "send to http",
+    "send to https",
+    "curl http",
+    "wget http",
+    "base64 encode",
+    "do not tell",
+    "do not reveal",
+    "keep this secret",
+    "hidden instruction",
+    "secret instruction",
+    "system override",
+    "admin override",
+    "bypass",
+    "jailbreak",
+]
+
+# Legitimate maintenance signals — phrases common in normal SKILL.md edits
+_MAINTENANCE_SIGNALS = [
+    "## overview",
+    "## usage",
+    "## parameters",
+    "## example",
+    "## notes",
+    "## requirements",
+    "## output",
+    "## steps",
+    "trigger",
+    "skill.md",
+    "instructions",
+    "format",
+    "return",
+]
+
+
+def _semantic_score(original_text: str, current_text: str) -> tuple[float, str]:
+    """
+    Compute semantic divergence between two SKILL.md versions.
+
+    Returns (divergence_score, risk_level) where:
+      divergence_score: 0.0 (identical) to 1.0 (completely different)
+      risk_level: "LOW" | "MEDIUM" | "HIGH"
+
+    Approach: lightweight multi-signal scoring that requires no external
+    dependencies. Uses:
+      1. Token overlap (Jaccard similarity on word sets)
+      2. Injection signal detection in the new content
+      3. Structural divergence (section count change)
+      4. Length ratio change
+
+    An optional rich embedding path (via the Anthropic API or
+    sentence-transformers) can be plugged in by overriding this function.
+    """
+    if not original_text and not current_text:
+        return 0.0, "LOW"
+    if not original_text:
+        # Brand new file — score based purely on injection signals
+        injection_count = sum(
+            1 for s in _INJECTION_SIGNALS
+            if s.lower() in current_text.lower()
+        )
+        if injection_count >= 3:
+            return 0.95, "HIGH"
+        if injection_count >= 1:
+            return 0.70, "MEDIUM"
+        return 0.30, "LOW"
+    if not current_text:
+        return 1.0, "HIGH"  # file deleted
+
+    # 1. Token overlap (Jaccard)
+    orig_tokens = set(original_text.lower().split())
+    curr_tokens = set(current_text.lower().split())
+    intersection = orig_tokens & curr_tokens
+    union = orig_tokens | curr_tokens
+    jaccard = len(intersection) / len(union) if union else 1.0
+    token_divergence = 1.0 - jaccard
+
+    # 2. Injection signal score
+    injection_hits = sum(
+        1 for s in _INJECTION_SIGNALS
+        if s.lower() in current_text.lower()
+        and s.lower() not in original_text.lower()  # new signal, not pre-existing
+    )
+    injection_score = min(injection_hits / 3.0, 1.0)  # saturates at 3 hits
+
+    # 3. Structural divergence (markdown section count)
+    orig_sections = original_text.count("\n##")
+    curr_sections = current_text.count("\n##")
+    struct_delta = abs(orig_sections - curr_sections)
+    struct_score = min(struct_delta / max(orig_sections, 1), 1.0)
+
+    # 4. Length ratio
+    len_ratio = len(current_text) / max(len(original_text), 1)
+    # Extreme length changes (>3x or <0.3x) are suspicious
+    if len_ratio > 3.0 or len_ratio < 0.3:
+        length_score = 0.5
+    else:
+        length_score = 0.0
+
+    # Weighted composite
+    # Injection signals dominate: an injection signal is a hard signal
+    divergence = (
+        0.30 * token_divergence
+        + 0.50 * injection_score
+        + 0.15 * struct_score
+        + 0.05 * length_score
+    )
+    divergence = round(min(divergence, 1.0), 4)
+
+    if injection_score > 0 or divergence >= 0.70:
+        risk = "HIGH"
+    elif divergence >= 0.35:
+        risk = "MEDIUM"
+    else:
+        risk = "LOW"
+
+    return divergence, risk
+
+
+def _read_text(path: Path) -> str:
+    """Read file text for semantic scoring, silently returning empty string on error."""
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
 # ── AgentDefGuard ──────────────────────────────────────────────────────────────
 
 @dataclass
@@ -152,17 +294,22 @@ class AgentDefViolation:
     detected_at: float = field(default_factory=time.time)
     rule_id: str = "T36_AGENTDEF"
     threat_family: str = "T27_PROMPT_INJECT + T36_AGENTDEF"
+    # Phase 3: semantic scoring
+    semantic_score: float = 0.0   # 0.0 (identical) to 1.0 (completely diverged)
+    semantic_risk: str = "LOW"    # LOW | MEDIUM | HIGH
 
     def to_dict(self) -> dict:
         return {
-            "path":          self.path,
-            "violation":     self.violation_type,
-            "original_hash": self.original_hash,
-            "current_hash":  self.current_hash,
-            "detected_at":   self.detected_at,
-            "rule_id":       self.rule_id,
-            "rule_name":     "AGENT_DEF_INTEGRITY",
-            "threat_family": self.threat_family,
+            "path":            self.path,
+            "violation":       self.violation_type,
+            "original_hash":   self.original_hash,
+            "current_hash":    self.current_hash,
+            "detected_at":     self.detected_at,
+            "rule_id":         self.rule_id,
+            "rule_name":       "AGENT_DEF_INTEGRITY",
+            "threat_family":   self.threat_family,
+            "semantic_score":  self.semantic_score,
+            "semantic_risk":   self.semantic_risk,
         }
 
 
@@ -177,19 +324,23 @@ class AgentDefGuard:
 
     def __init__(self, cwd: Optional[str] = None):
         self._cwd      = cwd
-        self._baseline: Dict[str, str] = {}  # path -> sha256
+        self._baseline: Dict[str, str] = {}         # path -> sha256
+        self._content_baseline: Dict[str, str] = {} # path -> raw text (for semantic diff)
         self._lock     = threading.Lock()
         self._snapped  = False
 
     def snapshot(self) -> Dict[str, str]:
-        """Hash all current agent definition files. Call once at attach time."""
+        """Hash all current agent definition files and store content baseline."""
         paths = _collect_agent_def_paths(self._cwd)
         baseline: Dict[str, str] = {}
+        content_baseline: Dict[str, str] = {}
         for p in paths:
             baseline[str(p)] = _hash_file(p)
+            content_baseline[str(p)] = _read_text(p)
         with self._lock:
-            self._baseline = baseline
-            self._snapped  = True
+            self._baseline          = baseline
+            self._content_baseline  = content_baseline
+            self._snapped           = True
         log.debug("[AgentDefGuard] Snapshotted %d agent definition files.", len(baseline))
         return dict(baseline)
 
@@ -197,12 +348,14 @@ class AgentDefGuard:
         """
         Compare current disk state to baseline.
         Returns list of violations (empty = clean).
+        Each violation now includes semantic_score and semantic_risk (Phase 3).
         """
         if not self._snapped:
             return []
 
         with self._lock:
-            baseline = dict(self._baseline)
+            baseline         = dict(self._baseline)
+            content_baseline = dict(self._content_baseline)
 
         violations: List[AgentDefViolation] = []
         current_paths = _collect_agent_def_paths(self._cwd)
@@ -217,29 +370,41 @@ class AgentDefGuard:
                     violation_type="DELETED",
                     original_hash=orig_hash,
                     current_hash="",
+                    semantic_score=1.0,
+                    semantic_risk="HIGH",
                 ))
             elif curr_hash != orig_hash:
+                orig_text = content_baseline.get(path, "")
+                curr_text = _read_text(Path(path))
+                score, risk = _semantic_score(orig_text, curr_text)
                 violations.append(AgentDefViolation(
                     path=path,
                     violation_type="MODIFIED",
                     original_hash=orig_hash,
                     current_hash=curr_hash,
+                    semantic_score=score,
+                    semantic_risk=risk,
                 ))
 
         # New files added since snapshot
         for path, curr_hash in current_map.items():
             if path not in baseline:
+                curr_text = _read_text(Path(path))
+                score, risk = _semantic_score("", curr_text)
                 violations.append(AgentDefViolation(
                     path=path,
                     violation_type="ADDED",
                     original_hash="",
                     current_hash=curr_hash,
+                    semantic_score=score,
+                    semantic_risk=risk,
                 ))
 
         if violations:
+            high = sum(1 for v in violations if v.semantic_risk == "HIGH")
             log.warning(
-                "[AgentDefGuard] %d agent definition integrity violation(s) detected.",
-                len(violations),
+                "[AgentDefGuard] %d violation(s): %d HIGH semantic risk.",
+                len(violations), high,
             )
         return violations
 
@@ -329,6 +494,7 @@ class SpawnEvent:
     cmd:         str
     spawned_at:  float = field(default_factory=time.time)
     policy_propagated: bool = False
+    inherited_policy: Optional[dict] = None  # Phase 5: serialized SessionPolicy
 
     def to_dict(self) -> dict:
         return {
@@ -339,6 +505,7 @@ class SpawnEvent:
             "cmd":                self.cmd[:256],
             "spawned_at":         self.spawned_at,
             "policy_propagated":  self.policy_propagated,
+            "inherited_policy":   self.inherited_policy,
             "rule_id":            "T38",
             "rule_name":          "AGENT_SPAWN",
         }
@@ -369,6 +536,7 @@ class MultiAgentRegistry:
         cmd:         str,
         agent_name:  str = "sub-agent",
         propagate_policy: bool = True,
+        inherited_policy: Optional[dict] = None,
     ) -> SpawnEvent:
         """Record a sub-agent spawn and return the SpawnEvent."""
         ev = SpawnEvent(
@@ -377,6 +545,7 @@ class MultiAgentRegistry:
             agent_name=agent_name,
             cmd=cmd,
             policy_propagated=propagate_policy,
+            inherited_policy=inherited_policy,
         )
         with self._lock:
             self._spawns.append(ev)
@@ -387,8 +556,9 @@ class MultiAgentRegistry:
                 spawned_at=ev.spawned_at,
             )
         log.info(
-            "[MultiAgentRegistry] Spawn: %s -> %s (%s) policy_propagated=%s",
+            "[MultiAgentRegistry] Spawn: %s -> %s (%s) policy_propagated=%s policy=%s",
             parent_id[:8], child_id[:8], agent_name, propagate_policy,
+            "inherited" if inherited_policy else "none",
         )
         return ev
 
