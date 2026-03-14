@@ -3,24 +3,32 @@
 ## Overview
 Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provides real-time monitoring, event logging, trust management, policy configuration, CMMC compliance tracking, autonomous threat scanning, and full administrative capabilities for AI agents operating through MCP (Model Context Protocol) proxies.
 
-## Python Package (aiglos/ v0.6.0)
+## Python Package (aiglos/ v0.7.0)
 The `aiglos/` directory contains the Python security runtime package covering threat families T1-T39.
 
 ### Package Structure
-- `aiglos/__init__.py` — Module-level API (attach, check, close, adaptive_run, etc.), version 0.6.0
+- `aiglos/__init__.py` — Module-level API (attach, check, close, adaptive_run, etc.), version 0.7.0
 - `aiglos/integrations/openclaw.py` — OpenClaw guard with threat detection (T07, T13, T19, T30, T34, T36)
 - `aiglos/integrations/hermes.py` — Hermes integration guard with trajectory signing
-- `aiglos/integrations/multi_agent.py` — AgentDef guard with semantic scoring
-- `aiglos/integrations/memory_guard.py` — ByteRover memory write guard (T31)
+- `aiglos/integrations/multi_agent.py` — AgentDefGuard (file integrity), MultiAgentRegistry, SessionIdentityChain (HMAC signing)
+- `aiglos/integrations/memory_guard.py` — ByteRover memory write guard (T31) with C2 channel corpus signals
 - `aiglos/integrations/rl_guard.py` — RL feedback guard (T39)
+- `aiglos/integrations/http_intercept.py` — HTTP interception engine (T25 SSRF, T37 FIN_EXEC, T22 RECON, T19/T20 CRED/EXFIL, T35 MODEL_EXFIL, T36 SUPPLY_CHAIN)
+- `aiglos/integrations/subprocess_intercept.py` — Subprocess interception engine (3-tier classification, 12 threat rules, compensating transactions)
 - `aiglos/autoresearch/coupling.py` — SecurityAwareReward co-training coupling
-- `aiglos/adaptive/` — Adaptive layer: ObservationGraph, InspectionEngine, AmendmentEngine, PolicySerializer, CampaignAnalyzer (8 patterns), MemoryProvenanceGraph
+- `aiglos/adaptive/` — Adaptive layer: ObservationGraph, InspectionEngine, AmendmentEngine, PolicySerializer, CampaignAnalyzer (9 patterns including EXTERNAL_INSTRUCTION_CHANNEL), MemoryProvenanceGraph
+- `aiglos/cli.py` — CLI commands including scan-message
 
-### Test Suites (253 tests)
+### Test Suites (680 tests)
 - `tests/test_core.py` — Core guard, module API, demos
 - `tests/test_adaptive.py` — Adaptive layer, semantic scoring, AgentDef
 - `tests/test_byterover.py` — Memory security, provenance, campaign patterns
 - `tests/test_rl_guard.py` — RL guard, OPD scoring, reward coupling, REWARD_MANIPULATION
+- `tests/test_campaign.py` — T06 campaign-mode session analysis (8 patterns + EXTERNAL_INSTRUCTION_CHANNEL)
+- `tests/test_external_channel.py` — External instruction channel, C2 memory corpus signals, scan-message CLI
+- `tests/test_http_intercept.py` — HTTP interception rules, allow-listing, modes
+- `tests/test_subprocess_intercept.py` — Subprocess tier classification, threat rules, modes, compensating transactions
+- `tests/test_v030.py` — AgentDefGuard file integrity, MultiAgentRegistry, SessionIdentityChain
 
 ### GitHub Repo
 Pushed to `w1123581321345589/aiglos` on the `main` branch.
