@@ -23,10 +23,8 @@ Quick start:
     print(report)
 """
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Optional
+from typing import Any
 
 log = logging.getLogger("aiglos.adaptive")
 
@@ -61,7 +59,7 @@ class AdaptiveEngine:
     v0.4.0: T06 campaign-mode, memory provenance graph, ByteRover integration.
     """
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None):
         effective_path = db_path or ":memory:"
         self.graph = ObservationGraph(db_path=effective_path)
         self.inspector = InspectionEngine(self.graph)

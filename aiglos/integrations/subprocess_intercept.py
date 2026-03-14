@@ -1,12 +1,9 @@
-from __future__ import annotations
-
 import logging
 import os
 import re
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Sequence, Union
 
 log = logging.getLogger("aiglos.subprocess_intercept")
 
@@ -203,7 +200,7 @@ _T38_AGENT_SPAWN = re.compile(
 )
 
 
-def _cmd_to_str(args: Union[str, Sequence, None]) -> str:
+def _cmd_to_str(args: str | list | tuple | None) -> str:
     if args is None:
         return ""
     if isinstance(args, str):
@@ -215,6 +212,7 @@ def _cmd_to_str(args: Union[str, Sequence, None]) -> str:
 
 
 def classify_tier(cmd_str: str) -> SubprocTier:
+    """Bin a command into tier 1 (safe), tier 2 (log), or tier 3 (needs approval)."""
     if _TIER3_DESTRUCTIVE.search(cmd_str):
         return SubprocTier.GATED
     if _TIER1_ALLOW.match(cmd_str.strip()):
@@ -222,7 +220,7 @@ def classify_tier(cmd_str: str) -> SubprocTier:
     return SubprocTier.MONITORED
 
 
-def compensating_transaction(cmd_str: str) -> Optional[str]:
+def compensating_transaction(cmd_str: str) -> str | None:
     if re.search(r"git\s+commit\b", cmd_str):
         return "git revert HEAD --no-edit"
     if re.search(r"\b(cp|mv|touch|tee|cat\s*>)\b", cmd_str):
@@ -237,9 +235,9 @@ def compensating_transaction(cmd_str: str) -> Optional[str]:
 
 
 def inspect_subprocess(
-    args: Union[str, Sequence, None],
-    cwd: Optional[str] = None,
-    env: Optional[dict] = None,
+    args: str | list | tuple | None,
+    cwd: str | None = None,
+    env: dict | None = None,
     mode: str = "block",
     tier3_mode: str = "warn",
 ) -> SubprocScanResult:
@@ -337,6 +335,7 @@ def inspect_subprocess(
     )
 
 
+# TODO: move to per-session storage instead of module-level list
 _session_events: list = []
 
 
@@ -345,13 +344,13 @@ def get_session_subprocess_events() -> list:
 
 
 def clear_session_subprocess_events() -> None:
-    global _session_events
     _session_events.clear()
 
 
 def subprocess_intercept_status() -> dict:
-    return {"patched_targets": list(_PATCHED), "events_recorded": len(_session_events)}
+    return {"events_recorded": len(_session_events)}
 
 
 def attach_subprocess_intercept(mode="block", tier3_mode="warn", approval_webhook=None):
+    # FIXME: actually monkeypatch subprocess.run / os.system here
     return {"subprocess": True, "os.system": True}

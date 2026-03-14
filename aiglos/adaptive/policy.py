@@ -1,31 +1,25 @@
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Any
+from dataclasses import dataclass, field, asdict
+from typing import List, Dict
 
 
 @dataclass
 class SessionPolicy:
     derived_from: str = ""
     evidence_sessions: int = 0
-    inherited_allow_http: List[str] = field(default_factory=list)
-    tier_overrides: Dict[str, str] = field(default_factory=dict)
-    suppressed_rules: List[str] = field(default_factory=list)
+    inherited_allow_http: list[str] = field(default_factory=list)
+    tier_overrides: dict[str, str] = field(default_factory=dict)
+    suppressed_rules: list[str] = field(default_factory=list)
 
     def is_empty(self) -> bool:
         return (not self.inherited_allow_http and
                 not self.tier_overrides and
                 not self.suppressed_rules)
 
-    def to_dict(self) -> Dict:
-        return {
-            "derived_from": self.derived_from,
-            "evidence_sessions": self.evidence_sessions,
-            "inherited_allow_http": self.inherited_allow_http,
-            "tier_overrides": self.tier_overrides,
-            "suppressed_rules": self.suppressed_rules,
-        }
+    def to_dict(self) -> dict:
+        return asdict(self)
 
     @classmethod
-    def from_dict(cls, d: Dict) -> "SessionPolicy":
+    def from_dict(cls, d: dict) -> "SessionPolicy":
         return cls(
             derived_from=d.get("derived_from", ""),
             evidence_sessions=d.get("evidence_sessions", 0),
@@ -40,6 +34,7 @@ class SessionPolicy:
 
 
 class PolicySerializer:
+    """Derives child-session policies from historical observation data."""
 
     def __init__(self, graph):
         self._graph = graph
@@ -47,9 +42,10 @@ class PolicySerializer:
     def derive(self, parent_id: str) -> SessionPolicy:
         stats = self._graph.all_rule_stats()
         sessions = self._graph.session_count()
-        tier_overrides = {}
-        suppressed = []
-        allow_http: List[str] = []
+        tier_overrides: dict[str, str] = {}
+        suppressed: list[str] = []
+        # TODO: populate allow_http from observed safe hosts in parent session
+        allow_http: list[str] = []
         for s in stats:
             if s.fires_total >= 5 and s.warns_total > 0:
                 warn_rate = s.warns_total / s.fires_total if s.fires_total else 0

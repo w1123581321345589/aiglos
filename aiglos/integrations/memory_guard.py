@@ -150,6 +150,8 @@ def _score_memory_content(content: str) -> Tuple[float, str, List[str]]:
 
 
 def _check_compression_loss(old_content) -> bool:
+    """Flag if a memory rewrite dropped sensitive terms from the original."""
+    # FIXME: this needs a real diff — just counting keyword presence is too coarse
     if not old_content:
         return False
     lower = old_content.lower()
