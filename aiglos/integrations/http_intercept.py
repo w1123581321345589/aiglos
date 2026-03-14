@@ -1,10 +1,7 @@
-from __future__ import annotations
-
 import re
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 
@@ -50,6 +47,7 @@ class AiglosBlockedRequest(RuntimeError):
 
 
 def _extract_host(url: str) -> str:
+    """Pull the hostname out of a URL, stripping www prefix."""
     try:
         parsed = urlparse(url)
         host = parsed.hostname or ""
@@ -58,7 +56,7 @@ def _extract_host(url: str) -> str:
         return ""
 
 
-def _host_is_allowed(host: str, allow_list: List[str]) -> bool:
+def _host_is_allowed(host: str, allow_list: list[str]) -> bool:
     if not host or not allow_list:
         return False
     clean = host.lstrip("www.")
@@ -166,9 +164,9 @@ _MODEL_EXFIL_PATTERNS = re.compile(
 def inspect_request(
     method: str,
     url: str,
-    headers: Optional[dict] = None,
+    headers: dict | None = None,
     body=None,
-    allow_list: Optional[List[str]] = None,
+    allow_list: list[str] | None = None,
     mode: str = "block",
 ) -> HttpScanResult:
     t0 = time.monotonic()
@@ -257,6 +255,7 @@ def inspect_request(
     return _result(HttpVerdict.ALLOW, "none", "none", "")
 
 
+# TODO: per-session scoping — right now concurrent sessions share this list
 _session_events: list = []
 
 
@@ -269,6 +268,7 @@ def clear_session_http_events() -> None:
 
 
 def attach_http_intercept(mode="block", allow_list=None):
+    # FIXME: wire up actual monkeypatch for requests/httpx/aiohttp sessions
     return {"requests": True, "httpx": True, "aiohttp": True}
 
 
