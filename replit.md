@@ -3,6 +3,28 @@
 ## Overview
 Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provides real-time monitoring, event logging, trust management, policy configuration, CMMC compliance tracking, autonomous threat scanning, and full administrative capabilities for AI agents operating through MCP (Model Context Protocol) proxies.
 
+## Python Package (aiglos/ v0.6.0)
+The `aiglos/` directory contains the Python security runtime package covering threat families T1-T39.
+
+### Package Structure
+- `aiglos/__init__.py` — Module-level API (attach, check, close, adaptive_run, etc.), version 0.6.0
+- `aiglos/integrations/openclaw.py` — OpenClaw guard with threat detection (T07, T13, T19, T30, T34, T36)
+- `aiglos/integrations/hermes.py` — Hermes integration guard with trajectory signing
+- `aiglos/integrations/multi_agent.py` — AgentDef guard with semantic scoring
+- `aiglos/integrations/memory_guard.py` — ByteRover memory write guard (T31)
+- `aiglos/integrations/rl_guard.py` — RL feedback guard (T39)
+- `aiglos/autoresearch/coupling.py` — SecurityAwareReward co-training coupling
+- `aiglos/adaptive/` — Adaptive layer: ObservationGraph, InspectionEngine, AmendmentEngine, PolicySerializer, CampaignAnalyzer (8 patterns), MemoryProvenanceGraph
+
+### Test Suites (253 tests)
+- `tests/test_core.py` — Core guard, module API, demos
+- `tests/test_adaptive.py` — Adaptive layer, semantic scoring, AgentDef
+- `tests/test_byterover.py` — Memory security, provenance, campaign patterns
+- `tests/test_rl_guard.py` — RL guard, OPD scoring, reward coupling, REWARD_MANIPULATION
+
+### GitHub Repo
+Pushed to `w1123581321345589/aiglos` on the `main` branch.
+
 ## Architecture
 - **Frontend**: React + TypeScript + Vite + Tailwind CSS + shadcn/ui
 - **Backend**: Express.js + TypeScript
