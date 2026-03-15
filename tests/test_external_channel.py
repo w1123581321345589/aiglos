@@ -300,7 +300,7 @@ class TestScanMessage:
 class TestV070ModuleAPI:
 
     def test_version_is_070(self):
-        assert aiglos.__version__ == "0.10.0"
+        assert aiglos.__version__ == "0.13.0"
 
     def test_nine_campaign_patterns(self):
         names = {p["name"] for p in _CAMPAIGN_PATTERNS}

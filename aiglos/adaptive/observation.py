@@ -140,6 +140,51 @@ CREATE TABLE IF NOT EXISTS causal_chains (
     timestamp          REAL NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS block_patterns (
+    pattern_id      TEXT NOT NULL,
+    agent_name      TEXT NOT NULL,
+    rule_id         TEXT NOT NULL,
+    tool_name       TEXT NOT NULL DEFAULT '',
+    args_fingerprint TEXT NOT NULL DEFAULT '',
+    tier            INTEGER NOT NULL DEFAULT 3,
+    occurred_at     REAL NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_block_pat_id    ON block_patterns(pattern_id);
+CREATE INDEX IF NOT EXISTS idx_block_pat_agent ON block_patterns(agent_name);
+CREATE INDEX IF NOT EXISTS idx_block_pat_ts    ON block_patterns(occurred_at);
+
+CREATE TABLE IF NOT EXISTS policy_proposals (
+    proposal_id       TEXT PRIMARY KEY,
+    pattern_id        TEXT NOT NULL,
+    proposal_type     TEXT NOT NULL,
+    agent_name        TEXT NOT NULL,
+    rule_id           TEXT NOT NULL,
+    tool_name         TEXT NOT NULL DEFAULT '',
+    args_fingerprint  TEXT NOT NULL DEFAULT '',
+    proposed_change   TEXT NOT NULL DEFAULT '{}',
+    confidence        REAL NOT NULL DEFAULT 0.0,
+    status            TEXT NOT NULL DEFAULT 'pending',
+    evidence_json     TEXT NOT NULL DEFAULT '{}',
+    created_at        REAL NOT NULL DEFAULT 0,
+    expires_at        REAL NOT NULL DEFAULT 0,
+    reviewed_at       REAL,
+    reviewed_by       TEXT,
+    applied_at        REAL,
+    rollback_reason   TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_proposals_status  ON policy_proposals(status);
+CREATE INDEX IF NOT EXISTS idx_proposals_agent   ON policy_proposals(agent_name);
+CREATE INDEX IF NOT EXISTS idx_proposals_pattern ON policy_proposals(pattern_id);
+
+CREATE TABLE IF NOT EXISTS agent_baselines (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    agent_name   TEXT NOT NULL UNIQUE,
+    baseline_json TEXT NOT NULL DEFAULT '{}',
+    sessions_trained INTEGER NOT NULL DEFAULT 0,
+    trained_at   REAL NOT NULL DEFAULT 0,
+    updated_at   REAL NOT NULL DEFAULT 0
+);
+
 CREATE INDEX IF NOT EXISTS idx_events_rule    ON events(rule_id);
 CREATE INDEX IF NOT EXISTS idx_events_session ON events(session_id);
 CREATE INDEX IF NOT EXISTS idx_events_verdict ON events(verdict);
@@ -617,6 +662,311 @@ class ObservationGraph:
         except Exception:
             d["chains"] = []
         return d
+
+    # ── Policy proposal support ──────────────────────────────────────────────────
+
+    def record_block_pattern_event(
+        self, pattern_id: str, agent_name: str, rule_id: str,
+        tool_name: str, args_fingerprint: str, tier: int = 3
+    ) -> None:
+        """Record a single block event for pattern tracking."""
+        with self._write_lock, self._conn() as conn:
+            conn.execute("""
+                INSERT INTO block_patterns
+                    (pattern_id, agent_name, rule_id, tool_name,
+                     args_fingerprint, tier, occurred_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (pattern_id, agent_name, rule_id, tool_name,
+                  args_fingerprint, tier, time.time()))
+
+    def get_block_pattern_count(
+        self, pattern_id: str, window_days: int = 7
+    ) -> int:
+        """Count occurrences of a block pattern within the rolling window."""
+        cutoff = time.time() - window_days * 86400
+        with self._conn() as conn:
+            row = conn.execute("""
+                SELECT COUNT(*) as c FROM block_patterns
+                WHERE pattern_id=? AND occurred_at >= ?
+            """, (pattern_id, cutoff)).fetchone()
+        return row["c"] if row else 0
+
+    def upsert_proposal(self, proposal) -> None:
+        """Persist or update a PolicyProposal."""
+        import json as _json
+        d = proposal.to_dict() if hasattr(proposal, "to_dict") else proposal
+        with self._write_lock, self._conn() as conn:
+            conn.execute("""
+                INSERT INTO policy_proposals
+                    (proposal_id, pattern_id, proposal_type, agent_name,
+                     rule_id, tool_name, args_fingerprint, proposed_change,
+                     confidence, status, evidence_json, created_at, expires_at,
+                     reviewed_at, reviewed_by, applied_at, rollback_reason)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(proposal_id) DO UPDATE SET
+                    status          = excluded.status,
+                    reviewed_at     = excluded.reviewed_at,
+                    reviewed_by     = excluded.reviewed_by,
+                    applied_at      = excluded.applied_at,
+                    rollback_reason = excluded.rollback_reason
+            """, (
+                d["proposal_id"], d["pattern_id"], d["proposal_type"],
+                d["agent_name"], d["rule_id"], d["tool_name"],
+                d["args_fingerprint"],
+                _json.dumps(d.get("proposed_change", {})),
+                d["confidence"], d["status"],
+                _json.dumps(d.get("evidence", {})),
+                d["created_at"], d["expires_at"],
+                d.get("reviewed_at"), d.get("reviewed_by"),
+                d.get("applied_at"), d.get("rollback_reason"),
+            ))
+
+    def get_proposal(self, proposal_id: str):
+        """Load a PolicyProposal by ID. Returns None if not found."""
+        from aiglos.core.policy_proposal import PolicyProposal
+        import json as _json
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM policy_proposals WHERE proposal_id=?",
+                (proposal_id,)
+            ).fetchone()
+        if not row:
+            return None
+        return self._row_to_proposal(dict(row))
+
+    def get_proposal_by_pattern(self, pattern_id: str, status: str = "pending"):
+        """Find an existing proposal for a given pattern_id."""
+        with self._conn() as conn:
+            row = conn.execute("""
+                SELECT * FROM policy_proposals
+                WHERE pattern_id=? AND status=?
+                ORDER BY created_at DESC LIMIT 1
+            """, (pattern_id, status)).fetchone()
+        if not row:
+            return None
+        return self._row_to_proposal(dict(row))
+
+    def list_proposals(
+        self,
+        status: str = "pending",
+        agent_name: str = None,
+        limit: int = 50,
+    ) -> list:
+        """List proposals filtered by status and optionally agent."""
+        query = "SELECT * FROM policy_proposals WHERE status=?"
+        args  = [status]
+        if agent_name:
+            query += " AND agent_name=?"
+            args.append(agent_name)
+        query += " ORDER BY created_at DESC LIMIT ?"
+        args.append(limit)
+        with self._conn() as conn:
+            rows = conn.execute(query, args).fetchall()
+        return [self._row_to_proposal(dict(r)) for r in rows]
+
+    def expire_proposals(self) -> int:
+        """Mark all expired pending proposals as expired. Returns count updated."""
+        now = time.time()
+        with self._write_lock, self._conn() as conn:
+            result = conn.execute("""
+                UPDATE policy_proposals SET status='expired'
+                WHERE status='pending' AND expires_at < ?
+            """, (now,))
+            return result.rowcount
+
+    def proposal_stats(self) -> dict:
+        """Summary counts by status for CLI display."""
+        with self._conn() as conn:
+            rows = conn.execute("""
+                SELECT status, COUNT(*) as c FROM policy_proposals GROUP BY status
+            """).fetchall()
+        stats = {r["status"]: r["c"] for r in rows}
+        return {
+            "pending":     stats.get("pending", 0),
+            "approved":    stats.get("approved", 0),
+            "rejected":    stats.get("rejected", 0),
+            "expired":     stats.get("expired", 0),
+            "rolled_back": stats.get("rolled_back", 0),
+            "total":       sum(stats.values()),
+        }
+
+    def _row_to_proposal(self, row: dict):
+        """Convert a DB row dict to a PolicyProposal."""
+        from aiglos.core.policy_proposal import PolicyProposal, BlockPattern, ProposalType, ProposalStatus
+        import json as _json
+        ev = _json.loads(row.get("evidence_json", "{}"))
+        evidence = BlockPattern(
+            agent_name       = row.get("agent_name", ""),
+            rule_id          = row.get("rule_id", ""),
+            tool_name        = row.get("tool_name", ""),
+            args_fingerprint = row.get("args_fingerprint", ""),
+            repetition_count = ev.get("repetition_count", 0),
+            window_days      = ev.get("window_days", 7),
+            first_seen       = ev.get("first_seen", 0.0),
+            last_seen        = ev.get("last_seen", 0.0),
+            consistency_score  = ev.get("consistency_score", 0.0),
+            incident_count     = ev.get("incident_count", 0),
+            baseline_confirmed = ev.get("baseline_confirmed", False),
+        )
+        return PolicyProposal(
+            proposal_id      = row["proposal_id"],
+            pattern_id       = row["pattern_id"],
+            proposal_type    = ProposalType(row["proposal_type"]),
+            agent_name       = row["agent_name"],
+            rule_id          = row["rule_id"],
+            tool_name        = row.get("tool_name", ""),
+            args_fingerprint = row.get("args_fingerprint", ""),
+            proposed_change  = _json.loads(row.get("proposed_change", "{}")),
+            evidence         = evidence,
+            confidence       = row.get("confidence", 0.0),
+            status           = ProposalStatus(row.get("status", "pending")),
+            created_at       = row.get("created_at", 0.0),
+            expires_at       = row.get("expires_at", 0.0),
+            reviewed_at      = row.get("reviewed_at"),
+            reviewed_by      = row.get("reviewed_by"),
+            applied_at       = row.get("applied_at"),
+            rollback_reason  = row.get("rollback_reason"),
+        )
+
+    # ── Behavioral baseline support ───────────────────────────────────────────
+
+    def agent_session_count(self, agent_name: str) -> int:
+        """Return total sessions ingested for this agent."""
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT COUNT(*) as c FROM sessions WHERE agent_name=?",
+                (agent_name,)
+            ).fetchone()
+        return row["c"] if row else 0
+
+    def get_agent_session_stats(
+        self, agent_name: str, limit: int = 90
+    ) -> list:
+        """
+        Load per-session statistics for an agent, most recent first.
+        Returns list of SessionStats-compatible objects.
+
+        Reads individual event records for surface/rule breakdown.
+        Falls back to sessions-table totals (total_events, blocked_events)
+        when the events table has no records for a session — this handles
+        sessions ingested via the threats list rather than subproc/http events.
+        """
+        from aiglos.core.behavioral_baseline import SessionStats
+        with self._conn() as conn:
+            sessions = conn.execute("""
+                SELECT session_id, total_events, blocked_events
+                FROM sessions
+                WHERE agent_name=?
+                ORDER BY closed_at DESC
+                LIMIT ?
+            """, (agent_name, limit)).fetchall()
+
+        result = []
+        for sess in sessions:
+            sid           = sess["session_id"]
+            total_fallback  = sess["total_events"]  or 0
+            blocked_fallback = sess["blocked_events"] or 0
+
+            with self._conn() as conn:
+                events = conn.execute("""
+                    SELECT surface, rule_id, verdict, tier
+                    FROM events WHERE session_id=?
+                """, (sid,)).fetchall()
+
+            surface_counts: dict = {}
+            rule_counts:    dict = {}
+            warned = 0
+            blocked_from_events = 0
+
+            for ev in events:
+                surf = ev["surface"] or "mcp"
+                surface_counts[surf] = surface_counts.get(surf, 0) + 1
+                if ev["verdict"] in ("BLOCK",):
+                    blocked_from_events += 1
+                    rule_id = ev["rule_id"] or "none"
+                    if rule_id != "none":
+                        rule_counts[rule_id] = rule_counts.get(rule_id, 0) + 1
+                if ev["verdict"] == "WARN":
+                    warned += 1
+
+            # If no individual events recorded, synthesise from sessions table
+            if not events and total_fallback > 0:
+                surface_counts = {"mcp": total_fallback}
+                blocked_from_events = blocked_fallback
+            elif events and total_fallback > 0:
+                # MCP events are not individually recorded in the events table
+                # (only http and subprocess events are stored there).
+                # Reconstruct MCP count from: total - sum(recorded surfaces)
+                recorded_surface_total = sum(surface_counts.values())
+                mcp_count = max(0, total_fallback - recorded_surface_total)
+                if mcp_count > 0:
+                    surface_counts["mcp"] = surface_counts.get("mcp", 0) + mcp_count
+
+            result.append(SessionStats(
+                agent_name     = agent_name,
+                session_id     = sid,
+                total_events   = max(total_fallback, len(events)),
+                blocked_events = blocked_from_events,
+                warned_events  = warned,
+                surface_counts = surface_counts,
+                rule_counts    = rule_counts,
+            ))
+
+        return list(reversed(result))  # chronological order
+
+    def upsert_baseline(self, agent_name: str, baseline) -> None:
+        """Persist a computed AgentBaseline to the agent_baselines table."""
+        import json as _json
+        d = baseline.to_dict() if hasattr(baseline, "to_dict") else baseline
+        now = time.time()
+        with self._write_lock, self._conn() as conn:
+            conn.execute("""
+                INSERT INTO agent_baselines
+                    (agent_name, baseline_json, sessions_trained, trained_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(agent_name) DO UPDATE SET
+                    baseline_json    = excluded.baseline_json,
+                    sessions_trained = excluded.sessions_trained,
+                    trained_at       = excluded.trained_at,
+                    updated_at       = excluded.updated_at
+            """, (
+                agent_name,
+                _json.dumps(d),
+                d.get("sessions_trained", 0),
+                d.get("trained_at", now),
+                now,
+            ))
+
+    def get_baseline(self, agent_name: str):
+        """Load a persisted AgentBaseline from the database. Returns None if not found."""
+        import json as _json
+        from aiglos.core.behavioral_baseline import AgentBaseline
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT baseline_json FROM agent_baselines WHERE agent_name=?",
+                (agent_name,)
+            ).fetchone()
+        if not row:
+            return None
+        try:
+            d = _json.loads(row["baseline_json"])
+            return AgentBaseline.from_dict(d)
+        except Exception as e:
+            log.debug("[ObsGraph] Baseline load error for %s: %s", agent_name, e)
+            return None
+
+    def baseline_anomaly_stats(self) -> dict:
+        """Summary stats about behavioral anomalies across all agents."""
+        with self._conn() as conn:
+            agents = conn.execute(
+                "SELECT agent_name, sessions_trained FROM agent_baselines"
+            ).fetchall()
+        return {
+            "agents_with_baselines": len(agents),
+            "agents_ready": sum(1 for a in agents
+                                if a["sessions_trained"] >= 20),
+            "agents": [dict(a) for a in agents],
+        }
 
     def reward_drift_data(self, window: int = 20) -> dict:
         """

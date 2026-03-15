@@ -52,6 +52,9 @@ Usage:
 
 import json
 import re as _re
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from aiglos.core.federation import GlobalPrior
 import logging
 import math
 import os
@@ -321,8 +324,9 @@ class IntentPredictor:
         model_path: Optional[str] = None,
         agent_name: str = "default",
     ):
-        self._graph      = graph
-        self._agent_name = agent_name
+        self._graph        = graph
+        self._agent_name   = agent_name
+        self._prior_version: Optional[str] = None
         if model_path:
             self._model_path = Path(model_path)
         else:
@@ -333,6 +337,39 @@ class IntentPredictor:
         self._retrain_threshold = 10   # retrain after N new sessions
 
     # ── Training ───────────────────────────────────────────────────────────────
+
+    def warm_start_from_prior(self, prior) -> bool:
+        """
+        Warm-start this predictor with the global prior.
+
+        Merges the prior into the local Markov model before (or after)
+        local training. Safe to call even if the model is untrained —
+        the synthetic sessions from the prior allow prediction to begin
+        immediately without waiting for 5+ local sessions.
+
+        Returns True if the prior was merged, False if prior is empty.
+        """
+        try:
+            if prior is None or not prior.transitions:
+                return False
+            prior.merge_into(self)
+            self._prior_version = prior.prior_version
+            log.info(
+                "[IntentPredictor] Warm-started from global prior v%s "
+                "(%d deployments) — agent=%s",
+                prior.prior_version,
+                prior.trained_on_n_deployments,
+                self._agent_name,
+            )
+            return True
+        except Exception as e:
+            log.debug("[IntentPredictor] warm_start error: %s", e)
+            return False
+
+    @property
+    def prior_version(self) -> Optional[str]:
+        """Version of the global prior this model was warm-started with."""
+        return getattr(self, "_prior_version", None)
 
     def train(self, force: bool = False) -> bool:
         """
