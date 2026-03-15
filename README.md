@@ -9,24 +9,25 @@
 ╚═╝  ╚═╝╚═╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚══════╝
 ```
 
-### Every surface. Every session. Every belief.
+### Every surface. Every session. Every belief. Every deployment.
 
 The first AI agent security platform that covers every surface your agent operates on,
 learns from every session it runs, secures persistent memory at the belief layer,
-and now traces blocked actions back to their injection source.
+traces blocked actions back to their injection source, and gets permanently better
+the more it's deployed — across your agents and across the network.
 
 [![PyPI](https://img.shields.io/pypi/v/aiglos?style=flat-square&color=000&labelColor=000&label=aiglos)](https://pypi.org/project/aiglos/)
 [![npm](https://img.shields.io/npm/v/aiglos?style=flat-square&color=000&labelColor=000&label=aiglos)](https://npmjs.com/package/aiglos)
 [![MIT](https://img.shields.io/badge/license-MIT-000?style=flat-square&labelColor=000)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-000?style=flat-square&labelColor=000)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-000?style=flat-square&labelColor=000)](sdk/typescript/)
-[![571 tests](https://img.shields.io/badge/tests-688_passing-000?style=flat-square&labelColor=000)](tests/)
+[![1047 tests](https://img.shields.io/badge/tests-1047_passing-000?style=flat-square&labelColor=000)](tests/)
 
 |  |  |  |  |  |  |
 |---|---|---|---|---|---|
-| **39** threat families | **3** execution surfaces | **10** campaign patterns | **Self-improving rules** | **Belief-layer + RL security** | **Signed attestation artifacts** |
+| **39** threat families | **3** execution surfaces | **10** campaign patterns | **Behavioral baselines** | **Federated intelligence** | **Policy proposals** |
 
-[The moment](#the-moment) · [What we built](#what-we-built) · [The white space](#the-white-space) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Adaptive layer](#adaptive-layer) · [Autoresearch](#autoresearch) · [Campaign-mode](#t06-campaign-mode) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [Skill scanner](#skill-scanner) · [CLI](#cli) · [TypeScript](#typescript-sdk) · [Attestation](#attestation) · [Pricing](#pricing)
+[The moment](#the-moment) · [What we built](#what-we-built) · [The white space](#the-white-space) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Behavioral baselines](#behavioral-baselines) · [Policy proposals](#policy-proposals) · [Federated intelligence](#federated-intelligence) · [Adaptive layer](#adaptive-layer) · [Campaign-mode](#t06-campaign-mode) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [Skill scanner](#skill-scanner) · [CLI](#cli) · [TypeScript](#typescript-sdk) · [Attestation](#attestation) · [Pricing](#pricing)
 
 </div>
 
@@ -105,6 +106,12 @@ python -m aiglos trace <session-id>` renders the full investigation report.
 
 **Python and TypeScript SDKs.** Complete T01-T39 in both. The majority of coding agent deployments are TypeScript-first.
 
+**Behavioral baselines (v0.11.0).** Per-agent statistical fingerprinting. Three feature spaces: event rate (z-score anomaly detection), surface mix (chi-squared divergence), rule frequency distribution (symmetric KL-divergence). A DevOps agent that reads `~/.aws/credentials` every session stops generating T19 noise after 20 sessions — the baseline knows it is normal behavior for that agent. Cold-start returns LOW with `baseline_ready=False`. No config, no training data, no external dependency. Pure Python stdlib math.
+
+**Policy proposals (v0.12.0).** Eliminates the false positive death spiral. When the same Tier 3 block fires five times with no incidents, Aiglos surfaces one policy proposal: "This agent has been blocked doing this seven times. Lower the tier?" Four proposal types: `LOWER_TIER`, `RAISE_THRESHOLD`, `ALLOW_LIST`, `SUPPRESS_PATTERN` — selected by evidence tier. Confidence scoring from repetition, consistency, baseline confirmation, and incident count. 30-day auto-expiry. Full approve/reject/rollback lifecycle. `aiglos policy list` reads from the local SQLite observation graph. No server required.
+
+**Federated intelligence (v0.13.0).** Every deployment contributes anonymized threat transition data to a global prior; every deployment benefits from what the network has seen. New deployments warm-start from the global prior on session one — the cold-start problem is eliminated. Laplace differential privacy noise (epsilon=0.1) on all shared data. Only noisy unigram counts over the 39-element rule vocabulary are shared; bigrams deliberately excluded to reduce information density. Rate limiting (one push per hour), TTL-based caching, hard 8-second timeout on all network calls. Without an `AIGLOS_KEY`, `FederationClient` is a complete no-op — the product works identically to pre-federation behavior with zero degradation.
+
 **Signed attestation artifacts.** Cryptographically signed at every session close. Structured for audit and compliance review.
 
 ---
@@ -152,7 +159,9 @@ Point solutions cover one surface. Aiglos covers the stack. But the more importa
   Memory: 1 HIGH-risk write blocked — authorization claim in store_memory
   RL: 2 reward signals quarantined (1 REWARD_POISON, 1 OPD_INJECTION)
   Campaign: REWARD_MANIPULATION detected — confidence 87%
+  Baseline: deploy-bot — LOW anomaly (47 sessions, event_rate z=0.3, surface χ²=1.2)
   Adaptive: 3 triggers fired (REWARD_DRIFT, AGENTDEF_REPEAT, FALSE_POSITIVE)
+  Policy: 1 proposal generated — T19 LOWER_TIER for deploy-bot (confidence 82%)
   Artifact: HMAC signed — signed and ready
 ```
 
@@ -315,6 +324,92 @@ Patches `subprocess.run`, `subprocess.Popen`, `subprocess.call`, `os.system`. T0
 
 ---
 
+## Behavioral baselines
+
+Per-agent statistical fingerprinting that distinguishes "this looks like an attack" from "this agent always does this." Three feature spaces scored independently and combined:
+
+| Feature | Method | Signal |
+|---------|--------|--------|
+| **Event rate** | Z-score from rolling 20-session mean | Agent running unusually hot or cold |
+| **Surface mix** | Chi-squared divergence from historical distribution | Unexpected shift in MCP/HTTP/subprocess ratio |
+| **Rule frequency** | Symmetric KL-divergence from baseline distribution | Rules firing in an atypical pattern for this agent |
+
+```python
+from aiglos.core.behavioral_baseline import BaselineEngine
+
+engine = BaselineEngine(db_path="~/.aiglos/observation.db")
+score = engine.score_session(agent_name="deploy-bot", session_stats=stats)
+# BaselineScore(
+#   overall="LOW",
+#   event_rate_z=0.3,  surface_chi2=1.2,  rule_kl=0.08,
+#   baseline_ready=True,  sessions_seen=47
+# )
+```
+
+Cold-start is handled: sessions 1–20 return `baseline_ready=False` with LOW anomaly. The baseline builds itself from the observation graph that Aiglos already maintains. No config, no training data, no external dependency. stdlib `math` and `collections` only.
+
+The `BEHAVIORAL_ANOMALY` inspection trigger fires when 2+ HIGH or 3+ MEDIUM anomaly sessions appear in the last 10 — surfacing sustained behavioral drift that per-session rules miss.
+
+---
+
+## Policy proposals
+
+Eliminates the per-action approval death spiral. Instead of 40 webhooks for the same DevOps agent reading credentials, Aiglos accumulates evidence and surfaces one decision.
+
+```bash
+$ aiglos policy list
+
+  PENDING  PP-0042  agent=deploy-bot  rule=T19  type=LOWER_TIER
+           Confidence: ████████░░ 82%    Repetitions: 7    Days remaining: 24
+           "T19 CRED_ACCESS has fired 7 times for deploy-bot with zero incidents.
+            Baseline confirms this is normal behavior. Lower from Tier 3 to Tier 2?"
+
+$ aiglos policy approve PP-0042
+  ✓ Policy applied. T19 lowered to Tier 2 for deploy-bot.
+```
+
+Four proposal types, selected by evidence tier:
+
+| Type | When | Effect |
+|------|------|--------|
+| `LOWER_TIER` | Repeated Tier 3 blocks, zero incidents, baseline confirms | Tier 3 → Tier 2 for this agent |
+| `RAISE_THRESHOLD` | Score consistently near threshold, no true positives | Threshold raised for this rule |
+| `ALLOW_LIST` | Same target blocked repeatedly, no incidents | Target added to allow list |
+| `SUPPRESS_PATTERN` | Rule fires but produces only WARNs, never BLOCKs | Rule suppressed for this agent |
+
+Confidence formula accounts for repetition count, consistency, baseline confirmation, and incident count. Proposals auto-expire after 30 days if not acted on. Full approve/reject/rollback lifecycle. Everything stored in local SQLite — no server required.
+
+---
+
+## Federated intelligence
+
+The architecture that makes every deployment smarter the longer Aiglos is deployed across the network.
+
+```python
+# Automatic — happens at session close when AIGLOS_KEY is set
+aiglos.attach(api_key="ak_live_...", enable_federation=True)
+
+# Or explicit
+from aiglos.core.federation import FederationClient
+
+client = FederationClient(api_key="ak_live_...", endpoint="https://intel.aiglos.dev")
+client.push_transitions(predictor)   # share anonymized transitions
+prior = client.pull_global_prior()   # receive network intelligence
+predictor.warm_start_from_prior(prior)  # cold-start eliminated
+```
+
+**What's shared:** Noisy unigram frequency counts over the 39-element rule vocabulary. Bigrams are deliberately excluded to reduce information density. Laplace noise (epsilon=0.1) applied to every count before transmission.
+
+**What's not shared:** Raw tool names, arguments, session IDs, agent names, IP addresses, or any content from tool calls. The shared data is a noisy histogram — "T19 fired roughly this many times relative to T07" — nothing more.
+
+**Privacy guarantees:** Differential privacy (Laplace, epsilon=0.1). Rate limiting (one push per hour). TTL-based prior caching. Hard 8-second timeout on all network calls. Graceful degradation on every failure mode.
+
+**Without an API key:** `FederationClient` is a complete no-op. `push_transitions()` returns `False`. `pull_global_prior()` returns `None`. The product works identically to pre-federation behavior. Zero network calls, zero degradation, zero noise.
+
+**The cold-start effect:** A new deployment warm-starts from the global prior. Day one, session one — the intent predictor already knows that T19 sequences frequently precede T37, that RECON_SWEEP patterns correlate with FIN_EXEC attempts, that certain injection sequences are being seen across the network right now. The product that ships to customer two is fundamentally better than the product that shipped to customer one, without customer two doing anything differently.
+
+---
+
 ## Adaptive layer
 
 ```
@@ -324,7 +419,7 @@ observe ──► inspect ──► amend ──► evaluate
              (auto-ingested at close())
 ```
 
-Ten inspection triggers fire automatically when the observation graph has evidence of drift, degradation, or manipulation:
+Thirteen inspection triggers fire automatically when the observation graph has evidence of drift, degradation, or manipulation:
 
 | Trigger | Fires when |
 |---------|-----------|
@@ -338,6 +433,9 @@ Ten inspection triggers fire automatically when the observation graph has eviden
 | `REWARD_DRIFT` | RL reward signals for security-relevant ops trending positive — T39 quarantine rate exceeds threshold |
 | `THREAT_FORECAST_ALERT` | Deployment-specific intent model forecasts HIGH/CRITICAL probability of a high-consequence action based on current session sequence patterns |
 | `CAUSAL_INJECTION_CONFIRMED` | Causal attribution has confirmed a HIGH-confidence injection-to-action chain in the observation graph — a specific blocked action has been traced to a specific injection source |
+| `BEHAVIORAL_ANOMALY` | 2+ HIGH or 3+ MEDIUM anomaly sessions in the last 10 for an agent — sustained behavioral drift that per-session rules miss |
+| `REPEATED_TIER3_BLOCK` | Same rule blocking the same agent repeatedly with no incidents — surfaces a policy proposal to eliminate false positive fatigue |
+| `GLOBAL_PRIOR_MATCH` | Agent with thin local model (<5 sessions) receives HIGH-probability threat prediction from global prior — early warning for novel attack classes spreading across the network |
 
 Amendment proposals require human approval. Nothing changes automatically.
 
@@ -573,6 +671,11 @@ python -m aiglos trace <session-id>    # causal investigation report
 python -m aiglos trace --latest        # most recent traced session
 python -m aiglos trace --all           # session-level summary
 python -m aiglos scan-message <text>  # scan a user message before forwarding to an agent
+python -m aiglos policy list         # pending policy proposals with confidence bars
+python -m aiglos policy show <id>    # detailed proposal with evidence summary
+python -m aiglos policy approve <id> # apply proposal — one decision replaces infinite interruptions
+python -m aiglos policy reject <id>  # reject proposal with reason
+python -m aiglos policy stats        # proposal lifecycle stats across all agents
 ```
 
 ---
@@ -604,7 +707,7 @@ Complete T01-T38 port. `createSecureFetch()`, `patchChildProcess()`, `Session` w
 
 ## Attestation
 
-v0.6.0 artifact fields:
+v0.13.0 artifact fields:
 
 | Field | Content |
 |-------|---------|
@@ -618,7 +721,9 @@ v0.6.0 artifact fields:
 | `rl_guard_summary` | RL reward signal summary with quarantine count |
 | `rl_quarantined` | Quarantined reward signals with adjusted values |
 | `rl_coupling_summary` | SecurityAwareReward override history |
-
+| `baseline` | Behavioral baseline score — event rate, surface mix, rule KL, anomaly level |
+| `policy_proposals` | Active policy proposals generated during session |
+| `federation_status` | Federation push/pull status and prior version |
 
 ---
 
@@ -642,8 +747,8 @@ v0.6.0 artifact fields:
 
 | Tier | Cost | Includes |
 |------|------|---------|
-| **Free / MIT** | $0 | T1–T39, adaptive layer, memory guard, RL guard, SecurityAwareReward, autoresearch, skill scanner, Python + TypeScript SDKs, HMAC artifacts |
-| **Pro** | $39 / dev / mo | Free + RSA-2048 artifacts, cloud dashboard, CVE push, SIEM/webhook integration, compliance export |
+| **Free / MIT** | $0 | T01–T39, adaptive layer, behavioral baselines, policy proposals, memory guard, RL guard, SecurityAwareReward, autoresearch, skill scanner, Python + TypeScript SDKs, HMAC artifacts |
+| **Pro** | $39 / dev / mo | Free + federated intelligence (global prior), RSA-2048 artifacts, cloud dashboard, CVE push, SIEM/webhook integration, compliance export |
 | **Teams** | $299 / mo (10 devs) + $29 / dev | Pro + centralized policy, aggregated threat view, T3 approval workflows |
 | **Enterprise** | Custom, annual | Teams + on-prem/air-gap deployment, dedicated support, custom rule packs |
 
@@ -651,13 +756,22 @@ v0.6.0 artifact fields:
 
 ## Open source vs. proprietary
 
-Detection engine, adaptive layer, memory security, RL security, autoresearch, TypeScript SDK, CLI: **MIT**.
+Detection engine, adaptive layer, behavioral baselines, policy proposals, memory security, RL security, autoresearch, TypeScript SDK, CLI: **MIT**.
 
-Signed attestation artifacts, cloud dashboard, compliance reports, cross-customer threat intelligence, air-gap container: **Proprietary**.
+Federated intelligence client (push/pull), signed attestation artifacts, cloud dashboard, compliance reports, federation server, air-gap container: **Proprietary**.
 
 ---
 
 ## Changelog
+
+**v0.13.0 — March 2026**
+Federated intelligence. `FederationClient` — push/pull anonymized threat transitions with Laplace differential privacy (epsilon=0.1). `GlobalPrior` warm-starts thin local models, eliminating cold-start. `GLOBAL_PRIOR_MATCH` 13th inspection trigger. `warm_start_from_prior()` on `IntentPredictor`. Rate limiting, TTL caching, graceful degradation. Complete no-op without API key. 1,047 tests.
+
+**v0.12.0 — March 2026**
+Policy proposals. `PolicyProposalEngine` — accumulates evidence from repeated Tier 3 blocks, generates proposals when threshold met. Four types: LOWER_TIER, RAISE_THRESHOLD, ALLOW_LIST, SUPPRESS_PATTERN. Confidence scoring, 30-day expiry, approve/reject/rollback lifecycle. `REPEATED_TIER3_BLOCK` 12th inspection trigger. `aiglos policy list|show|approve|reject|stats` CLI. 983 tests.
+
+**v0.11.0 — March 2026**
+Behavioral baselines. `BaselineEngine` — per-agent statistical fingerprinting across event rate (z-score), surface mix (chi-squared), rule frequency (symmetric KL-divergence). `AgentBaseline` trained from observation graph. `BEHAVIORAL_ANOMALY` 11th inspection trigger. Close-session scoring in artifact extensions. stdlib-only math. 918 tests.
 
 **v0.10.0 — March 2026**
 Predictive intent modeling. `IntentPredictor` — deployment-specific Markov chain trained from the observation graph, no external ML dependencies. `SessionForecaster` — session-scoped threshold elevation proposals based on forecast probability; `effective_tier()` pre-tightens blast radius before predicted high-risk actions fire. `THREAT_FORECAST_ALERT` 10th inspection trigger. `enable_intent_prediction()` on `OpenClawGuard`. `python -m aiglos forecast` CLI with probability bars. 688 tests.
