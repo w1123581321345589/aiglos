@@ -1,0 +1,93 @@
+Let me read the full session transcript and current state before giving you a real audit.​​​​​​​​​​​​​​​​
+
+Good news: the architecture is genuinely strong. The seven-layer temporal stack is logically coherent, each module has a clear non-overlapping responsibility, and 663 tests is substantial coverage. But there are **nine real problems** worth fixing before implementation, ranging from correctness bugs to missing critical tests.
+
+-----
+
+## Problem 1: Injection Scanner False Positives — CORRECTNESS BUG
+
+**What’s wrong.** The phrase corpus uses plain substring matching. “Your task is now” fires on “your task is nowhere near complete.” “First do” fires on “first do the setup then run the tests.” “Before doing anything” fires on “before doing anything else, check the logs.” All five of these are confirmed false positives that would produce MEDIUM verdicts on completely clean tool outputs.
+
+**Fix.** Replace substring matching with word-boundary-aware matching using `\b` regex anchors, and add a minimum-word-count requirement: the surrounding phrase must contain at least one more word that reinforces an instructional context (a verb, an object, a redirect target). For the most ambiguous phrases (“first do”, “instead do”), require a second signal before scoring them — they should contribute 0.10 to score, not 0.50, unless paired with another hit.
+
+-----
+
+## Problem 2: Intent Predictor Uses a Single Global Model File — CORRECTNESS BUG
+
+**What’s wrong.** `DEFAULT_MODEL_PATH = Path.home() / ".aiglos" / "intent_model.json"` is a single shared file for all agents on the machine. A deployment running a financial agent (T37-heavy sequence profile) and a code agent (T07/T19-heavy) will have their models overwrite each other on every retrain. The predictions for the financial agent will be polluted with code agent patterns and vice versa.
+
+**Fix.** Key the model file by `agent_name`: `~/.aiglos/models/{agent_name}.json`. `IntentPredictor.__init__` derives the path from the agent name passed in, and `enable_intent_prediction()` in `OpenClawGuard` passes `self.agent_name`. One model per agent profile, not one global model.
+
+-----
+
+## Problem 3: Forecast Elevations Never Decay — DESIGN BUG
+
+**What’s wrong.** Once `_active_adjustments` contains a rule, it stays there for the entire session with no decay or re-evaluation. If T37 is elevated to Tier 3 at step 5 because of a 73% prediction, but by step 40 the agent has run 35 completely clean file operations with zero T37 signal, the elevation stays. This produces Tier 3 friction for the entire remaining session with no evidence it’s still warranted.
+
+**Fix.** Add a `_elevation_step` to each `ForecastAdjustment`. In `after_action()`, re-check active elevations after each new prediction: if the probability of the elevated rule has dropped below half its triggering threshold for three consecutive steps, remove the elevation. Add a `steps_at_elevation` counter and log when elevations are applied, extended, or released — this data is critical for tuning.
+
+-----
+
+## Problem 4: CausalTracer Attribution Window is Step-Count-Based, Not Context-Aware — DESIGN ISSUE
+
+**What’s wrong.** `_ATTRIBUTION_WINDOW = 15` steps is hardcoded. For a coding agent that does 200 tool calls per session (common with Cursor or Claude Code), 15 steps is less than 10% of the session — most injections that happen in the first third of a long session will get LOW or NONE attribution even if the causal link is real. For a simple agent that does 8 total calls, 15 steps covers the entire session.
+
+**Fix.** Make the attribution window percentage-based: `min(15, max(8, session_length * 0.20))` computed at attribution time from the total action count. Expose it as a configurable parameter (`attribution_window_pct`, default 0.20). Document the tradeoff: larger windows produce more attributions but also more false positives where an injection happened to be in context but didn’t cause the action.
+
+-----
+
+## Problem 5: Multi-Agent Registry Has No Parent Verification — SECURITY BUG
+
+**What’s wrong.** `register_spawn(parent_id, child_id, ...)` trusts the caller-supplied `parent_id` without checking that a session with that ID actually exists in the registry. An attacker who can inject a spawn call can claim any arbitrary session as parent, manufacturing a false provenance chain in the audit artifact. The registry is supposed to be the proof of lineage; if it doesn’t verify lineage, it’s just a log.
+
+**Fix.** In `register_spawn()`, check that `parent_id` matches either `self.root_session_id` or an existing `child_id` in `_children`. If it doesn’t, raise a `RegistryIntegrityError` with a log entry. Add a corresponding test: attempt to register a child with a nonexistent parent, verify the error fires.
+
+-----
+
+## Problem 6: SessionArtifact.extra is an Untyped Dict — MAINTAINABILITY ISSUE
+
+**What’s wrong.** Three separate sections (injection, causal, forecast) are merged into `artifact.extra` via dict `.update()`. There’s no schema, no validation, and no guarantee the sections don’t overwrite each other if key names collide. Currently `injection_summary`, `injection_flagged`, `causal_attribution`, `forecast_summary`, `forecast_adjustments`, `forecast_snapshots` are the keys — but this is implicit, not enforced.
+
+**Fix.** Add an `ArtifactExtensions` dataclass with typed optional fields for each section: `injection: Optional[dict]`, `causal: Optional[dict]`, `forecast: Optional[dict]`. Replace the three `artifact.extra.update()` calls with `artifact.extensions.injection = ...` etc. Add `.extra` as a property that merges them for backward compat. This makes the structure inspectable, testable, and prevents key collisions.
+
+-----
+
+## Problem 7: No End-to-End Integration Test — TEST COVERAGE GAP
+
+**What’s wrong.** There’s no test that runs the full pipeline in a single test: `attach()` with all features enabled → multiple `before_tool_call()` events including threats → `after_tool_call()` with an injection → `close_session()` → verify the artifact contains all four sections (threats, injection, causal, forecast) with correct data. The existing `test_attach_check_close_cycle` only tests `attach → check → close` with a single clean call and a single block. It doesn’t touch injection scanning, causal tracing, or forecast.
+
+**Fix.** Add `tests/test_e2e.py` — a full end-to-end integration test that exercises every layer in sequence and asserts on the final artifact structure. Should include: a scenario that produces a RECON_SWEEP campaign, a scenario that produces a causal attribution chain, and a scenario that triggers a forecast elevation and verifies `effective_tier()` returns the elevated tier.
+
+-----
+
+## Problem 8: ObservationGraph Has No Thread Safety for Concurrent Agents — ROBUSTNESS ISSUE
+
+**What’s wrong.** `_conn()` opens a new connection per call with WAL mode. WAL is good for concurrent readers but still has write serialization. If two agents on the same machine both call `ingest()` simultaneously, you get intermittent write conflicts and possible data loss under Python’s GIL. There’s no lock around write operations.
+
+**Fix.** Add a `threading.Lock` at the `ObservationGraph` instance level, acquired for write operations (`ingest`, `ingest_causal_result`, etc.) but not read operations. Document that multi-process deployments should use separate `db_path` values per process. This is a narrow fix — the bigger solution (connection pool) is over-engineering for the current scale.
+
+-----
+
+## Problem 9: Version Has Two Sources of Truth — MAINTAINABILITY ISSUE
+
+**What’s wrong.** `__version__` is hardcoded as a string in `aiglos/__init__.py` at line 41. It’s also in `pyproject.toml` as `version = "0.1.0"` (which is stale — never updated). Every version bump requires two changes and the two will eventually diverge. Tests assert on the string literal, which means a missed update produces silent failures.
+
+**Fix.** Make `pyproject.toml` the single source of truth. Use `importlib.metadata.version("aiglos")` in `__init__.py` to read it dynamically, with a fallback to the hardcoded string for development installs. Tests then import `aiglos.__version__` as before, but the actual value comes from one place. Update `pyproject.toml` to `version = "0.10.0"` now.
+
+-----
+
+## Additional Test Improvements
+
+Beyond the e2e test, the existing test suite has these specific gaps worth filling:
+
+The `test_injection_scanner.py` has no test for the word-boundary false positive problem — once we fix the corpus, we need regression tests for “your task is nowhere near complete” staying ALLOW. The `test_intent_predictor.py` has no test for multi-agent model isolation. The `test_causal_tracer.py` has no test for a long session (50+ actions) where attribution window percentage matters. The `test_campaign.py` has no test for `REPEATED_INJECTION_ATTEMPT` verifying source diversity (three reads of the same URL should score lower than three reads of three different URLs). No test file exercises `SecurityAwareReward` with a configurable `warn_dampen_factor`.
+
+-----
+
+## What Does NOT Need Changing
+
+The core T01-T39 rule taxonomy is solid and the mapping is correct. The three-surface interception architecture (MCP, HTTP, subprocess) is the right design and the tier system is well-calibrated. The adaptive engine’s observe-inspect-amend-evaluate loop is architecturally correct and the eight original triggers are all firing on real signals. The campaign patterns are accurate threat models. The causal tracer’s backward attribution logic is sound — the confidence scoring is appropriately conservative. The injection scanner’s two-layer approach (phrase + encoding) is the right architecture; the false positive issue is in the phrase corpus specifically, not the structure. The Markov chain for intent prediction is the right algorithm at the current data scale — no need for a more complex model until you have thousands of sessions.
+
+-----
+
+**Ready to implement all nine fixes plus the e2e test?** The false positive fix and the model keying fix are the most important — they affect correctness in production. The rest are about robustness and maintainability but none are blockers.​​​​​​​​​​​​​​​​
