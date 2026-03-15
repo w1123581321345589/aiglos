@@ -5,16 +5,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aiglos"
 version = "0.10.0"
-description = "AI Agent Security Runtime — block T1-T36 threats, sign sessions, ship with proof"
+description = "AI agent security across every surface — T01-T39 threat detection, causal attribution, predictive intent modeling"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
     {name = "Aiglos", email = "will@aiglos.io"}
 ]
 keywords = [
-    "ai", "security", "agents", "mcp", "llm", "defense",
-    "openclaw", "hermes", "ndaa", "cmmc", "agentic", "runtime",
-    "prompt-injection", "tool-calling",
+    "ai", "security", "agents", "mcp", "llm", "agentic", "runtime",
+    "prompt-injection", "tool-calling", "injection-detection",
+    "causal-attribution", "agent-security",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
