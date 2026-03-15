@@ -3,7 +3,7 @@ aiglos_openclaw
 ===============
 Runtime security middleware for OpenClaw agents.
 
-Wraps any OpenClaw MCP tool call pipeline with Aiglos T1-T36 threat detection,
+Wraps any OpenClaw MCP tool call pipeline with Aiglos T01–T39 threat detection,
 signed attestation, and policy enforcement — in a single import.
 
 INSTALLATION
@@ -56,7 +56,7 @@ Paste this into your agent's SOUL.md to enable Aiglos on every session:
 OPENCLAW SKILL INVOCATION
 --------------------------
     openclaw skill load aiglos
-    > Aiglos loaded. T1-T36 runtime guard active. Policy: enterprise.
+    > Aiglos loaded. T01–T39 runtime guard active. Policy: enterprise.
 
 HEARTBEAT INTEGRATION
 ---------------------
@@ -85,7 +85,7 @@ T30  Supply chain: tool registration / __builtins__ override
 T34  Heartbeat-cycle persistence (agent modifying its own HEARTBEAT.md)
 T36  Memory poisoning (writes to SOUL.md, MEMORY.md, agent index files)
 
-Full T1-T36 library: https://github.com/aiglos/aiglos-cves
+Full T01–T39 library: https://github.com/aiglos/aiglos-cves
 """
 
 
@@ -356,7 +356,7 @@ _OPENCLAW_RULES: list[dict] = [
     },
 ]
 
-# General T1-T36 rules reused from core (simplified subset for OpenClaw)
+# General T01–T39 rules reused from core (simplified subset for OpenClaw)
 _CORE_RULES: list[dict] = [
     {
         "id": "T05",
@@ -542,7 +542,7 @@ class OpenClawGuard:
     """
     Aiglos runtime guard for OpenClaw agents.
 
-    Intercepts tool calls before execution and applies T1-T36 threat
+    Intercepts tool calls before execution and applies T01–T39 threat
     classification, trust scoring, and policy enforcement. Produces a
     signed session artifact on close.
 

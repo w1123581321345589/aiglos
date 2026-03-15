@@ -687,7 +687,7 @@ HTTP/API and subprocess interception, three-tier blast radius, Tier 3 pause mode
 Autoresearch two-loop system, adversarial corpus, autoresearch experiment logs.
 
 **v0.1.0 — January 2026**
-T1–T36 engine, MCP interception, OpenClaw and hermes integrations, 10 CVEs filed.
+T01–T39 engine, MCP interception, OpenClaw and hermes integrations, 10 CVEs filed.
 
 ---
 

@@ -3,7 +3,7 @@ Aiglos — AI Agent Security Runtime
 ===================================
 Protocol-agnostic runtime security for AI agents. Intercepts every agent
 action before execution — MCP tool calls, direct HTTP/API calls, CLI
-execution, subprocess spawning — and applies T1–T36 threat detection.
+execution, subprocess spawning — and applies T01–T39 threat detection.
 
 Signed session artifacts cover all three execution surfaces in a single
 compliance document. compliance artifact ready.

@@ -4,7 +4,7 @@ The detection engine is open. The CVE database is open. Contributions are welcom
 
 ## Ways to contribute
 
-**Add a rule family.** If you find an attack pattern not covered by T1–T36, open an issue describing the threat, the tool call vector, and a proof of concept. Well-documented submissions get a rule family and a CVE credit.
+**Add a rule family.** If you find an attack pattern not covered by T01–T39, open an issue describing the threat, the tool call vector, and a proof of concept. Well-documented submissions get a rule family and a CVE credit.
 
 **Improve an existing rule.** False positives, missed patterns, and CVSS scoring disputes are all valid issues. Open an issue with reproduction steps.
 

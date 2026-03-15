@@ -35,8 +35,8 @@ aiglos/
 │   ├── metering.py          cloud usage telemetry (Pro+)
 │   └── config.py            embedded SDK configuration
 ├── integrations/
-│   ├── openclaw.py          OpenClaw guard — full T1-T36, heartbeat, sub-agents
-│   └── hermes.py            hermes-agent guard — T1-T36 + trajectory signing
+│   ├── openclaw.py          OpenClaw guard — full T01–T39, heartbeat, sub-agents
+│   └── hermes.py            hermes-agent guard — T01–T39 + trajectory signing
 └── autonomous/
     ├── engine.py             continuous background hunt engine
     ├── t30_registry.py       supply chain registry monitor
