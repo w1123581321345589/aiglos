@@ -118,6 +118,14 @@ export async function registerRoutes(
     res.sendFile("pricing.html", { root: new URL("../client/public", import.meta.url).pathname });
   });
 
+  app.get("/scan", (_req, res) => {
+    res.sendFile("scan.html", { root: new URL("../client/public", import.meta.url).pathname });
+  });
+
+  app.get("/defense", (_req, res) => {
+    res.sendFile("defense.html", { root: new URL("../client/public", import.meta.url).pathname });
+  });
+
   const loginSchema = z.object({
     username: z.string().min(1),
     password: z.string().min(1),
