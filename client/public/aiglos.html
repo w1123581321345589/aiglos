@@ -648,6 +648,106 @@ footer {
 
 .footer-links a:hover { color: var(--text); }
 
+.bento-section { padding: 80px 0; }
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.bento-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.bento-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.bento-card.green::before { background: var(--green); }
+.bento-card.amber::before { background: var(--amber); }
+.bento-card.purple::before { background: #a855f7; }
+
+.bento-card h3 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  margin-bottom: 10px;
+}
+
+.bento-card p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.65;
+  margin-bottom: 20px;
+}
+
+.bento-code {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  overflow-x: auto;
+}
+
+.bento-code .hl-green { color: var(--green); }
+.bento-code .hl-amber { color: var(--amber); }
+.bento-code .hl-purple { color: #a855f7; }
+.bento-code .hl-dim { color: var(--text-muted); }
+
+.campaign-section { padding: 80px 0; }
+
+.campaign-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.campaign-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.campaign-card h4 {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.campaign-card .campaign-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.campaign-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: rgba(34,197,94,0.15);
+  color: var(--green);
+  white-space: nowrap;
+}
+
 @media (max-width: 768px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
   .features-grid { grid-template-columns: 1fr; }
@@ -655,6 +755,8 @@ footer {
   .code-cols { grid-template-columns: 1fr; }
   .pricing-cards { grid-template-columns: repeat(2, 1fr); }
   .trigger-list { grid-template-columns: 1fr; }
+  .bento-grid { grid-template-columns: 1fr; }
+  .campaign-grid { grid-template-columns: 1fr; }
   .nav-links { display: none; }
   h1 { letter-spacing: -2px; }
 }
@@ -717,8 +819,8 @@ h1 { animation-delay: 0.1s; }
 <div class="container">
   <div class="stats">
     <div class="stat">
-      <div class="stat-number">39</div>
-      <div class="stat-label">Threat families</div>
+      <div class="stat-number">1,047</div>
+      <div class="stat-label">Tests passing</div>
     </div>
     <div class="stat">
       <div class="stat-number">3</div>
@@ -729,8 +831,8 @@ h1 { animation-delay: 0.1s; }
       <div class="stat-label">Inspection triggers</div>
     </div>
     <div class="stat">
-      <div class="stat-number">&lt;1ms</div>
-      <div class="stat-label">Clean call overhead</div>
+      <div class="stat-number">0</div>
+      <div class="stat-label">Required dependencies</div>
     </div>
   </div>
 </div>
@@ -824,6 +926,92 @@ h1 { animation-delay: 0.1s; }
         <div class="feature-icon">&#x1f4dc;</div>
         <h3>Signed attestation</h3>
         <p>Cryptographically signed artifacts at every session close. HMAC-SHA256 countersigned event chain. Structured for audit and compliance review.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bento-section">
+  <div class="container">
+    <div class="section-label">What changed in v0.13</div>
+    <div class="section-title">Learns your deployment.</div>
+    <div class="section-desc">Three new capabilities that eliminate false positive fatigue, kill cold-start, and make every deployment permanently smarter.</div>
+    <div class="bento-grid">
+      <div class="bento-card green">
+        <h3>Behavioral Baseline</h3>
+        <p>Per-agent statistical fingerprinting across three feature spaces. Same T19 call, different agent, different score. The baseline knows what normal looks like.</p>
+        <div class="bento-code">
+<span class="hl-dim"># Same tool call — two agents, two scores</span>
+<span class="hl-dim">devops-agent</span>  cat ~/.ssh/id_rsa  T19
+  baseline: <span class="hl-green">LOW</span>  (composite=0.09)
+
+<span class="hl-dim">code-agent</span>    cat ~/.ssh/id_rsa  T19
+  baseline: <span class="hl-amber">HIGH</span> (composite=0.84)
+        </div>
+      </div>
+      <div class="bento-card amber">
+        <h3>Policy Proposals</h3>
+        <p>Five repeated blocks surface one policy proposal. One human decision. The agent never gets blocked for that pattern again. Four proposal types with confidence scoring.</p>
+        <div class="bento-code">
+<span class="hl-dim">$ aiglos proposals list</span>
+<span class="hl-amber">prp_a1b2c3d4</span>  LOWER_TIER  devops-agent/T19
+  confidence <span class="hl-green">91%</span>  14 blocks  27d left
+  <span class="hl-dim">action:</span> aiglos proposals accept prp_a1b2c3d4
+        </div>
+      </div>
+      <div class="bento-card purple">
+        <h3>Federated Intelligence</h3>
+        <p>New deployments warm-start from a global prior. Your local data takes over at 100 sessions. Differential privacy. Complete no-op without an API key.</p>
+        <div class="bento-code">
+<span class="hl-dim"># What gets sent (anonymized co-occurrence)</span>
+{<span class="hl-purple">"T19"</span>: {<span class="hl-purple">"T37"</span>: 14.2, <span class="hl-purple">"T07"</span>: 8.1}}
+
+<span class="hl-dim"># What never leaves</span>
+<span class="hl-dim">agent names, tool args, session data</span>
+
+<span class="hl-dim"># Local weight: 20% → 80% at 100 sessions</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="campaign-section">
+  <div class="container">
+    <div class="section-label">Multi-step detection</div>
+    <div class="section-title">10 campaign patterns.</div>
+    <div class="section-desc">Attack sequences invisible to per-call inspection. Aiglos tracks state across the full session.</div>
+    <div class="campaign-grid">
+      <div class="campaign-card">
+        <div><h4>AGENTDEF_CHAIN</h4><div class="campaign-desc">Agent definition modified then child spawned</div></div>
+      </div>
+      <div class="campaign-card">
+        <div><h4>MEMORY_PERSISTENCE</h4><div class="campaign-desc">Injection planted in memory, recalled later</div></div>
+      </div>
+      <div class="campaign-card">
+        <div><h4>REWARD_MANIPULATION</h4><div class="campaign-desc">RL reward signals steering toward unsafe actions</div></div>
+      </div>
+      <div class="campaign-card">
+        <div><h4>CREDENTIAL_CHAIN</h4><div class="campaign-desc">Credential read followed by exfiltration attempt</div></div>
+      </div>
+      <div class="campaign-card">
+        <div><h4>PRIVILEGE_LADDER</h4><div class="campaign-desc">Escalating access pattern across calls</div></div>
+      </div>
+      <div class="campaign-card">
+        <div><h4>DATA_STAGING</h4><div class="campaign-desc">Data aggregated then exfiltrated in bulk</div></div>
+      </div>
+      <div class="campaign-card">
+        <div><h4>EXTERNAL_INSTRUCTION_CHANNEL</h4><div class="campaign-desc">Fetched content directs subsequent tool calls</div></div>
+      </div>
+      <div class="campaign-card">
+        <div><h4>SSRF_PIVOT</h4><div class="campaign-desc">Internal metadata accessed then used for lateral movement</div></div>
+      </div>
+      <div class="campaign-card">
+        <div><h4>PERSISTENCE_INSTALL</h4><div class="campaign-desc">Backdoor written then registered for persistence</div></div>
+      </div>
+      <div class="campaign-card">
+        <div><h4>REPEATED_INJECTION_ATTEMPT</h4><div class="campaign-desc">Same injection vector retried with variations</div></div>
+        <span class="campaign-badge">New &middot; v0.8.0</span>
       </div>
     </div>
   </div>
