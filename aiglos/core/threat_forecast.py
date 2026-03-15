@@ -1,5 +1,49 @@
-"""Session-scoped threat forecasting — translates IntentPredictor
-predictions into session-scoped threshold elevations."""
+"""
+aiglos.core.threat_forecast
+=============================
+Session-scoped threat forecasting and predictive threshold management.
+
+The IntentPredictor tells you what the agent is likely to do next.
+ThreatForecast translates that prediction into actionable security posture:
+should we tighten blast radius thresholds *before* the predicted action fires?
+
+If the model says there is a 73% probability of T37 FIN_EXEC in the next
+5 steps, and the current policy has T37 at Tier 2 MONITORED, the right
+response is to pre-tighten to Tier 3 GATED before those 5 steps run —
+not to catch the T37 when it fires.
+
+This is the distinction between a reactive security layer and a proactive
+one. The forecast is the bridge between prediction and action.
+
+Design:
+
+  SessionForecaster
+    Wraps IntentPredictor for a single session lifecycle.
+    After each action: observe → predict → check thresholds → propose adjustments.
+    Maintains a forecast history for the session artifact.
+
+  ForecastAdjustment
+    A proposed threshold change: "elevate T37 from Tier 2 to Tier 3
+    for the remainder of this session, given 73% prediction probability."
+    Adjustments are session-scoped — they do not persist beyond session close.
+    They require no human approval (unlike adaptive amendments) because they
+    are temporary and bounded to the current session.
+
+Usage:
+    from aiglos.core.threat_forecast import SessionForecaster
+
+    forecaster = SessionForecaster(predictor, policy="enterprise")
+    forecaster.start_session(session_id="sess-abc")
+
+    # After each action
+    adjustments = forecaster.after_action("T19", "BLOCK")
+    for adj in adjustments:
+        # adj.rule_id elevated to adj.proposed_tier for this session
+        apply_tier_adjustment(adj)
+
+    # At session close
+    summary = forecaster.summary()
+"""
 
 import time
 from dataclasses import dataclass, field
@@ -29,33 +73,46 @@ _ELEVATABLE_RULES = {
 }
 
 
+# How many consecutive steps below half-threshold before elevation is released
+_DECAY_STEPS_THRESHOLD = 3
+
 @dataclass
 class ForecastAdjustment:
     """
     A session-scoped threshold adjustment proposed by the forecaster.
     Does not persist beyond session close. No human approval required.
+
+    Elevation decays automatically: if the predicted probability of the
+    elevated rule drops below half its triggering threshold for
+    _DECAY_STEPS_THRESHOLD consecutive steps, the elevation is released.
     """
-    rule_id:           str
-    proposed_tier:     int             # 2 or 3
-    original_tier:     Optional[int]   # what it was before
-    probability:       float           # prediction probability that triggered this
-    alert_level:       str
-    evidence:          str
-    session_id:        str
-    applied:           bool = False
-    timestamp:         float = field(default_factory=time.time)
+    rule_id:              str
+    proposed_tier:        int             # 2 or 3
+    original_tier:        Optional[int]   # what it was before
+    probability:          float           # probability that triggered this
+    alert_level:          str
+    evidence:             str
+    session_id:           str
+    applied_at_step:      int = 0
+    steps_below_threshold: int = 0        # consecutive low-probability steps
+    released:             bool = False    # True once decay released it
+    applied:              bool = False
+    timestamp:            float = field(default_factory=time.time)
 
     def to_dict(self) -> dict:
         return {
-            "rule_id":       self.rule_id,
-            "proposed_tier": self.proposed_tier,
-            "original_tier": self.original_tier,
-            "probability":   round(self.probability, 4),
-            "alert_level":   self.alert_level,
-            "evidence":      self.evidence,
-            "session_id":    self.session_id,
-            "applied":       self.applied,
-            "timestamp":     self.timestamp,
+            "rule_id":                self.rule_id,
+            "proposed_tier":          self.proposed_tier,
+            "original_tier":          self.original_tier,
+            "probability":            round(self.probability, 4),
+            "alert_level":            self.alert_level,
+            "evidence":               self.evidence,
+            "session_id":             self.session_id,
+            "applied_at_step":        self.applied_at_step,
+            "steps_below_threshold":  self.steps_below_threshold,
+            "released":               self.released,
+            "applied":                self.applied,
+            "timestamp":              self.timestamp,
         }
 
 
@@ -113,6 +170,8 @@ class SessionForecaster:
         self._step += 1
         self.predictor.observe(rule_id, verdict)
         prediction = self.predictor.predict()
+        # Check decay before computing new adjustments
+        self._decay_elevations(prediction)
         adjustments = self._compute_adjustments(prediction) if prediction else []
 
         snapshot = ForecastSnapshot(
@@ -156,6 +215,7 @@ class SessionForecaster:
                 original_tier=None,
                 probability=probability,
                 alert_level=prediction.alert_level,
+                applied_at_step=self._step,
                 evidence=(
                     f"{prediction.alert_level} forecast: {rule_id} predicted "
                     f"at {probability:.0%} in next {prediction.horizon} steps. "
@@ -168,6 +228,40 @@ class SessionForecaster:
             adjustments.append(adj)
 
         return adjustments
+
+    def _decay_elevations(self, prediction: Optional[PredictionResult]) -> None:
+        """
+        Re-evaluate active elevations. Release any that have been below
+        half their triggering threshold for _DECAY_STEPS_THRESHOLD steps.
+        Logs releases for audit trail.
+        """
+        if not prediction or not self._active_adjustments:
+            return
+
+        prob_map = dict(prediction.top_threats)
+        to_release = []
+
+        for rule_id, adj in self._active_adjustments.items():
+            current_prob = prob_map.get(rule_id, 0.0)
+            half_threshold = _ELEVATION_THRESHOLDS.get(adj.alert_level, 1.0) / 2.0
+
+            if current_prob < half_threshold:
+                adj.steps_below_threshold += 1
+                if adj.steps_below_threshold >= _DECAY_STEPS_THRESHOLD:
+                    adj.released = True
+                    to_release.append(rule_id)
+            else:
+                # Reset decay counter — probability recovered
+                adj.steps_below_threshold = 0
+
+        for rule_id in to_release:
+            released = self._active_adjustments.pop(rule_id)
+            import logging
+            logging.getLogger("aiglos.threat_forecast").info(
+                "[SessionForecaster] Elevation released — rule=%s "
+                "applied_at_step=%d released_at_step=%d agent=%s",
+                rule_id, released.applied_at_step, self._step, self.session_id,
+            )
 
     def current_forecast(self) -> Optional[PredictionResult]:
         """Return the most recent prediction for this session."""

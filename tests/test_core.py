@@ -191,12 +191,12 @@ class TestOpenClawCore:
     def test_artifact_ndaa_flag_federal(self):
         g = self.Guard("fed-agent", "federal", log_path=tempfile.mktemp())
         artifact = g.close_session()
-        assert artifact.ndaa_1513_ready is True
+        assert artifact.attestation_ready is True
 
     def test_artifact_ndaa_flag_enterprise(self):
         g = self._guard("enterprise")
         artifact = g.close_session()
-        assert artifact.ndaa_1513_ready is False
+        assert artifact.attestation_ready is False
 
     def test_artifact_write_and_read(self):
         g = self._guard()
@@ -316,7 +316,7 @@ class TestHermesCore:
     def test_federal_policy_ndaa_ready(self):
         g = self.Guard("fed", "federal", log_path=tempfile.mktemp())
         artifact = g.close_session()
-        assert artifact.ndaa_1513_ready is True
+        assert artifact.attestation_ready is True
 
 
 # ===========================================================================
