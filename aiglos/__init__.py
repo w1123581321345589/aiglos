@@ -1,4 +1,4 @@
-__version__ = "0.9.0"
+__version__ = "0.10.0"
 
 from aiglos.integrations.openclaw import (
     OpenClawGuard,
@@ -59,6 +59,16 @@ from aiglos.core.causal_tracer import (
     AttributionResult,
     ContextEntry,
     TaggedAction,
+)
+from aiglos.core.intent_predictor import (
+    IntentPredictor,
+    PredictionResult,
+    MarkovTransitionModel,
+)
+from aiglos.core.threat_forecast import (
+    SessionForecaster,
+    ForecastAdjustment,
+    ForecastSnapshot,
 )
 
 _adaptive_engine = None

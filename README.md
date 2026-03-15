@@ -20,7 +20,7 @@ and now traces blocked actions back to their injection source.
 [![MIT](https://img.shields.io/badge/license-MIT-000?style=flat-square&labelColor=000)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-000?style=flat-square&labelColor=000)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-000?style=flat-square&labelColor=000)](sdk/typescript/)
-[![784 tests](https://img.shields.io/badge/tests-784_passing-000?style=flat-square&labelColor=000)](tests/)
+[![828 tests](https://img.shields.io/badge/tests-828_passing-000?style=flat-square&labelColor=000)](tests/)
 
 |  |  |  |  |  |  |
 |---|---|---|---|---|---|
@@ -88,13 +88,18 @@ The complete inventory of what exists and ships today:
 
 **Session identity chain.** Every event HMAC-SHA256 countersigned. Every artifact tamper-evident.
 
-**Adaptive layer.** Observation graph, nine inspection triggers, amendment engine, policy serializer. Every session auto-ingested. Nothing changes without human approval.
+**Adaptive layer.** Observation graph, ten inspection triggers, amendment engine, policy serializer. Every session auto-ingested. Nothing changes without human approval.
 
 **Autoresearch.** Two-loop self-improving detection. Research loop optimizes rules against labeled corpus. Adversarial loop generates evasion cases. Rules and attacks co-evolve. Run logs are compliance evidence.
 
 **Free skill scanner.** `aiglos scan-skill <n>` — 8 signals, 2 seconds, catches what VirusTotal cannot.
 
-**Session-level causal attribution.** `CausalTracer` answers the question no other tool does: which specific input caused this specific action? Tracks which tool outputs are in the agent's context at every moment, tags every outbound action with a context snapshot, then walks backward from each blocked event to identify the injection source with confidence scoring. `CAUSAL_INJECTION_CONFIRMED` inspection trigger fires when the observation graph contains a traced attack chain. `python -m aiglos trace <session-id>` renders the full investigation report.
+**Predictive intent modeling.** `IntentPredictor` trains a deployment-specific Markov chain from the observation graph. No external ML. During live sessions it predicts the most likely next threat families and proposes session-scoped threshold elevations before predicted actions fire — converting Tier 2 MONITORED to Tier 3 GATED when 73% probability of T37 is forecast. The `THREAT_FORECAST_ALERT` trigger fires when the deployment's own behavioral patterns indicate an imminent high-consequence action.
+
+**Session-level causal attribution.** `CausalTracer` answers the question no other tool does: which specific input caused this specific action? Tracks which tool outputs are in the agent's context at every moment, tags every outbound action with a context snapshot, then walks backward from each blocked event to identify the injection source with confidence scoring. `CAUSAL_INJECTION_CONFIRMED` inspection trigger fires when the observation graph contains a traced attack chain. `python -m aiglos forecast                  # probability bars for current deployment
+python -m aiglos forecast --train          # retrain model from observation graph
+python -m aiglos forecast --sequence T19 T22   # predict from custom sequence
+python -m aiglos trace <session-id>` renders the full investigation report.
 
 **RL training trajectory signing.** `sign_trajectory()` prevents unsafe tool calls from entering training pipelines.
 
@@ -175,6 +180,27 @@ aiglos.attach(
 )
 
 artifact = aiglos.close()
+```
+
+### Predictive intent modeling
+
+```python
+# Enable in attach() — trains automatically from observation graph
+aiglos.attach(enable_intent_prediction=True)
+
+# Or directly on the guard
+guard.enable_intent_prediction()
+
+# After each session, forecast is available
+forecast = guard.forecast()
+# PredictionResult(
+#   alert_level="HIGH",
+#   top_threats=[("T37", 0.73), ("T19", 0.41)],
+#   evidence="Sequence [T19 → T22] predicts T37 with 73% probability in next 5 steps"
+# )
+
+# Session-scoped threshold elevations are applied automatically
+# T37 moves from Tier 2 MONITORED → Tier 3 GATED for this session
 ```
 
 ### Inbound injection scanning
@@ -298,7 +324,7 @@ observe ──► inspect ──► amend ──► evaluate
              (auto-ingested at close())
 ```
 
-Nine inspection triggers fire automatically when the observation graph has evidence of drift, degradation, or manipulation:
+Ten inspection triggers fire automatically when the observation graph has evidence of drift, degradation, or manipulation:
 
 | Trigger | Fires when |
 |---------|-----------|
@@ -310,6 +336,7 @@ Nine inspection triggers fire automatically when the observation graph has evide
 | `FIN_EXEC_BYPASS` | T37 overrides accumulating on specific hosts |
 | `FALSE_POSITIVE` | Rule fires but >60% result in WARNs, not BLOCKs |
 | `REWARD_DRIFT` | RL reward signals for security-relevant ops trending positive — T39 quarantine rate exceeds threshold |
+| `THREAT_FORECAST_ALERT` | Deployment-specific intent model forecasts HIGH/CRITICAL probability of a high-consequence action based on current session sequence patterns |
 | `CAUSAL_INJECTION_CONFIRMED` | Causal attribution has confirmed a HIGH-confidence injection-to-action chain in the observation graph — a specific blocked action has been traced to a specific injection source |
 
 Amendment proposals require human approval. Nothing changes automatically.
@@ -632,8 +659,11 @@ Signed attestation artifacts, cloud dashboard, compliance reports, cross-custome
 
 ## Changelog
 
+**v0.10.0 — March 2026**
+Predictive intent modeling. `IntentPredictor` — deployment-specific Markov chain trained from the observation graph, no external ML dependencies. `SessionForecaster` — session-scoped threshold elevation proposals based on forecast probability; `effective_tier()` pre-tightens blast radius before predicted high-risk actions fire. `THREAT_FORECAST_ALERT` 10th inspection trigger. `enable_intent_prediction()` on `OpenClawGuard`. `python -m aiglos forecast` CLI with probability bars. 828 tests.
+
 **v0.9.0 — March 2026**
-Session-level causal attribution. `CausalTracer` maintains a rolling context window of inbound content fingerprints, tags every outbound action with a context snapshot at the time of the call, and at session close runs backward attribution to identify which specific injection source caused which specific blocked action. `AttributionResult` with HIGH/MEDIUM/LOW/NONE confidence chains. `CAUSAL_INJECTION_CONFIRMED` 9th inspection trigger. `enable_causal_tracing()` on `OpenClawGuard`. `python -m aiglos trace <session-id>` CLI investigation report. `causal_chains` table in observation graph. 784 tests.
+Session-level causal attribution. `CausalTracer` maintains a rolling context window of inbound content fingerprints, tags every outbound action with a context snapshot at the time of the call, and at session close runs backward attribution to identify which specific injection source caused which specific blocked action. `AttributionResult` with HIGH/MEDIUM/LOW/NONE confidence chains. `CAUSAL_INJECTION_CONFIRMED` 9th inspection trigger. `enable_causal_tracing()` on `OpenClawGuard`. `python -m aiglos trace <session-id>` CLI investigation report. `causal_chains` table in observation graph. 619 tests.
 
 **v0.8.0 — March 2026**
 Indirect prompt injection scanner (`injection_scanner.py`). `InjectionScanner` with two-layer scoring: 50-phrase corpus for instruction-override patterns + encoding anomaly detection (base64 payloads, Unicode homoglyphs, invisible characters, RTL override, mixed scripts). `after_tool_call()` lifecycle hook on `OpenClawGuard`. `REPEATED_INJECTION_ATTEMPT` 10th campaign pattern. `scan_tool_output()`, `scan_document()`, `scan_memory_read()` convenience methods. 571 tests.
