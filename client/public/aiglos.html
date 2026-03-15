@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aiglos — AI Agent Security</title>
-<meta name="description" content="The first AI agent security platform that covers every surface, every session, every belief. 39 threat families. 828 tests. Zero dependencies.">
+<meta name="description" content="The AI agent security platform that learns your deployment, eliminates false positive fatigue, and gets permanently better with every deployment in the network. 39 threat families. 1,047 tests. Zero dependencies.">
 <meta property="og:title" content="Aiglos — AI Agent Security">
-<meta property="og:description" content="Every surface. Every session. Every belief.">
+<meta property="og:description" content="Every surface. Every session. Every deployment.">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -698,10 +698,10 @@ h1 { animation-delay: 0.1s; }
   <div class="container">
     <div class="hero-badge">
       <span class="dot"></span>
-      v0.10.0 — Predictive intent modeling
+      v0.13.0 — Federated intelligence
     </div>
-    <h1>Every surface.<br>Every session.<br>Every belief.</h1>
-    <p class="hero-sub">The AI agent security platform. 39 threat families across three execution surfaces. Self-improving rules. Belief-layer memory security. Zero external dependencies.</p>
+    <h1>Every surface.<br>Every session.<br>Every deployment.</h1>
+    <p class="hero-sub">The AI agent security platform that learns your deployment, eliminates false positive fatigue, and gets permanently better with every deployment in the network. Zero dependencies.</p>
     <div class="hero-actions">
       <a href="https://docs.aiglos.dev" class="btn-primary">Get started</a>
       <a href="https://github.com/w1123581321345589/aiglos" class="btn-secondary">View on GitHub</a>
@@ -725,7 +725,7 @@ h1 { animation-delay: 0.1s; }
       <div class="stat-label">Execution surfaces</div>
     </div>
     <div class="stat">
-      <div class="stat-number">10</div>
+      <div class="stat-number">13</div>
       <div class="stat-label">Inspection triggers</div>
     </div>
     <div class="stat">
@@ -761,6 +761,7 @@ h1 { animation-delay: 0.1s; }
 
 <span class="t-dim">[session close — 1.6s]</span>
 <span class="t-dim">  51 events  ·  7 blocked  ·  2 warned  ·  42 allowed</span>
+<span class="t-dim">  Behavioral baseline: LOW (composite=0.09) — within normal range for this agent</span>
 <span class="t-dim">  Campaign: REWARD_MANIPULATION detected — confidence 87%</span>
 <span class="t-dim">  Artifact: HMAC signed</span>
       </div>
@@ -780,19 +781,29 @@ h1 { animation-delay: 0.1s; }
         <p>MCP tool calls, HTTP/API calls, and subprocess execution. No proxy, no port, no config. Patches requests, httpx, aiohttp, subprocess at process level.</p>
       </div>
       <div class="feature">
+        <div class="feature-icon">&#x1f4ca;</div>
+        <h3>Behavioral baselines</h3>
+        <p>Per-agent statistical fingerprinting. A DevOps agent that reads credentials every session stops generating T19 noise after 20 sessions. The baseline knows what normal looks like for each agent.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1f4cb;</div>
+        <h3>Policy proposals</h3>
+        <p>Eliminates the false positive death spiral. Five repeated blocks surface one policy proposal. One human decision. The agent never gets blocked for that pattern again.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">&#x1f310;</div>
+        <h3>Federated intelligence</h3>
+        <p>Every deployment makes every other deployment smarter. New deployments warm-start from a global prior on day one. Differential privacy. Complete no-op without an API key.</p>
+      </div>
+      <div class="feature">
         <div class="feature-icon">&#x1f9e0;</div>
         <h3>Belief-layer memory security</h3>
         <p>Semantic scoring on every structured memory write. 38-phrase corpus catches authorization claims, endpoint redirects, and cross-session persistence attacks at the write moment.</p>
       </div>
       <div class="feature">
-        <div class="feature-icon">&#x1f504;</div>
-        <h3>Adaptive self-improvement</h3>
-        <p>Observation graph auto-ingests every session. Ten inspection triggers detect drift, degradation, and manipulation. Rules evolve through adversarial autoresearch.</p>
-      </div>
-      <div class="feature">
         <div class="feature-icon">&#x1f3af;</div>
         <h3>Campaign-mode detection</h3>
-        <p>Nine multi-step attack patterns including AGENTDEF_CHAIN, MEMORY_PERSISTENCE, REWARD_MANIPULATION, and EXTERNAL_INSTRUCTION_CHANNEL. Invisible to per-call tools.</p>
+        <p>Ten multi-step attack patterns including AGENTDEF_CHAIN, MEMORY_PERSISTENCE, REWARD_MANIPULATION, and EXTERNAL_INSTRUCTION_CHANNEL. Invisible to per-call tools.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">&#x1f52e;</div>
@@ -808,11 +819,6 @@ h1 { animation-delay: 0.1s; }
         <div class="feature-icon">&#x1f4a1;</div>
         <h3>RL training security</h3>
         <p>Intercepts reward signals and OPD feedback before they reach the training loop. Blocks reward poisoning and directional weight manipulation in live training systems.</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">&#x1f465;</div>
-        <h3>Multi-agent security</h3>
-        <p>Spawn registry, agent definition integrity scoring, session identity chains. Child agents inherit parent policy. Full spawn tree in the artifact.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">&#x1f4dc;</div>
@@ -928,7 +934,7 @@ aiglos.<span class="fn">attach</span>({
 <section class="triggers-section">
   <div class="container">
     <div class="section-label">Adaptive layer</div>
-    <div class="section-title">10 inspection triggers.</div>
+    <div class="section-title">13 inspection triggers.</div>
     <div class="section-desc">Automatic detection of drift, degradation, and manipulation across the observation graph.</div>
     <div class="trigger-list">
       <div class="trigger-item">
@@ -971,6 +977,18 @@ aiglos.<span class="fn">attach</span>({
         <div class="trigger-name">CAUSAL_INJECTION_CONFIRMED</div>
         <div class="trigger-desc">Causal attribution confirmed a traced injection-to-action chain</div>
       </div>
+      <div class="trigger-item">
+        <div class="trigger-name">BASELINE_ANOMALY</div>
+        <div class="trigger-desc">Session behavior diverges from behavioral baseline for this agent</div>
+      </div>
+      <div class="trigger-item">
+        <div class="trigger-name">POLICY_PROPOSAL_READY</div>
+        <div class="trigger-desc">Repeated blocks qualify for automated threshold adjustment proposal</div>
+      </div>
+      <div class="trigger-item">
+        <div class="trigger-name">FEDERATION_PRIOR_SHIFT</div>
+        <div class="trigger-desc">Global prior weights shifted beyond local confidence interval</div>
+      </div>
     </div>
   </div>
 </section>
@@ -986,10 +1004,10 @@ aiglos.<span class="fn">attach</span>({
         <div class="pricing-period">Free forever</div>
         <ul class="pricing-features">
           <li>T01-T39 threat engine</li>
-          <li>Adaptive layer + memory guard</li>
+          <li>Behavioral baselines + policy proposals</li>
+          <li>Federation: pull global prior</li>
           <li>RL guard + SecurityAwareReward</li>
           <li>Autoresearch + skill scanner</li>
-          <li>Python + TypeScript SDKs</li>
           <li>HMAC attestation artifacts</li>
         </ul>
         <a href="https://docs.aiglos.dev" class="btn-secondary">Get started</a>
@@ -1000,10 +1018,10 @@ aiglos.<span class="fn">attach</span>({
         <div class="pricing-period">per developer / month</div>
         <ul class="pricing-features">
           <li>Everything in Free</li>
+          <li>Contribute to global prior</li>
           <li>RSA-2048 signed artifacts</li>
-          <li>Cloud dashboard</li>
+          <li>Cloud dashboard + SIEM export</li>
           <li>CVE push notifications</li>
-          <li>SIEM + webhook integration</li>
           <li>Compliance export</li>
         </ul>
         <a href="mailto:security@aiglos.dev" class="btn-primary">Get started</a>
