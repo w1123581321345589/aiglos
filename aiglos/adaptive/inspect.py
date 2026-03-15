@@ -60,6 +60,7 @@ class InspectionEngine:
         triggers.extend(self._check_false_positives())
         triggers.extend(self._check_reward_drift())
         triggers.extend(self._check_causal_injection_confirmed())
+        triggers.extend(self._check_threat_forecast_alert())
         log.info("[InspectionEngine] %d trigger(s) fired.", len(triggers))
         return triggers
 
@@ -355,4 +356,86 @@ class InspectionEngine:
                 ))
         except Exception as e:
             log.debug("[InspectionEngine] causal_injection check error: %s", e)
+        return triggers
+
+    # --- threat forecast alert ---
+
+    FORECAST_MIN_SESSIONS_TRAINED = 5
+
+    def _check_threat_forecast_alert(self) -> List[InspectionTrigger]:
+        """Fire when the intent model forecasts HIGH/CRITICAL probability
+        of a high-consequence action across recent sessions."""
+        triggers = []
+        try:
+            from aiglos.core.intent_predictor import IntentPredictor, DEFAULT_MODEL_PATH
+            import json as _json
+            from pathlib import Path
+            from collections import defaultdict
+
+            model_path = Path(DEFAULT_MODEL_PATH)
+            if not model_path.exists():
+                return []
+
+            with open(model_path) as f:
+                model_data = _json.load(f)
+
+            sessions_trained = model_data.get("total_sessions", 0)
+            if sessions_trained < self.FORECAST_MIN_SESSIONS_TRAINED:
+                return []
+
+            predictor = IntentPredictor(self._graph)
+            predictor.train()
+            if not predictor.is_ready:
+                return []
+
+            with self._graph._conn() as conn:
+                recent_events = conn.execute("""
+                    SELECT session_id, rule_id FROM events
+                    WHERE verdict != 'ALLOW'
+                    AND timestamp > (SELECT MAX(timestamp) - 86400 FROM events)
+                    ORDER BY session_id, timestamp ASC
+                """).fetchall()
+
+            if not recent_events:
+                return []
+
+            session_seqs: dict = defaultdict(list)
+            for row in recent_events:
+                if row["rule_id"] not in ("none", ""):
+                    session_seqs[row["session_id"]].append(row["rule_id"])
+
+            high_forecast_sessions = []
+            for sid, seq in session_seqs.items():
+                predictor.reset_session()
+                for rule_id in seq:
+                    predictor.observe(rule_id, "BLOCK")
+                result = predictor.predict()
+                if result and result.alert_level in ("HIGH", "CRITICAL"):
+                    high_forecast_sessions.append((sid, result))
+
+            if high_forecast_sessions:
+                worst = max(high_forecast_sessions, key=lambda x: x[1].alert_threshold)
+                triggers.append(InspectionTrigger(
+                    trigger_type="THREAT_FORECAST_ALERT",
+                    rule_id=worst[1].top_threat[0] if worst[1].top_threat else None,
+                    severity="HIGH" if worst[1].alert_level == "CRITICAL" else "MEDIUM",
+                    evidence_summary=(
+                        f"Intent model forecasts {worst[1].alert_level} probability "
+                        f"of {worst[1].top_threat[0] if worst[1].top_threat else '?'} "
+                        f"({worst[1].alert_threshold:.0%}) across "
+                        f"{len(high_forecast_sessions)} recent session(s). "
+                        f"Model trained on {sessions_trained} sessions."
+                    ),
+                    evidence_data={
+                        "sessions_with_high_forecast": len(high_forecast_sessions),
+                        "worst_session": worst[0],
+                        "worst_alert_level": worst[1].alert_level,
+                        "worst_threshold": round(worst[1].alert_threshold, 4),
+                        "top_threat": worst[1].top_threat[0] if worst[1].top_threat else None,
+                        "model_sessions_trained": sessions_trained,
+                    },
+                    amendment_candidate=False,
+                ))
+        except Exception as e:
+            log.debug("[InspectionEngine] threat_forecast check error: %s", e)
         return triggers

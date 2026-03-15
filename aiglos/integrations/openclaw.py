@@ -218,11 +218,27 @@ class OpenClawGuard:
         )
         return result
 
+    def enable_intent_prediction(self):
+        """Wire up the Markov predictor + session forecaster.
+        Idempotent — second call returns the same forecaster."""
+        if hasattr(self, "_forecaster"):
+            return self._forecaster
+        from aiglos.core.intent_predictor import IntentPredictor
+        from aiglos.core.threat_forecast import SessionForecaster
+        self._intent_predictor = IntentPredictor()
+        self._intent_predictor.train()
+        self._forecaster = SessionForecaster(
+            self._intent_predictor, session_id=self.session_id)
+        return self._forecaster
+
+    def forecast(self):
+        """Current prediction, or None if intent prediction isn't enabled."""
+        if not hasattr(self, "_forecaster"):
+            return None
+        return self._forecaster.current_forecast()
+
     def enable_causal_tracing(self) -> "CausalTracer":
-        """
-        Enable session-level causal attribution.
-        Returns the CausalTracer for optional direct use.
-        """
+        """Enable session-level causal attribution."""
         from aiglos.core.causal_tracer import CausalTracer
         if not hasattr(self, "_causal_tracer"):
             self._causal_tracer = CausalTracer(
@@ -266,6 +282,8 @@ class OpenClawGuard:
             extra.update(self._injection_scanner.to_artifact_section())
         if hasattr(self, "_causal_tracer"):
             extra.update(self._causal_tracer.to_artifact_section())
+        if hasattr(self, "_forecaster"):
+            extra.update(self._forecaster.to_artifact_section())
 
         return SessionArtifact(
             agent_name=self.agent_name,
@@ -294,6 +312,8 @@ def attach(agent_name: str, policy: str = "enterprise", log_path: str = None, **
     _active_guard = OpenClawGuard(agent_name=agent_name, policy=policy, log_path=log_path)
     if kwargs.get("enable_causal_tracing"):
         _active_guard.enable_causal_tracing()
+    if kwargs.get("enable_intent_prediction"):
+        _active_guard.enable_intent_prediction()
 
 
 def check(tool_name: str, args: Dict) -> GuardResult:
