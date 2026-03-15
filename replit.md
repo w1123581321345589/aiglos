@@ -11,7 +11,7 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/integrations/openclaw.py` — OpenClaw guard with threat detection (T07, T13, T19, T30, T34, T36)
 - `aiglos/integrations/hermes.py` — Hermes integration guard with trajectory signing
 - `aiglos/integrations/multi_agent.py` — AgentDefGuard (file integrity), MultiAgentRegistry, SessionIdentityChain (HMAC signing)
-- `aiglos/integrations/memory_guard.py` — ByteRover memory write guard (T31) with C2 channel corpus signals
+- `aiglos/integrations/memory_guard.py` — memory-layer memory write guard (T31) with C2 channel corpus signals
 - `aiglos/integrations/rl_guard.py` — RL feedback guard (T39)
 - `aiglos/integrations/http_intercept.py` — HTTP interception engine (T25 SSRF, T37 FIN_EXEC, T22 RECON, T19/T20 CRED/EXFIL, T35 MODEL_EXFIL, T36 SUPPLY_CHAIN)
 - `aiglos/integrations/subprocess_intercept.py` — Subprocess interception engine (3-tier classification, 12 threat rules, compensating transactions)
