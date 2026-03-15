@@ -48,7 +48,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.10.0"  # canonical version for this release
+    __version__ = "0.13.0"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -96,6 +96,29 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     inspect_memory_write,
     is_memory_tool,
 )
+from aiglos.core.federation import (   # noqa: F401
+    FederationClient,
+    GlobalPrior,
+    extract_shareable_transitions,
+    _local_weight,
+)
+
+from aiglos.core.policy_proposal import (   # noqa: F401
+    PolicyProposalEngine,
+    PolicyProposal,
+    BlockPattern,
+    ProposalType,
+    ProposalStatus,
+)
+
+from aiglos.core.behavioral_baseline import (  # noqa: F401
+    BaselineEngine,
+    AgentBaseline,
+    BaselineScore,
+    FeatureScore,
+    SessionStats,
+)
+
 from aiglos.core.intent_predictor import (  # noqa: F401
     IntentPredictor,
     PredictionResult,
@@ -597,4 +620,20 @@ __all__ = [
     "ForecastSnapshot",
     # v0.10.0 artifact
     "ArtifactExtensions",
+    # v0.11.0
+    "BaselineEngine",
+    "AgentBaseline",
+    "BaselineScore",
+    "FeatureScore",
+    "SessionStats",
+    # v0.12.0
+    "PolicyProposalEngine",
+    "PolicyProposal",
+    "BlockPattern",
+    "ProposalType",
+    "ProposalStatus",
+    # v0.13.0
+    "FederationClient",
+    "GlobalPrior",
+    "extract_shareable_transitions",
 ]

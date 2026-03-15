@@ -161,6 +161,43 @@ _OPENCLAW_RULES: list[dict] = [
             )
         ),
     },
+    # T37: Financial API misuse — high-value transactions or payment API calls
+    {
+        "id": "T37",
+        "name": "FIN_EXEC",
+        "desc": "Unauthorized financial operation via payment API",
+        "score": 0.88,
+        "critical": True,
+        "match": lambda name, args: (
+            name in ("http.post", "http.put", "api.call", "http.request")
+        ) and any(
+            kw in str(args).lower()
+            for kw in (
+                "stripe.com", "paypal.com", "charges", "transfer",
+                "payment", "invoice", "checkout", "billing",
+                "plaid.com", "square.com/v2",
+            )
+        ),
+    },
+    # T31: Memory poisoning via store_memory or agent memory APIs
+    {
+        "id": "T31",
+        "name": "MEMORY_POISON",
+        "desc": "Injection payload written to agent memory store",
+        "score": 0.88,
+        "critical": True,
+        "match": lambda name, args: (
+            "memory" in name.lower() or "store" in name.lower()
+        ) and any(
+            kw in str(args).lower()
+            for kw in (
+                "pre-authorized", "override", "bypass",
+                "ignore previous", "forget all", "new instructions",
+                "disregard", "overrides all", "disable",
+                "always allow", "do not require",
+            )
+        ),
+    },
     # T23: Sub-agent spawning outside declared scope
     {
         "id": "T23",
@@ -305,43 +342,6 @@ _OPENCLAW_RULES: list[dict] = [
             "shell" in name.lower() or "terminal" in name.lower() or "execute" in name.lower()
         ) and "--force" in str(args) and ("install" in str(args).lower() or "skill" in str(args).lower()),
     },
-    # T37: Financial API misuse — high-value transactions or payment API calls
-    {
-        "id": "T37",
-        "name": "FIN_EXEC",
-        "desc": "Unauthorized financial operation via payment API",
-        "score": 0.88,
-        "critical": True,
-        "match": lambda name, args: (
-            name in ("http.post", "http.put", "api.call", "http.request")
-        ) and any(
-            kw in str(args).lower()
-            for kw in (
-                "stripe.com", "paypal.com", "charges", "transfer",
-                "payment", "invoice", "checkout", "billing",
-                "plaid.com", "square.com/v2",
-            )
-        ),
-    },
-    # T31: Memory poisoning via store_memory or agent memory APIs
-    {
-        "id": "T31",
-        "name": "MEMORY_POISON",
-        "desc": "Injection payload written to agent memory store",
-        "score": 0.88,
-        "critical": True,
-        "match": lambda name, args: (
-            "memory" in name.lower() or "store" in name.lower()
-        ) and any(
-            kw in str(args).lower()
-            for kw in (
-                "pre-authorized", "override", "bypass",
-                "ignore previous", "forget all", "new instructions",
-                "disregard", "overrides all", "disable",
-                "always allow", "do not require",
-            )
-        ),
-    },
     # T28: Cross-agent coordination (fleet attacks via Postiz or distribution APIs)
     {
         "id": "T28",
@@ -433,9 +433,10 @@ class ArtifactExtensions:
     Typed container for optional session artifact extensions.
     Populated by v0.8.0+ features; None when features are not enabled.
     """
-    injection: Optional[dict] = None    # InjectionScanner section
-    causal:    Optional[dict] = None    # CausalTracer section
-    forecast:  Optional[dict] = None    # SessionForecaster section
+    injection: Optional[dict] = None    # InjectionScanner section (v0.8.0)
+    causal:    Optional[dict] = None    # CausalTracer section (v0.9.0)
+    forecast:  Optional[dict] = None    # SessionForecaster section (v0.10.0)
+    baseline:  Optional[dict] = None    # BehavioralBaseline section (v0.11.0)
 
     def to_dict(self) -> dict:
         d = {}
@@ -445,6 +446,8 @@ class ArtifactExtensions:
             d["causal_attribution"] = self.causal
         if self.forecast:
             d.update(self.forecast)
+        if self.baseline:
+            d["behavioral_baseline"] = self.baseline
         return d
 
 
@@ -492,6 +495,8 @@ class SessionArtifact:
                 ("forecast_summary", "forecast_adjustments", "forecast_snapshots")
                 if k in value
             }
+        if "behavioral_baseline" in value:
+            self.extensions.baseline = value["behavioral_baseline"]
 
     @property
     def attestation_ready(self) -> bool:
@@ -830,6 +835,107 @@ class OpenClawGuard:
                 self._injection_scanner.set_tracer(self._causal_tracer)
         return self._causal_tracer
 
+    def enable_behavioral_baseline(self, **kwargs) -> None:
+        """
+        Enable per-agent behavioral baseline scoring.
+        At session close, scores the session against the agent's historical
+        fingerprint across three feature spaces: event rates, surface mix,
+        and rule frequency distribution.
+
+        Requires 20+ prior sessions in the observation graph before the
+        baseline is ready. Results included in the session artifact.
+        """
+        try:
+            from aiglos.adaptive.observation import ObservationGraph
+            from aiglos.core.behavioral_baseline import BaselineEngine
+            _graph  = ObservationGraph()
+            _engine = BaselineEngine(_graph, agent_name=self.agent_name, **kwargs)
+            _engine.train()
+            self._baseline_engine = _engine
+            self._baseline_graph  = _graph
+            logger.debug(
+                "[OpenClawGuard] Behavioral baseline enabled — agent=%s ready=%s",
+                self.agent_name, _engine.is_ready,
+            )
+        except Exception as e:
+            logger.debug("[OpenClawGuard] Behavioral baseline init error: %s", e)
+
+    def enable_federation(
+        self,
+        api_key:  str = "",
+        endpoint: str = "",
+        **kwargs,
+    ) -> None:
+        """
+        Enable federated threat intelligence.
+
+        When federation is enabled:
+          - At session start: pulls the latest global prior from the
+            federation server and warm-starts the intent predictor.
+          - At session close: contributes anonymized transition counts
+            to the global model (Pro tier required to contribute).
+
+        Privacy: Only noisy transition frequency counts over a 39-element
+        rule vocabulary are transmitted. No raw events, content, agent
+        names, URLs, or session metadata ever leaves the deployment.
+        """
+        try:
+            from aiglos.core.federation import FederationClient
+            client = FederationClient(
+                api_key  = api_key,
+                endpoint = endpoint or "",
+            )
+            self._federation_client = client
+
+            # Immediately pull and warm-start the predictor if available
+            if not hasattr(self, "_intent_predictor"):
+                self.enable_intent_prediction()
+
+            prior = client.pull_global_prior()
+            if prior and hasattr(self, "_intent_predictor"):
+                warmed = self._intent_predictor.warm_start_from_prior(prior)
+                if warmed:
+                    logger.info(
+                        "[OpenClawGuard] Intent predictor warm-started from "
+                        "global prior v%s — agent=%s",
+                        prior.prior_version, self.agent_name,
+                    )
+
+            logger.debug(
+                "[OpenClawGuard] Federation enabled — agent=%s key=%s endpoint=%s",
+                self.agent_name,
+                "set" if client.has_key else "none",
+                client._endpoint,
+            )
+        except Exception as e:
+            logger.debug("[OpenClawGuard] Federation init error: %s", e)
+
+    def enable_policy_proposals(self, **kwargs) -> None:
+        """
+        Enable policy-level proposal generation for repeated Tier 3 blocks.
+
+        Instead of firing a webhook on every Tier 3 block, the system tracks
+        block patterns and surfaces a single policy proposal when a pattern
+        repeats enough times to merit a policy decision.
+
+        The proposal appears in `aiglos policy list` for human review.
+        Until the proposal is reviewed, Tier 3 blocks downgrade to WARN
+        rather than blocking (preventing indefinite disruption).
+        """
+        try:
+            from aiglos.adaptive.observation import ObservationGraph
+            from aiglos.core.policy_proposal import PolicyProposalEngine
+            _graph  = ObservationGraph()
+            _engine = PolicyProposalEngine(graph=_graph)
+            _engine.expire_stale_proposals()
+            self._proposal_engine = _engine
+            logger.debug(
+                "[OpenClawGuard] Policy proposals enabled — agent=%s",
+                self.agent_name,
+            )
+        except Exception as e:
+            logger.debug("[OpenClawGuard] Policy proposal init error: %s", e)
+
     def enable_intent_prediction(self, graph=None) -> "SessionForecaster":
         """
         Enable predictive intent modeling for this session.
@@ -976,6 +1082,71 @@ class OpenClawGuard:
 
         if has_extensions:
             artifact.extensions = ext
+
+        # Federation: push anonymized transitions at session close (Pro tier)
+        if hasattr(self, "_federation_client") and hasattr(self, "_intent_predictor"):
+            try:
+                pushed = self._federation_client.push_transitions(
+                    self._intent_predictor._model
+                )
+                if pushed:
+                    logger.debug(
+                        "[OpenClawGuard] Federation contribution submitted — agent=%s",
+                        self.agent_name,
+                    )
+            except Exception as e:
+                logger.debug("[OpenClawGuard] Federation push error: %s", e)
+
+        # Behavioral baseline scoring — scored at session close
+        if hasattr(self, "_baseline_engine"):
+            try:
+                from aiglos.core.behavioral_baseline import SessionStats
+                # Build SessionStats from this session's results
+                surface_counts: dict = {}
+                rule_counts:    dict = {}
+                warned = 0
+                for r in self._results:
+                    surf = "mcp"   # default surface for MCP guard
+                    surface_counts[surf] = surface_counts.get(surf, 0) + 1
+                    if r.verdict == Verdict.BLOCK and r.threat_class:
+                        rule_counts[r.threat_class] =                             rule_counts.get(r.threat_class, 0) + 1
+                    if r.verdict == Verdict.WARN:
+                        warned += 1
+
+                sess_stats = SessionStats(
+                    agent_name     = self.agent_name,
+                    session_id     = self.session_id,
+                    total_events   = len(self._results),
+                    blocked_events = artifact.blocked_calls,
+                    warned_events  = warned,
+                    surface_counts = surface_counts,
+                    rule_counts    = rule_counts,
+                )
+                bl_score = self._baseline_engine.score_session(sess_stats)
+
+                if artifact.extensions is None:
+                    artifact.extensions = ArtifactExtensions()
+
+                artifact.extensions.baseline = bl_score.to_dict()
+
+                if bl_score.risk in ("MEDIUM", "HIGH"):
+                    logger.warning(
+                        "[OpenClawGuard] BEHAVIORAL ANOMALY %s — agent=%s "
+                        "composite=%.2f features=%s",
+                        bl_score.risk, self.agent_name,
+                        bl_score.composite, bl_score.anomalous_features,
+                    )
+
+                # Persist updated baseline
+                if hasattr(self, "_baseline_graph"):
+                    self._baseline_engine.train(force=True)
+                    if self._baseline_engine.baseline:
+                        self._baseline_graph.upsert_baseline(
+                            self.agent_name, self._baseline_engine.baseline
+                        )
+
+            except Exception as e:
+                logger.debug("[OpenClawGuard] Baseline scoring error: %s", e)
 
         if self.log_path:
             artifact.write(self.log_path)
