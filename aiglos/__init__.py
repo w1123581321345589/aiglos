@@ -59,6 +59,7 @@ log = logging.getLogger("aiglos")
 from aiglos.integrations.openclaw import (   # noqa: F401
     OpenClawGuard,
     SessionArtifact,
+    ArtifactExtensions,
     GuardResult as CheckResult,
 )
 from aiglos.integrations.openclaw import (
@@ -570,4 +571,30 @@ __all__ = [
     "MemoryProvenanceGraph",
     "CrossSessionRisk",
     "BeliefDriftReport",
+    # v0.6.0
+    "RLFeedbackGuard",
+    "RLFeedbackResult",
+    "SecurityAwareReward",
+    "CoupledRewardResult",
+    # v0.8.0
+    "InjectionScanner",
+    "InjectionScanResult",
+    "scan_tool_output",
+    "score_content",
+    "is_injection",
+    # v0.9.0
+    "CausalTracer",
+    "CausalChain",
+    "AttributionResult",
+    "ContextEntry",
+    "TaggedAction",
+    # v0.10.0
+    "IntentPredictor",
+    "PredictionResult",
+    "MarkovTransitionModel",
+    "SessionForecaster",
+    "ForecastAdjustment",
+    "ForecastSnapshot",
+    # v0.10.0 artifact
+    "ArtifactExtensions",
 ]
