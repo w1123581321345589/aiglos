@@ -5,11 +5,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Optional, Dict, List
 
-from aiglos.integrations.openclaw import (
-    OpenClawGuard, GuardResult, SessionArtifact,
-    _SHELL_DANGER, _SSRF_PATTERNS, _CRED_PATHS, _HEARTBEAT_PATHS,
-    _SUPPLY_CHAIN, _MEMORY_PATHS, _MEMORY_POISON_SIGNALS,
-)
+from aiglos.integrations.openclaw import OpenClawGuard, GuardResult, SessionArtifact, Verdict
 
 _HERMES_TOOL_MAP = {
     "terminal": "shell.execute",
@@ -17,6 +13,11 @@ _HERMES_TOOL_MAP = {
     "read_file": "filesystem.read_file",
     "write_file": "filesystem.write_file",
 }
+
+_SOUL_POISON_SIGNALS = [
+    "ignore previous", "override", "always allow",
+    "pre-authorized", "bypass", "new instructions",
+]
 
 
 class HermesGuard:
@@ -42,18 +43,25 @@ class HermesGuard:
             path = args.get("path", "")
             content = args.get("content", "").lower()
             if "soul.md" in path.lower():
-                for sig in _MEMORY_POISON_SIGNALS:
+                for sig in _SOUL_POISON_SIGNALS:
                     if sig in content:
-                        self._inner._calls.append({"tool": tool_name, "args": args, "ts": time.time()})
-                        self._inner._blocked += 1
-                        return GuardResult(verdict="BLOCK", blocked=True, allowed=False, score=0.90, threat_class="T36", rule_id="T36", reason="SOUL.md injection")
+                        result = GuardResult(
+                            verdict=Verdict.BLOCK, tool_name=tool_name,
+                            tool_args=args, score=0.90, threat_class="T36",
+                            threat_name="SOUL_POISON", reason="SOUL.md injection",
+                        )
+                        self._inner._results.append(result)
+                        return result
 
         return self._inner.before_tool_call(mapped, mapped_args)
 
     def spawn_sub_guard(self, name: str) -> "HermesGuard":
-        child = HermesGuard(agent_name=name, policy=self.policy, log_path=self._inner._log_path)
-        self._inner._children.append(child._inner)
-        self._inner._child_names.append(name)
+        child = HermesGuard(agent_name=name, policy=self.policy, log_path=str(self._inner.log_path) if self._inner.log_path else None)
+        if not hasattr(self._inner, "_child_guards"):
+            self._inner._child_guards = []
+        self._inner._child_guards.append(child._inner)
+        if name not in self._inner.sub_agents:
+            self._inner.sub_agents.append(name)
         self._children_names.append(name)
         return child
 
@@ -62,7 +70,7 @@ class HermesGuard:
 
     def close_session(self) -> SessionArtifact:
         artifact = self._inner.close_session()
-        artifact.sub_agents = self._inner._child_names
+        artifact.sub_agents = self._inner.sub_agents
         return artifact
 
     def sign_trajectory(self, trajectory: Dict) -> Dict:
