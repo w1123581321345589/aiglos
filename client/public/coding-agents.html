@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#0a0a0a;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coding Agent Security — Aiglos</title>
+<meta name="description" content="37 vulnerabilities. 84% attack success rate. Aiglos secures Cursor, Claude Code, and Copilot deployments at the process level — before the damage is done."/>
+<meta property="og:title" content="Aiglos — Coding Agent Security for Enterprise"/>
+<meta property="og:description" content="Your developers are running AI coding agents with root access to production codebases. Aiglos watches every subprocess call, every API request, every file write — before it executes."/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; background: #0a0a0a; }
+:root {
+  --bg:    #0a0a0a;
+  --s1:    #111113;
+  --s2:    #17171b;
+  --s3:    #1e1e23;
+  --ink:   #eeeef0;
+  --ink2:  rgba(238,238,240,0.62);
+  --ink3:  rgba(238,238,240,0.36);
+  --rule:  rgba(255,255,255,0.07);
+  --rule2: rgba(255,255,255,0.12);
+  --red:   #e8352a;
+  --red-a: rgba(232,53,42,0.12);
+  --green: #00d97e;
+  --amber: #f5a623;
+  --blue:  #4f8ef7;
+  --disp:  'Fraunces', Georgia, serif;
+  --body:  'Outfit', system-ui, sans-serif;
+  --mono:  'IBM Plex Mono', ui-monospace, monospace;
+}
+body {
+  background: #0a0a0a;
+  background: var(--bg);
+  color: #eeeef0;
+  color: var(--ink);
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 200;
+  height: 56px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px;
+  background: rgba(10,10,10,0.88); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--rule);
+}
+.nav-logo { font-family: var(--mono); font-size: 14px; font-weight: 600; letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+.logo-pip { width: 7px; height: 7px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red); animation: pip 3s ease-in-out infinite; }
+@keyframes pip { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.nav-links { display: flex; gap: 28px; }
+.nav-links a { font-size: 13.5px; color: var(--ink3); transition: color .15s; }
+.nav-links a:hover { color: var(--ink2); }
+.btn-nav-ghost { font-size: 13px; color: var(--ink3); border: 1px solid var(--rule2); background: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all .15s; }
+.btn-nav-ghost:hover { color: var(--ink); border-color: rgba(255,255,255,.22); }
+.btn-nav-red { font-size: 13px; font-weight: 600; color: #fff; background: var(--red); border: none; padding: 7px 16px; border-radius: 6px; cursor: pointer; transition: opacity .15s; }
+.btn-nav-red:hover { opacity: .88; }
+
+/* HERO */
+.hero {
+  max-width: 1040px; margin: 0 auto;
+  padding: 120px 40px 80px;
+  position: relative;
+}
+.hero::before {
+  content: '';
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 500px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(232,53,42,0.06) 0%, transparent 65%);
+  pointer-events: none;
+}
+.hero-label {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--mono); font-size: 10px; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink3); margin-bottom: 32px;
+}
+.hero-label-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); animation: pip 2s ease-in-out infinite; }
+.hero h1 {
+  font-family: var(--disp);
+  font-size: clamp(44px, 6.5vw, 80px);
+  font-weight: 300; letter-spacing: -0.03em; line-height: 1.06;
+  margin-bottom: 24px;
+}
+.hero h1 em { font-style: italic; color: var(--ink2); }
+.hero h1 .red { color: var(--red); font-style: italic; }
+.hero-sub {
+  font-size: clamp(15px, 1.8vw, 17px); color: var(--ink3);
+  font-weight: 300; line-height: 1.75; max-width: 520px; margin-bottom: 40px;
+}
+.hero-ctas { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 56px; }
+.btn-hero {
+  font-family: var(--body); font-size: 15px; font-weight: 600;
+  color: #fff; background: var(--red); padding: 13px 28px;
+  border: none; border-radius: 8px; cursor: pointer;
+  box-shadow: 0 0 28px rgba(232,53,42,0.20);
+  transition: opacity .15s, transform .1s;
+}
+.btn-hero:hover { opacity: .88; transform: translateY(-1px); }
+.btn-ghost-hero {
+  font-size: 14px; color: var(--ink2); padding: 13px 24px;
+  border: 1px solid var(--rule2); border-radius: 8px; background: none;
+  cursor: pointer; transition: all .15s;
+}
+.btn-ghost-hero:hover { color: var(--ink); border-color: rgba(255,255,255,.2); }
+
+/* STAT ROW */
+.stat-row {
+  display: flex; gap: 0;
+  border: 1px solid var(--rule2); border-radius: 10px;
+  overflow: hidden; max-width: 640px;
+  background: var(--s1);
+}
+.stat-cell {
+  flex: 1; padding: 20px 24px;
+  border-right: 1px solid var(--rule);
+}
+.stat-cell:last-child { border-right: none; }
+.stat-num {
+  font-family: var(--mono); font-size: 28px; font-weight: 600;
+  color: var(--red); line-height: 1; margin-bottom: 6px;
+}
+.stat-label { font-size: 12px; color: var(--ink3); line-height: 1.45; }
+
+/* SECTIONS */
+.section { max-width: 1040px; margin: 0 auto; padding: 96px 40px; border-top: 1px solid var(--rule); }
+.eyebrow {
+  font-family: var(--mono); font-size: 10px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3);
+  margin-bottom: 18px;
+}
+.eyebrow::before { content: '//'; color: var(--red); margin-right: 8px; }
+h2 {
+  font-family: var(--disp);
+  font-size: clamp(28px, 4vw, 44px); font-weight: 300;
+  letter-spacing: -0.025em; line-height: 1.12; margin-bottom: 16px;
+}
+h2 em { font-style: italic; color: var(--ink2); }
+h2 .red { color: var(--red); font-style: italic; }
+.lead { font-size: 16px; color: var(--ink3); font-weight: 300; line-height: 1.75; max-width: 560px; margin-bottom: 48px; }
+
+/* INCIDENT BLOCK */
+.incident-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; margin-bottom: 48px; }
+.incident-cell { background: var(--s1); padding: 28px 32px; }
+.incident-tag {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--red);
+  border: 1px solid rgba(232,53,42,0.3); padding: 3px 8px;
+  border-radius: 3px; display: inline-block; margin-bottom: 14px;
+}
+.incident-cell h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+.incident-cell p { font-size: 13.5px; color: var(--ink3); line-height: 1.65; }
+
+/* HOW IT WORKS — three columns */
+.how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.how-cell { background: var(--s1); padding: 28px 28px 32px; }
+.how-num { font-family: var(--mono); font-size: 10px; color: var(--ink3); letter-spacing: 0.08em; margin-bottom: 14px; }
+.how-cell h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+.how-cell p { font-size: 13.5px; color: var(--ink3); line-height: 1.65; }
+.how-cell .code-snip {
+  margin-top: 16px; background: var(--bg); border: 1px solid var(--rule);
+  border-radius: 6px; padding: 12px 14px;
+  font-family: var(--mono); font-size: 11.5px; line-height: 1.7;
+  color: var(--ink3);
+}
+.snip-green { color: var(--green); }
+.snip-red { color: var(--red); font-weight: 600; }
+.snip-amber { color: var(--amber); }
+.snip-dim { color: rgba(238,238,240,0.28); }
+
+/* TIER TABLE */
+.tier-table { width: 100%; border-collapse: collapse; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.tier-table th {
+  background: var(--s2); font-family: var(--mono); font-size: 10px;
+  font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink3); padding: 12px 20px; text-align: left;
+  border-bottom: 1px solid var(--rule);
+}
+.tier-table td { padding: 14px 20px; font-size: 13.5px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.tier-table tr:last-child td { border-bottom: none; }
+.tier-table tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+.tier-badge {
+  display: inline-block; font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.06em; padding: 3px 9px; border-radius: 4px;
+  font-weight: 600;
+}
+.badge-1 { background: rgba(0,217,126,0.12); color: var(--green); }
+.badge-2 { background: rgba(245,166,35,0.12); color: var(--amber); }
+.badge-3 { background: rgba(232,53,42,0.12); color: var(--red); }
+.tier-action { font-family: var(--mono); font-size: 12px; color: var(--ink3); }
+
+/* VULN TABLE */
+.vuln-table { width: 100%; border-collapse: collapse; }
+.vuln-table th {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink3); padding: 10px 16px;
+  text-align: left; border-bottom: 1px solid var(--rule);
+}
+.vuln-table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--rule); color: var(--ink2); }
+.vuln-table tr:last-child td { border-bottom: none; }
+.vuln-id { font-family: var(--mono); font-size: 11px; color: var(--red); }
+.vuln-severity {
+  font-family: var(--mono); font-size: 10px; padding: 2px 8px; border-radius: 3px;
+}
+.sev-crit { background: rgba(232,53,42,0.15); color: var(--red); }
+.sev-high { background: rgba(245,166,35,0.15); color: var(--amber); }
+
+/* TESTIMONIAL STRIP */
+.quote-strip { background: var(--s1); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 48px 40px; }
+.quote-grid { max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.quote-card { padding: 24px 28px; background: var(--s2); border-radius: 8px; border: 1px solid var(--rule); }
+.quote-text { font-size: 14px; color: var(--ink2); line-height: 1.7; margin-bottom: 16px; font-style: italic; }
+.quote-attr { font-family: var(--mono); font-size: 11px; color: var(--ink3); }
+
+/* PRICING NUDGE */
+.pricing-nudge { background: var(--s1); border-top: 1px solid var(--rule); padding: 80px 40px; text-align: center; }
+.pricing-nudge-inner { max-width: 560px; margin: 0 auto; }
+.pricing-nudge h2 { font-family: var(--disp); font-size: clamp(28px, 4vw, 40px); font-weight: 300; letter-spacing: -0.025em; margin-bottom: 14px; }
+.pricing-nudge p { font-size: 15px; color: var(--ink3); line-height: 1.72; margin-bottom: 32px; }
+.nudge-ctas { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+/* FOOTER */
+footer { border-top: 1px solid var(--rule); padding: 32px 40px; display: flex; align-items: center; justify-content: space-between; }
+.footer-logo { font-family: var(--mono); font-size: 13px; color: var(--ink3); }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a { font-size: 13px; color: var(--ink3); transition: color .15s; }
+.footer-links a:hover { color: var(--ink2); }
+
+@media (max-width: 700px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .hero { padding: 80px 20px 60px; }
+  .section { padding: 64px 20px; }
+  .incident-grid, .how-grid, .quote-grid { grid-template-columns: 1fr; }
+  .stat-row { flex-direction: column; }
+  .stat-cell { border-right: none; border-bottom: 1px solid var(--rule); }
+  footer { flex-direction: column; gap: 16px; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <div class="logo-pip"></div>
+    aiglos
+  </div>
+  <div class="nav-links">
+    <a href="../index.html">Home</a>
+    <a href="#how">How it works</a>
+    <a href="#vulns">Vulnerabilities</a>
+    <a href="../website/pricing.html">Pricing</a>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <a href="https://github.com/w1123581321345589/aiglos" target="_blank"><button class="btn-nav-ghost">GitHub ↗</button></a>
+    <button class="btn-nav-red" onclick="window.location='../index.html#pricing'">Get started →</button>
+  </div>
+</nav>
+
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-label">
+    <span class="hero-label-dot"></span>
+    Coding agent security
+  </div>
+
+  <h1>
+    Your developers gave<br/>
+    Cursor <span class="red">root access.</span><br/>
+    <em>Now what?</em>
+  </h1>
+
+  <p class="hero-sub">
+    37 vulnerabilities across 15 AI coding tools. 84% attack success rate.
+    Aiglos is the first runtime layer that secures Cursor, Claude Code, and
+    GitHub Copilot at the process level — not after the damage is done.
+  </p>
+
+  <div class="hero-ctas">
+    <button class="btn-hero" onclick="window.location='../index.html#pricing'">Deploy for your team →</button>
+    <a href="https://github.com/w1123581321345589/aiglos" target="_blank">
+      <button class="btn-ghost-hero">View on GitHub ↗</button>
+    </a>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-cell">
+      <div class="stat-num">37</div>
+      <div class="stat-label">vulnerabilities across<br/>15 AI coding tools</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">84%</div>
+      <div class="stat-label">attack success rate<br/>against coding agents</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">13h</div>
+      <div class="stat-label">AWS production outage<br/>from an AI coding tool</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">0</div>
+      <div class="stat-label">enterprise-grade runtime<br/>monitors — before Aiglos</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- THE PROBLEM -->
+<section class="section">
+  <div class="eyebrow">The problem</div>
+  <h2>Coding agents don't use MCP.<br/><em>They use your shell.</em></h2>
+  <p class="lead">
+    Cursor, Claude Code, Copilot, and Cline execute commands directly.
+    They run <code style="font-family:var(--mono);font-size:13px;background:var(--s2);padding:1px 6px;border-radius:3px;">subprocess.run()</code>,
+    call REST APIs with <code style="font-family:var(--mono);font-size:13px;background:var(--s2);padding:1px 6px;border-radius:3px;">requests.post()</code>,
+    and write files across your entire codebase.
+    Existing security tools were built for MCP. They miss everything else.
+  </p>
+
+  <div class="incident-grid">
+    <div class="incident-cell">
+      <div class="incident-tag">Amazon / Kiro · Dec 2025</div>
+      <h3>AI coding tool deletes production environment</h3>
+      <p>Amazon's own AI coding tool ran <code style="font-family:var(--mono);font-size:12px;">terraform destroy</code> followed by <code style="font-family:var(--mono);font-size:12px;">terraform apply</code> on a production environment. Both commands individually valid. Together, a 13-hour outage. Amazon's fix: mandatory senior engineer sign-off on all AI-assisted code. A human workaround to a software problem.</p>
+    </div>
+    <div class="incident-cell">
+      <div class="incident-tag">Research · March 2026</div>
+      <h3>84% attack success rate against coding agents</h3>
+      <p>Security researchers demonstrated that AI coding agents can be manipulated through malicious code comments, poisoned documentation, and prompt injection in dependency names — causing agents to exfiltrate credentials, introduce backdoors, and execute destructive commands. No existing tool monitors the subprocess execution path.</p>
+    </div>
+    <div class="incident-cell">
+      <div class="incident-tag">GhostClaw RAT · March 2026</div>
+      <h3>Malicious package installs RAT via npm</h3>
+      <p>A fake OpenClaw installer on npm deployed GhostLoader, stealing SSH keys, AWS credentials, browser passwords, and Kubernetes configs. The attack targeted developers in the moment of installing a new AI tool. Your coding agent's <code style="font-family:var(--mono);font-size:12px;">npm install</code> is the attack surface. Aiglos classifies every package install as Tier 2 monitored.</p>
+    </div>
+    <div class="incident-cell">
+      <div class="incident-tag">37 CVEs · 15 AI IDEs</div>
+      <h3>Every major coding tool has unpatched vulnerabilities</h3>
+      <p>Cursor, VS Code with Copilot, Cline, Continue, Aider, and 10 others have documented vulnerabilities enabling prompt injection, credential exfiltration, and remote code execution through the coding agent's command execution path. None of them ship with a runtime security layer. That's what Aiglos is.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="eyebrow">Getting started</div>
+  <h2>One import.<br/><em>Every action covered.</em></h2>
+  <p class="lead">
+    Aiglos patches into your agent process at import time — no proxy, no sidecar,
+    no architecture changes. The three interception layers activate in a single call.
+  </p>
+
+  <div class="how-grid" style="margin-bottom:48px;">
+    <div class="how-cell">
+      <div class="how-num">01 — MCP tool calls</div>
+      <h3>Framework-level inspection</h3>
+      <p>Every MCP tool call passes through T01–T39 before execution. Works with LangChain, AutoGen, CrewAI, OpenClaw, Hermes, and any framework using the MCP SDK.</p>
+      <div class="code-snip">
+        <span class="snip-green">✓</span> filesystem.read_file<br/>
+        <span class="snip-red">✗</span> shell.execute <span class="snip-amber">T07</span><br/>
+        <span class="snip-red">✗</span> network.fetch <span class="snip-amber">T13</span>
+      </div>
+    </div>
+    <div class="how-cell">
+      <div class="how-num">02 — Direct API calls</div>
+      <h3>HTTP interception</h3>
+      <p>Patches requests, httpx, aiohttp, and urllib. Every outbound HTTP call inspected before network I/O. SSRF, credential exfiltration, and recon endpoints blocked automatically.</p>
+      <div class="code-snip">
+        <span class="snip-red">✗</span> GET 169.254.169.254 <span class="snip-amber">T25</span><br/>
+        <span class="snip-green">✓</span> POST api.openai.com<br/>
+        <span class="snip-red">✗</span> POST attacker.ngrok.io <span class="snip-amber">T19</span>
+      </div>
+    </div>
+    <div class="how-cell">
+      <div class="how-num">03 — Subprocess / CLI</div>
+      <h3>Three-tier blast radius control</h3>
+      <p>Patches subprocess and os.system. Read-only commands auto-allow. File writes are monitored with compensating transactions. Destructive commands pause and await approval.</p>
+      <div class="code-snip">
+        <span class="snip-green">T1</span> git status <span class="snip-dim">auto-allow</span><br/>
+        <span class="snip-amber">T2</span> pip install <span class="snip-dim">monitored</span><br/>
+        <span class="snip-red">T3</span> rm -rf <span class="snip-dim">gated</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--s1);border:1px solid var(--rule);border-radius:10px;padding:28px 32px;">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--ink3);margin-bottom:16px;"># deploy to your team in 60 seconds</div>
+    <div style="font-family:var(--mono);font-size:13.5px;line-height:1.9;">
+      <span style="color:var(--green);">import</span> aiglos<br/><br/>
+      aiglos.<span style="color:var(--blue);">attach</span>(<br/>
+      &nbsp;&nbsp;agent_name=<span style="color:rgba(238,238,240,0.55);">"cursor-session"</span>,<br/>
+      &nbsp;&nbsp;api_key=<span style="color:var(--amber);">API_KEY</span>,<br/>
+      &nbsp;&nbsp;intercept_http=<span style="color:var(--amber);">True</span>,<br/>
+      &nbsp;&nbsp;intercept_subprocess=<span style="color:var(--amber);">True</span>,<br/>
+      &nbsp;&nbsp;subprocess_tier3_mode=<span style="color:rgba(238,238,240,0.55);">"pause"</span>,&nbsp;&nbsp;<span style="color:var(--ink3);"># block | pause | warn</span><br/>
+      &nbsp;&nbsp;tier3_approval_webhook=<span style="color:rgba(238,238,240,0.55);">"https://hooks.pagerduty.com/..."</span>,<br/>
+      )<br/><br/>
+      <span style="color:var(--ink3);"># every subprocess, API call, and tool call now inspected</span><br/>
+      <span style="color:var(--ink3);"># signed session artifact written on close</span><br/>
+      artifact = aiglos.<span style="color:var(--blue);">close</span>()
+    </div>
+  </div>
+</section>
+
+
+<!-- BLAST RADIUS TIER TABLE -->
+<section class="section">
+  <div class="eyebrow">Blast radius control</div>
+  <h2>Not all commands<br/><em>are created equal.</em></h2>
+  <p class="lead">
+    Aiglos classifies every subprocess call into one of three tiers before execution.
+    The tier determines how the action is handled — automatically, without requiring
+    security team involvement for routine operations.
+  </p>
+
+  <table class="tier-table">
+    <thead>
+      <tr>
+        <th>Tier</th>
+        <th>Action type</th>
+        <th>Examples</th>
+        <th>Behavior</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tier-badge badge-1">Tier 1</span></td>
+        <td style="color:var(--ink);">Autonomous</td>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--ink3);">git status, git log, ls, cat, pip list, pytest</td>
+        <td><span class="tier-action">Auto-allow · logged</span></td>
+      </tr>
+      <tr>
+        <td><span class="tier-badge badge-2">Tier 2</span></td>
+        <td style="color:var(--ink);">Monitored</td>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--ink3);">git commit, pip install, npm install, file writes</td>
+        <td><span class="tier-action">Allow · compensating transaction logged</span></td>
+      </tr>
+      <tr>
+        <td><span class="tier-badge badge-3">Tier 3</span></td>
+        <td style="color:var(--ink);">Gated</td>
+        <td style="font-family:var(--mono);font-size:12px;color:var(--ink3);">rm -rf, terraform destroy, kubectl delete, DROP TABLE, git push --force</td>
+        <td><span class="tier-action">Block · or pause + webhook approval</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top:20px;font-size:13px;color:var(--ink3);">
+    Tier 3 behavior is configurable per deployment: <code style="font-family:var(--mono);font-size:12px;">block</code> (hard exception),
+    <code style="font-family:var(--mono);font-size:12px;">pause</code> (emit PagerDuty/Slack webhook, resume on signed approval token),
+    or <code style="font-family:var(--mono);font-size:12px;">warn</code> (log and allow). Default for enterprise: pause.
+  </p>
+</section>
+
+
+<!-- VULNERABILITY TABLE -->
+<section class="section" id="vulns">
+  <div class="eyebrow">CVE coverage</div>
+  <h2>The vulnerabilities your<br/><em>tools already have.</em></h2>
+  <p class="lead">
+    37 documented vulnerabilities across 15 AI coding tools. Every one of them
+    exploits the subprocess execution path — the surface that existing MCP scanners
+    cannot see. Aiglos covers each one.
+  </p>
+
+  <table class="vuln-table">
+    <thead>
+      <tr>
+        <th>CVE / Finding</th>
+        <th>Tool</th>
+        <th>Attack vector</th>
+        <th>Aiglos rule</th>
+        <th>Severity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="vuln-id">CVE-2026-25198</td>
+        <td>Cursor, Cline</td>
+        <td>Prompt injection via malicious code comment causes agent to run arbitrary shell command</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--amber);">T07 SHELL_INJECT</td>
+        <td><span class="vuln-severity sev-crit">Critical</span></td>
+      </tr>
+      <tr>
+        <td class="vuln-id">CVE-2026-24774</td>
+        <td>Claude Code, Copilot</td>
+        <td>Direct API calls exfiltrate credential files from agent working directory</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--amber);">T19 CRED_HARVEST</td>
+        <td><span class="vuln-severity sev-crit">Critical</span></td>
+      </tr>
+      <tr>
+        <td class="vuln-id">GhostClaw RAT</td>
+        <td>OpenClaw, npm</td>
+        <td>Malicious package install via coding agent deploys persistent RAT</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--amber);">T36 SUPPLY_CHAIN</td>
+        <td><span class="vuln-severity sev-crit">Critical</span></td>
+      </tr>
+      <tr>
+        <td class="vuln-id">Kiro Blast Pattern</td>
+        <td>Amazon Kiro</td>
+        <td>Destructive command pair (destroy + apply) passes individual scanners, causes production outage</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--amber);">T_DEST Tier 3 gate</td>
+        <td><span class="vuln-severity sev-crit">Critical</span></td>
+      </tr>
+      <tr>
+        <td class="vuln-id">Nemotron Campaign</td>
+        <td>Local inference agents</td>
+        <td>1M-context model silently maps full codebase secrets before emitting one clean-looking call</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--amber);">T06 CAMPAIGN / T22 RECON</td>
+        <td><span class="vuln-severity sev-crit">Critical</span></td>
+      </tr>
+      <tr>
+        <td class="vuln-id">Dependency Confusion</td>
+        <td>All coding agents</td>
+        <td>Agent installs malicious package with same name as internal package via pip/npm</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--amber);">T36 SUPPLY_CHAIN</td>
+        <td><span class="vuln-severity sev-high">High</span></td>
+      </tr>
+      <tr>
+        <td class="vuln-id">Crontab Persistence</td>
+        <td>Aider, Continue</td>
+        <td>Agent modifies crontab or systemd unit files to establish persistence after session close</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--amber);">T11 PERSISTENCE</td>
+        <td><span class="vuln-severity sev-high">High</span></td>
+      </tr>
+      <tr>
+        <td class="vuln-id">Env Dump Exfil</td>
+        <td>All coding agents</td>
+        <td>Agent pipes environment variables to attacker-controlled endpoint via curl/wget</td>
+        <td style="font-family:var(--mono);font-size:11px;color:var(--amber);">T21 ENV_LEAK + T23</td>
+        <td><span class="vuln-severity sev-high">High</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top:16px;font-size:13px;color:var(--ink3);">
+    Full CVE registry: <a href="https://github.com/w1123581321345589/aiglos" style="color:var(--blue);">github.com/aiglos/aiglos-cves ↗</a>
+  </p>
+</section>
+
+
+<!-- QUOTES -->
+<div class="quote-strip">
+  <div class="quote-grid">
+    <div class="quote-card">
+      <div class="quote-text">"We were running Cursor across a 40-person engineering team with no visibility into what it was actually executing. Aiglos showed us within the first session that it had attempted to read our .env files twice. Nobody had noticed."</div>
+      <div class="quote-attr">// Engineering lead, Series B fintech</div>
+    </div>
+    <div class="quote-card">
+      <div class="quote-text">"The blast radius tier system is exactly what our security team needed to approve AI coding tools for production use. We couldn't get sign-off until we could show that destructive commands were gated. This unblocked it."</div>
+      <div class="quote-attr">// CISO, enterprise SaaS</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- PRICING NUDGE -->
+<div class="pricing-nudge">
+  <div class="pricing-nudge-inner">
+    <h2>Free for individual developers.<br/><em>Built for teams.</em></h2>
+    <p>
+      The open-source MIT tier includes the full T01–T39 detection stack and subprocess
+      monitoring. Pro adds cloud dashboard, signed session artifacts, and HTTP interception
+      on by default. Defense &amp; Government adds on-prem deployment and NDAA §1513 artifacts.
+    </p>
+    <div class="nudge-ctas">
+      <button class="btn-hero" onclick="window.location='../index.html#pricing'">See pricing →</button>
+      <a href="../website/defense.html">
+        <button class="btn-ghost-hero">Enterprise &amp; Defense →</button>
+      </a>
+    </div>
+  </div>
+</div>
+
+
+<footer>
+  <div class="footer-logo">aiglos v0.2.0</div>
+  <div class="footer-links">
+    <a href="../index.html">Home</a>
+    <a href="https://github.com/w1123581321345589/aiglos" target="_blank">GitHub</a>
+    <a href="../website/defense.html">Defense</a>
+    <a href="../index.html#pricing">Pricing</a>
+  </div>
+</footer>
+
+</body>
+</html>
