@@ -45,7 +45,7 @@ import aiglos  # every agent action below this line is inspected, attested, and 
 
 ## The moment
 
-In March 2026, a series of events in under two weeks made AI agent security impossible to defer.
+In March 2026, a series of incidents in under two weeks made AI agent security impossible to defer.
 
 An autonomous agent selected McKinsey as a target with no human direction. It found 22 unauthenticated API endpoints, exploited SQL injection via JSON key reflection, and within two hours had full read-write access to 46.5 million chat messages, 728,000 files, and every system prompt in the platform. The system prompts were writable. The agent modified them silently. For an unknown window, 40,000 consultants were operating a tool whose instructions had been replaced. This was a new attack category: machine-speed, fully autonomous, invisible to every existing tool because those tools watched individual calls, not the session-level campaign that assembled them.
 
