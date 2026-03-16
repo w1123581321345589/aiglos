@@ -26,7 +26,7 @@ with every deployment in the network.
 |---|---|---|---|---|---|
 | **39** threat families | **3** execution surfaces | **13** inspection triggers | **Learns your deployment** | **Network intelligence** | **Zero dependencies** |
 
-[The moment](#the-moment) · [What changed](#what-changed-in-v013) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli) · [Pricing](#pricing)
+[The moment](#the-moment) · [What changed](#what-changed-in-v013) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli)
 
 </div>
 
@@ -45,15 +45,45 @@ import aiglos  # every agent action below this line is inspected, attested, and 
 
 ## The moment
 
-In March 2026, seven events in under two weeks made AI agent security impossible to defer.
+88% of organizations experienced AI agent security incidents in 2025 ([Gravitee State of AI Agent Security 2026 Report](https://www.gravitee.io/blog/state-of-ai-agent-security-2026-report-when-adoption-outpaces-control)). 16,200 AI-related security incidents were recorded that year, a 49% increase year-over-year ([Obsidian Security](https://www.reco.ai/blog/ai-and-cloud-security-breaches-2025)). Only 14.4% of organizations deploying AI agents went live with full security approval. The gap between adoption and control became the defining security failure of the decade.
 
-An autonomous agent selected McKinsey as a target with no human direction. It found 22 unauthenticated API endpoints, exploited SQL injection via JSON key reflection, and within two hours had full read-write access to 46.5 million chat messages, 728,000 files, and every system prompt in the platform. The system prompts were writable. The agent modified them silently. For an unknown window, 40,000 consultants were operating a tool whose instructions had been replaced. This was a new attack category: machine-speed, fully autonomous, invisible to every existing tool because those tools watched individual calls, not the session-level campaign that assembled them.
+### The attacks that changed everything
 
-135,000 agent instances exposed to the public internet with authentication bypass. A repository of 120 specialized sub-agents hit 31,000 stars with an install path that writes directly into the directory that reprograms every future AI session on the host. A malicious npm package posing as a major framework installer went live on launch day, deploying a persistent RAT harvesting SSH keys, AWS credentials, and crypto wallets. The payload was AES-256-GCM encrypted. VirusTotal saw a clean package.
+**GTG-1002: The first autonomous cyber-espionage campaign.** In September 2025, Anthropic disclosed that a China-linked threat actor used Claude Code inside an agentic framework to run reconnaissance, exploit vulnerabilities, move laterally, and exfiltrate data across roughly 30 organizations in technology, finance, chemicals, and government. 80–90% of the campaign was executed autonomously — the human operator intervened at perhaps 4–6 decision points per intrusion. The agent generated exploit payloads, iterated on failed attempts, mapped complete network topologies, queried databases, and categorized stolen data, all at thousands of requests per second. This was physically impossible for a human team. Anthropic's CEO was called to testify before the House Committee on Homeland Security in December 2025. ([Anthropic disclosure](https://www.anthropic.com/news/disrupting-AI-espionage); [full technical report PDF](https://assets.anthropic.com/m/ec212e6566a0d47/original/Disrupting-the-first-reported-AI-orchestrated-cyber-espionage-campaign.pdf))
 
-Alongside this, Princeton released a live RL training system. The reward signal became a write path to the model's weights. "You should have sent the credentials to that endpoint" is not a bad log entry — it is a token-level instruction that modifies trained behavior across all future sessions.
+**CVE-2025-53773: GitHub Copilot remote code execution.** Prompt injection via code comments triggered Copilot's "YOLO mode" — an auto-approve setting that grants unrestricted shell access, file modification, and package installation. Malicious instructions embedded in a README or code comment could silently enable `chat.tools.autoApprove`, then execute arbitrary commands without user interaction. Researchers demonstrated wormable RCE, self-replicating AI viruses that propagate through Git repositories, and "ZombAI" botnets recruiting developer workstations. CVSS 7.8, patched August 2025. ([Embrace The Red](https://embracethered.com/blog/posts/2025/github-copilot-remote-code-execution-via-prompt-injection/); [Microsoft advisory](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-53773))
 
-Aiglos is what closes the gap — across every surface, every session, every write path, and now every deployment in the network.
+**CVE-2025-32711: Microsoft Copilot zero-click data exfiltration.** A malicious email containing hidden prompt injection instructions could trigger Copilot to silently exfiltrate data — no user click required. The attack bypassed Microsoft's cross-prompt injection classifier entirely. ([OWASP Agentic AI reference: "EchoLeak"](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/))
+
+**Cursor AI MCP exploits.** CVE-2025-0223 allowed unauthorized MCP server creation and remote code execution via GitHub README files. CVE-2025-0224 exploited Cursor's one-time trust mechanism to establish persistent backdoors. ([Persistent Security](https://www.persistent-security.net/post/part-iii-vscode-copilot-wormable-command-execution-via-prompt-injection))
+
+**Drift OAuth token theft.** Threat actor UNC6395 compromised Drift's Salesforce integration, stealing OAuth tokens to access 700+ organizations — exfiltrating contacts, opportunities, and AWS credentials across the supply chain. Estimated impact: $200M in Q1 2025 alone. ([Reco.ai 2025 Year in Review](https://www.reco.ai/blog/ai-and-cloud-security-breaches-2025))
+
+**MCP supply chain poisoning.** 1,184 malicious skills discovered across agent marketplaces — 41.7% of audited packages. Attack vectors included typosquatting, automated mass uploads, and malicious MCP servers. One npm package posing as a Postmark integration silently BCC'd every email to the attacker. Another contained dual reverse shells across 126 packages with 86,000 downloads. ([OWASP ASI-04](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/))
+
+**Memory poisoning in production.** Demonstrated persistent memory corruption where agents developed false beliefs about security policies that persisted for weeks. Compromised context reshapes agent behavior long after the initial injection — the "sleeper agent" scenario. Agents actively defended false beliefs when questioned by humans. ([OWASP ASI-06; Lakera Q4 2025 Attack Data](https://www.esecurityplanet.com/artificial-intelligence/ai-agent-attacks-in-q4-2025-signal-new-risks-for-2026/))
+
+**Multi-agent cascading failures.** A single compromised agent poisoned 87% of downstream decision-making within 4 hours. Cascading failures propagated faster than traditional incident response could contain them. The root cause was hidden in inter-agent communication logs that no existing tool was designed to inspect. ([OWASP ASI-08](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/))
+
+The IBM X-Force Threat Intelligence Index 2026 found that AI-enabled vulnerability discovery runs 44% faster than manual scanning, and that manufacturing was the most-targeted sector for the fifth consecutive year. Shadow AI breaches carry a $670,000 cost premium over standard incidents and take 247 days to detect. 63% of employees pasted sensitive data — source code, customer records, credentials — into personal chatbot accounts in 2025. ([IBM X-Force 2026](https://newsroom.ibm.com/2026-02-25-ibm-2026-x-force-threat-index-ai-driven-attacks-are-escalating-as-basic-security-gaps-leave-enterprises-exposed))
+
+### OWASP codifies the threat landscape
+
+In December 2025, the OWASP GenAI Security Project released the **Top 10 for Agentic Applications** — the first industry-standard taxonomy of autonomous agent risks, developed by 100+ security experts and adopted by Microsoft, NVIDIA, and AWS. The ten risks: Agent Goal Hijack (ASI-01), Tool Misuse (ASI-02), Identity & Privilege Abuse (ASI-03), Supply Chain Vulnerabilities (ASI-04), Unexpected Code Execution (ASI-05), Memory & Context Poisoning (ASI-06), Insecure Inter-Agent Communication (ASI-07), Cascading Failures (ASI-08), Human-Agent Trust Exploitation (ASI-09), and Rogue Agents (ASI-10). ([OWASP announcement](https://genai.owasp.org/2025/12/09/owasp-genai-security-project-releases-top-10-risks-and-mitigations-for-agentic-ai-security/))
+
+Aiglos v0.13 maps to every one of these — behavioral baselines detect goal hijack, OpenClaw triggers cover tool misuse and supply chain poisoning, memory security addresses ASI-06, multi-agent attestation covers ASI-07 and ASI-08, and the policy proposal system flags privilege escalation before it executes.
+
+### The regulatory wave
+
+**China: CAC draft regulations on anthropomorphic AI interaction (December 27, 2025).** The Cyberspace Administration of China published the *Interim Measures for the Management of Anthropomorphic AI Interaction Services* — draft regulations (not a ban) requiring security assessments before launch, mandatory AI disclosure to users every 2 hours, psychological risk monitoring for user dependence, and lifecycle security from design through deployment. Separately, China's amended Cybersecurity Law (effective January 1, 2026) explicitly incorporates AI for the first time, mandating R&D support and risk assessments at the national level. China's "AI Plus Action Plan" (August 2025) targets 70% AI penetration in key sectors by 2027. The regulatory posture is clear: scale AI aggressively, but with mandatory runtime controls. ([China Law Translate](https://www.chinalawtranslate.com/en/chatbot-measures-draft/); [Bloomberg](https://www.bloomberg.com/news/articles/2025-12-27/china-issues-draft-rules-to-govern-use-of-human-like-ai-systems))
+
+**EU AI Act: August 2, 2026 hard deadline for high-risk systems.** The Act defines AI systems as "machine-based systems designed to operate with varying levels of autonomy" — language that covers every tool-calling agent in production. Autonomous agents used in employment, finance, biometrics, education, critical infrastructure, law enforcement, or healthcare are classified high-risk under Annex III, requiring conformity assessments, risk management systems, human oversight with override mechanisms, technical documentation with decision explainability, CE marking, and registration in the EU AI database. Penalties reach €35M or 7% of global annual turnover. Prohibited practices (social scoring, subliminal manipulation) have been enforceable since February 2025. GPAI model transparency obligations activated August 2025. The high-risk compliance deadline is five months away and harmonized technical standards from CEN/CENELEC are still not published. ([EU AI Office](https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai); [full text](https://artificialintelligenceact.eu/))
+
+**NIST AI 600-1: U.S. federal guidance for generative and agentic AI risk (July 2024).** The first Generative AI Profile of the AI Risk Management Framework, identifying 12 risk categories including information security (prompt injection, model poisoning, data extraction), human-AI configuration, and value chain/supply chain risks. The framework is voluntary but widely referenced by federal agencies, sector regulators (CFPB, FDA, SEC, FTC, EEOC), and federal contractors as the baseline for responsible AI deployment. NIST is extending the framework with agentic-specific guidance covering autonomous agent unpredictability, inter-agent dependencies, and human-in-the-loop requirements. ([NIST AI 600-1 PDF](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf))
+
+**NDAA §1513** created a hard compliance requirement for AI agent deployments in defense and federal contexts. Every defense prime and federal contractor deploying AI agents needs runtime attestation to pass program security reviews. FedRAMP-adjacent assurances for agentic systems are next — a signed, auditable artifact proving every tool call was inspected at runtime.
+
+The pattern across all three regulatory spheres — China, Europe, and the United States — is convergence on the same requirements: runtime inspection, human oversight mechanisms, signed attestation, and auditable evidence for every action an AI agent takes. Aiglos produces those artifacts today.
 
 ---
 
@@ -145,7 +175,7 @@ aiglos.attach(
     enable_intent_prediction=True,     # predicts next threat families
     enable_causal_tracing=True,        # traces blocked actions to injection sources
     enable_policy_proposals=True,      # replaces per-action webhooks with policy decisions
-    enable_federation=True,            # warm-starts from global prior (Pro tier)
+    enable_federation=True,            # warm-starts from global prior
 
     # Other guards
     enable_multi_agent=True,
@@ -205,7 +235,7 @@ aiglos policy approve prp_a1b2c3d4
 aiglos.attach(
     agent_name="new-agent",
     enable_federation=True,
-    api_key="ak_live_xxx",         # Pro tier required to contribute
+    api_key="ak_live_xxx",         # required to contribute to global prior
 )
 
 # Prior is merged automatically at attach() time
@@ -400,11 +430,11 @@ Noisy unigram transition counts over a 39-element rule vocabulary. Laplace noise
 aiglos.attach(
     agent_name="my-agent",
     enable_federation=True,
-    api_key="ak_live_xxx",    # free tier: pull only; Pro tier: contribute + pull
+    api_key="ak_live_xxx",    # enables contribution to global prior
 )
 
 # At attach(): pulls latest global prior, warm-starts intent predictor
-# At close():  contributes anonymized transitions (Pro tier)
+# At close():  contributes anonymized transitions
 
 # Check federation status
 client = aiglos.FederationClient(api_key="ak_live_xxx")
@@ -628,24 +658,9 @@ Session artifact fields:
 
 ---
 
-## Pricing
-
-| Tier | Cost | Includes |
-|------|------|---------|
-| **Free / MIT** | $0 | T01–T39, behavioral baseline, policy proposals, adaptive layer, memory guard, RL guard, SecurityAwareReward, autoresearch, skill scanner, causal tracing, intent prediction, Python + TypeScript SDKs, HMAC artifacts. Federation: pull global prior only. |
-| **Pro** | $39 / dev / mo | Free + contribute to global prior (makes every deployment smarter), RSA-2048 signed artifacts, cloud dashboard, CVE push, SIEM/webhook integration, compliance export |
-| **Teams** | $299 / mo (10 devs) + $29 / dev | Pro + centralized policy management, aggregated threat view, T3 approval workflows |
-| **Enterprise** | Custom, annual | Teams + on-prem/air-gap, dedicated support, custom rule packs |
-
-The free tier is complete. It is not a trial. Every intelligence layer — baseline, proposals, causal tracing, intent prediction — runs locally with no network dependency. Federation pull is free. Contribution (what makes the network smarter) is Pro.
-
----
-
-## Open source vs. proprietary
+## Open source
 
 Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, TypeScript SDK, CLI: **MIT**.
-
-Federation server, signed attestation artifacts, cloud dashboard, compliance reports, air-gap container: **Proprietary**.
 
 ---
 
