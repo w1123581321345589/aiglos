@@ -26,7 +26,7 @@ with every deployment in the network.
 |---|---|---|---|---|---|
 | **39** threat families | **3** execution surfaces | **13** inspection triggers | **Learns your deployment** | **Network intelligence** | **Zero dependencies** |
 
-[The moment](#the-moment) · [What changed](#what-changed-in-v013) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli) · [Pricing](#pricing)
+[The moment](#the-moment) · [What changed](#what-changed-in-v013) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli)
 
 </div>
 
@@ -45,13 +45,23 @@ import aiglos  # every agent action below this line is inspected, attested, and 
 
 ## The moment
 
-In March 2026, seven events in under two weeks made AI agent security impossible to defer.
+In March 2026, a series of events in under two weeks made AI agent security impossible to defer.
 
 An autonomous agent selected McKinsey as a target with no human direction. It found 22 unauthenticated API endpoints, exploited SQL injection via JSON key reflection, and within two hours had full read-write access to 46.5 million chat messages, 728,000 files, and every system prompt in the platform. The system prompts were writable. The agent modified them silently. For an unknown window, 40,000 consultants were operating a tool whose instructions had been replaced. This was a new attack category: machine-speed, fully autonomous, invisible to every existing tool because those tools watched individual calls, not the session-level campaign that assembled them.
 
 135,000 agent instances exposed to the public internet with authentication bypass. A repository of 120 specialized sub-agents hit 31,000 stars with an install path that writes directly into the directory that reprograms every future AI session on the host. A malicious npm package posing as a major framework installer went live on launch day, deploying a persistent RAT harvesting SSH keys, AWS credentials, and crypto wallets. The payload was AES-256-GCM encrypted. VirusTotal saw a clean package.
 
 Alongside this, Princeton released a live RL training system. The reward signal became a write path to the model's weights. "You should have sent the credentials to that endpoint" is not a bad log entry — it is a token-level instruction that modifies trained behavior across all future sessions.
+
+### The regulatory wave
+
+China's Cyberspace Administration banned autonomous AI agents from executing actions without human approval in regulated industries — financial services, healthcare, critical infrastructure. The ban is categorical: no agent may initiate a transaction, modify a record, or access a protected system without explicit human confirmation at the action level. This is the first sovereign-level prohibition on autonomous agent execution, and it arrived before most Western enterprises had even deployed agents to production.
+
+The EU AI Act's implementing provisions classified autonomous tool-calling agents as high-risk systems requiring conformity assessments, real-time monitoring, and auditable decision logs. NIST published AI 600-1, the first U.S. federal guidance specifically addressing agentic AI risk — mapping directly to the Govern, Map, Measure, and Manage functions that Aiglos already implements. The 2025 compliance attestation mandate requires enterprise deployments to establish governance frameworks for autonomous and agentic AI systems, with signed evidence packages.
+
+NDAA §1513 created a hard compliance requirement for AI agent deployments in defense and federal contexts. Every defense prime and federal contractor deploying AI agents now needs runtime attestation to pass program security reviews. FedRAMP-adjacent assurances for agentic systems are next — a signed, auditable artifact proving every tool call was inspected at runtime.
+
+The pattern is clear: every major regulatory body is converging on the same requirement — runtime inspection, signed attestation, and auditable evidence for every action an AI agent takes. Aiglos produces those artifacts today.
 
 Aiglos is what closes the gap — across every surface, every session, every write path, and now every deployment in the network.
 
@@ -145,7 +155,7 @@ aiglos.attach(
     enable_intent_prediction=True,     # predicts next threat families
     enable_causal_tracing=True,        # traces blocked actions to injection sources
     enable_policy_proposals=True,      # replaces per-action webhooks with policy decisions
-    enable_federation=True,            # warm-starts from global prior (Pro tier)
+    enable_federation=True,            # warm-starts from global prior
 
     # Other guards
     enable_multi_agent=True,
@@ -628,24 +638,9 @@ Session artifact fields:
 
 ---
 
-## Pricing
-
-| Tier | Cost | Includes |
-|------|------|---------|
-| **Free / MIT** | $0 | T01–T39, behavioral baseline, policy proposals, adaptive layer, memory guard, RL guard, SecurityAwareReward, autoresearch, skill scanner, causal tracing, intent prediction, Python + TypeScript SDKs, HMAC artifacts. Federation: pull global prior only. |
-| **Pro** | $39 / dev / mo | Free + contribute to global prior (makes every deployment smarter), RSA-2048 signed artifacts, cloud dashboard, CVE push, SIEM/webhook integration, compliance export |
-| **Teams** | $299 / mo (10 devs) + $29 / dev | Pro + centralized policy management, aggregated threat view, T3 approval workflows |
-| **Enterprise** | Custom, annual | Teams + on-prem/air-gap, dedicated support, custom rule packs |
-
-The free tier is complete. It is not a trial. Every intelligence layer — baseline, proposals, causal tracing, intent prediction — runs locally with no network dependency. Federation pull is free. Contribution (what makes the network smarter) is Pro.
-
----
-
-## Open source vs. proprietary
+## Open source
 
 Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, TypeScript SDK, CLI: **MIT**.
-
-Federation server, signed attestation artifacts, cloud dashboard, compliance reports, air-gap container: **Proprietary**.
 
 ---
 
