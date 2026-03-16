@@ -532,92 +532,6 @@ h1 {
   line-height: 1.5;
 }
 
-.pricing-section {
-  margin-bottom: 120px;
-  text-align: center;
-}
-
-.pricing-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-top: 48px;
-}
-
-.pricing-card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 40px 32px;
-  text-align: left;
-  position: relative;
-}
-
-.pricing-card.featured {
-  border-color: #333;
-  background: var(--bg-card);
-}
-
-.pricing-card.featured::before {
-  content: 'Most popular';
-  position: absolute;
-  top: -12px;
-  left: 32px;
-  padding: 4px 12px;
-  background: var(--accent);
-  color: var(--bg);
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: 100px;
-}
-
-.pricing-tier {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.pricing-amount {
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: -1px;
-  margin-bottom: 4px;
-}
-
-.pricing-period {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-bottom: 24px;
-}
-
-.pricing-features {
-  list-style: none;
-  margin-bottom: 32px;
-}
-
-.pricing-features li {
-  font-size: 14px;
-  color: var(--text-secondary);
-  padding: 6px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.pricing-features li::before {
-  content: '\2713';
-  color: var(--green);
-  font-size: 14px;
-}
-
-.pricing-card .btn-primary,
-.pricing-card .btn-secondary {
-  width: 100%;
-  justify-content: center;
-  padding: 12px 20px;
-}
-
 footer {
   border-top: 1px solid var(--border);
   padding: 48px 0;
@@ -753,7 +667,6 @@ footer {
   .features-grid { grid-template-columns: 1fr; }
   .surface-cards { grid-template-columns: 1fr; }
   .code-cols { grid-template-columns: 1fr; }
-  .pricing-cards { grid-template-columns: repeat(2, 1fr); }
   .trigger-list { grid-template-columns: 1fr; }
   .bento-grid { grid-template-columns: 1fr; }
   .campaign-grid { grid-template-columns: 1fr; }
@@ -788,7 +701,6 @@ h1 { animation-delay: 0.1s; }
       <li><a href="#features">Features</a></li>
       <li><a href="#surfaces">Surfaces</a></li>
       <li><a href="#threats">Threats</a></li>
-      <li><a href="#pricing">Pricing</a></li>
       <li><a href="https://docs.aiglos.dev">Docs</a></li>
       <li><a href="https://github.com/w1123581321345589/aiglos">GitHub</a></li>
     </ul>
@@ -1176,67 +1088,6 @@ aiglos.<span class="fn">attach</span>({
       <div class="trigger-item">
         <div class="trigger-name">FEDERATION_PRIOR_SHIFT</div>
         <div class="trigger-desc">Global prior weights shifted beyond local confidence interval</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="pricing-section" id="pricing">
-  <div class="container">
-    <div class="section-label">Pricing</div>
-    <div class="section-title">Start free. Scale when you need to.</div>
-    <div class="pricing-cards">
-      <div class="pricing-card">
-        <div class="pricing-tier">Free / MIT</div>
-        <div class="pricing-amount">$0</div>
-        <div class="pricing-period">Free forever</div>
-        <ul class="pricing-features">
-          <li>T01-T39 threat engine</li>
-          <li>Behavioral baselines + policy proposals</li>
-          <li>Federation: pull global prior</li>
-          <li>RL guard + SecurityAwareReward</li>
-          <li>Autoresearch + skill scanner</li>
-          <li>HMAC attestation artifacts</li>
-        </ul>
-        <a href="https://docs.aiglos.dev" class="btn-secondary">Get started</a>
-      </div>
-      <div class="pricing-card">
-        <div class="pricing-tier">Pro</div>
-        <div class="pricing-amount">$39</div>
-        <div class="pricing-period">per developer / month</div>
-        <ul class="pricing-features">
-          <li>Everything in Free</li>
-          <li>Contribute to global prior</li>
-          <li>RSA-2048 signed artifacts</li>
-          <li>Cloud dashboard + SIEM export</li>
-          <li>CVE push notifications</li>
-          <li>Compliance export</li>
-        </ul>
-        <a href="mailto:security@aiglos.dev" class="btn-primary">Get started</a>
-      </div>
-      <div class="pricing-card featured">
-        <div class="pricing-tier">Teams</div>
-        <div class="pricing-amount">$299</div>
-        <div class="pricing-period">per month (10 devs) + $29/dev</div>
-        <ul class="pricing-features">
-          <li>Everything in Pro</li>
-          <li>Centralized policy management</li>
-          <li>Aggregated threat view</li>
-          <li>T3 approval workflows</li>
-        </ul>
-        <a href="mailto:security@aiglos.dev" class="btn-primary">Contact sales</a>
-      </div>
-      <div class="pricing-card">
-        <div class="pricing-tier">Enterprise</div>
-        <div class="pricing-amount">Custom</div>
-        <div class="pricing-period">annual contract</div>
-        <ul class="pricing-features">
-          <li>Everything in Teams</li>
-          <li>On-prem / air-gap deployment</li>
-          <li>Dedicated support</li>
-          <li>Custom rule packs</li>
-        </ul>
-        <a href="mailto:security@aiglos.dev" class="btn-secondary">Contact sales</a>
       </div>
     </div>
   </div>

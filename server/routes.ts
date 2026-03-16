@@ -114,10 +114,6 @@ export async function registerRoutes(
     res.sendFile("aiglos.html", { root: new URL("../client/public", import.meta.url).pathname });
   });
 
-  app.get("/pricing", (_req, res) => {
-    res.sendFile("pricing.html", { root: new URL("../client/public", import.meta.url).pathname });
-  });
-
   app.get("/scan", (_req, res) => {
     res.sendFile("scan.html", { root: new URL("../client/public", import.meta.url).pathname });
   });
