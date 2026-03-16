@@ -215,7 +215,7 @@ aiglos policy approve prp_a1b2c3d4
 aiglos.attach(
     agent_name="new-agent",
     enable_federation=True,
-    api_key="ak_live_xxx",         # Pro tier required to contribute
+    api_key="ak_live_xxx",         # required to contribute to global prior
 )
 
 # Prior is merged automatically at attach() time
@@ -410,11 +410,11 @@ Noisy unigram transition counts over a 39-element rule vocabulary. Laplace noise
 aiglos.attach(
     agent_name="my-agent",
     enable_federation=True,
-    api_key="ak_live_xxx",    # free tier: pull only; Pro tier: contribute + pull
+    api_key="ak_live_xxx",    # enables contribution to global prior
 )
 
 # At attach(): pulls latest global prior, warm-starts intent predictor
-# At close():  contributes anonymized transitions (Pro tier)
+# At close():  contributes anonymized transitions
 
 # Check federation status
 client = aiglos.FederationClient(api_key="ak_live_xxx")
