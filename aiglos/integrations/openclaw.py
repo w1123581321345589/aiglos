@@ -3,7 +3,7 @@ aiglos_openclaw
 ===============
 Runtime security middleware for OpenClaw agents.
 
-Wraps any OpenClaw MCP tool call pipeline with Aiglos T01--T66 threat detection,
+Wraps any OpenClaw MCP tool call pipeline with Aiglos T01–T66 threat detection,
 signed attestation, and policy enforcement -- in a single import.
 
 INSTALLATION
@@ -122,6 +122,7 @@ POLICY_THRESHOLDS: dict[str, dict] = {
     "enterprise": {"block_score": 0.75, "warn_score": 0.50},
     "strict":     {"block_score": 0.50, "warn_score": 0.30},
     "federal":    {"block_score": 0.40, "warn_score": 0.20},
+    "lockdown":   {"block_score": 0.0,  "warn_score": 0.0},
 }
 
 # ─── OpenClaw-specific threat signatures ─────────────────────────────────────
@@ -382,7 +383,7 @@ _OPENCLAW_RULES: list[dict] = [
     fromlist=["RULES_T44_T66"]
 ).RULES_T44_T66
 
-# General T01--T66 rules reused from core (simplified subset for OpenClaw)
+# General T01–T39 rules reused from core (simplified subset for OpenClaw)
 _CORE_RULES: list[dict] = [
     {
         "id": "T05",
@@ -569,6 +570,36 @@ class SessionArtifact:
 
 # ─── Main guard class ─────────────────────────────────────────────────────────
 
+def _is_impossible_in_sandbox(tool_name: str, args: dict) -> bool:
+    """
+    Returns True if a tool call is physically impossible in a correctly
+    configured non-main OpenClaw sandbox. When sandbox_context=True and
+    this returns True, it means the sandbox is misconfigured or the agent
+    achieved escape -- either way CRITICAL.
+    """
+    n = tool_name.lower()
+    s = str(args).lower()
+    # Filesystem writes outside /tmp should be impossible
+    if any(kw in n for kw in ("write", "delete", "remove", "append")):
+        import re as _re
+        path = str(args.get("path", args.get("file", ""))).lower()
+        if path and not path.startswith(("/tmp", "./", "tmp/")):
+            return True
+    # Network calls to non-localhost in sandbox
+    if any(kw in n for kw in ("http", "fetch", "request", "curl", "post", "put")):
+        url = str(args.get("url", args.get("endpoint", ""))).lower()
+        if url and "localhost" not in url and "127.0.0.1" not in url:
+            return True
+    # Shell execution always impossible in strict sandbox
+    if any(kw in n for kw in ("shell", "exec", "bash", "terminal", "subprocess")):
+        return True
+    # Env var access impossible
+    if "env" in n or "environ" in n:
+        return True
+    return False
+
+
+
 class OpenClawGuard:
     """
     Aiglos runtime guard for OpenClaw agents.
@@ -596,6 +627,8 @@ class OpenClawGuard:
         session_id:       str | None = None,
         sub_agents:       list[str] | None = None,
         verbose:          bool = False,
+        sandbox_context:  bool = False,
+        allow_tools:      list[str] | None = None,
     ) -> None:
         if policy not in POLICY_THRESHOLDS:
             raise ValueError(
@@ -611,6 +644,9 @@ class OpenClawGuard:
         self.session_id      = session_id or str(uuid.uuid4())[:8]
         self.sub_agents      = sub_agents or []
         self.verbose         = verbose
+        self.sandbox_context = sandbox_context
+        self._allow_tools:   set[str] = set(allow_tools or [])
+        self._tool_grants:   list[dict] = []
 
         self._started_at   = datetime.now(timezone.utc).isoformat()
         self._results:      list[GuardResult] = []
@@ -631,6 +667,37 @@ class OpenClawGuard:
         )
 
     # ── Heartbeat support ─────────────────────────────────────────────────────
+
+    def allow_tool(self, tool_name: str, reason: str = "", authorized_by: str = "user") -> dict:
+        """
+        Add a tool to the lockdown allowlist.
+        Records a human-authorized permission grant in the compliance log.
+        Returns the grant artifact.
+        """
+        import time as _time
+        self._allow_tools.add(tool_name)
+        grant = {
+            "tool_name":     tool_name,
+            "authorized_by": authorized_by,
+            "reason":        reason,
+            "session_id":    self.session_id,
+            "agent_name":    self.agent_name,
+            "granted_at":    _time.time(),
+        }
+        self._tool_grants.append(grant)
+        logger.info(
+            "TOOL_GRANT  tool=%s  authorized_by=%s  agent=%s",
+            tool_name, authorized_by, self.agent_name,
+        )
+        return grant
+
+    def allowed_tools(self) -> list[str]:
+        """Return the current tool allowlist."""
+        return sorted(self._allow_tools)
+
+    def tool_grants(self) -> list[dict]:
+        """Return the full human-authorized permission grant log."""
+        return list(self._tool_grants)
 
     def on_heartbeat(self) -> None:
         """
@@ -679,7 +746,6 @@ class OpenClawGuard:
             if is_memory_tool(tool_name):
                 br_guard = MemoryWriteGuard(
                     session_id=sid,
-                    agent_name=self.agent_name,
                     mode=self.policy if self.policy in ("block", "warn", "audit") else "block",
                 )
                 br_result = br_guard.before_tool_call(tool_name, args_dict)
@@ -781,6 +847,66 @@ class OpenClawGuard:
                         )
             except Exception as _rep_e:
                 logger.debug("[OpenClawGuard] Reputation pre-check error: %s", _rep_e)
+
+        # ── Build 3: Lockdown policy -- deny unless in allowlist ──────────────────
+        if self.policy == "lockdown" and self._allow_tools:
+            if tool_name not in self._allow_tools:
+                _result = GuardResult(
+                    verdict      = "BLOCK",
+                    tool_name    = tool_name,
+                    tool_args    = args_dict,
+                    threat_class = "LOCKDOWN_DENY",
+                    reason       = (
+                        f"Tool '{tool_name}' is not in the approved allowlist. "
+                        "Add it with: aiglos policy allow --tool " + tool_name
+                    ),
+                    score      = 1.0,
+                    session_id = self.session_id,
+                )
+                self._results.append(_result)
+                logger.warning(
+                    "LOCKDOWN  tool=%s  reason=not_in_allowlist  agent=%s",
+                    tool_name, self.agent_name,
+                )
+                return _result
+        elif self.policy == "lockdown" and not self._allow_tools:
+            _result = GuardResult(
+                verdict      = "BLOCK",
+                tool_name    = tool_name,
+                tool_args    = args_dict,
+                threat_class = "LOCKDOWN_DENY",
+                reason       = (
+                    f"Tool '{tool_name}' blocked: lockdown policy, no allowlist configured. "
+                    "Use: aiglos policy allow --tool <n> to open permissions one by one."
+                ),
+                score      = 1.0,
+                session_id = self.session_id,
+            )
+            self._results.append(_result)
+            return _result
+
+        # ── Build 3: sandbox_context -- impossible calls = confirmed escape ────
+        if self.sandbox_context:
+            _sandbox_impossible = _is_impossible_in_sandbox(tool_name, args_dict)
+            if _sandbox_impossible:
+                _result = GuardResult(
+                    verdict      = "BLOCK",
+                    tool_name    = tool_name,
+                    tool_args    = args_dict,
+                    threat_class = "T50",
+                    reason       = (
+                        f"Tool call impossible in non-main sandbox: {tool_name}. "
+                        "Sandbox escape confirmed or misconfiguration detected."
+                    ),
+                    score      = 1.0,
+                    session_id = self.session_id,
+                )
+                self._results.append(_result)
+                logger.warning(
+                    "SANDBOX_ESCAPE  tool=%s  agent=%s  session=%s",
+                    tool_name, self.agent_name, self.session_id,
+                )
+                return _result
 
         matched_rule: dict | None = None
         max_score = 0.0
@@ -894,7 +1020,6 @@ class OpenClawGuard:
             from aiglos.integrations.injection_scanner import InjectionScanner
             self._injection_scanner = InjectionScanner(
                 session_id=self.session_id,
-                agent_name=self.agent_name,
                 mode="warn",
             )
             # Wire to causal tracer if present
@@ -941,7 +1066,6 @@ class OpenClawGuard:
         if not hasattr(self, "_causal_tracer"):
             self._causal_tracer = CausalTracer(
                 session_id=self.session_id,
-                agent_name=self.agent_name,
             )
             # Wire to injection scanner if already created
             if hasattr(self, "_injection_scanner"):
@@ -962,7 +1086,7 @@ class OpenClawGuard:
             from aiglos.adaptive.observation import ObservationGraph
             from aiglos.core.behavioral_baseline import BaselineEngine
             _graph  = ObservationGraph()
-            _engine = BaselineEngine(_graph, agent_name=self.agent_name, **kwargs)
+            _engine = BaselineEngine(_graph, **kwargs)
             _engine.train()
             self._baseline_engine = _engine
             self._baseline_graph  = _graph
@@ -1038,7 +1162,6 @@ class OpenClawGuard:
                 graph = ObservationGraph()
                 self._override_mgr = OverrideManager(
                     graph=graph,
-                    agent_name=self.agent_name,
                 )
             challenge = self._override_mgr.request_override(
                 rule_id    = rule_id,
@@ -1069,8 +1192,8 @@ class OpenClawGuard:
 
     def before_send(
         self,
-        tool_name:   str,
         content:     str,
+        destination: str = "",
     ):
         """
         Scan outbound content for secret leakage before transmission.
@@ -1080,42 +1203,36 @@ class OpenClawGuard:
           - Before posting to an external webhook or API
           - Before writing to any external log
 
-        Returns a result with verdict attribute. If verdict is BLOCK,
+        Returns an OutboundScanResult. If result.blocked is True,
         suppress the transmission and log the incident.
 
         Example:
-            result = guard.before_send("http.post", response_text)
-            if result.verdict == Verdict.BLOCK:
+            result = guard.before_send(response_text, destination="user")
+            if result.blocked:
                 return "[Response suppressed: security policy]"
         """
         try:
             from aiglos.integrations.outbound_guard import OutboundGuard
+            mode = "block" if self.policy in (
+                "strict", "federal", "lockdown"
+            ) else "warn"
             og = OutboundGuard(
                 session_id = self._active_session_id or "",
-                mode       = "block" if self.policy in (
-                    "block", "enterprise", "strict", "federal"
-                ) else "warn",
+                mode       = mode,
             )
-            result = og.before_send(tool_name, content)
-            verdict_str = getattr(result, "verdict", "ALLOW")
-            if verdict_str == "BLOCK":
+            result = og.before_send(destination or "outbound", content)
+            if result.verdict == "BLOCK":
                 logger.warning(
                     "[OpenClawGuard] T41 OUTBOUND_SECRET_LEAK BLOCK "
-                    "reason=%s",
-                    getattr(result, "reason", ""),
+                    "rule=%s dest=%s",
+                    result.rule_id, destination,
                 )
-            elif verdict_str == "WARN":
+            elif result.verdict == "WARN":
                 logger.warning(
                     "[OpenClawGuard] T41 OUTBOUND_SECRET_LEAK WARN "
-                    "reason=%s",
-                    getattr(result, "reason", ""),
+                    "rule=%s dest=%s",
+                    result.rule_id, destination,
                 )
-            v = (Verdict.BLOCK if verdict_str == "BLOCK"
-                 else Verdict.WARN if verdict_str == "WARN"
-                 else Verdict.ALLOW)
-            result.verdict = v
-            result.threat_class = "T41" if verdict_str in ("BLOCK", "WARN") else ""
-            result.tier = "3" if verdict_str == "BLOCK" else "2" if verdict_str == "WARN" else "1"
             return result
         except Exception as e:
             logger.debug("[OpenClawGuard] before_send error: %s", e)
@@ -1243,7 +1360,7 @@ class OpenClawGuard:
         from aiglos.core.threat_forecast import SessionForecaster
         if not hasattr(self, "_session_forecaster"):
             _graph = graph or getattr(self, "_adaptive_engine_graph", None)
-            predictor = IntentPredictor(graph=_graph, agent_name=self.agent_name)
+            predictor = IntentPredictor(graph=_graph)
             predictor.train()
             self._intent_predictor = predictor
             self._session_forecaster = SessionForecaster(
