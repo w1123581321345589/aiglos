@@ -160,6 +160,24 @@ _CAMPAIGN_PATTERNS = [
         },
     },
     {
+        "name":        "SANDBOX_ESCAPE_ATTEMPT",
+        "description": (
+            "Three or more sandbox policy violations in one session. "
+            "An agent blocked from filesystem access, shell execution, or "
+            "external HTTP calls repeatedly attempting the same escape vector "
+            "indicates an active escape campaign rather than accidental misconfiguration."
+        ),
+        "sequence":    [
+            {"T07", "T36_AGENTDEF", "T03"},   # first escape attempt
+            {"T07", "T36_AGENTDEF", "T03"},   # second attempt
+            {"T07", "T36_AGENTDEF", "T03"},   # third confirms campaign
+        ],
+        "min_events":  3,
+        "confidence":  0.87,
+        "surfaces":    None,
+        "amplifiers":  {},
+    },
+    {
         "name":        "SKILL_CHAIN",
         "description": (
             "Skill file write followed by instruction override -- "

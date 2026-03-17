@@ -573,17 +573,17 @@ class TestRepeatedInjectionAttempt:
             rec = results[0].recommendation.lower()
             assert any(w in rec for w in ["injection", "context", "source", "campaign"])
 
-    def test_eleven_patterns_present(self):
+    def test_twelve_patterns_present(self):
         names = {p["name"] for p in _CAMPAIGN_PATTERNS}
         expected = {
             "RECON_SWEEP", "CREDENTIAL_ACCUMULATE", "EXFIL_SETUP",
             "PERSISTENCE_CHAIN", "LATERAL_PREP", "AGENTDEF_CHAIN",
             "MEMORY_PERSISTENCE_CHAIN", "REWARD_MANIPULATION",
             "EXTERNAL_INSTRUCTION_CHANNEL", "REPEATED_INJECTION_ATTEMPT",
-            "SKILL_CHAIN",
+            "SKILL_CHAIN", "SANDBOX_ESCAPE_ATTEMPT",
         }
         assert expected.issubset(names)
-        assert len(names) == 11
+        assert len(names) == 12
 
 
 # =============================================================================
@@ -593,7 +593,7 @@ class TestRepeatedInjectionAttempt:
 class TestV080ModuleAPI:
 
     def test_version_is_080(self):
-        assert aiglos.__version__ == "0.17.0"
+        assert aiglos.__version__ == "0.18.0"
 
     def test_exports_injection_scanner_types(self):
         assert hasattr(aiglos, "InjectionScanner")
@@ -606,5 +606,5 @@ class TestV080ModuleAPI:
         # Should have substantial coverage
         assert len(_INJECTION_PHRASES) >= 40
 
-    def test_eleven_campaign_patterns(self):
-        assert len(_CAMPAIGN_PATTERNS) == 11
+    def test_twelve_campaign_patterns(self):
+        assert len(_CAMPAIGN_PATTERNS) == 12

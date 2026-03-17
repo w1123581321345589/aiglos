@@ -3,11 +3,11 @@
 ## Overview
 Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provides real-time monitoring, event logging, trust management, policy configuration, CMMC compliance tracking, autonomous threat scanning, and full administrative capabilities for AI agents operating through MCP (Model Context Protocol) proxies.
 
-## Python Package (aiglos/ v0.17.0)
+## Python Package (aiglos/ v0.18.0)
 The `aiglos/` directory contains the Python security runtime package covering threat families T01-T43.
 
 ### Package Structure
-- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.17.0
+- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.18.0
 - `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T43)
 - `aiglos/integrations/hermes.py` -- Hermes integration guard with trajectory signing
 - `aiglos/integrations/multi_agent.py` -- AgentDefGuard, MultiAgentRegistry, SessionIdentityChain
@@ -21,14 +21,17 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/integrations/override.py` -- OverrideManager (6-char codes, 120s expiry, 3 attempts)
 - `aiglos/adaptive/source_reputation.py` -- SourceReputationGraph (cross-session source tracking, 4 risk levels)
 - `aiglos/adaptive/observation.py` -- ObservationGraph with source_records, honeypot_events, override_challenges tables
-- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (11 patterns including SKILL_CHAIN)
+- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (12 patterns including SKILL_CHAIN, SANDBOX_ESCAPE_ATTEMPT)
+- `aiglos/adaptive/skill_reputation.py` -- SkillReputationGraph (ClawKeeper badge data, sync_security_feed)
+- `aiglos/audit/scanner.py` -- AuditScanner (5-phase, 50+ checks, A-F grade)
+- `aiglos/audit/report.py` -- AuditReporter (5 formats: summary, full, json, briefing, clawkeeper)
 - `aiglos/autoresearch/` -- CitationVerifier, ThreatLiteratureSearch, ComplianceReportGenerator
 - `aiglos/skills/SKILL.md` -- Context Hub skill distribution for Claude Code
 - `aiglos/desktop/` -- Tauri desktop app (main.rs, App.jsx, aiglos_sidecar.py, install.sh)
-- `aiglos/cli.py` -- CLI: scan-message, honeypot, override, reputation
+- `aiglos/cli.py` -- CLI: scan-message, honeypot, override, reputation, audit, skill
 
-### Test Suites (1313 tests)
-20 test files covering all modules and integrations.
+### Test Suites (1378 tests)
+21 test files covering all modules and integrations.
 
 ### Class Name Map (important for imports)
 - `ContextWriteResult` (NOT ContextGuardResult)

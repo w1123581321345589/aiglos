@@ -20,13 +20,13 @@ with every deployment in the network.
 [![MIT](https://img.shields.io/badge/license-MIT-000?style=flat-square&labelColor=000)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-000?style=flat-square&labelColor=000)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-000?style=flat-square&labelColor=000)](sdk/typescript/)
-[![1313 tests](https://img.shields.io/badge/tests-1313_passing-000?style=flat-square&labelColor=000)](tests/)
+[![1378 tests](https://img.shields.io/badge/tests-1378_passing-000?style=flat-square&labelColor=000)](tests/)
 
 | | | | | | |
 |---|---|---|---|---|---|
 | **43** threat families | **3** execution surfaces | **15** inspection triggers | **Learns your deployment** | **Network intelligence** | **Zero dependencies** |
 
-[The moment](#the-moment) · [What changed](#what-changed-in-v017) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Source reputation](#source-reputation) · [Context Hub skill](#context-hub-skill-distribution) · [Honeypot detection](#honeypot-detection) · [Challenge-response overrides](#challenge-response-overrides) · [Verified threat intelligence](#verified-threat-intelligence) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli) · [Desktop app](#aiglos-desktop)
+[The moment](#the-moment) · [What changed](#what-changed-in-v018) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Security audit](#security-audit) · [Sandbox policy](#sandbox-policy) · [Source reputation](#source-reputation) · [Context Hub skill](#context-hub-skill-distribution) · [Honeypot detection](#honeypot-detection) · [Challenge-response overrides](#challenge-response-overrides) · [Verified threat intelligence](#verified-threat-intelligence) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli) · [Desktop app](#aiglos-desktop)
 
 </div>
 
@@ -86,6 +86,37 @@ Before that, the CAC published draft *Interim Measures for the Management of Ant
 **NDAA §1513.** Hard compliance requirement for AI agent deployments in defense and federal contexts. Every defense prime and federal contractor deploying agents needs runtime attestation to pass program security reviews. FedRAMP-adjacent assurances for agentic systems are next: a signed, auditable artifact proving every tool call was inspected at runtime.
 
 China, Europe, and the United States are all converging on the same requirements: runtime inspection, human oversight, signed attestation, auditable evidence for every action an agent takes. Aiglos produces those artifacts today.
+
+---
+
+## What changed in v0.18
+
+**Security audit command.** `aiglos audit --deep` runs five phases (secrets, agent config injection, OpenClaw policy, deep injection scan, citation coverage), produces an A-F letter grade, and outputs five report formats (summary, full, json, briefing, clawkeeper). `aiglos audit --schedule nightly` writes a 6am cron entry with the explicit instruction: "Do not set --auto-fix. Review each finding manually."
+
+```bash
+aiglos audit --deep
+# Grade: B (3 CRITICAL, 7 WARNING, 41 PASS)
+# Phase 1: Secrets .............. 2 CRITICAL
+# Phase 2: Agent config ......... PASS
+# Phase 3: OpenClaw policy ...... 1 WARNING
+# Phase D1: Deep injection ...... 6 WARNING
+# Phase D2: Source reputation .... PASS
+```
+
+**SkillReputationGraph.** Extends `SourceReputationGraph` with ClawKeeper Skill Marketplace badge data. `sync_security_feed()` polls `clawkeeper.dev/security-feed.json`. Badge mapping: Blocked (score=1.0, BLOCKED level), Suspicious (score=0.65, HIGH_RISK). `aiglos skill blocked`, `aiglos skill scan <name>` CLI.
+
+**SandboxPolicy.** Runtime enforcement of sandbox escape detection. Five categories: filesystem escape (absolute paths, `../`, `~`, credential directories), shell escape (`rm -rf`, `sudo`, `curl` to external hosts), HTTP to non-allowlisted endpoints, env var access, strict mode (all shell blocked). `is_escape_campaign()` triggers after 3+ escape attempts. 12th campaign pattern: `SANDBOX_ESCAPE_ATTEMPT` (confidence 0.87).
+
+```python
+guard = aiglos.attach(
+    agent_name="code-agent",
+    policy="enterprise",
+    sandbox_mode="non-main",
+    allow_http=["api.openai.com"],
+)
+```
+
+**1378 tests passing.** 65 new tests across audit scanner, sandbox policy, skill reputation, campaign patterns.
 
 ---
 
@@ -403,6 +434,45 @@ Patches `subprocess.run`, `subprocess.Popen`, `subprocess.call`, `os.system`. T0
 | `T43` | HONEYPOT_ACCESS | MCP | Access to deployed synthetic credential files |
 
 All rules map to MITRE ATLAS. Protocol-portable - not MCP-only.
+
+---
+
+## Security audit
+
+*Added v0.18.0 -- posture assessment with letter grade.*
+
+```bash
+aiglos audit           # Standard 3-phase scan
+aiglos audit --deep    # 5-phase scan with injection analysis + source reputation
+aiglos audit --format json       # Machine-readable for CI/CD
+aiglos audit --format briefing   # Morning report with grade trend
+aiglos audit --format clawkeeper --clawkeeper-json audit.json  # Combined host+runtime grade
+aiglos audit --schedule nightly  # 6am cron, review-only (no auto-fix)
+```
+
+Five phases: (1) Plaintext secrets in .env, shell history, AWS credentials, SSH keys. (2) Injection payloads in agent config files (~/.claude/agents/, ~/.claude/skills/, .openclaw/, .cursor/rules/). (3) OpenClaw policy settings (tools.elevated.enabled, sandbox mode, network allowlist). Deep adds: (D1) full injection scan via InjectionScanner, (D2) source reputation check for near-threshold sources, (D3) citation coverage analysis.
+
+Letter grades: A (0 critical, <=2 warnings), B (0 critical, <=7 warnings), C (1-2 critical), D (3-5 critical), F (6+ critical).
+
+---
+
+## Sandbox policy
+
+*Added v0.18.0 -- runtime sandbox escape enforcement.*
+
+```python
+from aiglos.integrations.sandbox_policy import SandboxPolicy
+
+policy = SandboxPolicy(mode="non-main", allow_http=["api.openai.com"])
+result = policy.check_tool_call("shell.exec", {"command": "cat ~/.aws/credentials"})
+print(result.verdict)    # "BLOCK"
+print(result.is_escape)  # True
+print(result.rule)       # "CRED_DIR_READ"
+```
+
+Five escape categories: filesystem paths outside working directory, shell commands that escape sandbox, HTTP to non-allowlisted endpoints, environment variable access, strict mode (all shell blocked). After 3+ escape attempts, `is_escape_campaign()` returns True, triggering the SANDBOX_ESCAPE_ATTEMPT campaign pattern.
+
+One-line integration: `aiglos.attach(sandbox_mode="non-main", allow_http=["api.openai.com"])`.
 
 ---
 
@@ -939,11 +1009,14 @@ Session artifact fields:
 
 ## Open source
 
-Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, citation verification, compliance reports, honeypot detection, challenge-response overrides, source reputation, Context Hub skill, desktop app, TypeScript SDK, CLI: **MIT**.
+Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, citation verification, compliance reports, honeypot detection, challenge-response overrides, source reputation, Context Hub skill, security audit, sandbox policy, skill reputation, desktop app, TypeScript SDK, CLI: **MIT**.
 
 ---
 
 ## Changelog
+
+**v0.18.0 - March 2026**
+`AuditScanner` with 5-phase security posture assessment, A-F letter grade, 50+ checks. `AuditReporter` with 5 output formats (summary, full, json, briefing, clawkeeper). `aiglos audit --deep` and `aiglos audit --schedule nightly`. `SkillReputationGraph` extends source reputation with ClawKeeper Skill Marketplace badge data (`sync_security_feed()`, badge mapping, `aiglos skill blocked|scan`). `SandboxPolicy` for runtime sandbox escape detection -- 5 escape categories, `is_escape_campaign()` after 3+ attempts. `SANDBOX_ESCAPE_ATTEMPT` 12th campaign pattern (confidence 0.87). `aiglos.attach(sandbox_mode="non-main", allow_http=[...])` integration. 1378 tests.
 
 **v0.17.0 - March 2026**
 `SourceReputationGraph` -- cross-session source tracking with four risk levels (CLEAN/SUSPICIOUS/HIGH_RISK/BLOCKED), domain propagation, automatic threshold dampening, and `get_shareable_reputation()` for federation. `source_records` table in observation graph. `enable_source_reputation=True` on `attach()`. Context Hub skill distribution -- `aiglos/skills/SKILL.md` auto-loads into Claude Code sessions via Context Hub. T36_AGENTDEF extended to cover `~/.claude/skills/`, `.claude/skills/`, `skills/*.md`, `SKILL.md`. SKILL_CHAIN campaign pattern (11th) -- T36_AGENTDEF followed by T01/T27 injection, confidence 0.91. `aiglos reputation top|show|domains|shareable` CLI. 1313 tests.
