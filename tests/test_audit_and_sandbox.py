@@ -146,7 +146,7 @@ class TestAuditScanner:
 
     def test_aiglos_version_populated(self, tmp_path):
         r = AuditScanner(deep=False).run()
-        assert r.aiglos_version == "0.18.0"
+        assert r.aiglos_version == aiglos.__version__
 
     def test_duration_ms_positive(self, tmp_path):
         r = AuditScanner(deep=False).run()
@@ -425,7 +425,7 @@ class TestSandboxCampaignPattern:
 class TestV0180ModuleAPI:
 
     def test_version_is_0180(self):
-        assert aiglos.__version__ == "0.18.0"
+        assert aiglos.__version__ == "0.19.0"
 
     def test_audit_scanner_in_all(self):
         assert "AuditScanner" in aiglos.__all__

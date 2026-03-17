@@ -836,7 +836,7 @@ class TestV0110ModuleAPI:
 
     def test_version_is_0110(self):
         import aiglos
-        assert aiglos.__version__ == "0.18.0"
+        assert aiglos.__version__ == "0.19.0"
 
     def test_baseline_engine_in_all(self):
         import aiglos

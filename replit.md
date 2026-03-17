@@ -3,11 +3,11 @@
 ## Overview
 Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provides real-time monitoring, event logging, trust management, policy configuration, CMMC compliance tracking, autonomous threat scanning, and full administrative capabilities for AI agents operating through MCP (Model Context Protocol) proxies.
 
-## Python Package (aiglos/ v0.18.0)
+## Python Package (aiglos/ v0.19.0)
 The `aiglos/` directory contains the Python security runtime package covering threat families T01-T43.
 
 ### Package Structure
-- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.18.0
+- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.19.0
 - `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T43)
 - `aiglos/integrations/hermes.py` -- Hermes integration guard with trajectory signing
 - `aiglos/integrations/multi_agent.py` -- AgentDefGuard, MultiAgentRegistry, SessionIdentityChain
@@ -29,6 +29,9 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/skills/SKILL.md` -- Context Hub skill distribution for Claude Code
 - `aiglos/desktop/` -- Tauri desktop app (main.rs, App.jsx, aiglos_sidecar.py, install.sh)
 - `aiglos/cli.py` -- CLI: scan-message, honeypot, override, reputation, audit, skill
+
+- `server/federation/` -- Federation server (FastAPI, aggregator, auth, Supabase store, Railway deploy)
+- `sdk/typescript/src/` -- TypeScript SDK (full parity: behavioral_baseline, policy_proposals, federation, security_surfaces, index)
 
 ### Test Suites (1378 tests)
 21 test files covering all modules and integrations.
