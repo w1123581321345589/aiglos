@@ -3,7 +3,7 @@ aiglos_openclaw
 ===============
 Runtime security middleware for OpenClaw agents.
 
-Wraps any OpenClaw MCP tool call pipeline with Aiglos T01–T39 threat detection,
+Wraps any OpenClaw MCP tool call pipeline with Aiglos T01--T66 threat detection,
 signed attestation, and policy enforcement -- in a single import.
 
 INSTALLATION
@@ -377,9 +377,12 @@ _OPENCLAW_RULES: list[dict] = [
             )
         ),
     },
-]
+] + __import__(
+    "aiglos.core.threat_engine_v2",
+    fromlist=["RULES_T44_T66"]
+).RULES_T44_T66
 
-# General T01–T39 rules reused from core (simplified subset for OpenClaw)
+# General T01--T66 rules reused from core (simplified subset for OpenClaw)
 _CORE_RULES: list[dict] = [
     {
         "id": "T05",

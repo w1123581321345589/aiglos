@@ -196,6 +196,93 @@ _CAMPAIGN_PATTERNS = [
         "amplifiers":  {},
     },
     {
+        "name":        "GAAS_TAKEOVER",
+        "description": (
+            "GaaS tenant escalation followed by cross-tenant data access -- "
+            "the pattern of an agent that gains cross-tenant API key access "
+            "and immediately begins harvesting data across tenant boundaries. "
+            "T66 (tenant key confusion) → T45 (cross-tenant data access) → "
+            "T22 (data exfiltration)."
+        ),
+        "sequence":    [
+            {"T66"},            # tenant key confusion/escalation
+            {"T45"},            # cross-tenant access
+            {"T22", "T19"},     # exfiltration or credential harvest
+        ],
+        "min_events":  2,
+        "confidence":  0.93,
+        "surfaces":    None,
+        "amplifiers":  {},
+    },
+    {
+        "name":        "INFERENCE_HIJACK_CHAIN",
+        "description": (
+            "Model fingerprint probe followed by inference router hijack -- "
+            "attacker first learns what model is running (T51), then attempts "
+            "to redirect inference to a different model or modify the system "
+            "prompt (T44). Common in Dynamo/OpenShell enterprise deployments."
+        ),
+        "sequence":    [
+            {"T51"},            # model fingerprint probe (reconnaissance)
+            {"T44"},            # inference router hijack
+        ],
+        "min_events":  2,
+        "confidence":  0.88,
+        "surfaces":    None,
+        "amplifiers":  {},
+    },
+    {
+        "name":        "RAG_POISON_CHAIN",
+        "description": (
+            "Vector database injection followed by tool result forgery -- "
+            "the attacker first poisons the RAG retrieval store (T54), then "
+            "when the agent retrieves the poisoned document and begins acting "
+            "on it, forges tool results to cover the operation (T55)."
+        ),
+        "sequence":    [
+            {"T54"},            # vector DB injection
+            {"T55", "T27"},     # tool result forgery or prompt injection from retrieval
+        ],
+        "min_events":  2,
+        "confidence":  0.87,
+        "surfaces":    None,
+        "amplifiers":  {},
+    },
+    {
+        "name":        "MULTI_AGENT_IMPERSONATION",
+        "description": (
+            "Agent identity spoofing followed by privilege escalation -- "
+            "an agent claims to be a supervisor/admin agent (T64), then uses "
+            "that claimed identity to attempt privilege escalation (T08) or "
+            "cross-tenant access (T45)."
+        ),
+        "sequence":    [
+            {"T64"},            # agent identity spoofing
+            {"T08", "T45"},     # privilege escalation or cross-tenant access
+        ],
+        "min_events":  2,
+        "confidence":  0.90,
+        "surfaces":    None,
+        "amplifiers":  {},
+    },
+    {
+        "name":        "CAPABILITY_EXPLOIT_CHAIN",
+        "description": (
+            "Capability boundary probe followed by targeted exploit -- "
+            "systematic reconnaissance (T56) immediately followed by one of "
+            "the confirmed-capable attack vectors. The probe tells the attacker "
+            "exactly which tools are available; the exploit uses them."
+        ),
+        "sequence":    [
+            {"T56"},                          # capability recon
+            {"T07", "T10", "T37", "T19"},     # targeted exploit using confirmed capability
+        ],
+        "min_events":  2,
+        "confidence":  0.85,
+        "surfaces":    None,
+        "amplifiers":  {},
+    },
+    {
         "name":        "MEMORY_PERSISTENCE_CHAIN",
         "description": "High-risk memory write followed by anomalous action -- cross-session poison chain",
         "sequence":    [

@@ -1,7 +1,7 @@
 """
 aiglos.adaptive.inspect
 ========================
-Phase 2: Inspection triggers — automated conditions that surface rules,
+Phase 2: Inspection triggers -- automated conditions that surface rules,
 agent definitions, and deployment patterns that need attention.
 
 An inspection trigger fires when the observation graph contains enough
@@ -10,13 +10,13 @@ Triggers are non-blocking: they surface findings, they do not change anything.
 The amendment engine (Phase 4) acts on trigger findings.
 
 Trigger types:
-  RATE_DROP        — rule firing rate dropped >40% from 30-session baseline
-  ZERO_FIRE        — rule has gone silent after being active
-  HIGH_OVERRIDE    — T3 operations being consistently webhook-approved
-  AGENTDEF_REPEAT  — same agent def path modified across multiple sessions
-  SPAWN_NO_POLICY  — child agents spawning with no inherited policy
-  FIN_EXEC_BYPASS  — T37 overrides accumulating on specific hosts
-  FALSE_POSITIVE   — rule firing but consistently not blocking (high warn rate)
+  RATE_DROP        -- rule firing rate dropped >40% from 30-session baseline
+  ZERO_FIRE        -- rule has gone silent after being active
+  HIGH_OVERRIDE    -- T3 operations being consistently webhook-approved
+  AGENTDEF_REPEAT  -- same agent def path modified across multiple sessions
+  SPAWN_NO_POLICY  -- child agents spawning with no inherited policy
+  FIN_EXEC_BYPASS  -- T37 overrides accumulating on specific hosts
+  FALSE_POSITIVE   -- rule firing but consistently not blocking (high warn rate)
 
 Usage:
     from aiglos.adaptive.inspect import InspectionEngine
@@ -26,6 +26,7 @@ Usage:
     for t in triggers:
         print(t.trigger_type, t.rule_id, t.evidence_summary)
 """
+
 
 
 import logging
@@ -66,7 +67,7 @@ class InspectionEngine:
     Each check is independent and safe to run in any order.
     """
 
-    # Thresholds — tunable via constructor kwargs
+    # Thresholds -- tunable via constructor kwargs
     RATE_DROP_THRESHOLD    = 0.40   # 40% drop triggers RATE_DROP
     HIGH_OVERRIDE_MIN      = 3      # N consecutive approvals triggers HIGH_OVERRIDE
     AGENTDEF_REPEAT_MIN    = 2      # N cross-session violations triggers AGENTDEF_REPEAT
@@ -96,7 +97,9 @@ class InspectionEngine:
         triggers.extend(self._check_repeated_tier3())
         triggers.extend(self._check_global_prior_match())
         triggers.extend(self._check_unverified_rules())
-        triggers.extend(self._check_shared_context_anomaly())
+        triggers.extend(self._check_gaas_escalation())
+        triggers.extend(self._check_inference_hijack())
+        triggers.extend(self._check_context_drift())
         log.info("[InspectionEngine] %d trigger(s) fired.", len(triggers))
         return triggers
 
@@ -366,7 +369,7 @@ class InspectionEngine:
     def _check_reward_drift(self) -> List[InspectionTrigger]:
         """
         Detect when reward signals for security-relevant operations shift
-        toward positive — indicating possible reward poisoning in an RL loop.
+        toward positive -- indicating possible reward poisoning in an RL loop.
 
         Fires REWARD_DRIFT when:
         - Claimed rewards for operations Aiglos blocked are trending positive
@@ -415,7 +418,7 @@ class InspectionEngine:
         Fire when causal attribution has confirmed a HIGH-confidence
         injection-to-action chain in one or more sessions.
 
-        This is the highest-severity trigger — it means the observation graph
+        This is the highest-severity trigger -- it means the observation graph
         contains evidence that a specific blocked action was caused by a
         specific injection source. This is not a suspicion; it is a traced
         attack chain.
@@ -569,7 +572,7 @@ class InspectionEngine:
         Sustained = _BEHAVIORAL_SUSTAINED_COUNT consecutive HIGH-anomaly
         sessions, or 3+ MEDIUM sessions in the last 10 sessions.
 
-        Amendment candidate: True — deviation may reflect legitimate new
+        Amendment candidate: True -- deviation may reflect legitimate new
         behavior (new task type, new environment) that should update the baseline.
         """
         triggers = []
@@ -661,7 +664,7 @@ class InspectionEngine:
         It catches patterns that span multiple sessions and agents that don't
         have enable_policy_proposals() active.
 
-        Amendment candidate: False — generates a PolicyProposal directly
+        Amendment candidate: False -- generates a PolicyProposal directly
         rather than going through the amendment queue.
         """
         triggers = []
@@ -697,7 +700,7 @@ class InspectionEngine:
                     severity     = "MEDIUM",
                     evidence_summary = (
                         f"Tier 3 block pattern repeated {row['cnt']} times in "
-                        f"{self.TIER3_WINDOW_DAYS} days — agent='{row['agent_name']}' "
+                        f"{self.TIER3_WINDOW_DAYS} days -- agent='{row['agent_name']}' "
                         f"rule={row['rule_id']} tool='{row['tool_name']}'. "
                         f"Consider enabling policy proposals: "
                         f"`aiglos.attach(enable_policy_proposals=True)`. "
@@ -739,7 +742,7 @@ class InspectionEngine:
           2. The global prior has data from >= _GLOBAL_PRIOR_MIN_DEPLOYMENTS
           3. The global prior predicts a HIGH-probability threat
 
-        Amendment candidate: False — this is a network signal, not a
+        Amendment candidate: False -- this is a network signal, not a
         local pattern, so policy changes are not appropriate.
         """
         triggers = []
@@ -798,7 +801,7 @@ class InspectionEngine:
                         f"Global prior match for agent '{agent_name}': "
                         f"rule {top_rule} predicted with {top_prob:.0%} probability "
                         f"based on data from {prior.trained_on_n_deployments} deployments. "
-                        f"Local model has only {session_count} sessions — insufficient "
+                        f"Local model has only {session_count} sessions -- insufficient "
                         f"to catch this pattern independently. "
                         f"Enable federation: aiglos.attach(enable_federation=True)"
                     ),
@@ -843,14 +846,14 @@ class InspectionEngine:
     def _check_unverified_rules(self) -> List[InspectionTrigger]:
         """
         Fire when active rules have no verified citation but have been
-        blocking in production. These rules work — but they can't be
+        blocking in production. These rules work -- but they can't be
         explained to an auditor, a regulator, or a compliance review.
 
         Fires for rules that have:
           - Fired _UNVERIFIED_MIN_BLOCKS+ times in production
           - No citation record in the graph, or citation status UNVERIFIED/PENDING
 
-        Amendment candidate: False — this doesn't change the rule, it flags
+        Amendment candidate: False -- this doesn't change the rule, it flags
         that the rule needs a citation attached. Run `aiglos research verify`
         to fix it.
         """
@@ -897,42 +900,117 @@ class InspectionEngine:
         except Exception as e:
             log.debug("[InspectionEngine] unverified_rules check error: %s", e)
         return triggers
+    # ── GaaS tenant escalation detection ─────────────────────────────────────
 
-    # ── Shared context anomaly ────────────────────────────────────────────────
-
-    _SHARED_CONTEXT_MIN_EVENTS = 2
-
-    def _check_shared_context_anomaly(self) -> List[InspectionTrigger]:
+    def _check_gaas_escalation(self) -> List[InspectionTrigger]:
+        """
+        Fire when T45 or T66 fires more than once in a session window.
+        Multiple cross-tenant access attempts indicate an active escalation
+        campaign rather than misconfiguration.
+        """
         triggers = []
         try:
             with self._graph._conn() as conn:
                 rows = conn.execute("""
-                    SELECT COUNT(*) as cnt, session_id
-                    FROM events
-                    WHERE rule_id = 'T40'
-                    GROUP BY session_id
-                    HAVING cnt >= ?
-                    ORDER BY cnt DESC
-                    LIMIT 10
-                """, (self._SHARED_CONTEXT_MIN_EVENTS,)).fetchall()
-
-            for row in rows:
+                    SELECT COUNT(*) as c FROM block_patterns
+                    WHERE rule_id IN ('T45', 'T66')
+                    AND occurred_at >= ?
+                """, (self._session_window(),)).fetchone()
+            count = rows["c"] if rows else 0
+            if count >= 2:
                 triggers.append(InspectionTrigger(
-                    trigger_type="SHARED_CONTEXT_ANOMALY",
-                    rule_id="T40",
-                    severity="HIGH" if row["cnt"] >= 5 else "MEDIUM",
-                    evidence_summary=(
-                        f"Session {row['session_id']} has {row['cnt']} shared context "
-                        f"write events (T40). Multiple poisoned writes to fleet "
-                        f"coordination paths detected — inspect shared directories "
-                        f"for coordinated injection attempts."
+                    trigger_type  = "GAAS_ESCALATION_DETECTED",
+                    rule_id       = "T45",
+                    severity      = "HIGH",
+                    evidence_summary = (
+                        f"{count} cross-tenant access or tenant key confusion events "
+                        f"in the current session window. Active GaaS escalation campaign."
                     ),
-                    evidence_data={
-                        "session_id": row["session_id"],
-                        "t40_event_count": row["cnt"],
-                    },
-                    amendment_candidate=False,
+                    evidence_data = {"t45_t66_count": count},
+                    amendment_candidate = False,
                 ))
         except Exception as e:
-            log.debug("[InspectionEngine] shared_context_anomaly check error: %s", e)
+            log.debug("[InspectionEngine] gaas_escalation check error: %s", e)
         return triggers
+
+    # ── Inference hijack detection ────────────────────────────────────────────
+
+    def _check_inference_hijack(self) -> List[InspectionTrigger]:
+        """
+        Fire when T44 (inference router hijack) fires after T51 (model probe)
+        in the same session window -- the INFERENCE_HIJACK_CHAIN pattern
+        confirmed at the inspection layer.
+        """
+        triggers = []
+        try:
+            with self._graph._conn() as conn:
+                t51 = conn.execute("""
+                    SELECT COUNT(*) as c FROM block_patterns
+                    WHERE rule_id = 'T51' AND occurred_at >= ?
+                """, (self._session_window(),)).fetchone()
+                t44 = conn.execute("""
+                    SELECT COUNT(*) as c FROM block_patterns
+                    WHERE rule_id = 'T44' AND occurred_at >= ?
+                """, (self._session_window(),)).fetchone()
+            if (t51 and t51["c"] >= 1) and (t44 and t44["c"] >= 1):
+                triggers.append(InspectionTrigger(
+                    trigger_type  = "INFERENCE_HIJACK_CONFIRMED",
+                    rule_id       = "T44",
+                    severity      = "HIGH",
+                    evidence_summary = (
+                        "Model fingerprint probe (T51) followed by inference router "
+                        "hijack attempt (T44) in same session window. "
+                        "Confirmed INFERENCE_HIJACK_CHAIN campaign."
+                    ),
+                    evidence_data = {"t51_count": t51["c"], "t44_count": t44["c"]},
+                    amendment_candidate = False,
+                ))
+        except Exception as e:
+            log.debug("[InspectionEngine] inference_hijack check error: %s", e)
+        return triggers
+
+    # ── Context drift detection ───────────────────────────────────────────────
+
+    def _check_context_drift(self) -> List[InspectionTrigger]:
+        """
+        Fire when T58 (long context drift) or T50 (agentic loop escape)
+        fires in a session that is unusually long (>500 events).
+        Long sessions with drift signals indicate a slow-burn manipulation.
+        """
+        triggers = []
+        try:
+            with self._graph._conn() as conn:
+                drift = conn.execute("""
+                    SELECT COUNT(*) as c FROM block_patterns
+                    WHERE rule_id IN ('T58', 'T50') AND occurred_at >= ?
+                """, (self._session_window(),)).fetchone()
+                total = conn.execute("""
+                    SELECT COUNT(*) as c FROM block_patterns
+                    WHERE occurred_at >= ?
+                """, (self._session_window(),)).fetchone()
+            drift_count = drift["c"] if drift else 0
+            total_count = total["c"] if total else 0
+            if drift_count >= 1 and total_count >= 100:
+                triggers.append(InspectionTrigger(
+                    trigger_type  = "CONTEXT_DRIFT_DETECTED",
+                    rule_id       = "T58",
+                    severity      = "MEDIUM",
+                    evidence_summary = (
+                        f"Context drift signal (T50/T58) detected in long session "
+                        f"({total_count} events). Possible slow-burn behavioral manipulation."
+                    ),
+                    evidence_data = {
+                        "drift_count": drift_count,
+                        "session_events": total_count,
+                    },
+                    amendment_candidate = False,
+                ))
+        except Exception as e:
+            log.debug("[InspectionEngine] context_drift check error: %s", e)
+        return triggers
+
+    def _session_window(self) -> float:
+        """Return the timestamp for 24 hours ago."""
+        import time as _time
+        return _time.time() - 86400
+

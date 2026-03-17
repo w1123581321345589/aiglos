@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.19.0"  # canonical version for this release
+    __version__ = "0.20.0"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -194,6 +194,7 @@ from aiglos.core.causal_tracer import (  # noqa: F401
     ContextEntry,
     TaggedAction,
 )
+from aiglos.core.threat_engine_v2 import RULES_T44_T66  # noqa: F401
 from aiglos.integrations.injection_scanner import (  # noqa: F401
     InjectionScanner,
     InjectionScanResult,
@@ -761,6 +762,8 @@ __all__ = [
     "OutboundScanResult",
     "scan_for_secrets",
     "contains_secret",
+    # v0.20.0
+    "RULES_T44_T66",
     # v0.14.0
     "CitationVerifier",
     "VerifiedCitation",
