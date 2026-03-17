@@ -26,7 +26,7 @@ with every deployment in the network.
 |---|---|---|---|---|---|
 | **43** threat families | **3** execution surfaces | **15** inspection triggers | **Learns your deployment** | **Network intelligence** | **Zero dependencies** |
 
-[The moment](#the-moment) · [What changed](#what-changed-in-v018) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Security audit](#security-audit) · [Sandbox policy](#sandbox-policy) · [Source reputation](#source-reputation) · [Context Hub skill](#context-hub-skill-distribution) · [Honeypot detection](#honeypot-detection) · [Challenge-response overrides](#challenge-response-overrides) · [Verified threat intelligence](#verified-threat-intelligence) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli) · [Desktop app](#aiglos-desktop)
+[The moment](#the-moment) · [What changed](#what-changed-in-v019) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Federation server](#federation-server) · [TypeScript SDK](#typescript-sdk) · [Security audit](#security-audit) · [Sandbox policy](#sandbox-policy) · [Source reputation](#source-reputation) · [Context Hub skill](#context-hub-skill-distribution) · [Honeypot detection](#honeypot-detection) · [Challenge-response overrides](#challenge-response-overrides) · [Verified threat intelligence](#verified-threat-intelligence) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli) · [Desktop app](#aiglos-desktop)
 
 </div>
 
@@ -86,6 +86,21 @@ Before that, the CAC published draft *Interim Measures for the Management of Ant
 **NDAA §1513.** Hard compliance requirement for AI agent deployments in defense and federal contexts. Every defense prime and federal contractor deploying agents needs runtime attestation to pass program security reviews. FedRAMP-adjacent assurances for agentic systems are next: a signed, auditable artifact proving every tool call was inspected at runtime.
 
 China, Europe, and the United States are all converging on the same requirements: runtime inspection, human oversight, signed attestation, auditable evidence for every action an agent takes. Aiglos produces those artifacts today.
+
+---
+
+## What changed in v0.19
+
+**Federation server.** Five files, one Railway deploy. `aggregator.py` implements federated averaging with two privacy layers -- Laplace noise (epsilon=0.1) client-side, Gaussian noise (sigma=0.5) server-side. Nothing traceable to a deployment. S-curve local weight schedule: 20% local at session 0, 80% local at session 100. `main.py` serves four FastAPI routes: `GET /v1/health`, `GET /v1/status`, `GET /v1/prior` (free + pro), `POST /v1/contribute` (pro only). Supabase-backed persistence with in-memory fallback for CI. `railway up` deploys in under two minutes.
+
+**TypeScript SDK -- full parity.** Everything from v0.11 through v0.17 is now available in TypeScript:
+- `behavioral_baseline.ts` -- BaselineEngine with the same three-component scoring (event rate z-score, surface mix chi-squared, rule frequency KL-divergence), same weights (40/30/30), same thresholds
+- `policy_proposals.ts` -- PolicyProposalEngine with all four proposal types and the same confidence formula
+- `federation.ts` -- FederationClient with Laplace noise, rate limiting, 8s timeout, graceful degradation
+- `security_surfaces.ts` -- ContextDirectoryGuard (T40), OutboundSecretGuard (T41), HoneypotManager (T43), OverrideManager, SourceReputationGraph
+- `index.ts` -- full rewrite with `attach()`, `beforeToolCall()` (T43, T40, source reputation priority chain), `afterToolCall()`, `beforeSend()`, `requestOverride()`, `confirmOverride()`, `status()`
+
+**1378 tests passing.** Federation server routes verified. TypeScript SDK feature-complete with Python.
 
 ---
 
@@ -434,6 +449,51 @@ Patches `subprocess.run`, `subprocess.Popen`, `subprocess.call`, `os.system`. T0
 | `T43` | HONEYPOT_ACCESS | MCP | Access to deployed synthetic credential files |
 
 All rules map to MITRE ATLAS. Protocol-portable - not MCP-only.
+
+---
+
+## Federation server
+
+*Added v0.19.0 -- privacy-preserving network intelligence.*
+
+```
+server/federation/
+  main.py          # FastAPI routes: health, status, prior, contribute
+  aggregator.py    # Federated averaging with dual privacy layers
+  models.py        # Pydantic models for API contracts
+  auth.py          # API key validation (free/pro tiers)
+  store.py         # Supabase persistence + in-memory fallback
+  Dockerfile       # Railway-ready container
+  railway.json     # One-click deploy config
+```
+
+Two privacy layers: Laplace noise (epsilon=0.1) applied client-side before submission, Gaussian noise (sigma=0.5) applied server-side before broadcast. Nothing traceable to a specific deployment. S-curve local weight schedule: new deployments start at 20% local weight, reaching 80% at 100 sessions -- the global prior dominates early and yields to local observations over time.
+
+Free tier pulls the aggregated prior. Pro tier contributes and pulls. `AIGLOS_MASTER_KEY` for admin operations.
+
+---
+
+## TypeScript SDK
+
+*Added v0.19.0 -- full feature parity with Python.*
+
+```typescript
+import { attach } from 'aiglos';
+
+const guard = attach({
+  agentName: 'my-agent',
+  policy: 'enterprise',
+  enableSourceReputation: true,
+  honeypotFiles: ['aws_keys.json'],
+});
+
+const result = guard.beforeToolCall('file.read', { path: 'aws_keys.json' });
+if (result.verdict === 'BLOCK') {
+  console.log(result.reason);
+}
+```
+
+All v0.11-v0.17 features ported: BaselineEngine (behavioral_baseline.ts), PolicyProposalEngine (policy_proposals.ts), FederationClient (federation.ts), ContextDirectoryGuard/OutboundSecretGuard/HoneypotManager/OverrideManager/SourceReputationGraph (security_surfaces.ts). `beforeToolCall()` runs T43, T40, source reputation in the correct priority order. `afterToolCall()` updates source reputation from injection scan results.
 
 ---
 
@@ -1009,11 +1069,14 @@ Session artifact fields:
 
 ## Open source
 
-Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, citation verification, compliance reports, honeypot detection, challenge-response overrides, source reputation, Context Hub skill, security audit, sandbox policy, skill reputation, desktop app, TypeScript SDK, CLI: **MIT**.
+Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, citation verification, compliance reports, honeypot detection, challenge-response overrides, source reputation, Context Hub skill, security audit, sandbox policy, skill reputation, federation server, desktop app, TypeScript SDK, CLI: **MIT**.
 
 ---
 
 ## Changelog
+
+**v0.19.0 - March 2026**
+Federation server (`server/federation/`) -- FastAPI with 4 routes, dual privacy layers (Laplace epsilon=0.1 client + Gaussian sigma=0.5 server), S-curve local weight schedule, Supabase persistence, Railway one-click deploy. TypeScript SDK full parity (`sdk/typescript/src/`) -- BaselineEngine, PolicyProposalEngine, FederationClient, ContextDirectoryGuard, OutboundSecretGuard, HoneypotManager, OverrideManager, SourceReputationGraph, full `attach()`/`beforeToolCall()`/`afterToolCall()`/`beforeSend()` pipeline. 1378 tests.
 
 **v0.18.0 - March 2026**
 `AuditScanner` with 5-phase security posture assessment, A-F letter grade, 50+ checks. `AuditReporter` with 5 output formats (summary, full, json, briefing, clawkeeper). `aiglos audit --deep` and `aiglos audit --schedule nightly`. `SkillReputationGraph` extends source reputation with ClawKeeper Skill Marketplace badge data (`sync_security_feed()`, badge mapping, `aiglos skill blocked|scan`). `SandboxPolicy` for runtime sandbox escape detection -- 5 escape categories, `is_escape_campaign()` after 3+ attempts. `SANDBOX_ESCAPE_ATTEMPT` 12th campaign pattern (confidence 0.87). `aiglos.attach(sandbox_mode="non-main", allow_http=[...])` integration. 1378 tests.
