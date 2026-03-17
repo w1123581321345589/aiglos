@@ -1,0 +1,111 @@
+name: 'Aiglos Security Scan'
+description: 'Run Aiglos AI agent security audit on any repository'
+author: 'Aiglos'
+
+branding:
+  icon: 'shield'
+  color: 'orange'
+
+inputs:
+  deep:
+    description: 'Run deep scan (injection analysis, reputation check, citation coverage)'
+    required: false
+    default: 'false'
+  fail_below_grade:
+    description: 'Fail if security grade is below this threshold (A/B/C/D)'
+    required: false
+    default: 'C'
+  aiglos_version:
+    description: 'Aiglos version to install (default: latest)'
+    required: false
+    default: 'aiglos'
+  python_version:
+    description: 'Python version to use'
+    required: false
+    default: '3.12'
+
+outputs:
+  grade:
+    description: 'Security grade (A through F)'
+    value: ${{ steps.audit.outputs.grade }}
+  score:
+    description: 'Numeric security score (0-100)'
+    value: ${{ steps.audit.outputs.score }}
+  passed:
+    description: 'Whether the scan passed the grade threshold'
+    value: ${{ steps.grade_check.outputs.passed }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python_version }}
+
+    - name: Install Aiglos
+      shell: bash
+      run: pip install ${{ inputs.aiglos_version }} --quiet
+
+    - name: Run Aiglos audit
+      id: audit
+      shell: bash
+      run: |
+        DEEP_FLAG=""
+        if [ "${{ inputs.deep }}" = "true" ]; then
+          DEEP_FLAG="--deep"
+        fi
+
+        aiglos audit $DEEP_FLAG --format json > aiglos-audit.json 2>&1 || true
+        aiglos audit $DEEP_FLAG --format summary > aiglos-audit-summary.txt 2>&1 || true
+
+        GRADE=$(python3 -c "
+        import json
+        with open('aiglos-audit.json') as f:
+            d = json.load(f)
+        print(d.get('grade', 'F'))
+        " 2>/dev/null || echo "F")
+
+        SCORE=$(python3 -c "
+        import json
+        with open('aiglos-audit.json') as f:
+            d = json.load(f)
+        print(d.get('score', 0))
+        " 2>/dev/null || echo "0")
+
+        echo "grade=$GRADE" >> $GITHUB_OUTPUT
+        echo "score=$SCORE" >> $GITHUB_OUTPUT
+
+    - name: Check grade threshold
+      id: grade_check
+      shell: bash
+      run: |
+        GRADE="${{ steps.audit.outputs.grade }}"
+        THRESHOLD="${{ inputs.fail_below_grade }}"
+
+        grade_to_num() {
+          case $1 in A) echo 1;; B) echo 2;; C) echo 3;; D) echo 4;; *) echo 5;; esac
+        }
+
+        GRADE_NUM=$(grade_to_num $GRADE)
+        THRESHOLD_NUM=$(grade_to_num $THRESHOLD)
+
+        if [ $GRADE_NUM -gt $THRESHOLD_NUM ]; then
+          echo "passed=false" >> $GITHUB_OUTPUT
+          echo "::error::Aiglos security grade $GRADE is below required threshold $THRESHOLD"
+          cat aiglos-audit-summary.txt
+          exit 1
+        else
+          echo "passed=true" >> $GITHUB_OUTPUT
+          echo "Aiglos security grade $GRADE meets threshold $THRESHOLD ✓"
+        fi
+
+    - name: Upload audit artifact
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: aiglos-audit
+        path: |
+          aiglos-audit.json
+          aiglos-audit-summary.txt
+        retention-days: 30

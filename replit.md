@@ -32,6 +32,9 @@ The `aiglos/` directory contains the Python security runtime package covering th
 
 - `server/federation/` -- Federation server (FastAPI, aggregator, auth, Supabase store, Railway deploy)
 - `sdk/typescript/src/` -- TypeScript SDK (full parity: behavioral_baseline, policy_proposals, federation, security_surfaces, index)
+- `website/` -- Landing site source (index.html, changelog.html, pricing.html) also served at /aiglos, /changelog, /pricing
+- `.github/actions/aiglos-scan/action.yml` -- Reusable GitHub Action for Aiglos security audit
+- `.github/workflows/aiglos-scan.yml` -- CI workflow (push/PR/nightly scan, deep mode, grade gating)
 
 ### Test Suites (1378 tests)
 21 test files covering all modules and integrations.

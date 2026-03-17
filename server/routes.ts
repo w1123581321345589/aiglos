@@ -108,7 +108,7 @@ export async function registerRoutes(
 
   const staticPages = new Set([
     "landing", "aiglos", "scan", "defense", "docs",
-    "demo", "changelog", "coding-agents", "supernova-plan",
+    "demo", "changelog", "pricing", "coding-agents", "supernova-plan",
   ]);
   const publicRoot = new URL("../client/public", import.meta.url).pathname;
 
