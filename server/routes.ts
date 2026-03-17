@@ -106,40 +106,17 @@ export async function registerRoutes(
 
   app.use(loadUser);
 
-  app.get("/landing", (_req, res) => {
-    res.sendFile("landing.html", { root: new URL("../client/public", import.meta.url).pathname });
-  });
+  const staticPages = new Set([
+    "landing", "aiglos", "scan", "defense", "docs",
+    "demo", "changelog", "coding-agents", "supernova-plan",
+  ]);
+  const publicRoot = new URL("../client/public", import.meta.url).pathname;
 
-  app.get("/aiglos", (_req, res) => {
-    res.sendFile("aiglos.html", { root: new URL("../client/public", import.meta.url).pathname });
-  });
-
-  app.get("/scan", (_req, res) => {
-    res.sendFile("scan.html", { root: new URL("../client/public", import.meta.url).pathname });
-  });
-
-  app.get("/defense", (_req, res) => {
-    res.sendFile("defense.html", { root: new URL("../client/public", import.meta.url).pathname });
-  });
-
-  app.get("/docs", (_req, res) => {
-    res.sendFile("docs.html", { root: new URL("../client/public", import.meta.url).pathname });
-  });
-
-  app.get("/demo", (_req, res) => {
-    res.sendFile("demo.html", { root: new URL("../client/public", import.meta.url).pathname });
-  });
-
-  app.get("/changelog", (_req, res) => {
-    res.sendFile("changelog.html", { root: new URL("../client/public", import.meta.url).pathname });
-  });
-
-  app.get("/coding-agents", (_req, res) => {
-    res.sendFile("coding-agents.html", { root: new URL("../client/public", import.meta.url).pathname });
-  });
-
-  app.get("/supernova-plan", (_req, res) => {
-    res.sendFile("supernova-plan.html", { root: new URL("../client/public", import.meta.url).pathname });
+  app.get("/:page", (req, res, next) => {
+    if (staticPages.has(req.params.page)) {
+      return res.sendFile(`${req.params.page}.html`, { root: publicRoot });
+    }
+    next();
   });
 
   const loginSchema = z.object({

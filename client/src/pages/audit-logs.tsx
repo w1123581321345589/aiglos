@@ -34,7 +34,6 @@ export default function AuditLogs() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-tight" data-testid="text-audit-title">Audit Trail</h2>
-          <p className="text-sm text-muted-foreground mt-1">Complete log of all system actions and changes</p>
         </div>
         <Select value={resourceFilter} onValueChange={setResourceFilter}>
           <SelectTrigger className="w-[180px]" data-testid="select-resource-filter">
@@ -63,7 +62,7 @@ export default function AuditLogs() {
         <CardContent>
           {isLoading ? (
             <div className="space-y-3">
-              {Array.from({ length: 8 }).map((_, i) => (
+              {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-14 w-full" />
               ))}
             </div>
@@ -110,11 +109,7 @@ export default function AuditLogs() {
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <ScrollText className="w-10 h-10 text-muted-foreground/40 mb-3" />
-              <p className="text-sm text-muted-foreground">No audit log entries</p>
-              <p className="text-xs text-muted-foreground/60 mt-1">Actions will be recorded as users interact with the system</p>
-            </div>
+            <p className="text-sm text-muted-foreground text-center py-12">No audit entries</p>
           )}
         </CardContent>
       </Card>

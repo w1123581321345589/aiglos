@@ -193,7 +193,6 @@ export default function EnginePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight" data-testid="heading-engine">Command Center</h1>
-          <p className="text-sm text-muted-foreground">Autonomous threat scanning engine</p>
         </div>
         {canOperate && (
           <div className="flex items-center gap-2" data-testid="engine-controls">

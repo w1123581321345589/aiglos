@@ -96,7 +96,6 @@ export default function Alerting() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-tight" data-testid="text-alerting-title">Alert Destinations</h2>
-          <p className="text-sm text-muted-foreground mt-1">Configure where security alerts are delivered</p>
         </div>
         {isAdmin && (
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
@@ -184,13 +183,8 @@ export default function Alerting() {
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <Skeleton className="h-28 w-full" />
-              </CardContent>
-            </Card>
-          ))}
+          <Card><CardContent className="p-6"><Skeleton className="h-28 w-full" /></CardContent></Card>
+          <Card><CardContent className="p-6"><Skeleton className="h-24 w-full" /></CardContent></Card>
         </div>
       ) : destinations && destinations.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -265,10 +259,9 @@ export default function Alerting() {
         </div>
       ) : (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <Bell className="w-10 h-10 text-muted-foreground/40 mb-3" />
-            <p className="text-sm text-muted-foreground">No alert destinations configured</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Add a Slack, webhook, or SIEM destination to receive security alerts</p>
+          <CardContent className="py-14 text-center">
+            <Bell className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No destinations configured</p>
           </CardContent>
         </Card>
       )}

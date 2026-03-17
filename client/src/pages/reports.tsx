@@ -138,7 +138,6 @@ export default function Reports() {
     <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
       <div>
         <h2 className="text-xl font-semibold tracking-tight" data-testid="text-reports-title">Reports & Export</h2>
-        <p className="text-sm text-muted-foreground mt-1">Generate and download compliance reports and data exports</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

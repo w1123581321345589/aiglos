@@ -93,7 +93,6 @@ export default function UsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold tracking-tight" data-testid="text-users-title">User Management</h2>
-          <p className="text-sm text-muted-foreground mt-1">Manage team members and role-based access control</p>
         </div>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
