@@ -20,13 +20,13 @@ with every deployment in the network.
 [![MIT](https://img.shields.io/badge/license-MIT-000?style=flat-square&labelColor=000)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-000?style=flat-square&labelColor=000)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-000?style=flat-square&labelColor=000)](sdk/typescript/)
-[![1069 tests](https://img.shields.io/badge/tests-1069_passing-000?style=flat-square&labelColor=000)](tests/)
+[![1313 tests](https://img.shields.io/badge/tests-1313_passing-000?style=flat-square&labelColor=000)](tests/)
 
 | | | | | | |
 |---|---|---|---|---|---|
 | **43** threat families | **3** execution surfaces | **15** inspection triggers | **Learns your deployment** | **Network intelligence** | **Zero dependencies** |
 
-[The moment](#the-moment) · [What changed](#what-changed-in-v016) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Honeypot detection](#honeypot-detection) · [Challenge-response overrides](#challenge-response-overrides) · [Verified threat intelligence](#verified-threat-intelligence) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli) · [Desktop app](#aiglos-desktop)
+[The moment](#the-moment) · [What changed](#what-changed-in-v017) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Source reputation](#source-reputation) · [Context Hub skill](#context-hub-skill-distribution) · [Honeypot detection](#honeypot-detection) · [Challenge-response overrides](#challenge-response-overrides) · [Verified threat intelligence](#verified-threat-intelligence) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli) · [Desktop app](#aiglos-desktop)
 
 </div>
 
@@ -86,6 +86,30 @@ Before that, the CAC published draft *Interim Measures for the Management of Ant
 **NDAA §1513.** Hard compliance requirement for AI agent deployments in defense and federal contexts. Every defense prime and federal contractor deploying agents needs runtime attestation to pass program security reviews. FedRAMP-adjacent assurances for agentic systems are next: a signed, auditable artifact proving every tool call was inspected at runtime.
 
 China, Europe, and the United States are all converging on the same requirements: runtime inspection, human oversight, signed attestation, auditable evidence for every action an agent takes. Aiglos produces those artifacts today.
+
+---
+
+## What changed in v0.17
+
+**Source reputation graph.** `SourceReputationGraph` maps URLs, domains, and document fingerprints to their injection history across sessions. Four risk levels: CLEAN, SUSPICIOUS (1-2 events, 0.75x threshold), HIGH_RISK (3+ events or max score >= 0.75, 0.5x threshold), BLOCKED (8+ local events or 5+ network flags). Domain propagation: a flag on `api.attacker.com/specific-path` applies a dampened score to the entire `api.attacker.com` domain. `record_event()` called by `after_tool_call()` whenever the injection scanner scores >= 0.25. `get_risk()` called by `before_tool_call()` before any fetch -- if BLOCKED, returns immediately without hitting the network.
+
+```python
+guard = aiglos.attach(
+    agent_name="research-agent",
+    policy="enterprise",
+    enable_source_reputation=True,
+)
+
+result = guard.before_tool_call("http.get", {"url": "https://api.attacker.com/data"})
+```
+
+**Context Hub skill distribution.** Drop `aiglos/skills/SKILL.md` into `~/.claude/skills/aiglos/SKILL.md` and every Claude Code session that has Context Hub installed auto-loads Aiglos. No pip install prompt, no terminal, no configuration. One-line attach, CLI reference, threat coverage table, source reputation, outbound scanning example, override syntax.
+
+**T36_AGENTDEF extended.** `_T36_AGENTDEF_PATHS` regex now covers `~/.claude/skills/`, `.claude/skills/`, `skills/*.md`, and `SKILL.md` explicitly. Any write to these paths gets the same Tier 3 gate as `~/.claude/agents/`. A compromised SKILL.md with injection instructions persists across every future session -- worse than T31 memory poisoning because it survives memory resets and loads as trusted context.
+
+**SKILL_CHAIN campaign pattern.** 11th campaign pattern. Sequence: T36_AGENTDEF write followed by T01 or T27 injection in the same session. Confidence 0.91. The Context Hub version of AGENTDEF_CHAIN -- same mechanism, different file type.
+
+**1313 tests passing.** 244 new tests across source reputation, skill chain, T36 extended paths.
 
 ---
 
@@ -379,6 +403,51 @@ Patches `subprocess.run`, `subprocess.Popen`, `subprocess.call`, `os.system`. T0
 | `T43` | HONEYPOT_ACCESS | MCP | Access to deployed synthetic credential files |
 
 All rules map to MITRE ATLAS. Protocol-portable - not MCP-only.
+
+---
+
+## Source reputation
+
+*Added v0.17.0 -- cross-session source tracking.*
+
+The goldfish problem at the source level: session 1, an endpoint returns injection attempts -- annotated. Session 2, that endpoint gets elevated scrutiny before content even loads. Session N, the source is blocked.
+
+```python
+from aiglos.adaptive.source_reputation import SourceReputationGraph
+
+graph = SourceReputationGraph(db_path=":memory:")
+
+graph.record_event(
+    source_url="https://api.attacker.com/data",
+    score=0.85,
+    rule_id="T27",
+)
+
+risk = graph.get_risk(source_url="https://api.attacker.com/data")
+print(risk.level)        # "HIGH_RISK"
+print(risk.should_block)  # False (needs 8+ events)
+
+shareable = graph.get_shareable_reputation()
+```
+
+Four levels: `CLEAN` (no history), `SUSPICIOUS` (1-2 events, threshold dampened to 0.75x), `HIGH_RISK` (3+ events or max score >= 0.75, threshold dampened to 0.5x), `BLOCKED` (8+ local events or 5+ network flags -- immediate reject without network call).
+
+Domain propagation: a flag on `api.attacker.com/specific-path` propagates a dampened score to the entire `api.attacker.com` domain.
+
+CLI: `aiglos reputation top`, `aiglos reputation show <url>`, `aiglos reputation domains`, `aiglos reputation shareable`.
+
+---
+
+## Context Hub skill distribution
+
+*Added v0.17.0 -- zero-install agent integration.*
+
+```bash
+mkdir -p ~/.claude/skills/aiglos
+cp aiglos/skills/SKILL.md ~/.claude/skills/aiglos/SKILL.md
+```
+
+Every Claude Code session with Context Hub installed auto-loads Aiglos into context. The skill file contains: one-line attach, CLI reference, threat coverage table, source reputation configuration, outbound scanning example, override syntax. No pip install prompt, no terminal interaction, no configuration dialog.
 
 ---
 
@@ -870,11 +939,14 @@ Session artifact fields:
 
 ## Open source
 
-Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, citation verification, compliance reports, honeypot detection, challenge-response overrides, desktop app, TypeScript SDK, CLI: **MIT**.
+Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, citation verification, compliance reports, honeypot detection, challenge-response overrides, source reputation, Context Hub skill, desktop app, TypeScript SDK, CLI: **MIT**.
 
 ---
 
 ## Changelog
+
+**v0.17.0 - March 2026**
+`SourceReputationGraph` -- cross-session source tracking with four risk levels (CLEAN/SUSPICIOUS/HIGH_RISK/BLOCKED), domain propagation, automatic threshold dampening, and `get_shareable_reputation()` for federation. `source_records` table in observation graph. `enable_source_reputation=True` on `attach()`. Context Hub skill distribution -- `aiglos/skills/SKILL.md` auto-loads into Claude Code sessions via Context Hub. T36_AGENTDEF extended to cover `~/.claude/skills/`, `.claude/skills/`, `skills/*.md`, `SKILL.md`. SKILL_CHAIN campaign pattern (11th) -- T36_AGENTDEF followed by T01/T27 injection, confidence 0.91. `aiglos reputation top|show|domains|shareable` CLI. 1313 tests.
 
 **v0.16.0 - March 2026**
 T43 HONEYPOT_ACCESS - deception-based detection with zero false positives. `HoneypotManager` deploys 10 synthetic credential files, TOOL_CALL/CONTENT/FILESYSTEM detection modes, score=1.0 CRITICAL BLOCK. `get_targeted_names()` and `from_network_intelligence()` for federation. `OverrideManager` - 6-character time-limited challenge-response codes for Tier 3 overrides, 120s expiry, 3 attempt limit, full observation graph persistence. `honeypot_events` and `override_challenges` tables. `aiglos honeypot deploy|status|list` and `aiglos override confirm|reject` CLI. Aiglos Desktop - Tauri native app with real-time alert feed, override modal, policy proposal queue, compliance report export. 1069 tests.

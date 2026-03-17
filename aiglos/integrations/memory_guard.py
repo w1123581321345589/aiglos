@@ -234,7 +234,7 @@ class MemoryWriteGuard:
                 timestamp=time.time(), surface="mcp",
             )
 
-        content = args.get("content", args.get("memory", args.get("text", "")))
+        content = args.get("content", args.get("memory", args.get("text", args.get("value", ""))))
         old_content = args.get("old_content", "")
         category = args.get("category", None)
 

@@ -1,0 +1,15 @@
+1143/1143. v0.17.0 complete.
+
+Build 1 — aiglos/skills/SKILL.md — Context Hub distribution
+Drop this into ~/.claude/skills/aiglos/SKILL.md and every Claude Code session that has Context Hub installed auto-loads Aiglos into context. No pip install prompt, no terminal, no configuration. One-line attach, CLI reference, threat coverage table, source reputation explained, outbound scanning example, override syntax. The distribution channel didn't exist before Context Hub. It exists now.
+Build 2 — T36_AGENTDEF extended (subprocess_intercept.py)
+_T36_AGENTDEF_PATHS regex now covers ~/.claude/skills/, .claude/skills/, skills/*.md, and SKILL.md explicitly. Any write to these paths gets the same Tier 3 gate as ~/.claude/agents/. The threat: a compromised SKILL.md with injection instructions in it persists across every future session — it's worse than T31 memory poisoning because it survives memory resets and is loaded as trusted context. One addition to the protected path regex, closes the gap before it's exploited.
+SKILL_CHAIN campaign pattern (campaign.py)
+11th campaign pattern. Sequence: T36_AGENTDEF write followed by T01 or T27 injection in the same session. Confidence 0.91. The attack: write a poisoned SKILL.md in the current session, then issue an instruction override that the poisoned skill enables. The pattern is the precise Context Hub version of the McKinsey/Lilli AGENTDEF_CHAIN — same mechanism, different file type.
+Build 3 — SourceReputationGraph (source_reputation.py)
+Context Hub mechanism applied to threat intelligence. SourceReputationGraph maps URLs, domains, and document fingerprints to their injection history across sessions. Four levels: CLEAN, SUSPICIOUS (1–2 events, 0.75x threshold), HIGH_RISK (3+ events or max score ≥ 0.75, 0.5x threshold), BLOCKED (8+ local events or 5+ network flags). Domain propagation: a flag on api.attacker.com/specific-path applies a dampened score to the entire api.attacker.com domain.
+record_event() called by after_tool_call() whenever the injection scanner scores ≥ 0.25. get_risk() called by before_tool_call() before any fetch operation — if BLOCKED, returns immediately without hitting the network. get_shareable_reputation() returns anonymized domain-level scores for federation sharing.
+source_records table in the observation graph. upsert_source_record() preserves MAX score on conflict so a stale low-score update can never downgrade a high-risk record. list_source_records() for the CLI.
+enable_source_reputation() on OpenClawGuard. enable_source_reputation=True kwarg wired into attach().
+aiglos reputation CLI — top, show, domains, shareable. Color-coded by level.
+The compounding: session 1 an endpoint returns injection attempts, annotated. Session 2 that endpoint gets elevated scrutiny before content even loads. Session N the source is blocked. The goldfish problem is solved at the source level, not just the content level.

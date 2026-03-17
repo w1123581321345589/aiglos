@@ -580,7 +580,7 @@ class TestRepeatedInjectionAttempt:
             "PERSISTENCE_CHAIN", "LATERAL_PREP", "AGENTDEF_CHAIN",
             "MEMORY_PERSISTENCE_CHAIN", "REWARD_MANIPULATION",
             "EXTERNAL_INSTRUCTION_CHANNEL", "REPEATED_INJECTION_ATTEMPT",
-            "CONTEXT_DIRECTORY_TAKEOVER",
+            "SKILL_CHAIN",
         }
         assert expected.issubset(names)
         assert len(names) == 11
@@ -593,7 +593,7 @@ class TestRepeatedInjectionAttempt:
 class TestV080ModuleAPI:
 
     def test_version_is_080(self):
-        assert aiglos.__version__ == "0.16.0"
+        assert aiglos.__version__ == "0.17.0"
 
     def test_exports_injection_scanner_types(self):
         assert hasattr(aiglos, "InjectionScanner")

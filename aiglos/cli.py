@@ -567,7 +567,8 @@ def _cmd_trace(args: List[str]) -> None:
             else dim(conf)
         )
 
-        print(f"  {bold(f'Step {action.get("step","?"):>3}')}  "
+        step_num = action.get('step', '?')
+        print(f"  {bold(f'Step {step_num:>3}')}  "
               f"{_severity_color(action.get('verdict','ALLOW')):<7}  "
               f"{action.get('tool_name','?')}  "
               f"[{dim(action.get('rule_id','?'))}]")
@@ -778,6 +779,7 @@ def cmd_help() -> None:
 
 {bold('OTHER')}
   {cyan('demo')} [hermes]             Run the OpenClaw or hermes demo
+  {cyan('reputation')} top|show|clear           Source reputation -- URL and document threat history
   {cyan('override')} list|confirm|reject       Challenge-response Tier 3 override management
   {cyan('honeypot')} status|list|deploy         Honeypot file management and hit log
   {cyan('research')} verify|report|scan        Citation verification and compliance reports
@@ -938,6 +940,103 @@ def _cmd_policy(args: list) -> None:
     else:
         print(f"Unknown policy subcommand: {subcmd}")
         print("Usage: aiglos policy list|show|approve|reject|stats")
+
+
+def _cmd_reputation(args: list) -> None:
+    """
+    aiglos reputation <subcommand> [args]
+
+    Subcommands:
+      top [--limit 10]
+           Show most dangerous sources for this deployment.
+
+      show <url-or-domain>
+           Show reputation details for a specific source.
+
+      domains
+           Show domain-level reputation summary.
+
+      shareable
+           Show anonymized reputation data that can be shared via federation.
+    """
+    from aiglos.adaptive.observation import ObservationGraph
+    from aiglos.adaptive.source_reputation import SourceReputationGraph, CLEAN
+
+    graph   = ObservationGraph()
+    srg     = SourceReputationGraph(graph=graph)
+    subcmd  = args[0] if args else "top"
+    rest    = args[1:]
+
+    if subcmd == "top":
+        limit = 10
+        for i, token in enumerate(rest):
+            if token == "--limit" and i + 1 < len(rest):
+                try:
+                    limit = int(rest[i + 1])
+                except ValueError:
+                    pass
+
+        records = srg.top_risky_sources(limit=limit)
+        if not records:
+            print("  No reputation history yet.")
+            print("  Enable with: aiglos.attach(enable_source_reputation=True)")
+            return
+
+        print(f"\n  {bold('Top Risky Sources')} ({len(records)} found)")
+        print("  " + "─" * 70)
+        for r in records:
+            level_colors = {
+                "BLOCKED":   "\033[91m",
+                "HIGH_RISK": "\033[33m",
+                "SUSPICIOUS": "\033[93m",
+            }
+            color = level_colors.get(r.reputation_level, "")
+            reset = "\033[0m"
+            print(f"  {color}{r.reputation_level:<12}{reset} "
+                  f"{r.source_key[:50]:<50} "
+                  f"events={r.event_count} "
+                  f"max={r.max_score:.2f}")
+            if r.rule_ids:
+                rules = ', '.join(set(r.rule_ids[:3]))
+                print(f"    rules: {rules}")
+
+    elif subcmd == "show":
+        if not rest:
+            print("Usage: aiglos reputation show <url-or-domain>")
+            return
+        url   = rest[0]
+        risk  = srg.get_risk(source_url=url)
+        print(f"\n  {bold('Source Reputation')}: {url}")
+        print(f"  Level:      {risk.level}")
+        print(f"  Score:      {risk.score:.2f}")
+        print(f"  Events:     {risk.event_count}")
+        print(f"  Action:     {risk.recommendation}")
+        if risk.evidence_summary:
+            print(f"  Evidence:   {risk.evidence_summary[:100]}")
+
+    elif subcmd == "domains":
+        summary = srg.domain_summary()
+        if not summary:
+            print("  No domain reputation history.")
+            return
+        print(f"\n  {bold('Domain Reputation Summary')}")
+        print("  " + "─" * 50)
+        for domain, count in list(summary.items())[:20]:
+            print(f"  {domain:<40} events={count}")
+
+    elif subcmd == "shareable":
+        data = srg.get_shareable_reputation()
+        if not data:
+            print("  No shareable reputation data.")
+            return
+        print(f"\n  {bold('Shareable Reputation')} ({len(data)} domains)")
+        print("  (anonymized domain-level data for federation)")
+        print("  " + "─" * 50)
+        for item in data[:10]:
+            print(f"  {item['level']:<12} {item['domain']:<40} "
+                  f"score={item['max_score']:.2f}")
+    else:
+        print(f"Unknown reputation subcommand: {subcmd}")
 
 
 def _cmd_override(args: list) -> None:
@@ -1260,6 +1359,10 @@ def main() -> None:
 
     cmd = args[0]
     rest = args[1:]
+
+    if cmd == "reputation":
+        _cmd_reputation(args)
+        return
 
     if cmd == "override":
         _cmd_override(args)
