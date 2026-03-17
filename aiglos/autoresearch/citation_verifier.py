@@ -1,7 +1,7 @@
 """
 aiglos.autoresearch.citation_verifier
 =======================================
-Verified threat intelligence — evidence-backed rule citations for Aiglos.
+Verified threat intelligence -- evidence-backed rule citations for Aiglos.
 
 The problem with the existing autoresearch loop:
   Rules are generated and improved against an internal labeled corpus.
@@ -16,9 +16,9 @@ T0040 maps it to the known attack technique."
 CitationVerifier closes that gap.
 
 It queries three authoritative sources:
-  1. NVD (National Vulnerability Database) — real CVEs for AI agent attacks
-  2. OWASP Top 10 for Agentic Applications — published taxonomy
-  3. MITRE ATLAS — adversarial ML attack techniques
+  1. NVD (National Vulnerability Database) -- real CVEs for AI agent attacks
+  2. OWASP Top 10 for Agentic Applications -- published taxonomy
+  3. MITRE ATLAS -- adversarial ML attack techniques
 
 For every rule in the Aiglos engine, it finds the best matching citation
 from these sources, scores the confidence, and attaches the citation to the
@@ -29,7 +29,7 @@ Rules with no citation stay PENDING and surface the UNVERIFIED_RULE_ACTIVE
 inspection trigger, requiring human review before going to production.
 
 The self-healing fallback: if all external APIs are unreachable (air-gap,
-network restriction), the verifier falls back to internal evidence — the
+network restriction), the verifier falls back to internal evidence -- the
 observation graph's own block history. A rule that has fired 50+ times in
 production with zero false positive overrides is internally verified.
 
@@ -47,6 +47,7 @@ Usage:
     #   confidence=0.88, status="VERIFIED"
     # )
 """
+
 
 
 import json
@@ -69,7 +70,7 @@ _NVD_RATE_LIMIT    = 0.6   # seconds between NVD requests (rate limit: 5/30s)
 _MIN_CONFIDENCE    = 0.50  # minimum to count as VERIFIED
 _INTERNAL_FALLBACK_BLOCKS = 20  # blocks needed for internal verification
 
-# OWASP Top 10 for Agentic Applications — static reference (published Dec 2025)
+# OWASP Top 10 for Agentic Applications -- static reference (published Dec 2025)
 _OWASP_ASI = {
     "ASI-01": {
         "name": "Agent Goal Hijack",
@@ -82,13 +83,14 @@ _OWASP_ASI = {
         "keywords": ["tool misuse", "tool call", "mcp", "function call",
                      "unauthorized tool", "tool abuse"],
         "aiglos_rules": ["T03", "T04", "T05", "T07", "T08", "T09", "T10",
-                         "T11", "T12", "T37"],
+                         "T11", "T12", "T37", "T44", "T49", "T55"],
     },
     "ASI-03": {
         "name": "Identity and Privilege Abuse",
         "keywords": ["privilege escalation", "identity abuse", "impersonation",
                      "unauthorized access", "credential abuse"],
-        "aiglos_rules": ["T08", "T11", "T19", "T20", "T21", "T38"],
+        "aiglos_rules": ["T08", "T11", "T19", "T20", "T21", "T38",
+                         "T45", "T52", "T61", "T63", "T64", "T66"],
     },
     "ASI-04": {
         "name": "Supply Chain Vulnerabilities",
@@ -106,13 +108,13 @@ _OWASP_ASI = {
         "name": "Memory and Context Poisoning",
         "keywords": ["memory poisoning", "context poisoning", "belief injection",
                      "persistent memory", "memory manipulation"],
-        "aiglos_rules": ["T31"],
+        "aiglos_rules": ["T31", "T54", "T58"],
     },
     "ASI-07": {
         "name": "Insecure Inter-Agent Communication",
         "keywords": ["inter-agent", "agent communication", "multi-agent",
                      "agent spawning", "a2a", "agent-to-agent"],
-        "aiglos_rules": ["T38"],
+        "aiglos_rules": ["T38", "T59", "T64"],
     },
     "ASI-08": {
         "name": "Cascading Failures",
@@ -124,17 +126,17 @@ _OWASP_ASI = {
         "name": "Human-Agent Trust Exploitation",
         "keywords": ["trust exploitation", "social engineering", "human trust",
                      "agent definition", "skill poisoning"],
-        "aiglos_rules": ["T36_AGENTDEF"],
+        "aiglos_rules": ["T36_AGENTDEF", "T49", "T55", "T57"],
     },
     "ASI-10": {
         "name": "Rogue Agents",
         "keywords": ["rogue agent", "autonomous agent", "unauthorized action",
                      "out of scope", "behavioral anomaly"],
-        "aiglos_rules": ["T38"],
+        "aiglos_rules": ["T38", "T50", "T53", "T56"],
     },
 }
 
-# MITRE ATLAS — adversarial ML techniques relevant to AI agents
+# MITRE ATLAS -- adversarial ML techniques relevant to AI agents
 _MITRE_ATLAS = {
     "AML.T0040": {
         "name": "ML Supply Chain Compromise",
@@ -183,6 +185,29 @@ _RULE_SEARCH_TERMS: Dict[str, List[str]] = {
     "T37":         ["autonomous financial transaction agent stripe"],
     "T38":         ["agent spawning unauthorized multi-agent"],
     "T39":         ["reward poisoning RL training AI agent"],
+    "T44":         ["inference routing manipulation AI model swap"],
+    "T45":         ["cross-tenant data access cloud AI agent"],
+    "T46":         ["simulation environment poisoning robot AI"],
+    "T47":         ["token flooding denial of service AI agent"],
+    "T48":         ["context window smuggling prompt injection"],
+    "T49":         ["tool schema manipulation MCP AI agent"],
+    "T50":         ["agentic workflow escape unauthorized action"],
+    "T51":         ["model extraction fingerprinting LLM"],
+    "T52":         ["parallel session abuse rate limit bypass AI"],
+    "T53":         ["eval harness poisoning safety evaluation AI"],
+    "T54":         ["vector database injection RAG poisoning"],
+    "T55":         ["tool result forgery AI agent fabrication"],
+    "T56":         ["capability probing reconnaissance AI agent"],
+    "T57":         ["instruction hierarchy bypass system prompt"],
+    "T58":         ["long context drift behavioral manipulation LLM"],
+    "T59":         ["agentic social engineering impersonation"],
+    "T60":         ["data pipeline injection ETL AI agent"],
+    "T61":         ["compute resource abuse cryptomining AI agent"],
+    "T62":         ["secrets in logs sensitive data leakage AI"],
+    "T63":         ["webhook replay attack AI agent automation"],
+    "T64":         ["agent identity spoofing multi-agent system"],
+    "T65":         ["inference timing attack model probing"],
+    "T66":         ["cross-tenant API key confusion GaaS"],
 }
 
 
@@ -254,10 +279,10 @@ class CitationVerifier:
     Verifies Aiglos rules against authoritative security sources.
 
     Priority order:
-      1. OWASP ASI — static reference, always available, O(1) lookup
-      2. MITRE ATLAS — static reference, always available, O(1) lookup
-      3. NVD CVE — live API, rate-limited, best for specific CVE matching
-      4. Internal fallback — observation graph block history
+      1. OWASP ASI -- static reference, always available, O(1) lookup
+      2. MITRE ATLAS -- static reference, always available, O(1) lookup
+      3. NVD CVE -- live API, rate-limited, best for specific CVE matching
+      4. Internal fallback -- observation graph block history
 
     Always tries OWASP and MITRE first (no network required).
     NVD is called only when OWASP/MITRE confidence is below threshold.
@@ -279,7 +304,7 @@ class CitationVerifier:
     ) -> VerifiedCitation:
         """
         Find the best verified citation for a rule.
-        Returns VerifiedCitation — always returns something, never raises.
+        Returns VerifiedCitation -- always returns something, never raises.
         """
         # Check graph cache first
         if not force_refresh and self._graph:
@@ -371,7 +396,7 @@ class CitationVerifier:
 
         for asi_id, data in _OWASP_ASI.items():
             if rule_id in data["aiglos_rules"]:
-                # Direct rule mapping — highest confidence
+                # Direct rule mapping -- highest confidence
                 score = 0.90
                 if score > best_score:
                     best_score = score
