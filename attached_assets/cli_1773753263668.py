@@ -27,6 +27,7 @@ Usage:
     python -m aiglos sessions --n 20
 """
 
+from __future__ import annotations
 
 import json
 import sys

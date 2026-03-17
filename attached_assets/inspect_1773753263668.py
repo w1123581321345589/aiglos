@@ -27,6 +27,7 @@ Usage:
         print(t.trigger_type, t.rule_id, t.evidence_summary)
 """
 
+from __future__ import annotations
 
 import logging
 import time

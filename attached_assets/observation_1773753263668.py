@@ -27,6 +27,7 @@ Usage:
     #   "override_rate": 0.08, "trend": "STABLE" }
 """
 
+from __future__ import annotations
 
 import hashlib
 import json

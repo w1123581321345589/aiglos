@@ -33,6 +33,7 @@ Framework integrations:
     from aiglos.integrations.hermes   import HermesGuard
 """
 
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, List, Optional
@@ -48,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.14.0"  # canonical version for this release
+    __version__ = "0.15.0"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -96,6 +97,36 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     inspect_memory_write,
     is_memory_tool,
 )
+from aiglos.integrations.context_guard import (  # noqa: F401
+    ContextDirectoryGuard,
+    ContextGuardResult,
+    is_shared_context_write,
+)
+from aiglos.integrations.outbound_guard import (  # noqa: F401
+    OutboundSecretGuard,
+    OutboundScanResult,
+    scan_for_secrets,
+    contains_secret,
+)
+
+from aiglos.autoresearch.citation_verifier import (  # noqa: F401
+    CitationVerifier,
+    VerifiedCitation,
+    CitationStatus,
+)
+from aiglos.autoresearch.threat_literature import (  # noqa: F401
+    ThreatLiteratureSearch,
+    ThreatSignal,
+)
+from aiglos.autoresearch.verified_rule_engine import (  # noqa: F401
+    VerifiedRuleEngine,
+    VerifiedRunResult,
+)
+from aiglos.autoresearch.compliance_report import (  # noqa: F401
+    ComplianceReportGenerator,
+    ComplianceReport,
+)
+
 from aiglos.core.federation import (   # noqa: F401
     FederationClient,
     GlobalPrior,
@@ -152,24 +183,6 @@ from aiglos.integrations.rl_guard import (  # noqa: F401
 from aiglos.autoresearch.coupling import (  # noqa: F401
     SecurityAwareReward,
     CoupledRewardResult,
-)
-
-from aiglos.autoresearch.citation_verifier import (  # noqa: F401
-    CitationVerifier,
-    VerifiedCitation,
-    CitationStatus,
-)
-from aiglos.autoresearch.threat_literature import (  # noqa: F401
-    ThreatLiteratureSearch,
-    ThreatSignal,
-)
-from aiglos.autoresearch.verified_rule_engine import (  # noqa: F401
-    VerifiedRuleEngine,
-    VerifiedRunResult,
-)
-from aiglos.autoresearch.compliance_report import (  # noqa: F401
-    ComplianceReportGenerator,
-    ComplianceReport,
 )
 
 
@@ -654,6 +667,14 @@ __all__ = [
     "FederationClient",
     "GlobalPrior",
     "extract_shareable_transitions",
+    # v0.15.0
+    "ContextDirectoryGuard",
+    "ContextGuardResult",
+    "is_shared_context_write",
+    "OutboundSecretGuard",
+    "OutboundScanResult",
+    "scan_for_secrets",
+    "contains_secret",
     # v0.14.0
     "CitationVerifier",
     "VerifiedCitation",
