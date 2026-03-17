@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.20.0"  # canonical version for this release
+    __version__ = "0.21.0"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -97,6 +97,18 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     inspect_memory_write,
     is_memory_tool,
 )
+from aiglos.core.threat_engine_v2 import RULES_T44_T66  # noqa: F401
+from aiglos.adaptive.permission_recommender import (   # noqa: F401
+    PermissionRecommender,
+    PermissionRecommendation,
+    ToolUsageStats,
+)
+from aiglos.benchmark.govbench import (  # noqa: F401
+    GovBench,
+    GovBenchResult,
+    DimensionResult,
+)
+
 from aiglos.audit.scanner import AuditScanner, AuditResult, CheckResult  # noqa: F401
 from aiglos.audit.report  import AuditReporter  # noqa: F401
 from aiglos.adaptive.skill_reputation import (  # noqa: F401
@@ -194,7 +206,6 @@ from aiglos.core.causal_tracer import (  # noqa: F401
     ContextEntry,
     TaggedAction,
 )
-from aiglos.core.threat_engine_v2 import RULES_T44_T66  # noqa: F401
 from aiglos.integrations.injection_scanner import (  # noqa: F401
     InjectionScanner,
     InjectionScanResult,
@@ -735,6 +746,15 @@ __all__ = [
     "FederationClient",
     "GlobalPrior",
     "extract_shareable_transitions",
+    # v0.20.0
+    "PermissionRecommender",
+    "PermissionRecommendation",
+    "ToolUsageStats",
+    "GovBench",
+    "GovBenchResult",
+    "DimensionResult",
+    # v0.19.0
+    "RULES_T44_T66",
     # v0.18.0
     "AuditScanner",
     "AuditResult",
@@ -762,8 +782,6 @@ __all__ = [
     "OutboundScanResult",
     "scan_for_secrets",
     "contains_secret",
-    # v0.20.0
-    "RULES_T44_T66",
     # v0.14.0
     "CitationVerifier",
     "VerifiedCitation",
