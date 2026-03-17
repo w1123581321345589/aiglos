@@ -145,6 +145,7 @@ class TestExternalInstructionChannel:
             "MEMORY_PERSISTENCE_CHAIN", "REWARD_MANIPULATION",
             "EXTERNAL_INSTRUCTION_CHANNEL", "REPEATED_INJECTION_ATTEMPT",
             "SKILL_CHAIN", "SANDBOX_ESCAPE_ATTEMPT",
+            "SANDBOX_CONFIRMED_ESCAPE",
             "GAAS_TAKEOVER", "INFERENCE_HIJACK_CHAIN",
             "RAG_POISON_CHAIN", "MULTI_AGENT_IMPERSONATION",
             "CAPABILITY_EXPLOIT_CHAIN",
@@ -304,11 +305,11 @@ class TestScanMessage:
 class TestV070ModuleAPI:
 
     def test_version_is_070(self):
-        assert aiglos.__version__ == "0.20.0"
+        assert aiglos.__version__ == "0.21.0"
 
     def test_eleven_campaign_patterns(self):
         names = {p["name"] for p in _CAMPAIGN_PATTERNS}
         assert "EXTERNAL_INSTRUCTION_CHANNEL" in names
         assert "SKILL_CHAIN" in names
         assert "SANDBOX_ESCAPE_ATTEMPT" in names
-        assert len(names) == 17
+        assert len(names) == 18
