@@ -96,6 +96,7 @@ class InspectionEngine:
         triggers.extend(self._check_repeated_tier3())
         triggers.extend(self._check_global_prior_match())
         triggers.extend(self._check_unverified_rules())
+        triggers.extend(self._check_shared_context_anomaly())
         log.info("[InspectionEngine] %d trigger(s) fired.", len(triggers))
         return triggers
 
@@ -895,4 +896,43 @@ class InspectionEngine:
 
         except Exception as e:
             log.debug("[InspectionEngine] unverified_rules check error: %s", e)
+        return triggers
+
+    # ── Shared context anomaly ────────────────────────────────────────────────
+
+    _SHARED_CONTEXT_MIN_EVENTS = 2
+
+    def _check_shared_context_anomaly(self) -> List[InspectionTrigger]:
+        triggers = []
+        try:
+            with self._graph._conn() as conn:
+                rows = conn.execute("""
+                    SELECT COUNT(*) as cnt, session_id
+                    FROM events
+                    WHERE rule_id = 'T40'
+                    GROUP BY session_id
+                    HAVING cnt >= ?
+                    ORDER BY cnt DESC
+                    LIMIT 10
+                """, (self._SHARED_CONTEXT_MIN_EVENTS,)).fetchall()
+
+            for row in rows:
+                triggers.append(InspectionTrigger(
+                    trigger_type="SHARED_CONTEXT_ANOMALY",
+                    rule_id="T40",
+                    severity="HIGH" if row["cnt"] >= 5 else "MEDIUM",
+                    evidence_summary=(
+                        f"Session {row['session_id']} has {row['cnt']} shared context "
+                        f"write events (T40). Multiple poisoned writes to fleet "
+                        f"coordination paths detected — inspect shared directories "
+                        f"for coordinated injection attempts."
+                    ),
+                    evidence_data={
+                        "session_id": row["session_id"],
+                        "t40_event_count": row["cnt"],
+                    },
+                    amendment_candidate=False,
+                ))
+        except Exception as e:
+            log.debug("[InspectionEngine] shared_context_anomaly check error: %s", e)
         return triggers

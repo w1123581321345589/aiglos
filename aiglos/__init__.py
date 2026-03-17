@@ -3,7 +3,7 @@ Aiglos — AI Agent Security Runtime
 ===================================
 Protocol-agnostic runtime security for AI agents. Intercepts every agent
 action before execution — MCP tool calls, direct HTTP/API calls, CLI
-execution, subprocess spawning — and applies T01–T39 threat detection.
+execution, subprocess spawning — and applies T01–T42 threat detection.
 
 Signed session artifacts cover all three execution surfaces in a single
 compliance document. compliance artifact ready.
@@ -48,7 +48,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.14.0"  # canonical version for this release
+    __version__ = "0.15.0"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -95,6 +95,14 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     MemoryWriteResult,
     inspect_memory_write,
     is_memory_tool,
+)
+from aiglos.integrations.context_guard import (  # noqa: F401
+    ContextDirectoryGuard,
+    ContextWriteResult,
+)
+from aiglos.integrations.outbound_guard import (  # noqa: F401
+    OutboundGuard,
+    OutboundScanResult,
 )
 from aiglos.core.federation import (   # noqa: F401
     FederationClient,
@@ -664,4 +672,9 @@ __all__ = [
     "VerifiedRunResult",
     "ComplianceReportGenerator",
     "ComplianceReport",
+    # v0.15.0
+    "ContextDirectoryGuard",
+    "ContextWriteResult",
+    "OutboundGuard",
+    "OutboundScanResult",
 ]

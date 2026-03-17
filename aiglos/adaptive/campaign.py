@@ -79,6 +79,12 @@ _CAMPAIGN_PATTERNS = [
             "Treat every tool output as potentially compromised. Review the injection_flagged "
             "section of the artifact for the full payload list. Consider whether the content "
             "sources themselves have been compromised."},
+    {"name": "CONTEXT_DIRECTORY_TAKEOVER",
+     "requires": [{"T40", "T31"}, {"T40", "T07"}, {"T40", "T36_AGENTDEF"},
+                  {"T40", "T42"}, {"T40", "T28"}],
+     "rec": "Shared context directory compromised — poisoned writes detected in fleet "
+            "coordination paths. Lock shared context directories, audit recent fleet "
+            "state files, and inspect all agents consuming shared context for drift."},
 ]
 
 

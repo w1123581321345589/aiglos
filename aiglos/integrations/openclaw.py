@@ -354,6 +354,44 @@ _OPENCLAW_RULES: list[dict] = [
             is not None
         ),
     },
+    # T40: Shared context directory poisoning
+    {
+        "id": "T40",
+        "name": "SHARED_CONTEXT_POISON",
+        "desc": "Write to shared context/fleet coordination path with injection payload",
+        "score": 0.88,
+        "critical": True,
+        "match": lambda name, args: (
+            "write" in name.lower() or "filesystem" in name.lower()
+        ) and any(
+            kw in str(args).lower()
+            for kw in (
+                "shared/", "fleet/", "context/", "coordination/",
+                "agents.md", "shared.md", "fleet.md", "coordination.md",
+                "fleet_context/", "shared_context/",
+            )
+        ),
+    },
+    # T41: Outbound secret leakage
+    {
+        "id": "T41",
+        "name": "OUTBOUND_SECRET_LEAK",
+        "desc": "Outbound content contains API keys, credentials, or sensitive file references",
+        "score": 0.92,
+        "critical": True,
+        "match": lambda name, args: (
+            name in ("http.post", "http.put", "api.call", "send_message",
+                     "post_message", "http.request")
+        ) and any(
+            re.search(pat, str(args))
+            for pat in [
+                r"sk-ant-api03-", r"sk-[A-Za-z0-9]{20,}",
+                r"AKIA[A-Z0-9]{16}", r"ghp_[A-Za-z0-9]{36}",
+                r"sk_live_", r"sk_test_", r"xoxb-", r"hf_[A-Za-z0-9]{20,}",
+                r"~/.ssh/id_rsa", r"~/.aws/credentials", r"\.env\b",
+            ]
+        ),
+    },
 ]
 
 # General T01–T39 rules reused from core (simplified subset for OpenClaw)
@@ -685,6 +723,35 @@ class OpenClawGuard:
         except Exception as _br_err:
             logger.debug("[OpenClawGuard] Memory guard check skipped: %s", _br_err)
 
+        try:
+            from aiglos.integrations.outbound_guard import OutboundGuard, _is_send_operation
+            if _is_send_operation(tool_name):
+                content = str(args_dict.get("content", args_dict.get("body", args_dict.get("data", args_dict.get("raw", "")))))
+                if content:
+                    ob_guard = OutboundGuard(session_id=sid, mode="block")
+                    ob_result = ob_guard.before_send(tool_name, content)
+                    if ob_result.verdict == "BLOCK":
+                        result = GuardResult(
+                            verdict=Verdict.BLOCK,
+                            tool_name=tool_name,
+                            tool_args=args_dict,
+                            threat_class="T41",
+                            threat_name="OUTBOUND_SECRET_LEAK",
+                            score=0.92,
+                            reason=ob_result.reason,
+                            session_id=self.session_id,
+                        )
+                        self._results.append(result)
+                        self._log_line(result.to_log_line())
+                        self._trust_score = max(0.0, self._trust_score - 0.15)
+                        logger.warning(
+                            "BLOCKED outbound  tool=%s  class=T41  agent=%s",
+                            tool_name, self.agent_name,
+                        )
+                        return result
+        except Exception as _ob_err:
+            logger.debug("[OpenClawGuard] Outbound guard check skipped: %s", _ob_err)
+
         # Run all rules
         matched_rule: dict | None = None
         max_score = 0.0
@@ -771,6 +838,38 @@ class OpenClawGuard:
             logger.debug("ALLOW  tool=%s  score=%.2f", tool_name, combined)
 
         return result
+
+    # ── Outbound secret scanning ─────────────────────────────────────────────
+
+    def before_send(self, tool_name: str, content: str) -> "GuardResult":
+        from aiglos.integrations.outbound_guard import OutboundGuard
+        guard = OutboundGuard(session_id=self.session_id, mode="block")
+        scan = guard.before_send(tool_name, content)
+        if scan.verdict == "BLOCK":
+            result = GuardResult(
+                verdict=Verdict.BLOCK,
+                tool_name=tool_name,
+                tool_args={"content_length": len(content)},
+                threat_class="T41",
+                threat_name="OUTBOUND_SECRET_LEAK",
+                score=0.92,
+                reason=scan.reason,
+                session_id=self.session_id,
+            )
+            self._results.append(result)
+            self._log_line(result.to_log_line())
+            self._trust_score = max(0.0, self._trust_score - 0.15)
+            logger.warning(
+                "BLOCKED outbound  tool=%s  class=T41  agent=%s  reason=%s",
+                tool_name, self.agent_name, scan.reason[:80],
+            )
+            return result
+        return GuardResult(
+            verdict=Verdict.ALLOW,
+            tool_name=tool_name,
+            tool_args={},
+            session_id=self.session_id,
+        )
 
     # ── Sub-agent delegation ──────────────────────────────────────────────────
 

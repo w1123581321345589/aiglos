@@ -183,6 +183,27 @@ _T36_AGENTDEF_PATHS = re.compile(
 
 _T36_AGENTDEF_WRITE_CMD = re.compile(r"^(cp|mv|tee|install|rsync|ln)\s", re.IGNORECASE)
 
+_T42_AUTOGROWTH_PATHS = re.compile(
+    r"("
+    r"\binstructions\.md\b"
+    r"|\bcrons\.json\b"
+    r"|\bagent\.yml\b"
+    r"|\btasks\.json\b"
+    r")",
+    re.IGNORECASE,
+)
+
+_T42_AUTOGROWTH_KEYWORDS = re.compile(
+    r"("
+    r"\bautogrowth\b"
+    r"|\bself_improve\b"
+    r"|\bfeedback_loop\b"
+    r"|\bmodify_cron\b"
+    r"|\bupdate_instructions\b"
+    r")",
+    re.IGNORECASE,
+)
+
 _T38_AGENT_SPAWN = re.compile(
     r"("
     r"\bclaude\s+(code|--print|-p)\b"
@@ -263,6 +284,18 @@ def inspect_subprocess(
             reason=reason, cmd=cmd_str, matched_val=matched[:120],
             latency_ms=(time.monotonic() - t0) * 1000,
         )
+
+    t42_path = _T42_AUTOGROWTH_PATHS.search(cmd_str)
+    t42_kw = _T42_AUTOGROWTH_KEYWORDS.search(cmd_str)
+    _t42_is_write = bool(re.match(
+        r"^(cp|mv|tee|install|rsync|ln|echo|cat\s*>|python|node|bash|sh)\s",
+        cmd_str.strip(), re.IGNORECASE,
+    )) or bool(re.search(r">\s*\S", cmd_str))
+    if t42_kw or (t42_path and _t42_is_write):
+        matched = (t42_path.group() if t42_path else "") + (" " + t42_kw.group() if t42_kw else "")
+        return _result("T42", "INSTRUCTION_REWRITE_POISON",
+            f"Self-rewriting instruction file detected: {matched.strip()} — autogrowth attack vector.",
+            matched.strip(), force_tier=SubprocTier.GATED)
 
     path_match = _T36_AGENTDEF_PATHS.search(cmd_str)
     if path_match:
