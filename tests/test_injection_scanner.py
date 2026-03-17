@@ -593,7 +593,7 @@ class TestRepeatedInjectionAttempt:
 class TestV080ModuleAPI:
 
     def test_version_is_080(self):
-        assert aiglos.__version__ == "0.15.0"
+        assert aiglos.__version__ == "0.16.0"
 
     def test_exports_injection_scanner_types(self):
         assert hasattr(aiglos, "InjectionScanner")

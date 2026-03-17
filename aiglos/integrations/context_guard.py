@@ -70,6 +70,27 @@ def _is_shared_context_path(path: str) -> bool:
     return bool(_SHARED_CONTEXT_PATHS.search(path))
 
 
+def is_shared_context_write(tool_name: str, args) -> bool:
+    _WRITE_TOOLS = {
+        "write_file", "create_file", "edit_file", "save_file",
+        "filesystem.write_file", "filesystem.create_file",
+        "file.write", "file.create", "file.save",
+        "update_file", "append_file", "overwrite_file",
+    }
+    name_lower = tool_name.lower() if isinstance(tool_name, str) else ""
+    is_write = any(w in name_lower for w in ("write", "create", "save", "edit", "append", "overwrite"))
+    if not is_write and name_lower not in _WRITE_TOOLS:
+        return False
+    paths_to_check = []
+    if isinstance(args, dict):
+        for k in ("path", "file", "filename", "filepath", "target"):
+            if k in args and isinstance(args[k], str):
+                paths_to_check.append(args[k])
+    elif isinstance(args, str):
+        paths_to_check.append(args)
+    return any(_is_shared_context_path(p) for p in paths_to_check)
+
+
 def _score_context_content(content: str) -> Tuple[float, str, List[str]]:
     if not content:
         return 0.0, "LOW", []

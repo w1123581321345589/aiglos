@@ -14,6 +14,9 @@ _API_KEY_PATTERNS = [
     ("stripe_test_key", re.compile(r"sk_test_[A-Za-z0-9]{20,}")),
     ("slack_bot_token", re.compile(r"xoxb-[A-Za-z0-9\-]{20,}")),
     ("huggingface_token", re.compile(r"hf_[A-Za-z0-9]{20,}")),
+    ("anthropic_api_key", re.compile(r"sk-ant-[A-Za-z0-9\-]{20,}")),
+    ("openai_api_key", re.compile(r"sk-[A-Za-z0-9]{20,}")),
+    ("gcp_service_key", re.compile(r"AIza[A-Za-z0-9\-_]{35}")),
     ("generic_jwt", re.compile(r"eyJ[A-Za-z0-9_\-]{10,}\.eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}")),
 ]
 
@@ -85,6 +88,14 @@ def _is_read_operation(tool_name: str) -> bool:
         if op in lower:
             return True
     return False
+
+
+def contains_secret(content: str) -> bool:
+    return bool(_scan_api_keys(content) or _scan_sensitive_paths(content))
+
+
+def scan_for_secrets(content: str) -> List[str]:
+    return _scan_api_keys(content) + _scan_sensitive_paths(content)
 
 
 def _scan_api_keys(content: str) -> List[str]:
