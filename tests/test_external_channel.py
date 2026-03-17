@@ -137,7 +137,7 @@ class TestExternalInstructionChannel:
             rec = results[0].recommendation.lower()
             assert any(w in rec for w in ["tip", "user message", "productivity", "disguised"])
 
-    def test_twelve_patterns_total(self):
+    def test_seventeen_patterns_total(self):
         names = {p["name"] for p in _CAMPAIGN_PATTERNS}
         expected = {
             "RECON_SWEEP", "CREDENTIAL_ACCUMULATE", "EXFIL_SETUP",
@@ -145,6 +145,9 @@ class TestExternalInstructionChannel:
             "MEMORY_PERSISTENCE_CHAIN", "REWARD_MANIPULATION",
             "EXTERNAL_INSTRUCTION_CHANNEL", "REPEATED_INJECTION_ATTEMPT",
             "SKILL_CHAIN", "SANDBOX_ESCAPE_ATTEMPT",
+            "GAAS_TAKEOVER", "INFERENCE_HIJACK_CHAIN",
+            "RAG_POISON_CHAIN", "MULTI_AGENT_IMPERSONATION",
+            "CAPABILITY_EXPLOIT_CHAIN",
         }
         assert expected == names
 
@@ -301,11 +304,11 @@ class TestScanMessage:
 class TestV070ModuleAPI:
 
     def test_version_is_070(self):
-        assert aiglos.__version__ == "0.19.0"
+        assert aiglos.__version__ == "0.20.0"
 
     def test_eleven_campaign_patterns(self):
         names = {p["name"] for p in _CAMPAIGN_PATTERNS}
         assert "EXTERNAL_INSTRUCTION_CHANNEL" in names
         assert "SKILL_CHAIN" in names
         assert "SANDBOX_ESCAPE_ATTEMPT" in names
-        assert len(names) == 12
+        assert len(names) == 17
