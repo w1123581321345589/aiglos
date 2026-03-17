@@ -95,6 +95,7 @@ class InspectionEngine:
         triggers.extend(self._check_behavioral_anomaly())
         triggers.extend(self._check_repeated_tier3())
         triggers.extend(self._check_global_prior_match())
+        triggers.extend(self._check_unverified_rules())
         log.info("[InspectionEngine] %d trigger(s) fired.", len(triggers))
         return triggers
 
@@ -833,3 +834,65 @@ class InspectionEngine:
             return prior
         except Exception:
             return None
+
+    # ── Unverified rule detection ─────────────────────────────────────────────
+
+    _UNVERIFIED_MIN_BLOCKS = 10   # rule must have fired this many times to trigger
+
+    def _check_unverified_rules(self) -> List[InspectionTrigger]:
+        """
+        Fire when active rules have no verified citation but have been
+        blocking in production. These rules work — but they can't be
+        explained to an auditor, a regulator, or a compliance review.
+
+        Fires for rules that have:
+          - Fired _UNVERIFIED_MIN_BLOCKS+ times in production
+          - No citation record in the graph, or citation status UNVERIFIED/PENDING
+
+        Amendment candidate: False — this doesn't change the rule, it flags
+        that the rule needs a citation attached. Run `aiglos research verify`
+        to fix it.
+        """
+        triggers = []
+        try:
+            # Get all rules with significant block history but no citation
+            with self._graph._conn() as conn:
+                # Rules that have fired but have no verified citation
+                rows = conn.execute("""
+                    SELECT bp.rule_id, COUNT(*) as block_count
+                    FROM block_patterns bp
+                    LEFT JOIN rule_citations rc ON bp.rule_id = rc.rule_id
+                    WHERE (rc.rule_id IS NULL
+                           OR rc.status IN ('UNVERIFIED', 'PENDING'))
+                    GROUP BY bp.rule_id
+                    HAVING block_count >= ?
+                    ORDER BY block_count DESC
+                    LIMIT 10
+                """, (self._UNVERIFIED_MIN_BLOCKS,)).fetchall()
+
+            for row in rows:
+                rule_id     = row["rule_id"]
+                block_count = row["block_count"]
+
+                triggers.append(InspectionTrigger(
+                    trigger_type = "UNVERIFIED_RULE_ACTIVE",
+                    rule_id      = rule_id,
+                    severity     = "LOW",
+                    evidence_summary = (
+                        f"Rule {rule_id} has fired {block_count} times in production "
+                        f"but has no verified citation from OWASP, MITRE ATLAS, or NVD. "
+                        f"This rule cannot be explained to a compliance auditor. "
+                        f"Run `aiglos research verify --rule {rule_id}` to attach a citation. "
+                        f"Run `aiglos research report` to generate the full compliance report."
+                    ),
+                    evidence_data = {
+                        "rule_id":     rule_id,
+                        "block_count": block_count,
+                        "action":      "aiglos research verify --rule " + rule_id,
+                    },
+                    amendment_candidate = False,
+                ))
+
+        except Exception as e:
+            log.debug("[InspectionEngine] unverified_rules check error: %s", e)
+        return triggers

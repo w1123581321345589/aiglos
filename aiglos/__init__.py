@@ -48,7 +48,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.13.0"  # canonical version for this release
+    __version__ = "0.14.0"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -152,6 +152,24 @@ from aiglos.integrations.rl_guard import (  # noqa: F401
 from aiglos.autoresearch.coupling import (  # noqa: F401
     SecurityAwareReward,
     CoupledRewardResult,
+)
+
+from aiglos.autoresearch.citation_verifier import (  # noqa: F401
+    CitationVerifier,
+    VerifiedCitation,
+    CitationStatus,
+)
+from aiglos.autoresearch.threat_literature import (  # noqa: F401
+    ThreatLiteratureSearch,
+    ThreatSignal,
+)
+from aiglos.autoresearch.verified_rule_engine import (  # noqa: F401
+    VerifiedRuleEngine,
+    VerifiedRunResult,
+)
+from aiglos.autoresearch.compliance_report import (  # noqa: F401
+    ComplianceReportGenerator,
+    ComplianceReport,
 )
 
 
@@ -636,4 +654,14 @@ __all__ = [
     "FederationClient",
     "GlobalPrior",
     "extract_shareable_transitions",
+    # v0.14.0
+    "CitationVerifier",
+    "VerifiedCitation",
+    "CitationStatus",
+    "ThreatLiteratureSearch",
+    "ThreatSignal",
+    "VerifiedRuleEngine",
+    "VerifiedRunResult",
+    "ComplianceReportGenerator",
+    "ComplianceReport",
 ]

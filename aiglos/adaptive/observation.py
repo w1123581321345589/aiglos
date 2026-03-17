@@ -140,6 +140,35 @@ CREATE TABLE IF NOT EXISTS causal_chains (
     timestamp          REAL NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS rule_citations (
+    rule_id         TEXT PRIMARY KEY,
+    source          TEXT NOT NULL DEFAULT '',
+    reference_id    TEXT NOT NULL DEFAULT '',
+    reference_name  TEXT NOT NULL DEFAULT '',
+    reference_url   TEXT NOT NULL DEFAULT '',
+    confidence      REAL NOT NULL DEFAULT 0.0,
+    status          TEXT NOT NULL DEFAULT 'UNVERIFIED',
+    verified_at     REAL NOT NULL DEFAULT 0,
+    evidence_summary TEXT NOT NULL DEFAULT '',
+    internal_block_count INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS threat_signals (
+    signal_id       TEXT PRIMARY KEY,
+    source          TEXT NOT NULL DEFAULT '',
+    reference_id    TEXT NOT NULL DEFAULT '',
+    title           TEXT NOT NULL DEFAULT '',
+    description     TEXT NOT NULL DEFAULT '',
+    published_at    TEXT NOT NULL DEFAULT '',
+    relevance_score REAL NOT NULL DEFAULT 0.0,
+    suggested_rule  TEXT,
+    is_new          INTEGER NOT NULL DEFAULT 1,
+    detected_at     REAL NOT NULL DEFAULT 0,
+    keywords_json   TEXT NOT NULL DEFAULT '[]'
+);
+CREATE INDEX IF NOT EXISTS idx_signals_rule ON threat_signals(suggested_rule);
+CREATE INDEX IF NOT EXISTS idx_signals_det  ON threat_signals(detected_at);
+
 CREATE TABLE IF NOT EXISTS block_patterns (
     pattern_id      TEXT NOT NULL,
     agent_name      TEXT NOT NULL,
@@ -662,6 +691,120 @@ class ObservationGraph:
         except Exception:
             d["chains"] = []
         return d
+
+    # ── Citation and threat signal support ──────────────────────────────────────
+
+    def upsert_citation(self, citation) -> None:
+        """Persist or update a VerifiedCitation."""
+        d = citation.to_dict() if hasattr(citation, "to_dict") else citation
+        with self._write_lock, self._conn() as conn:
+            conn.execute("""
+                INSERT INTO rule_citations
+                    (rule_id, source, reference_id, reference_name,
+                     reference_url, confidence, status, verified_at,
+                     evidence_summary, internal_block_count)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(rule_id) DO UPDATE SET
+                    source         = excluded.source,
+                    reference_id   = excluded.reference_id,
+                    reference_name = excluded.reference_name,
+                    reference_url  = excluded.reference_url,
+                    confidence     = excluded.confidence,
+                    status         = excluded.status,
+                    verified_at    = excluded.verified_at,
+                    evidence_summary = excluded.evidence_summary,
+                    internal_block_count = excluded.internal_block_count
+            """, (
+                d["rule_id"], d["source"], d["reference_id"],
+                d["reference_name"], d["reference_url"],
+                d["confidence"], d["status"], d["verified_at"],
+                d["evidence_summary"], d["internal_block_count"],
+            ))
+
+    def get_citation(self, rule_id: str):
+        """Load a VerifiedCitation by rule_id. Returns None if not found."""
+        from aiglos.autoresearch.citation_verifier import VerifiedCitation
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM rule_citations WHERE rule_id=?",
+                (rule_id,)
+            ).fetchone()
+        if not row:
+            return None
+        return VerifiedCitation.from_dict(dict(row))
+
+    def get_rule_block_count(self, rule_id: str, window_days: int = 90) -> int:
+        """Count total blocks for a rule in the rolling window."""
+        cutoff = time.time() - window_days * 86400
+        with self._conn() as conn:
+            # Check block_patterns table
+            row = conn.execute("""
+                SELECT COUNT(*) as c FROM block_patterns
+                WHERE rule_id=? AND occurred_at >= ?
+            """, (rule_id, cutoff)).fetchone()
+        return row["c"] if row else 0
+
+    def upsert_threat_signal(self, signal) -> None:
+        """Persist or update a ThreatSignal."""
+        import json as _json
+        d = signal.to_dict() if hasattr(signal, "to_dict") else signal
+        with self._write_lock, self._conn() as conn:
+            conn.execute("""
+                INSERT INTO threat_signals
+                    (signal_id, source, reference_id, title, description,
+                     published_at, relevance_score, suggested_rule, is_new,
+                     detected_at, keywords_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(signal_id) DO UPDATE SET
+                    is_new = excluded.is_new,
+                    detected_at = excluded.detected_at
+            """, (
+                d["signal_id"], d["source"], d["reference_id"],
+                d["title"], d["description"][:500],
+                d["published_at"], d["relevance_score"],
+                d.get("suggested_rule"), 1 if d.get("is_new", True) else 0,
+                d["detected_at"],
+                _json.dumps(d.get("keywords_matched", [])),
+            ))
+
+    def get_threat_signals(
+        self, rule_id: str = None, limit: int = 20
+    ) -> list:
+        """Load threat signals optionally filtered by suggested_rule."""
+        from aiglos.autoresearch.threat_literature import ThreatSignal
+        import json as _json
+        with self._conn() as conn:
+            if rule_id:
+                rows = conn.execute("""
+                    SELECT * FROM threat_signals WHERE suggested_rule=?
+                    ORDER BY detected_at DESC LIMIT ?
+                """, (rule_id, limit)).fetchall()
+            else:
+                rows = conn.execute("""
+                    SELECT * FROM threat_signals
+                    ORDER BY detected_at DESC LIMIT ?
+                """, (limit,)).fetchall()
+        results = []
+        for row in rows:
+            d = dict(row)
+            results.append(ThreatSignal(
+                signal_id        = d["signal_id"],
+                source           = d["source"],
+                reference_id     = d["reference_id"],
+                title            = d["title"],
+                description      = d["description"],
+                published_at     = d["published_at"],
+                relevance_score  = d["relevance_score"],
+                suggested_rule   = d.get("suggested_rule"),
+                is_new           = bool(d.get("is_new", 1)),
+                detected_at      = d["detected_at"],
+                keywords_matched = _json.loads(d.get("keywords_json", "[]")),
+            ))
+        return results
+
+    def list_threat_signals(self, limit: int = 20) -> list:
+        """List most recent threat signals."""
+        return self.get_threat_signals(limit=limit)
 
     # ── Policy proposal support ──────────────────────────────────────────────────
 

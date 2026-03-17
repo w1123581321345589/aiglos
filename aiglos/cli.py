@@ -566,7 +566,7 @@ def _cmd_trace(args: List[str]) -> None:
             else dim(conf)
         )
 
-        print(f"  {bold('Step %3s' % action.get('step', '?'))}  "
+        print(f"  {bold(f'Step {action.get("step","?"):>3}')}  "
               f"{_severity_color(action.get('verdict','ALLOW')):<7}  "
               f"{action.get('tool_name','?')}  "
               f"[{dim(action.get('rule_id','?'))}]")
@@ -715,7 +715,7 @@ def _cmd_forecast(args: List[str]) -> None:
         else dim(prediction.alert_level)
     )
     print(f"  Alert level:        {alert_color}")
-    print(f"  Model confidence:   {dim('%.0f%%' % (prediction.model_confidence * 100))}")
+    print(f"  Model confidence:   {dim(f'{prediction.model_confidence:.0%}')}")
     print()
 
     # Probability bars
@@ -748,7 +748,7 @@ def _cmd_forecast(args: List[str]) -> None:
         print(bold("  Recommended session-scoped elevations:"))
         for rule_id, prob, tier in elevations:
             print(f"    {red(rule_id):<20}  →  Tier {tier} GATED  "
-                  f"({yellow('%.0f%%' % (prob * 100))} probability)")
+                  f"({yellow(f'{prob:.0%}')} probability)")
         print()
         print(dim("  These elevations are applied automatically when"))
         print(dim("  enable_intent_prediction=True is set in aiglos.attach()."))
@@ -777,6 +777,7 @@ def cmd_help() -> None:
 
 {bold('OTHER')}
   {cyan('demo')} [hermes]             Run the OpenClaw or hermes demo
+  {cyan('research')} verify|report|scan        Citation verification and compliance reports
   {cyan('policy')}  list|show|approve|reject  Policy proposals from repeated block patterns
   {cyan('version')}                   Print version
   {cyan('help')}                      Show this help
@@ -936,6 +937,137 @@ def _cmd_policy(args: list) -> None:
         print("Usage: aiglos policy list|show|approve|reject|stats")
 
 
+def _cmd_research(args: list) -> None:
+    """
+    aiglos research <subcommand> [args]
+
+    Subcommands:
+      verify [--rule T37] [--all] [--force]
+           Verify rules against NVD, OWASP, MITRE ATLAS.
+           --rule: verify a single rule
+           --all:  verify all 39 rules (takes ~30s due to NVD rate limits)
+           --force: re-verify even if cached
+
+      report [--format markdown|json|summary]
+           Generate a compliance report mapping all rules to their
+           evidence trail. Formats: markdown (default), json, summary.
+
+      scan [--days 7]
+           Scan NVD and GitHub Security Advisories for new AI agent
+           threat patterns in the past N days.
+    """
+    from aiglos.adaptive.observation import ObservationGraph
+    from aiglos.autoresearch.citation_verifier import CitationVerifier
+    from aiglos.autoresearch.threat_literature import ThreatLiteratureSearch
+    from aiglos.autoresearch.verified_rule_engine import VerifiedRuleEngine
+    from aiglos.autoresearch.compliance_report import ComplianceReportGenerator
+
+    graph  = ObservationGraph()
+    subcmd = args[0] if args else "report"
+    rest   = args[1:]
+
+    if subcmd == "verify":
+        rule_id  = None
+        all_rules = False
+        force    = False
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--rule" and i + 1 < len(rest):
+                rule_id = rest[i + 1]; i += 2
+            elif rest[i] == "--all":
+                all_rules = True; i += 1
+            elif rest[i] == "--force":
+                force = True; i += 1
+            else:
+                i += 1
+
+        verifier = CitationVerifier(graph=graph)
+
+        if rule_id:
+            print(f"\n  Verifying {rule_id}...")
+            citation = verifier.verify_rule(rule_id, force_refresh=force)
+            print(f"  {rule_id}: {citation.reference_id} [{citation.source}] "
+                  f"{citation.confidence:.0%} — {citation.status.value}")
+            if citation.evidence_summary:
+                print(f"  {citation.evidence_summary[:120]}")
+
+        elif all_rules:
+            all_rule_ids = [f"T{i:02d}" for i in range(1, 40)] + ["T36_AGENTDEF"]
+            print(f"\n  Verifying {len(all_rule_ids)} rules against NVD, OWASP, MITRE ATLAS...")
+            print(f"  (This takes ~30s due to NVD rate limits)")
+            engine = VerifiedRuleEngine(graph=graph)
+            result = engine.run_with_verification(
+                category="ALL", rounds=0, adversarial=False,
+                scan_literature=False,
+            )
+            summary = result.summary()
+            print(f"\n  Coverage: {summary['citation_coverage']:.0%} "
+                  f"({summary['verified_rules']}/{summary['citation_coverage'] and len(result.citations)} verified)")
+            if summary["unverified_rules"]:
+                print(f"  Unverified: {', '.join(summary['unverified_rules'])}")
+            else:
+                print(f"  All rules verified.")
+
+        else:
+            print("Usage: aiglos research verify --rule T37  OR  --all")
+
+    elif subcmd == "report":
+        fmt = "markdown"
+        for token in rest:
+            if token in ("markdown", "json", "summary"):
+                fmt = token
+
+        print(f"\n  Generating compliance report ({fmt})...")
+        gen    = ComplianceReportGenerator(graph=graph)
+        report = gen.generate(save=True)
+
+        if fmt == "summary":
+            print(report.executive_summary())
+        elif fmt == "json":
+            print(report.to_json()[:2000] + "\n  ... (full report saved to ~/.aiglos/reports/)")
+        else:
+            print(report.executive_summary())
+            print(f"  Full report saved to ~/.aiglos/reports/")
+            print(f"  Run with --format json for machine-readable output.")
+
+    elif subcmd == "scan":
+        days = 7
+        for i, token in enumerate(rest):
+            if token == "--days" and i + 1 < len(rest):
+                try:
+                    days = int(rest[i + 1])
+                except ValueError:
+                    pass
+
+        print(f"\n  Scanning threat intelligence (past {days} days)...")
+        searcher = ThreatLiteratureSearch(graph=graph)
+        signals  = searcher.scan_new_threats(since_days=days)
+
+        if not signals:
+            print(f"  No new AI agent threat signals found in past {days} days.")
+            return
+
+        print(f"  {len(signals)} new threat signal(s) found:")
+        print("  " + "─" * 60)
+        for sig in signals[:10]:
+            icon = "🔴" if sig.relevance_score >= 0.70 else "🟡"
+            rule = f" → {sig.suggested_rule}" if sig.suggested_rule else ""
+            print(f"  {icon} [{sig.source}] {sig.reference_id}{rule}")
+            print(f"     {sig.title[:70]}")
+            print(f"     relevance={sig.relevance_score:.0%} "
+                  f"keywords={', '.join(sig.keywords_matched[:3])}")
+            print()
+
+        gaps = searcher.coverage_gaps()
+        if gaps:
+            print(f"  Coverage gaps (no recent signals): {', '.join(gaps[:5])}")
+            print(f"  Run `aiglos research verify --all` to check citations.")
+
+    else:
+        print(f"Unknown research subcommand: {subcmd}")
+        print("Usage: aiglos research verify|report|scan")
+
+
 def _get_version() -> str:
     try:
         from aiglos import __version__
@@ -955,6 +1087,10 @@ def main() -> None:
 
     cmd = args[0]
     rest = args[1:]
+
+    if cmd == "research":
+        _cmd_research(args)
+        return
 
     if cmd == "policy":
         _cmd_policy(args)
