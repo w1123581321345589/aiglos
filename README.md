@@ -20,13 +20,13 @@ with every deployment in the network.
 [![MIT](https://img.shields.io/badge/license-MIT-000?style=flat-square&labelColor=000)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-000?style=flat-square&labelColor=000)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-000?style=flat-square&labelColor=000)](sdk/typescript/)
-[![954 tests](https://img.shields.io/badge/tests-954_passing-000?style=flat-square&labelColor=000)](tests/)
+[![1069 tests](https://img.shields.io/badge/tests-1069_passing-000?style=flat-square&labelColor=000)](tests/)
 
 | | | | | | |
 |---|---|---|---|---|---|
-| **39** threat families | **3** execution surfaces | **14** inspection triggers | **Learns your deployment** | **Network intelligence** | **Zero dependencies** |
+| **43** threat families | **3** execution surfaces | **15** inspection triggers | **Learns your deployment** | **Network intelligence** | **Zero dependencies** |
 
-[The moment](#the-moment) · [What changed](#what-changed-in-v014) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Verified threat intelligence](#verified-threat-intelligence) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli)
+[The moment](#the-moment) · [What changed](#what-changed-in-v016) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Honeypot detection](#honeypot-detection) · [Challenge-response overrides](#challenge-response-overrides) · [Verified threat intelligence](#verified-threat-intelligence) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli) · [Desktop app](#aiglos-desktop)
 
 </div>
 
@@ -71,7 +71,7 @@ IBM X-Force 2026: AI-enabled vulnerability discovery runs 44% faster than manual
 
 In December 2025, OWASP released the **Top 10 for Agentic Applications**, the first industry-standard taxonomy of autonomous agent risks. 100+ security experts, adopted by Microsoft, NVIDIA, and AWS. The ten: Agent Goal Hijack (ASI-01), Tool Misuse (ASI-02), Identity & Privilege Abuse (ASI-03), Supply Chain Vulnerabilities (ASI-04), Unexpected Code Execution (ASI-05), Memory & Context Poisoning (ASI-06), Insecure Inter-Agent Communication (ASI-07), Cascading Failures (ASI-08), Human-Agent Trust Exploitation (ASI-09), Rogue Agents (ASI-10). ([OWASP announcement](https://genai.owasp.org/2025/12/09/owasp-genai-security-project-releases-top-10-risks-and-mitigations-for-agentic-ai-security/))
 
-Aiglos v0.14 maps to all ten. Behavioral baselines detect goal hijack. OpenClaw triggers cover tool misuse and supply chain poisoning. Memory security handles ASI-06. Multi-agent attestation covers ASI-07 and ASI-08. The policy proposal system catches privilege escalation before it executes. Every mapping is now backed by a verified citation from OWASP ASI, MITRE ATLAS, or NVD.
+Aiglos v0.16 maps to all ten. Behavioral baselines detect goal hijack. OpenClaw triggers cover tool misuse and supply chain poisoning. Memory security handles ASI-06. Multi-agent attestation covers ASI-07 and ASI-08. The policy proposal system catches privilege escalation before it executes. Honeypot detection catches credential theft with zero false positives. Every mapping is backed by a verified citation from OWASP ASI, MITRE ATLAS, or NVD.
 
 ### The regulatory wave
 
@@ -89,7 +89,31 @@ China, Europe, and the United States are all converging on the same requirements
 
 ---
 
-## What changed in v0.14
+## What changed in v0.16
+
+Deception-based detection, human-in-the-loop overrides, and a native desktop app.
+
+### Honeypot credentials catch attackers with zero false positives
+
+`HoneypotManager` deploys 10 synthetic credential files to `~/.aiglos/honeypots/`: fake AWS keys, Stripe keys, SSH archives, database credentials. Convincing but inert. Read-only (0o444). Any access is proof of malicious intent - there is no legitimate reason to read a honeypot file. Score 1.0, severity CRITICAL, immediate BLOCK. No threshold tuning, no false positive debate. The read is the evidence.
+
+The network effect extension: `get_targeted_names()` reveals which honeypot files attackers are actively seeking across the federation. `from_network_intelligence()` pre-seeds a new deployment with the filenames currently under attack.
+
+### Tier 3 blocks get human-verified override codes
+
+`OverrideManager` issues 6-character time-limited codes using `random.SystemRandom()` with visually unambiguous characters (no 0/O, 1/I). Codes expire in 120 seconds. Three wrong attempts invalidate the challenge. Every issuance and resolution persists to the observation graph with full context: rule blocked, tool name, agent name, session ID, timestamps, attempt count.
+
+The compliance artifact: every Tier 3 exception is logged with who authorized it, what code was used, and when - the specific evidence NDAA section 1513 and EU AI Act require for human oversight.
+
+### Desktop app for real-time monitoring
+
+Aiglos Desktop is a Tauri-native application with real-time alert feed, override modal with countdown timer, policy proposal queue with one-click approve/reject, and compliance report export. Native notifications for CRITICAL events and Tier 3 blocks.
+
+### What changed in v0.15
+
+T40 SHARED_CONTEXT_POISON - write-scoped shared context directory detection. T41 OUTBOUND_SECRET_LEAK - 3-layer outbound scanning (API keys, sensitive paths, semantic signals). T42 INSTRUCTION_REWRITE_POISON - agent self-modification through feedback loops. CONTEXT_DIRECTORY_TAKEOVER campaign pattern. SHARED_CONTEXT_ANOMALY inspection trigger.
+
+### What changed in v0.14
 
 Every rule now requires evidence. Every block cites its source.
 
@@ -349,8 +373,67 @@ Patches `subprocess.run`, `subprocess.Popen`, `subprocess.call`, `os.system`. T0
 | `T37` | FIN_EXEC | HTTP | Autonomous financial transactions |
 | `T38` | AGENT_SPAWN | MCP | Unauthorized sub-agent creation |
 | `T39` | REWARD_POISON | RL | Training loop corruption |
+| `T40` | SHARED_CONTEXT_POISON | MCP | Shared context directory write with injection payload |
+| `T41` | OUTBOUND_SECRET_LEAK | HTTP | API keys, credentials, or secrets in outbound content |
+| `T42` | INSTRUCTION_REWRITE_POISON | Subprocess | Agent self-modification through feedback loops |
+| `T43` | HONEYPOT_ACCESS | MCP | Access to deployed synthetic credential files |
 
 All rules map to MITRE ATLAS. Protocol-portable - not MCP-only.
+
+---
+
+## Honeypot detection
+
+*Added v0.16.0 - perfect signal-to-noise.*
+
+T43 HONEYPOT_ACCESS deploys synthetic credential files that no legitimate code should ever read. Any access is immediate proof of adversarial behavior.
+
+```python
+from aiglos import HoneypotManager
+
+manager = HoneypotManager()
+manager.deploy()  # creates 10 honeypot files in ~/.aiglos/honeypots/
+
+# Integration with OpenClawGuard - automatic via before_tool_call()
+# Any read of a honeypot file: score=1.0, severity=CRITICAL, BLOCK
+
+# Network intelligence extension
+targeted = manager.get_targeted_names()
+# ["aws_credentials_backup", "stripe_live_keys.txt"] - files attackers are seeking
+
+# Pre-seed from federation
+manager = HoneypotManager.from_network_intelligence(targeted_names=targeted)
+```
+
+**Honeypot files deployed:** `system_auth_tokens.json`, `.env.production`, `aws_credentials_backup`, `stripe_live_keys.txt`, `anthropic_api_keys_backup.json`, `ssh_key_archive.json`, `database_credentials.json`, `github_tokens.txt`, `openai_keys_backup.json`, `gcp_service_account_keys.json`.
+
+---
+
+## Challenge-response overrides
+
+*Added v0.16.0 - auditable human-in-the-loop for Tier 3.*
+
+When a Tier 3 action is blocked, the system can issue a time-limited challenge code. A human must enter the code to authorize the exception. Every override is logged with full context for compliance evidence.
+
+```python
+from aiglos import OverrideManager
+
+manager = OverrideManager(db_path=":memory:")
+challenge = manager.request_override(
+    rule_id="T37", tool_name="stripe.charge",
+    agent_name="billing-agent", session_id="sess-abc",
+)
+# OverrideChallenge(challenge_id="ovr_abc123", code="K7HN3F",
+#   expires_at=..., max_attempts=3)
+
+# Human enters the code
+result = manager.confirm_override(challenge.challenge_id, code="K7HN3F")
+# OverrideResult(success=True, message="Override confirmed")
+
+# Wired into OpenClawGuard
+guard.request_override(rule_id="T37", tool_name="stripe.charge")
+guard.confirm_override("ovr_abc123", "K7HN3F")
+```
 
 ---
 
@@ -538,9 +621,9 @@ print(client.status())
 
 The observation graph, inspection engine, and amendment engine that make Aiglos self-improving.
 
-**14 inspection triggers.** RATE_DROP, ZERO_FIRE, HIGH_OVERRIDE, AGENTDEF_REPEAT, SPAWN_NO_POLICY, FIN_EXEC_BYPASS, FALSE_POSITIVE, REWARD_DRIFT, CAUSAL_INJECTION_CONFIRMED, THREAT_FORECAST_ALERT, BEHAVIORAL_ANOMALY, REPEATED_TIER3_BLOCK, GLOBAL_PRIOR_MATCH, UNVERIFIED_RULE_ACTIVE.
+**15 inspection triggers.** RATE_DROP, ZERO_FIRE, HIGH_OVERRIDE, AGENTDEF_REPEAT, SPAWN_NO_POLICY, FIN_EXEC_BYPASS, FALSE_POSITIVE, REWARD_DRIFT, CAUSAL_INJECTION_CONFIRMED, THREAT_FORECAST_ALERT, BEHAVIORAL_ANOMALY, REPEATED_TIER3_BLOCK, GLOBAL_PRIOR_MATCH, UNVERIFIED_RULE_ACTIVE, SHARED_CONTEXT_ANOMALY.
 
-**10 campaign patterns.** RECON_SWEEP, CREDENTIAL_ACCUMULATE, EXFIL_SETUP, PERSISTENCE_CHAIN, LATERAL_PREP, AGENTDEF_CHAIN, MEMORY_PERSISTENCE_CHAIN, REWARD_MANIPULATION, REPEATED_INJECTION_ATTEMPT, EXTERNAL_INSTRUCTION_CHANNEL.
+**11 campaign patterns.** RECON_SWEEP, CREDENTIAL_ACCUMULATE, EXFIL_SETUP, PERSISTENCE_CHAIN, LATERAL_PREP, AGENTDEF_CHAIN, MEMORY_PERSISTENCE_CHAIN, REWARD_MANIPULATION, REPEATED_INJECTION_ATTEMPT, EXTERNAL_INSTRUCTION_CHANNEL, CONTEXT_DIRECTORY_TAKEOVER.
 
 **Amendment engine.** Every proposed rule change requires human approval. The system proposes; it never decides.
 
@@ -687,6 +770,13 @@ python -m aiglos research report --framework ndaa
 python -m aiglos research scan               # scan threat literature feeds
 python -m aiglos research scan --days 30
 
+# Honeypot and overrides (v0.16)
+python -m aiglos honeypot deploy            # deploy honeypot credential files
+python -m aiglos honeypot status            # check deployment status
+python -m aiglos honeypot list              # list deployed honeypot files
+python -m aiglos override confirm <id> <code>  # confirm a Tier 3 override
+python -m aiglos override reject <id>       # explicitly reject an override
+
 # Scanning
 python -m aiglos scan-skill <name>
 python -m aiglos scan-message "<text>"
@@ -719,6 +809,26 @@ const artifact = aiglos.close();
 
 ---
 
+## Aiglos Desktop
+
+A Tauri-native desktop application for real-time agent security monitoring.
+
+**Features:**
+- Real-time alert feed with severity color coding (pulsing CRITICAL dot)
+- Override modal with 6-character code input and countdown timer
+- Policy proposal queue with confidence bars and one-click approve/reject
+- Compliance report tab with export
+- Native OS notifications for CRITICAL events and Tier 3 blocks
+
+**Installation:**
+```bash
+cd aiglos/desktop && bash install.sh
+```
+
+**Architecture:** Tauri (Rust) core with React frontend. Python sidecar bridges the full Aiglos stack via JSON over stdin/stdout. System tray with alert count badge.
+
+---
+
 ## Attestation
 
 Session artifact fields:
@@ -738,6 +848,8 @@ Session artifact fields:
 | `extensions.baseline` | Behavioral baseline - composite score, risk, feature breakdown |
 | `extensions.citations` | Citation verification - verified count, unverified rules, sources |
 | `extensions.compliance` | Compliance report - framework coverage, gaps, pass/fail by framework |
+| `extensions.honeypot` | Honeypot detection - deployed files, access events, targeted names |
+| `extensions.overrides` | Override audit trail - issued challenges, confirmations, rejections |
 
 ---
 
@@ -758,11 +870,17 @@ Session artifact fields:
 
 ## Open source
 
-Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, citation verification, compliance reports, TypeScript SDK, CLI: **MIT**.
+Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, citation verification, compliance reports, honeypot detection, challenge-response overrides, desktop app, TypeScript SDK, CLI: **MIT**.
 
 ---
 
 ## Changelog
+
+**v0.16.0 - March 2026**
+T43 HONEYPOT_ACCESS - deception-based detection with zero false positives. `HoneypotManager` deploys 10 synthetic credential files, TOOL_CALL/CONTENT/FILESYSTEM detection modes, score=1.0 CRITICAL BLOCK. `get_targeted_names()` and `from_network_intelligence()` for federation. `OverrideManager` - 6-character time-limited challenge-response codes for Tier 3 overrides, 120s expiry, 3 attempt limit, full observation graph persistence. `honeypot_events` and `override_challenges` tables. `aiglos honeypot deploy|status|list` and `aiglos override confirm|reject` CLI. Aiglos Desktop - Tauri native app with real-time alert feed, override modal, policy proposal queue, compliance report export. 1069 tests.
+
+**v0.15.0 - March 2026**
+T40 SHARED_CONTEXT_POISON - write-scoped shared context directory detection. `ContextDirectoryGuard` with 30 semantic phrases, ALLOW/WARN/BLOCK scoring. T41 OUTBOUND_SECRET_LEAK - 3-layer outbound scanning (API key regex, sensitive file paths, semantic signals). `OutboundGuard` with `before_send()` for send/post/write operations. T42 INSTRUCTION_REWRITE_POISON - agent self-modification through feedback loops. `CONTEXT_DIRECTORY_TAKEOVER` 11th campaign pattern. `SHARED_CONTEXT_ANOMALY` 15th inspection trigger. 77 new tests.
 
 **v0.14.0 - March 2026**
 Verified threat intelligence. `CitationVerifier` - rule-level citation verification against OWASP ASI, MITRE ATLAS, and NVD. `VerifiedCitation` with confidence scoring and `CitationStatus` lifecycle. `ThreatLiteratureSearch` - continuous security feed monitoring with relevance scoring. `ThreatSignal` structured output. `VerifiedRuleEngine` - autoresearch wrapper requiring citation verification before rule activation. `ComplianceReportGenerator` - structured compliance reports mapping to NDAA section 1513, EU AI Act Annex III, and NIST AI 600-1. `rule_citations` and `threat_signals` tables in observation graph. `UNVERIFIED_RULE_ACTIVE` 14th inspection trigger. `aiglos research verify|report|scan` CLI. 954 tests.
