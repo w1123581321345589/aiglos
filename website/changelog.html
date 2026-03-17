@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Changelog — Aiglos</title>
+<title>Changelog -- Aiglos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -212,14 +212,14 @@ footer {
 
       <div class="cve-block">
         <div class="cve-block-id">CVE-2026-26319</div>
-        <div class="cve-block-score">CVSS 9.0 — Critical</div>
+        <div class="cve-block-score">CVSS 9.0 -- Critical</div>
         <div class="cve-block-desc">Remote code execution via malicious tool registration overriding a trusted server namespace. An attacker controlling a malicious MCP server can register a tool with the same name as a trusted tool, causing the client to execute attacker-controlled code.</div>
         <div class="cve-block-status reviewing">● In coordinated disclosure</div>
       </div>
 
       <div class="cve-block">
         <div class="cve-block-id">CVE-2026-26322</div>
-        <div class="cve-block-score">CVSS 7.7 — High</div>
+        <div class="cve-block-score">CVSS 7.7 -- High</div>
         <div class="cve-block-desc">Agent delegation spoofing via crafted A2A task message. A malicious agent can forge a task message appearing to originate from a trusted orchestrator, causing unauthorized tool execution under a different agent's permissions.</div>
         <div class="cve-block-status reviewing">● In coordinated disclosure</div>
       </div>
@@ -235,12 +235,12 @@ footer {
         <span class="entry-version">v1.2.0</span>
       </div>
       <h2>T35 Personal Agent Monitor + 8 new CVEs</h2>
-      <p>Major detection expansion. T35 covers the personal agent attack surface — devices running local MCP servers, Claude Desktop, and similar single-user agent environments.</p>
+      <p>Major detection expansion. T35 covers the personal agent attack surface -- devices running local MCP servers, Claude Desktop, and similar single-user agent environments.</p>
       <ul class="entry-list">
         <li class="added">T35 rule family: WebSocket localhost guard, log poisoning detector, messaging channel guard, exposed instance detector</li>
         <li class="added">T36 embedded library: zero-config <code>import aiglos</code> auto-patching for pip environments</li>
         <li class="added">8 new CVEs filed against personal agent and embedded scenarios</li>
-        <li class="added">30-day Pro trial mechanic — auto-starts on first <code>aiglos.attest()</code> call</li>
+        <li class="added">30-day Pro trial mechanic -- auto-starts on first <code>aiglos.attest()</code> call</li>
         <li class="fixed">Gate hits now persisted to <code>~/.aiglos/license.json</code> on every call</li>
         <li class="fixed">Concurrent trial start race condition resolved (trial starts exactly once under 20-thread load)</li>
         <li class="changed">Free tier attestation locked at zero artifacts (previously 3/month)</li>
@@ -253,12 +253,12 @@ footer {
         <span class="entry-tag cve">CVE Disclosure</span>
         <span class="entry-tag security">Security</span>
       </div>
-      <h2>CVE-2026-25253: WebSocket localhost hijack — CVSS 8.8</h2>
+      <h2>CVE-2026-25253: WebSocket localhost hijack -- CVSS 8.8</h2>
       <p>A malicious MCP server can register a tool that proxies calls to a locally running WebSocket server, bypassing same-origin restrictions and gaining access to local-only services including Claude Desktop's internal API surface.</p>
 
       <div class="cve-block">
         <div class="cve-block-id">CVE-2026-25253</div>
-        <div class="cve-block-score">CVSS 8.8 — Critical</div>
+        <div class="cve-block-score">CVSS 8.8 -- Critical</div>
         <div class="cve-block-desc">WebSocket localhost hijack via malicious MCP tool registration. Affected: any MCP client running on a host with locally bound WebSocket services. Patch: aiglos-core v1.1.3 adds T35 WebSocket guard blocking <code>ws://localhost:*</code> and <code>ws://127.0.0.1:*</code> destinations in tool arguments.</div>
         <div class="cve-block-status patched">✓ Patched in v1.1.3</div>
       </div>
@@ -275,10 +275,10 @@ footer {
       <h2>A2A protocol coverage + attestation artifacts</h2>
       <p>Aiglos now covers the Google Agent-to-Agent protocol (T25–T29) and ships the first production-ready attestation artifact generator.</p>
       <ul class="entry-list">
-        <li class="added">T25–T29 rule families: A2A protocol coverage — task spoofing, replay, unauthorized delegation, orchestrator impersonation</li>
+        <li class="added">T25–T29 rule families: A2A protocol coverage -- task spoofing, replay, unauthorized delegation, orchestrator impersonation</li>
         <li class="added">RSA-2048 attestation artifact generation (<code>aiglos.attest()</code>)</li>
         <li class="added">Offline artifact verification (<code>aiglos.verify()</code>)</li>
-        <li class="added">LicenseManager tier system — FREE / TRIAL / PRO / TEAM / ENTERPRISE</li>
+        <li class="added">LicenseManager tier system -- FREE / TRIAL / PRO / TEAM / ENTERPRISE</li>
         <li class="added">TypeScript / Node.js SDK: <code>npm install aiglos</code></li>
         <li class="fixed">Metering flush thread no longer blocks process exit</li>
       </ul>
@@ -295,20 +295,287 @@ footer {
 
       <div class="cve-block">
         <div class="cve-block-id">CVE-2026-25593</div>
-        <div class="cve-block-score">CVSS 5.9 — Medium</div>
+        <div class="cve-block-score">CVSS 5.9 -- Medium</div>
         <div class="cve-block-desc">SSRF via internal network probe through file-fetch MCP tool. The tool accepts a URL argument with no scheme or host restrictions, allowing requests to <code>http://169.254.169.254</code> (AWS metadata), <code>http://10.x.x.x</code> (internal networks), and <code>file://</code> URIs.</div>
         <div class="cve-block-status patched">✓ Patched in v1.0.4</div>
       </div>
+    </div>
+
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.18.0</span>
+      </div>
+      <h2>Security posture audit + ClawKeeper integration + sandbox enforcement</h2>
+      <p>One command covers your entire pre-deployment security posture. Merges with ClawKeeper host audit for a unified host + runtime report. Enforces OpenClaw sandbox hardening at the Aiglos layer.</p>
+      <ul class="entry-list">
+        <li class="added"><code>AuditScanner</code> -- 5-phase, 50+ checks, A-F letter grade</li>
+        <li class="added"><code>AuditReporter</code> -- summary/full/json/briefing/clawkeeper formats</li>
+        <li class="added"><code>SkillReputationGraph</code> -- ingests ClawKeeper Skill Marketplace badge data (13,000+ skills)</li>
+        <li class="added"><code>SandboxPolicy</code> -- runtime enforcement of <code>tools.elevated.enabled=false</code> and <code>sandbox.mode=non-main</code></li>
+        <li class="added"><code>SANDBOX_ESCAPE_ATTEMPT</code> -- 12th campaign pattern</li>
+        <li class="added"><code>aiglos audit [--deep] [--schedule nightly]</code> CLI</li>
+        <li class="added"><code>aiglos skill scan|import|blocked</code> CLI</li>
+        <li class="added">1208 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.17.0</span>
+      </div>
+      <h2>Source reputation + Context Hub distribution</h2>
+      <p>The Context Hub annotation mechanism applied to threat intelligence. URLs and documents accumulate threat history across sessions. New deployments start with pre-populated source reputation from the federation layer.</p>
+      <ul class="entry-list">
+        <li class="added"><code>SourceReputationGraph</code> -- URL/domain/document reputation with 4 levels</li>
+        <li class="added"><code>enable_source_reputation()</code> on <code>OpenClawGuard</code></li>
+        <li class="added"><code>after_tool_call()</code> auto-records injection scan results by source</li>
+        <li class="added"><code>SKILL_CHAIN</code> -- 11th campaign pattern</li>
+        <li class="added"><code>aiglos/skills/SKILL.md</code> -- Context Hub distribution</li>
+        <li class="added">T36_AGENTDEF extended to cover <code>~/.claude/skills/</code> and <code>SKILL.md</code></li>
+        <li class="added"><code>aiglos reputation top|show|domains</code> CLI</li>
+        <li class="added">1143 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.16.0</span>
+      </div>
+      <h2>Honeypot detection + challenge-response override + Aiglos Desktop</h2>
+      <p>Deception-based threat detection with perfect signal-to-noise ratio. The read is the evidence. Human override via time-limited challenge codes with full compliance logging.</p>
+      <ul class="entry-list">
+        <li class="added">T43 <code>HONEYPOT_ACCESS</code> -- deploys 10 synthetic credential files, CRITICAL with no threshold</li>
+        <li class="added"><code>OverrideManager</code> -- 6-char codes, 120s expiry, compliance audit trail</li>
+        <li class="added"><code>request_override()</code> / <code>confirm_override()</code> on <code>OpenClawGuard</code></li>
+        <li class="added">Tauri Desktop app skeleton -- system tray, real-time alert feed, override modal</li>
+        <li class="added"><code>aiglos honeypot deploy|status|list</code> CLI</li>
+        <li class="added"><code>aiglos override list|confirm|reject</code> CLI</li>
+        <li class="added">1081 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.15.0</span>
+      </div>
+      <h2>Three new attack surfaces</h2>
+      <p>Shared context directory poisoning. Outbound secret leakage. Instruction rewrite via autogrowth feedback loops. All three surfaces were discovered through production deployments and had no existing coverage.</p>
+      <ul class="entry-list">
+        <li class="added">T40 <code>SHARED_CONTEXT_POISON</code> -- multi-agent coordination directory injection</li>
+        <li class="added">T41 <code>OUTBOUND_SECRET_LEAK</code> -- API keys in outbound content (8 pattern families)</li>
+        <li class="added">T42 <code>INSTRUCTION_REWRITE_POISON</code> -- autogrowth self-modification detection</li>
+        <li class="added"><code>before_send()</code> hook on <code>OpenClawGuard</code></li>
+        <li class="added">1026 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.14.0</span>
+      </div>
+      <h2>Verified threat intelligence</h2>
+      <p>Every Aiglos rule now traces to a real CVE, OWASP reference, or MITRE ATLAS technique. Audit-ready compliance reports for NDAA §1513, EU AI Act Annex III, and NIST AI 600-1.</p>
+      <ul class="entry-list">
+        <li class="added"><code>CitationVerifier</code> -- OWASP ASI, MITRE ATLAS, NVD in priority order</li>
+        <li class="added"><code>ComplianceReportGenerator</code> -- NDAA §1513, EU AI Act, NIST AI 600-1</li>
+        <li class="added"><code>UNVERIFIED_RULE_ACTIVE</code> -- 14th inspection trigger</li>
+        <li class="added"><code>aiglos research verify|report|scan</code> CLI</li>
+        <li class="added">954 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.13.0</span>
+      </div>
+      <h2>Federated threat intelligence</h2>
+      <p>Privacy-preserving Markov prior sharing across deployments. New deployments warm-start from collective intelligence. The network effect that makes every rule compound.</p>
+      <ul class="entry-list">
+        <li class="added"><code>FederationClient</code> -- Laplace DP (epsilon=0.1), rate limiting, graceful degradation</li>
+        <li class="added"><code>GlobalPrior</code> -- session-weighted local/global blending</li>
+        <li class="added"><code>GLOBAL_PRIOR_MATCH</code> -- 13th inspection trigger</li>
+        <li class="added">Federation server -- FastAPI, Supabase, Railway one-click deploy</li>
+        <li class="added">882 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.10.0</span>
+      </div>
+      <h2>Predictive intent modeling</h2>
+      <p>Deployment-specific Markov chain trained from the observation graph. No external ML dependencies. Predicts likely next threat families and pre-tightens blast radius thresholds before predicted actions fire.</p>
+      <ul class="entry-list">
+        <li class="added"><code>IntentPredictor</code> -- per-agent model file, bigram + unigram + co-occurrence scoring</li>
+        <li class="added"><code>SessionForecaster</code> -- elevation decay, <code>effective_tier()</code></li>
+        <li class="added"><code>THREAT_FORECAST_ALERT</code> -- 10th inspection trigger</li>
+        <li class="added"><code>python -m aiglos forecast</code> with probability bars</li>
+        <li class="added">688 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.9.0</span>
+      </div>
+      <h2>Session-level causal attribution</h2>
+      <p>Answers the question no other tool does: which specific input caused this specific blocked action?</p>
+      <ul class="entry-list">
+        <li class="added"><code>CausalTracer</code> -- rolling context window, outbound action tagging</li>
+        <li class="added"><code>AttributionResult</code> -- HIGH/MEDIUM/LOW/NONE confidence chains</li>
+        <li class="added"><code>CAUSAL_INJECTION_CONFIRMED</code> -- 9th inspection trigger</li>
+        <li class="added"><code>python -m aiglos trace &lt;session-id&gt;</code> investigation report</li>
+        <li class="added"><code>causal_chains</code> table in observation graph</li>
+        <li class="added">619 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.8.0</span>
+      </div>
+      <h2>Indirect prompt injection scanner</h2>
+      <p>Closes the inbound data surface -- tool outputs, retrieved documents, API responses, memory reads.</p>
+      <ul class="entry-list">
+        <li class="added"><code>InjectionScanner</code> -- tiered phrase corpus + encoding anomaly detection</li>
+        <li class="added">Base64, Unicode homoglyphs, invisible characters, RTL override detection</li>
+        <li class="added"><code>after_tool_call()</code> lifecycle hook on <code>OpenClawGuard</code></li>
+        <li class="added"><code>REPEATED_INJECTION_ATTEMPT</code> -- 10th campaign pattern</li>
+        <li class="added">571 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.7.0</span>
+      </div>
+      <h2>External instruction channel detection</h2>
+      <ul class="entry-list">
+        <li class="added"><code>scan-message</code> CLI command</li>
+        <li class="added"><code>EXTERNAL_INSTRUCTION_CHANNEL</code> -- 9th campaign pattern (confidence 0.91)</li>
+        <li class="added">17 new memory corpus signals for C2 channel setup language</li>
+        <li class="added">515 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.6.0</span>
+      </div>
+      <h2>RL training security -- T39 REWARD_POISON</h2>
+      <ul class="entry-list">
+        <li class="added"><code>RLFeedbackGuard</code> -- Binary RL reward scoring + Hindsight OPD inspection</li>
+        <li class="added"><code>SecurityAwareReward</code> -- safety as learned objective</li>
+        <li class="added"><code>REWARD_DRIFT</code> -- 8th inspection trigger</li>
+        <li class="added"><code>REWARD_MANIPULATION</code> -- 8th campaign pattern</li>
+        <li class="added">489 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.5.0</span>
+      </div>
+      <h2>Memory security -- T31 semantic scoring</h2>
+      <ul class="entry-list">
+        <li class="added"><code>MemoryWriteGuard</code> -- 38-phrase corpus on every structured memory write</li>
+        <li class="added"><code>MemoryProvenanceGraph</code> -- cross-session belief tracking, drift detection</li>
+        <li class="added"><code>MEMORY_PERSISTENCE_CHAIN</code> -- 7th campaign pattern</li>
+        <li class="added">416 tests</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.4.0</span>
+      </div>
+      <h2>Adaptive layer + campaign mode</h2>
+      <ul class="entry-list">
+        <li class="added">Adaptive layer -- observe → inspect → amend → evaluate loop</li>
+        <li class="added">T06 campaign-mode -- 6 patterns, RECON_SWEEP through AGENTDEF_CHAIN</li>
+        <li class="added">TypeScript SDK</li>
+        <li class="added">Semantic <code>AgentDefGuard</code>, policy inheritance for spawned agents</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">March 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.3.0</span>
+      </div>
+      <h2>Agent definition + financial + spawn threat coverage</h2>
+      <ul class="entry-list">
+        <li class="added">T36_AGENTDEF -- semantic scoring on agent definition writes</li>
+        <li class="added">T37 FIN_EXEC -- autonomous financial execution gating</li>
+        <li class="added">T38 AGENT_SPAWN -- sub-agent registry with parent verification</li>
+        <li class="added"><code>SessionIdentityChain</code>, <code>MultiAgentRegistry</code></li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">February 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.2.0</span>
+      </div>
+      <h2>HTTP/API and subprocess interception</h2>
+      <ul class="entry-list">
+        <li class="added">HTTP surface -- patches requests/httpx/aiohttp/fetch</li>
+        <li class="added">Subprocess surface -- three-tier blast radius, Tier 3 pause mode</li>
+        <li class="added">Webhook approval integration for Tier 3 actions</li>
+      </ul>
+    </div>
+
+    <div class="entry" data-type="release">
+      <div class="entry-meta">
+        <span class="entry-date">February 2026</span>
+        <span class="entry-tag release">Release</span>
+        <span class="entry-version">v0.1.1</span>
+      </div>
+      <h2>Autoresearch two-loop system</h2>
+      <ul class="entry-list">
+        <li class="added">Research loop -- optimizes detection rules against labeled corpus</li>
+        <li class="added">Adversarial loop -- generates evasion cases, rules and attacks co-evolve</li>
+        <li class="added">Run logs are compliance audit evidence</li>
+      </ul>
     </div>
 
     <div class="entry" data-type="release">
       <div class="entry-meta">
         <span class="entry-date">January 2026</span>
         <span class="entry-tag release">Release</span>
-        <span class="entry-version">v1.0.0</span>
+        <span class="entry-version">v0.1.0</span>
       </div>
-      <h2>Initial release — T1–T34, 769 tests passing</h2>
-      <p>First public release of Aiglos. The T1–T34 rule families cover the full MCP attack surface known at time of release. Detection engine is MIT licensed.</p>
+      <h2>Initial release -- T01–T39, 688 tests passing</h2>
+      <p>First public release of Aiglos. The T01–T39 rule families cover the full MCP attack surface known at time of release. Detection engine is MIT licensed.</p>
       <ul class="entry-list">
         <li class="added">T01–T06: Injection &amp; Exfiltration</li>
         <li class="added">T07–T12: Shell &amp; OS Abuse</li>
@@ -316,10 +583,10 @@ footer {
         <li class="added">T19–T24: Secrets &amp; Credentials</li>
         <li class="added">T25–T29: A2A Protocol (initial coverage)</li>
         <li class="added">T30–T34: Supply Chain</li>
-        <li class="added">In-process MCP SDK patching — zero proxy, zero config</li>
+        <li class="added">In-process MCP SDK patching -- zero proxy, zero config</li>
         <li class="added">Sync and async interceptor paths</li>
         <li class="added">MeterClient with 30s batch flush, graceful degradation</li>
-        <li class="added">769 unit tests, 17 test files</li>
+        <li class="added">688 unit tests, 17 test files</li>
       </ul>
     </div>
 
@@ -333,10 +600,10 @@ footer {
     <li><a href="https://github.com/aiglos">GitHub</a></li>
     <li><a href="/threats.html">CVEs</a></li>
     <li><a href="/pricing.html">Pricing</a></li>
-    <li><a href="/defense.html">Defense</a></li>
+    <li><a href="mailto:hello@aiglos.dev">Defense</a></li>
     <li><a href="/cdn-cgi/l/email-protection#e695878a8395a6878f818a8995c88f89">Contact</a></li>
   </ul>
-  <span>aiglos.dev</span>
+  <span>aiglos.io</span>
 </footer>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
