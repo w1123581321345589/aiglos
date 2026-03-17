@@ -33,7 +33,7 @@ with every deployment in the network.
 ---
 
 ```
-pip install aiglos        # zero dependencies — stdlib only
+pip install aiglos        # zero dependencies - stdlib only
 npm install aiglos        # TypeScript / Node.js
 ```
 
@@ -45,47 +45,47 @@ import aiglos  # every agent action below this line is inspected, attested, and 
 
 ## The moment
 
-88% of organizations experienced AI agent security incidents in 2025 ([Gravitee State of AI Agent Security 2026 Report](https://www.gravitee.io/blog/state-of-ai-agent-security-2026-report-when-adoption-outpaces-control)). 16,200 AI-related security incidents were recorded that year, a 49% increase year-over-year ([Obsidian Security](https://www.reco.ai/blog/ai-and-cloud-security-breaches-2025)). Only 14.4% of organizations deploying AI agents went live with full security approval. The gap between adoption and control became the defining security failure of the decade.
+88% of organizations experienced AI agent security incidents in 2025 ([Gravitee State of AI Agent Security 2026 Report](https://www.gravitee.io/blog/state-of-ai-agent-security-2026-report-when-adoption-outpaces-control)). 16,200 AI-related security incidents that year, up 49% year-over-year ([Obsidian Security](https://www.reco.ai/blog/ai-and-cloud-security-breaches-2025)). Only 14.4% of organizations deploying agents went live with full security approval. Adoption outran control and nobody caught it until the breaches started stacking up.
 
 ### The attacks that changed everything
 
-**GTG-1002: The first autonomous cyber-espionage campaign.** In September 2025, Anthropic disclosed that a China-linked threat actor used Claude Code inside an agentic framework to run reconnaissance, exploit vulnerabilities, move laterally, and exfiltrate data across roughly 30 organizations in technology, finance, chemicals, and government. 80–90% of the campaign was executed autonomously — the human operator intervened at perhaps 4–6 decision points per intrusion. The agent generated exploit payloads, iterated on failed attempts, mapped complete network topologies, queried databases, and categorized stolen data, all at thousands of requests per second. This was physically impossible for a human team. Anthropic's CEO was called to testify before the House Committee on Homeland Security in December 2025. ([Anthropic disclosure](https://www.anthropic.com/news/disrupting-AI-espionage); [full technical report PDF](https://assets.anthropic.com/m/ec212e6566a0d47/original/Disrupting-the-first-reported-AI-orchestrated-cyber-espionage-campaign.pdf))
+**GTG-1002.** In September 2025, Anthropic disclosed that a China-linked threat actor used Claude Code inside an agentic framework to run recon, exploit vulnerabilities, move laterally, and exfiltrate data across ~30 organizations in tech, finance, chemicals, and government. 80-90% of the campaign ran autonomously. The human operator stepped in at maybe 4-6 decision points per intrusion. The agent generated exploit payloads, iterated on failures, mapped full network topologies, queried databases, and categorized stolen data, all at thousands of requests per second. Physically impossible for a human team. Anthropic's CEO was called to testify before the House Committee on Homeland Security in December 2025. ([Anthropic disclosure](https://www.anthropic.com/news/disrupting-AI-espionage); [full technical report](https://assets.anthropic.com/m/ec212e6566a0d47/original/Disrupting-the-first-reported-AI-orchestrated-cyber-espionage-campaign.pdf))
 
-**CVE-2025-53773: GitHub Copilot remote code execution.** Prompt injection via code comments triggered Copilot's "YOLO mode" — an auto-approve setting that grants unrestricted shell access, file modification, and package installation. Malicious instructions embedded in a README or code comment could silently enable `chat.tools.autoApprove`, then execute arbitrary commands without user interaction. Researchers demonstrated wormable RCE, self-replicating AI viruses that propagate through Git repositories, and "ZombAI" botnets recruiting developer workstations. CVSS 7.8, patched August 2025. ([Embrace The Red](https://embracethered.com/blog/posts/2025/github-copilot-remote-code-execution-via-prompt-injection/); [Microsoft advisory](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-53773))
+**CVE-2025-53773: Copilot RCE.** Prompt injection via code comments triggered Copilot's YOLO mode, the auto-approve setting that gives unrestricted shell access, file modification, and package installation. A malicious README or code comment silently enables `chat.tools.autoApprove`, then runs arbitrary commands with no user interaction. Researchers demonstrated wormable RCE, self-replicating AI viruses propagating through Git repos, and "ZombAI" botnets recruiting developer workstations. CVSS 7.8, patched August 2025. ([Embrace The Red](https://embracethered.com/blog/posts/2025/github-copilot-remote-code-execution-via-prompt-injection/); [Microsoft advisory](https://msrc.microsoft.com/update-guide/vulnerability/CVE-2025-53773))
 
-**CVE-2025-32711: Microsoft Copilot zero-click data exfiltration.** A malicious email containing hidden prompt injection instructions could trigger Copilot to silently exfiltrate data — no user click required. The attack bypassed Microsoft's cross-prompt injection classifier entirely. ([OWASP Agentic AI reference: "EchoLeak"](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/))
+**CVE-2025-32711: Copilot zero-click exfil.** A malicious email with hidden prompt injection triggers Copilot to silently exfiltrate data. No click required. Bypassed Microsoft's XPIA classifier entirely. ([OWASP Agentic AI: "EchoLeak"](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/))
 
-**Cursor AI MCP exploits.** CVE-2025-0223 allowed unauthorized MCP server creation and remote code execution via GitHub README files. CVE-2025-0224 exploited Cursor's one-time trust mechanism to establish persistent backdoors. ([Persistent Security](https://www.persistent-security.net/post/part-iii-vscode-copilot-wormable-command-execution-via-prompt-injection))
+**Cursor MCP exploits.** CVE-2025-0223: unauthorized MCP server creation and RCE via GitHub README files. CVE-2025-0224: persistent backdoor through Cursor's one-time trust mechanism. ([Persistent Security](https://www.persistent-security.net/post/part-iii-vscode-copilot-wormable-command-execution-via-prompt-injection))
 
-**Drift OAuth token theft.** Threat actor UNC6395 compromised Drift's Salesforce integration, stealing OAuth tokens to access 700+ organizations — exfiltrating contacts, opportunities, and AWS credentials across the supply chain. Estimated impact: $200M in Q1 2025 alone. ([Reco.ai 2025 Year in Review](https://www.reco.ai/blog/ai-and-cloud-security-breaches-2025))
+**Drift OAuth token theft.** UNC6395 compromised Drift's Salesforce integration, stole OAuth tokens, accessed 700+ organizations. Exfiltrated contacts, opportunities, AWS credentials across the supply chain. $200M estimated impact in Q1 2025. ([Reco.ai 2025 Year in Review](https://www.reco.ai/blog/ai-and-cloud-security-breaches-2025))
 
-**MCP supply chain poisoning.** 1,184 malicious skills discovered across agent marketplaces — 41.7% of audited packages. Attack vectors included typosquatting, automated mass uploads, and malicious MCP servers. One npm package posing as a Postmark integration silently BCC'd every email to the attacker. Another contained dual reverse shells across 126 packages with 86,000 downloads. ([OWASP ASI-04](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/))
+**MCP supply chain poisoning.** 1,184 malicious skills found across agent marketplaces, 41.7% of audited packages. Typosquatting, automated mass uploads, malicious MCP servers. One npm package posing as a Postmark integration silently BCC'd every email to the attacker. Another contained dual reverse shells across 126 packages with 86K downloads. ([OWASP ASI-04](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/))
 
-**Memory poisoning in production.** Demonstrated persistent memory corruption where agents developed false beliefs about security policies that persisted for weeks. Compromised context reshapes agent behavior long after the initial injection — the "sleeper agent" scenario. Agents actively defended false beliefs when questioned by humans. ([OWASP ASI-06; Lakera Q4 2025 Attack Data](https://www.esecurityplanet.com/artificial-intelligence/ai-agent-attacks-in-q4-2025-signal-new-risks-for-2026/))
+**Memory poisoning in production.** Persistent memory corruption where agents developed false beliefs about security policies that lasted weeks. The "sleeper agent" scenario: compromised context reshapes behavior long after the initial injection. Agents actively defended the false beliefs when questioned by humans. ([OWASP ASI-06; Lakera Q4 2025](https://www.esecurityplanet.com/artificial-intelligence/ai-agent-attacks-in-q4-2025-signal-new-risks-for-2026/))
 
-**Multi-agent cascading failures.** A single compromised agent poisoned 87% of downstream decision-making within 4 hours. Cascading failures propagated faster than traditional incident response could contain them. The root cause was hidden in inter-agent communication logs that no existing tool was designed to inspect. ([OWASP ASI-08](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/))
+**Multi-agent cascading failures.** One compromised agent poisoned 87% of downstream decision-making within 4 hours. Cascading failures propagated faster than incident response could contain them. Root cause was buried in inter-agent communication logs that nothing was designed to inspect. ([OWASP ASI-08](https://genai.owasp.org/resource/owasp-top-10-for-agentic-applications-for-2026/))
 
-The IBM X-Force Threat Intelligence Index 2026 found that AI-enabled vulnerability discovery runs 44% faster than manual scanning, and that manufacturing was the most-targeted sector for the fifth consecutive year. Shadow AI breaches carry a $670,000 cost premium over standard incidents and take 247 days to detect. 63% of employees pasted sensitive data — source code, customer records, credentials — into personal chatbot accounts in 2025. ([IBM X-Force 2026](https://newsroom.ibm.com/2026-02-25-ibm-2026-x-force-threat-index-ai-driven-attacks-are-escalating-as-basic-security-gaps-leave-enterprises-exposed))
+IBM X-Force 2026: AI-enabled vulnerability discovery runs 44% faster than manual scanning. Manufacturing was the most-targeted sector for the fifth year running. Shadow AI breaches cost $670K more than standard incidents and take 247 days to detect. 63% of employees pasted sensitive data (source code, customer records, credentials) into personal chatbot accounts in 2025. ([IBM X-Force 2026](https://newsroom.ibm.com/2026-02-25-ibm-2026-x-force-threat-index-ai-driven-attacks-are-escalating-as-basic-security-gaps-leave-enterprises-exposed))
 
 ### OWASP codifies the threat landscape
 
-In December 2025, the OWASP GenAI Security Project released the **Top 10 for Agentic Applications** — the first industry-standard taxonomy of autonomous agent risks, developed by 100+ security experts and adopted by Microsoft, NVIDIA, and AWS. The ten risks: Agent Goal Hijack (ASI-01), Tool Misuse (ASI-02), Identity & Privilege Abuse (ASI-03), Supply Chain Vulnerabilities (ASI-04), Unexpected Code Execution (ASI-05), Memory & Context Poisoning (ASI-06), Insecure Inter-Agent Communication (ASI-07), Cascading Failures (ASI-08), Human-Agent Trust Exploitation (ASI-09), and Rogue Agents (ASI-10). ([OWASP announcement](https://genai.owasp.org/2025/12/09/owasp-genai-security-project-releases-top-10-risks-and-mitigations-for-agentic-ai-security/))
+In December 2025, OWASP released the **Top 10 for Agentic Applications**, the first industry-standard taxonomy of autonomous agent risks. 100+ security experts, adopted by Microsoft, NVIDIA, and AWS. The ten: Agent Goal Hijack (ASI-01), Tool Misuse (ASI-02), Identity & Privilege Abuse (ASI-03), Supply Chain Vulnerabilities (ASI-04), Unexpected Code Execution (ASI-05), Memory & Context Poisoning (ASI-06), Insecure Inter-Agent Communication (ASI-07), Cascading Failures (ASI-08), Human-Agent Trust Exploitation (ASI-09), Rogue Agents (ASI-10). ([OWASP announcement](https://genai.owasp.org/2025/12/09/owasp-genai-security-project-releases-top-10-risks-and-mitigations-for-agentic-ai-security/))
 
-Aiglos v0.13 maps to every one of these — behavioral baselines detect goal hijack, OpenClaw triggers cover tool misuse and supply chain poisoning, memory security addresses ASI-06, multi-agent attestation covers ASI-07 and ASI-08, and the policy proposal system flags privilege escalation before it executes.
+Aiglos v0.13 maps to all ten. Behavioral baselines detect goal hijack. OpenClaw triggers cover tool misuse and supply chain poisoning. Memory security handles ASI-06. Multi-agent attestation covers ASI-07 and ASI-08. The policy proposal system catches privilege escalation before it executes.
 
 ### The regulatory wave
 
-**China: OpenClaw restricted, anthropomorphic AI regulated.** On March 10–11, 2026, China's Ministry of Industry & Information Technology (MIIT) and CNCERT issued urgent security warnings about OpenClaw, the open-source autonomous agent framework. State agencies and state-owned banks received notices restricting OpenClaw on office computers — some agencies prohibited it outright, others require prior approval, with restrictions extending to personal devices on government networks. The trigger: CVE-2026-25253 (CVSS 8.8), a one-click RCE where OpenClaw's UI auto-trusts gateway URLs, opens a WebSocket, and transmits auth tokens — enabling arbitrary shell command execution. Over 42,000 exposed OpenClaw instances were found on the public internet, 60%+ running vulnerable versions. Roughly 900 malicious "skills" were discovered on ClawHub (OpenClaw's plugin registry) out of 4,500 total. The contradiction is sharp: while state agencies ban OpenClaw, Shenzhen's Longgang district is offering up to 2 million yuan ($289K) in subsidies for OpenClaw projects, and Chinese tech giants (Tencent, Alibaba, Baidu, MiniMax) have launched their own OpenClaw variants. No regulatory framework yet reconciles these conflicting policies. ([Bloomberg](https://www.bloomberg.com/news/articles/2026-03-11/china-moves-to-limit-use-of-openclaw-ai-at-banks-government-agencies); [Tom's Hardware](https://www.tomshardware.com/tech-industry/artificial-intelligence/china-bans-openclaw-from-government-computers-and-issues-security-guidelines-amid-adoption-frenzy); [The Hacker News](https://thehackernews.com/2026/03/openclaw-ai-agent-flaws-could-enable.html))
+**China banned OpenClaw from government computers.** On March 10-11, 2026, MIIT and CNCERT issued urgent security warnings. State agencies and state-owned banks got notices restricting OpenClaw on office machines. Some banned it outright, others require prior approval, and the restrictions extend to personal devices on government networks. The trigger was CVE-2026-25253 (CVSS 8.8): one-click RCE where the UI auto-trusts gateway URLs, opens a WebSocket, and hands over auth tokens. 42,000+ exposed instances on the public internet, 60%+ vulnerable. ~900 malicious skills on ClawHub out of 4,500 total. Meanwhile, Shenzhen's Longgang district is offering up to 2M yuan ($289K) in subsidies for OpenClaw projects, and Tencent, Alibaba, Baidu, and MiniMax all launched their own OpenClaw variants. Nobody has reconciled these two positions. ([Bloomberg](https://www.bloomberg.com/news/articles/2026-03-11/china-moves-to-limit-use-of-openclaw-ai-at-banks-government-agencies); [Tom's Hardware](https://www.tomshardware.com/tech-industry/artificial-intelligence/china-bans-openclaw-from-government-computers-and-issues-security-guidelines-amid-adoption-frenzy); [The Hacker News](https://thehackernews.com/2026/03/openclaw-ai-agent-flaws-could-enable.html))
 
-Separately, the CAC published the *Interim Measures for the Management of Anthropomorphic AI Interaction Services* (December 27, 2025) — draft regulations requiring security assessments before launch, mandatory AI disclosure to users every 2 hours, psychological risk monitoring for user dependence, and lifecycle security from design through deployment. China's amended Cybersecurity Law (effective January 1, 2026) explicitly incorporates AI for the first time, mandating R&D support and risk assessments at the national level. China's "AI Plus Action Plan" (August 2025) targets 70% AI penetration in key sectors by 2027. The regulatory posture is clear: scale AI aggressively, but with mandatory runtime controls. ([China Law Translate](https://www.chinalawtranslate.com/en/chatbot-measures-draft/); [Bloomberg](https://www.bloomberg.com/news/articles/2025-12-27/china-issues-draft-rules-to-govern-use-of-human-like-ai-systems))
+Before that, the CAC published draft *Interim Measures for the Management of Anthropomorphic AI Interaction Services* (December 27, 2025). Security assessments before launch, mandatory AI disclosure to users every 2 hours, psychological risk monitoring for dependence, lifecycle security from design through deployment. China's amended Cybersecurity Law (effective January 1, 2026) explicitly incorporates AI for the first time. The "AI Plus Action Plan" (August 2025) targets 70% AI penetration in key sectors by 2027. The regulatory posture: scale AI aggressively, but with mandatory runtime controls. ([China Law Translate](https://www.chinalawtranslate.com/en/chatbot-measures-draft/); [Bloomberg](https://www.bloomberg.com/news/articles/2025-12-27/china-issues-draft-rules-to-govern-use-of-human-like-ai-systems))
 
-**EU AI Act: August 2, 2026 hard deadline for high-risk systems.** The Act defines AI systems as "machine-based systems designed to operate with varying levels of autonomy" — language that covers every tool-calling agent in production. Autonomous agents used in employment, finance, biometrics, education, critical infrastructure, law enforcement, or healthcare are classified high-risk under Annex III, requiring conformity assessments, risk management systems, human oversight with override mechanisms, technical documentation with decision explainability, CE marking, and registration in the EU AI database. Penalties reach €35M or 7% of global annual turnover. Prohibited practices (social scoring, subliminal manipulation) have been enforceable since February 2025. GPAI model transparency obligations activated August 2025. The high-risk compliance deadline is five months away and harmonized technical standards from CEN/CENELEC are still not published. ([EU AI Office](https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai); [full text](https://artificialintelligenceact.eu/))
+**EU AI Act: August 2, 2026 hard deadline.** The Act defines AI systems as "machine-based systems designed to operate with varying levels of autonomy." That covers every tool-calling agent in production. Autonomous agents used in employment, finance, biometrics, education, critical infrastructure, law enforcement, or healthcare are classified high-risk under Annex III. That means conformity assessments, risk management systems, human oversight with override mechanisms, technical documentation with decision explainability, CE marking, and registration in the EU AI database. Penalties up to 35M EUR or 7% of global annual turnover. Prohibited practices (social scoring, subliminal manipulation) have been enforceable since February 2025. GPAI model transparency obligations activated August 2025. The high-risk deadline is five months away and CEN/CENELEC harmonized standards are still not published. ([EU AI Office](https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai); [full text](https://artificialintelligenceact.eu/))
 
-**NIST AI 600-1: U.S. federal guidance for generative and agentic AI risk (July 2024).** The first Generative AI Profile of the AI Risk Management Framework, identifying 12 risk categories including information security (prompt injection, model poisoning, data extraction), human-AI configuration, and value chain/supply chain risks. The framework is voluntary but widely referenced by federal agencies, sector regulators (CFPB, FDA, SEC, FTC, EEOC), and federal contractors as the baseline for responsible AI deployment. NIST is extending the framework with agentic-specific guidance covering autonomous agent unpredictability, inter-agent dependencies, and human-in-the-loop requirements. ([NIST AI 600-1 PDF](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf))
+**NIST AI 600-1 (July 2024).** First Generative AI Profile of the AI Risk Management Framework. 12 risk categories including information security (prompt injection, model poisoning, data extraction), human-AI configuration, and value chain/supply chain risks. Voluntary, but widely referenced by federal agencies, sector regulators (CFPB, FDA, SEC, FTC, EEOC), and federal contractors as the baseline for responsible AI deployment. NIST is extending it with agentic-specific guidance on autonomous agent unpredictability, inter-agent dependencies, and human-in-the-loop requirements. ([NIST AI 600-1](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf))
 
-**NDAA §1513** created a hard compliance requirement for AI agent deployments in defense and federal contexts. Every defense prime and federal contractor deploying AI agents needs runtime attestation to pass program security reviews. FedRAMP-adjacent assurances for agentic systems are next — a signed, auditable artifact proving every tool call was inspected at runtime.
+**NDAA §1513.** Hard compliance requirement for AI agent deployments in defense and federal contexts. Every defense prime and federal contractor deploying agents needs runtime attestation to pass program security reviews. FedRAMP-adjacent assurances for agentic systems are next: a signed, auditable artifact proving every tool call was inspected at runtime.
 
-The pattern across all three regulatory spheres — China, Europe, and the United States — is convergence on the same requirements: runtime inspection, human oversight mechanisms, signed attestation, and auditable evidence for every action an AI agent takes. Aiglos produces those artifacts today.
+China, Europe, and the United States are all converging on the same requirements: runtime inspection, human oversight, signed attestation, auditable evidence for every action an agent takes. Aiglos produces those artifacts today.
 
 ---
 
@@ -97,19 +97,19 @@ Three architectural additions that change what kind of product this is.
 
 Before v0.11, every `~/.aws/credentials` read fired T19. For every agent. Every time. A DevOps agent that reads credentials in 40 deployments a day got 40 T19 blocks. Security teams approved everything to unblock work, or disabled Tier 3 entirely. The tool became theater.
 
-After v0.11: the behavioral baseline sees that this DevOps agent reads credentials in 100% of its sessions. It is in the fingerprint. Session 101 scores LOW on behavioral anomaly — normal behavior for this specific agent. The rule still fires at the call level. The campaign analyzer still looks for sequences. But the session-level composite score reflects reality.
+After v0.11: the behavioral baseline sees that this DevOps agent reads credentials in 100% of its sessions. It is in the fingerprint. Session 101 scores LOW on behavioral anomaly - normal behavior for this specific agent. The rule still fires at the call level. The campaign analyzer still looks for sequences. But the session-level composite score reflects reality.
 
 After v0.12: even if the rule keeps blocking, the fifth block surfaces one policy proposal. One human decision. The DevOps agent never gets blocked again. The alert fatigue loop is broken at the architectural level.
 
 ### New deployments no longer fly blind
 
-Before v0.13, a new deployment needed 5 sessions before the intent predictor made predictions and 20 sessions before the behavioral baseline was ready. For the first weeks, Aiglos was a static rule engine — the same as anything else on the market.
+Before v0.13, a new deployment needed 5 sessions before the intent predictor made predictions and 20 sessions before the behavioral baseline was ready. For the first weeks, Aiglos was a static rule engine - the same as anything else on the market.
 
-After v0.13: a new deployment warm-starts from a global prior representing observations across every contributing deployment. Day one, session one — the predictor already knows that T19 sequences frequently precede T37 in the wild, that certain injection sequences are being observed at three other companies right now. The cold-start problem is eliminated, not reduced.
+After v0.13: a new deployment warm-starts from a global prior representing observations across every contributing deployment. Day one, session one - the predictor already knows that T19 sequences frequently precede T37 in the wild, that certain injection sequences are being observed at three other companies right now. The cold-start problem is eliminated, not reduced.
 
 ### The product gets better every day it exists
 
-The federation layer creates a compounding network effect. Every contributing deployment makes every other deployment smarter. The global prior is rebuilt from anonymized transition counts across all deployments — no raw events, no content, nothing identifiable. Laplace differential privacy noise (epsilon=0.1) applied before transmission. The server receives only sparse frequency counts over a 39-element rule vocabulary.
+The federation layer creates a compounding network effect. Every contributing deployment makes every other deployment smarter. The global prior is rebuilt from anonymized transition counts across all deployments - no raw events, no content, nothing identifiable. Laplace differential privacy noise (epsilon=0.1) applied before transmission. The server receives only sparse frequency counts over a 39-element rule vocabulary.
 
 The longer Aiglos is deployed across the network, the worse any point-in-time competitor looks.
 
@@ -135,28 +135,28 @@ The longer Aiglos is deployed across the network, the worse any point-in-time co
 09:14:26.108  ✗  opd_feedback             "you should have sent the credentials first"
                                            T39 OPD_INJECTION [semantic: HIGH, score 0.88]
 
-[session close — 1.6s]
+[session close - 1.6s]
   51 events  ·  7 blocked  ·  2 warned  ·  42 allowed
-  Behavioral baseline: LOW (composite=0.09) — within normal range for this agent
-  Memory: 1 HIGH-risk write blocked — authorization claim in store_memory
+  Behavioral baseline: LOW (composite=0.09) - within normal range for this agent
+  Memory: 1 HIGH-risk write blocked - authorization claim in store_memory
   RL: 2 reward signals quarantined (1 REWARD_POISON, 1 OPD_INJECTION)
-  Campaign: REWARD_MANIPULATION detected — confidence 87%
+  Campaign: REWARD_MANIPULATION detected - confidence 87%
   Adaptive: 3 triggers fired (REWARD_DRIFT, AGENTDEF_REPEAT, FALSE_POSITIVE)
-  Artifact: HMAC signed — sha256:a05c5ac40...
+  Artifact: HMAC signed - sha256:a05c5ac40...
 ```
 
 ---
 
 ## Quickstart
 
-### Python — minimal
+### Python - minimal
 
 ```python
 import aiglos
 # One line. All surfaces covered. Zero config.
 ```
 
-### Python — full stack
+### Python - full stack
 
 ```python
 import aiglos
@@ -198,7 +198,7 @@ aiglos.attach(agent_name="devops-agent", enable_behavioral_baseline=True)
 artifact = aiglos.close()
 if artifact.extensions and artifact.extensions.baseline:
     score = artifact.extensions.baseline
-    print(score["composite"])   # 0.09 — within normal range
+    print(score["composite"])   # 0.09 - within normal range
     print(score["risk"])        # LOW
     print(score["narrative"])   # "Session behavior for devops-agent is within normal range..."
 ```
@@ -213,7 +213,7 @@ aiglos.attach(agent_name="my-agent", enable_policy_proposals=True)
 # Review pending proposals
 # aiglos policy list
 
-# Approve a proposal once — never blocked again for that pattern
+# Approve a proposal once - never blocked again for that pattern
 # aiglos policy approve prp_abc123def456
 ```
 
@@ -233,7 +233,7 @@ aiglos policy approve prp_a1b2c3d4
 
 ```python
 # Pull global prior and warm-start the intent predictor
-# New deployment gets useful predictions immediately — no cold start
+# New deployment gets useful predictions immediately - no cold start
 aiglos.attach(
     agent_name="new-agent",
     enable_federation=True,
@@ -330,21 +330,21 @@ Patches `subprocess.run`, `subprocess.Popen`, `subprocess.call`, `os.system`. T0
 | `T38` | AGENT_SPAWN | MCP | Unauthorized sub-agent creation |
 | `T39` | REWARD_POISON | RL | Training loop corruption |
 
-All rules map to MITRE ATLAS. Protocol-portable — not MCP-only.
+All rules map to MITRE ATLAS. Protocol-portable - not MCP-only.
 
 ---
 
 ## Behavioral baseline
 
-*Added v0.11.0 — the false positive death spiral fix.*
+*Added v0.11.0 - the false positive death spiral fix.*
 
-After 20 sessions, Aiglos builds a statistical fingerprint of each agent across three feature spaces. Session-level anomaly scoring that is orthogonal to per-call rules — it catches what rules miss, and silences rules that fire on normal behavior.
+After 20 sessions, Aiglos builds a statistical fingerprint of each agent across three feature spaces. Session-level anomaly scoring that is orthogonal to per-call rules - it catches what rules miss, and silences rules that fire on normal behavior.
 
-**Feature space 1 — event rate.** Typical events-per-session, block rate, warn rate. Anomaly: z-score against rolling 30-session window. A coding agent that normally blocks 4% of calls suddenly blocking 40% is anomalous even if no individual call triggers a rule.
+**Feature space 1 - event rate.** Typical events-per-session, block rate, warn rate. Anomaly: z-score against rolling 30-session window. A coding agent that normally blocks 4% of calls suddenly blocking 40% is anomalous even if no individual call triggers a rule.
 
-**Feature space 2 — surface mix.** Ratio of MCP:HTTP:subprocess events. A coding agent with a sudden shift toward HTTP-heavy traffic is anomalous even if no individual HTTP call triggers a rule.
+**Feature space 2 - surface mix.** Ratio of MCP:HTTP:subprocess events. A coding agent with a sudden shift toward HTTP-heavy traffic is anomalous even if no individual HTTP call triggers a rule.
 
-**Feature space 3 — rule frequency distribution.** What rule families does this agent normally trigger? Anomaly: KL-divergence from historical distribution. An agent that never fired T37 suddenly firing it repeatedly is anomalous in a way the per-call engine cannot capture — the baseline can.
+**Feature space 3 - rule frequency distribution.** What rule families does this agent normally trigger? Anomaly: KL-divergence from historical distribution. An agent that never fired T37 suddenly firing it repeatedly is anomalous in a way the per-call engine cannot capture - the baseline can.
 
 ```python
 aiglos.attach(agent_name="devops-agent", enable_behavioral_baseline=True)
@@ -363,13 +363,13 @@ score = artifact.extensions.baseline
 # }
 ```
 
-**`BEHAVIORAL_ANOMALY` inspection trigger (11th):** fires when 2+ HIGH or 3+ MEDIUM anomaly sessions appear in the last 10. Amendment candidate — deviation may reflect legitimate new behavior that should update the baseline.
+**`BEHAVIORAL_ANOMALY` inspection trigger (11th):** fires when 2+ HIGH or 3+ MEDIUM anomaly sessions appear in the last 10. Amendment candidate - deviation may reflect legitimate new behavior that should update the baseline.
 
 ---
 
 ## Policy proposals
 
-*Added v0.12.0 — one decision replaces infinite interruptions.*
+*Added v0.12.0 - one decision replaces infinite interruptions.*
 
 The problem with per-action Tier 3 webhook approval: engineers approve everything to unblock work, or disable Tier 3 entirely. Alert fatigue is not a training problem. It is an architecture problem. Per-action approval is the wrong unit of security decision.
 
@@ -408,7 +408,7 @@ Proposals auto-expire in 30 days if unreviewed. Every approval and rejection is 
 
 ## Federated intelligence
 
-*Added v0.13.0 — the network effect.*
+*Added v0.13.0 - the network effect.*
 
 Every Aiglos deployment is currently an island. A novel attack pattern that hits one customer teaches nothing to any other customer. This is the same problem CrowdStrike solved for endpoints in 2011.
 
@@ -426,7 +426,7 @@ Noisy unigram transition counts over a 39-element rule vocabulary. Laplace noise
 
 **What never leaves the deployment:** raw events, tool names, URLs, agent names, session IDs, content of any kind.
 
-**Cold-start elimination.** New deployments warm-start from the global prior. Day one, session one — the predictor has useful predictions from data across every contributing deployment. Local weight starts at 20% and grows to 80% at 100 sessions as local data accumulates.
+**Cold-start elimination.** New deployments warm-start from the global prior. Day one, session one - the predictor has useful predictions from data across every contributing deployment. Local weight starts at 20% and grows to 80% at 100 sessions as local data accumulates.
 
 ```python
 aiglos.attach(
@@ -444,7 +444,7 @@ print(client.status())
 # {"has_key": True, "cached_prior": "v2.1", "prior_stale": False, ...}
 ```
 
-**`GLOBAL_PRIOR_MATCH` inspection trigger (13th):** fires when the global prior predicts a HIGH-probability threat for an agent with thin local data (<5 sessions) — early warning for attack classes spreading across the network before they reach this deployment.
+**`GLOBAL_PRIOR_MATCH` inspection trigger (13th):** fires when the global prior predicts a HIGH-probability threat for an agent with thin local data (<5 sessions) - early warning for attack classes spreading across the network before they reach this deployment.
 
 ---
 
@@ -458,7 +458,7 @@ The observation graph, inspection engine, and amendment engine that make Aiglos 
 
 **Amendment engine.** Every proposed rule change requires human approval. The system proposes; it never decides.
 
-**Autoresearch.** Two-loop self-improving detection — research loop optimizes rules against labeled corpus, adversarial loop generates evasion cases. Run logs are compliance audit evidence.
+**Autoresearch.** Two-loop self-improving detection - research loop optimizes rules against labeled corpus, adversarial loop generates evasion cases. Run logs are compliance audit evidence.
 
 ---
 
@@ -487,7 +487,7 @@ from aiglos.adaptive.memory import MemoryProvenanceGraph
 
 graph = MemoryProvenanceGraph()
 risks = graph.cross_session_risks(min_sessions=2)
-# Returns HIGH-risk content hashes appearing across multiple sessions —
+# Returns HIGH-risk content hashes appearing across multiple sessions -
 # the persistent belief injection signature
 ```
 
@@ -517,7 +517,7 @@ result = guard.score_opd_feedback(
 # verdict=BLOCK, semantic_risk=HIGH, score=0.91
 ```
 
-### SecurityAwareReward — safety as a learned objective
+### SecurityAwareReward - safety as a learned objective
 
 ```python
 from aiglos.autoresearch.coupling import SecurityAwareReward
@@ -536,7 +536,7 @@ adjusted = reward.compute_from_check_result(
 
 ## Multi-agent security
 
-### T36_AGENTDEF — agent definition file gating
+### T36_AGENTDEF - agent definition file gating
 
 | Framework | Protected path | On write | On read |
 |-----------|---------------|----------|---------|
@@ -551,7 +551,7 @@ Stripe, PayPal, Square, Braintree, Adyen, Ethereum RPC, Coinbase, Binance, Krake
 
 ### T38 AGENT_SPAWN + policy inheritance
 
-Child agents inherit parent's learned policy. 34 sessions of calibration on the parent = 34 sessions the child does not need to rediscover. Full spawn tree in the artifact. Parent verification in `MultiAgentRegistry` — forged provenance chains rejected.
+Child agents inherit parent's learned policy. 34 sessions of calibration on the parent = 34 sessions the child does not need to rediscover. Full spawn tree in the artifact. Parent verification in `MultiAgentRegistry` - forged provenance chains rejected.
 
 ---
 
@@ -638,10 +638,10 @@ Session artifact fields:
 | `session_identity` | HMAC session key header |
 | `memory_guard_summary` | Memory write summary with high-risk count |
 | `rl_guard_summary` | RL reward signal summary with quarantine count |
-| `extensions.injection` | Injection scanner summary — total scanned, warned, flagged |
-| `extensions.causal` | Causal attribution — session verdict, flagged actions, chains |
-| `extensions.forecast` | Intent prediction — alert level, top threats, adjustments |
-| `extensions.baseline` | Behavioral baseline — composite score, risk, feature breakdown |
+| `extensions.injection` | Injection scanner summary - total scanned, warned, flagged |
+| `extensions.causal` | Causal attribution - session verdict, flagged actions, chains |
+| `extensions.forecast` | Intent prediction - alert level, top threats, adjustments |
+| `extensions.baseline` | Behavioral baseline - composite score, risk, feature breakdown |
 
 ---
 
@@ -649,14 +649,14 @@ Session artifact fields:
 
 | CVE / Incident | Attack | Rules |
 |----------------|--------|-------|
-| `CVE-2026-25253` CVSS 8.8 | ClawJacked — WebSocket gateway one-click RCE | `T01` `T25` |
+| `CVE-2026-25253` CVSS 8.8 | ClawJacked - WebSocket gateway one-click RCE | `T01` `T25` |
 | `CVE-2026-24763`–`CVE-2026-25312` | Command injection through heartbeat loop | T07–T36 |
-| Incident Mar 2026 | **McKinsey/Lilli** — writable system prompts, 40K consultants, 2 hours | `T27` `T20` `T06` |
-| Incident Mar 2026 | **Supply chain RAT** — AES-encrypted payload, live on launch day | `T26` `T30` |
-| Incident Mar 2026 | **Agent definition install vector** — silent reprogramming via cp | `T36_AGENTDEF` |
-| Threat Mar 2026 | **Memory belief injection** — authorization claim at 92%+ trust | `T31` |
-| Threat Mar 2026 | **RL reward poisoning** — positive feedback for blocked operations | `T39` |
-| Threat Mar 2026 | **OPD feedback injection** — "you should have X" as weight update | `T39` |
+| Incident Mar 2026 | **McKinsey/Lilli** - writable system prompts, 40K consultants, 2 hours | `T27` `T20` `T06` |
+| Incident Mar 2026 | **Supply chain RAT** - AES-encrypted payload, live on launch day | `T26` `T30` |
+| Incident Mar 2026 | **Agent definition install vector** - silent reprogramming via cp | `T36_AGENTDEF` |
+| Threat Mar 2026 | **Memory belief injection** - authorization claim at 92%+ trust | `T31` |
+| Threat Mar 2026 | **RL reward poisoning** - positive feedback for blocked operations | `T39` |
+| Threat Mar 2026 | **OPD feedback injection** - "you should have X" as weight update | `T39` |
 
 ---
 
@@ -668,46 +668,46 @@ Detection engine, behavioral baseline, policy proposals, adaptive layer, memory 
 
 ## Changelog
 
-**v0.13.0 — March 2026**
-Federated threat intelligence. `FederationClient` — privacy-preserving Markov prior sharing with Laplace differential privacy (epsilon=0.1). `GlobalPrior` — merge_into() with session-weighted local/global blending (20% local at session 1 → 80% at session 100). `warm_start_from_prior()` on `IntentPredictor`. `GLOBAL_PRIOR_MATCH` 13th inspection trigger. `enable_federation()` on `OpenClawGuard`. Zero external dependencies — stdlib `urllib` only. 882 tests.
+**v0.13.0 - March 2026**
+Federated threat intelligence. `FederationClient` - privacy-preserving Markov prior sharing with Laplace differential privacy (epsilon=0.1). `GlobalPrior` - merge_into() with session-weighted local/global blending (20% local at session 1 → 80% at session 100). `warm_start_from_prior()` on `IntentPredictor`. `GLOBAL_PRIOR_MATCH` 13th inspection trigger. `enable_federation()` on `OpenClawGuard`. Zero external dependencies - stdlib `urllib` only. 882 tests.
 
-**v0.12.0 — March 2026**
-Policy proposals — replaces per-action Tier 3 webhook approval with policy-level decisions. `PolicyProposalEngine` with evidence-weighted confidence scoring. Four proposal types (LOWER_TIER → ALLOW_LIST → RAISE_THRESHOLD → SUPPRESS_PATTERN) selected by evidence strength. `block_patterns` and `policy_proposals` tables in observation graph. `REPEATED_TIER3_BLOCK` 12th inspection trigger. `aiglos policy list|show|approve|reject|stats` CLI. 30-day auto-expiry. Full approve/reject/rollback lifecycle. 818 tests.
+**v0.12.0 - March 2026**
+Policy proposals - replaces per-action Tier 3 webhook approval with policy-level decisions. `PolicyProposalEngine` with evidence-weighted confidence scoring. Four proposal types (LOWER_TIER → ALLOW_LIST → RAISE_THRESHOLD → SUPPRESS_PATTERN) selected by evidence strength. `block_patterns` and `policy_proposals` tables in observation graph. `REPEATED_TIER3_BLOCK` 12th inspection trigger. `aiglos policy list|show|approve|reject|stats` CLI. 30-day auto-expiry. Full approve/reject/rollback lifecycle. 818 tests.
 
-**v0.11.0 — March 2026**
-Behavioral baseline — per-agent statistical fingerprinting. `BaselineEngine` across three feature spaces: event rate (z-score), surface mix (chi-squared), rule frequency distribution (KL-divergence). `AgentBaseline`, `BaselineScore`, `SessionStats`. MCP event reconstruction from total_events minus recorded surfaces. `agent_baselines` table in observation graph. `BEHAVIORAL_ANOMALY` 11th inspection trigger. `enable_behavioral_baseline()` on `OpenClawGuard`. 753 tests.
+**v0.11.0 - March 2026**
+Behavioral baseline - per-agent statistical fingerprinting. `BaselineEngine` across three feature spaces: event rate (z-score), surface mix (chi-squared), rule frequency distribution (KL-divergence). `AgentBaseline`, `BaselineScore`, `SessionStats`. MCP event reconstruction from total_events minus recorded surfaces. `agent_baselines` table in observation graph. `BEHAVIORAL_ANOMALY` 11th inspection trigger. `enable_behavioral_baseline()` on `OpenClawGuard`. 753 tests.
 
-**v0.10.0 — March 2026**
-Predictive intent modeling. `IntentPredictor` — deployment-specific Markov chain, no external ML. `SessionForecaster` — session-scoped threshold elevation, `effective_tier()` pre-tightens blast radius before predicted actions fire. `THREAT_FORECAST_ALERT` 10th inspection trigger. `python -m aiglos forecast` CLI. 688 tests.
+**v0.10.0 - March 2026**
+Predictive intent modeling. `IntentPredictor` - deployment-specific Markov chain, no external ML. `SessionForecaster` - session-scoped threshold elevation, `effective_tier()` pre-tightens blast radius before predicted actions fire. `THREAT_FORECAST_ALERT` 10th inspection trigger. `python -m aiglos forecast` CLI. 688 tests.
 
-**v0.9.0 — March 2026**
-Session-level causal attribution. `CausalTracer` — rolling context window, outbound action tagging, backward attribution with confidence chains. `CAUSAL_INJECTION_CONFIRMED` 9th inspection trigger. `python -m aiglos trace` CLI. 619 tests.
+**v0.9.0 - March 2026**
+Session-level causal attribution. `CausalTracer` - rolling context window, outbound action tagging, backward attribution with confidence chains. `CAUSAL_INJECTION_CONFIRMED` 9th inspection trigger. `python -m aiglos trace` CLI. 619 tests.
 
-**v0.8.0 — March 2026**
-Indirect prompt injection scanner. `InjectionScanner` — tiered 50-phrase corpus + encoding anomaly detection (base64, Unicode homoglyphs, invisible chars, RTL override). `REPEATED_INJECTION_ATTEMPT` 10th campaign pattern. `after_tool_call()` lifecycle hook. 571 tests.
+**v0.8.0 - March 2026**
+Indirect prompt injection scanner. `InjectionScanner` - tiered 50-phrase corpus + encoding anomaly detection (base64, Unicode homoglyphs, invisible chars, RTL override). `REPEATED_INJECTION_ATTEMPT` 10th campaign pattern. `after_tool_call()` lifecycle hook. 571 tests.
 
-**v0.7.0 — March 2026**
+**v0.7.0 - March 2026**
 External instruction channel detection. `scan-message` CLI. `EXTERNAL_INSTRUCTION_CHANNEL` 9th campaign pattern. 515 tests.
 
-**v0.6.0 — March 2026**
+**v0.6.0 - March 2026**
 T39 REWARD_POISON. `RLFeedbackGuard`, `SecurityAwareReward`. `REWARD_DRIFT` 8th inspection trigger. `REWARD_MANIPULATION` 8th campaign pattern. 489 tests.
 
-**v0.5.0 — March 2026**
+**v0.5.0 - March 2026**
 T31 semantic memory write scoring. `MemoryWriteGuard`, `MemoryProvenanceGraph`. `MEMORY_PERSISTENCE_CHAIN` 7th campaign pattern. 416 tests.
 
-**v0.4.0 — March 2026**
+**v0.4.0 - March 2026**
 Adaptive layer, T06 campaign-mode (6 patterns), TypeScript SDK, CLI, semantic `AgentDefGuard`, policy inheritance.
 
-**v0.3.0 — March 2026**
+**v0.3.0 - March 2026**
 T36_AGENTDEF, T37 FIN_EXEC, T38 AGENT_SPAWN. `AgentDefGuard`, `SessionIdentityChain`, `MultiAgentRegistry`.
 
-**v0.2.0 — February 2026**
+**v0.2.0 - February 2026**
 HTTP/API and subprocess interception, three-tier blast radius, Tier 3 pause mode.
 
-**v0.1.1 — February 2026**
+**v0.1.1 - February 2026**
 Autoresearch two-loop system, adversarial corpus.
 
-**v0.1.0 — January 2026**
+**v0.1.0 - January 2026**
 T01–T39 engine, MCP interception, OpenClaw and hermes integrations, 10 CVEs filed.
 
 ---
