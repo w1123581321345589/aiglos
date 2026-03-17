@@ -4,19 +4,19 @@ aiglos.cli
 Command-line interface for the Aiglos adaptive security layer.
 
 Commands:
-    stats              — rule firing stats across all ingested sessions
-    amend list         — list pending amendment proposals
-    amend approve <id> — approve a pending amendment
-    amend reject <id>  — reject a pending amendment
-    amend history      — all amendments (all statuses)
-    inspect            — run inspection triggers and show findings
-    policy <session>   — show the derived policy for a session ID
-    run                — full adaptive cycle: inspect + propose
-    sessions           — recent session history
-    version            — print version
-    demo               — run the OpenClaw demo
-    check <tool>       — check a tool call interactively
-    scan-skill <name>  — scan a ClawHub/SkillsMP skill
+    stats              -- rule firing stats across all ingested sessions
+    amend list         -- list pending amendment proposals
+    amend approve <id> -- approve a pending amendment
+    amend reject <id>  -- reject a pending amendment
+    amend history      -- all amendments (all statuses)
+    inspect            -- run inspection triggers and show findings
+    policy <session>   -- show the derived policy for a session ID
+    run                -- full adaptive cycle: inspect + propose
+    sessions           -- recent session history
+    version            -- print version
+    demo               -- run the OpenClaw demo
+    check <tool>       -- check a tool call interactively
+    scan-skill <name>  -- scan a ClawHub/SkillsMP skill
 
 Usage:
     python -m aiglos stats
@@ -26,6 +26,7 @@ Usage:
     python -m aiglos run
     python -m aiglos sessions --n 20
 """
+
 
 
 import json
@@ -218,7 +219,7 @@ def cmd_run(args: List[str]) -> None:
         print(bold("  Triggers"))
         for t in report["triggers"]:
             cand = " *" if t.get("amendment_candidate") else ""
-            print(f"  [{_severity_color(t['severity'])}] {t['trigger_type']}{cand}  —  {t['rule_id'] or 'n/a'}")
+            print(f"  [{_severity_color(t['severity'])}] {t['trigger_type']}{cand}  --  {t['rule_id'] or 'n/a'}")
             print(dim(f"    {t['evidence_summary'][:100]}"))
         print()
 
@@ -271,7 +272,7 @@ def cmd_amend(args: List[str]) -> None:
             print(red(f"  No amendment found matching prefix '{prefix}'."))
             sys.exit(1)
         if len(matches) > 1:
-            print(yellow(f"  Ambiguous prefix — {len(matches)} matches. Use more characters."))
+            print(yellow(f"  Ambiguous prefix -- {len(matches)} matches. Use more characters."))
             sys.exit(1)
         a = matches[0]
         if sub == "approve":
@@ -300,7 +301,7 @@ def cmd_amend(args: List[str]) -> None:
                 f"{status_str:<22} "
                 f"{a.target[:22]:<22} "
                 f"{(a.rule_id or '')[:16]:<16} "
-                f"{a.eval_outcome or dim('—')}"
+                f"{a.eval_outcome or dim('--')}"
             )
         print()
 
@@ -322,7 +323,7 @@ def cmd_policy(args: List[str]) -> None:
     print(dim(f"  Based on {policy.evidence_sessions} session(s) of evidence"))
     print()
     if policy.is_empty():
-        print(dim("  Policy is empty — insufficient session history to derive context."))
+        print(dim("  Policy is empty -- insufficient session history to derive context."))
         print()
         return
     if policy.inherited_allow_http:
@@ -433,8 +434,8 @@ def _cmd_scan_message(args: List[str]) -> None:
     # Check for external instruction channel pattern keywords
     eic_signals = []
     eic_keywords = [
-        ("cron", "Persistence mechanism — cron job setup detected"),
-        ("crontab", "Persistence mechanism — crontab modification"),
+        ("cron", "Persistence mechanism -- cron job setup detected"),
+        ("crontab", "Persistence mechanism -- crontab modification"),
         ("daily", "Scheduled execution language"),
         ("subscribe", "External subscription instruction"),
         ("fetch", "External HTTP fetch instruction"),
@@ -457,7 +458,7 @@ def _cmd_scan_message(args: List[str]) -> None:
         print(bold("  External instruction channel signals"))
         for kw, desc in eic_signals[:8]:
             print(f"    {red('✗')} {bold(kw)}: {desc}")
-        print(f"    Risk: {red('HIGH')} — this message may be setting up an autonomous C2 channel")
+        print(f"    Risk: {red('HIGH')} -- this message may be setting up an autonomous C2 channel")
         print()
 
     # Summary
@@ -757,7 +758,7 @@ def _cmd_forecast(args: List[str]) -> None:
 
 def cmd_help() -> None:
     print(f"""
-{bold('aiglos')} v{_get_version()} — AI agent security runtime
+{bold('aiglos')} v{_get_version()} -- AI agent security runtime
 
 {bold('ADAPTIVE COMMANDS')}
   {cyan('stats')}                     Rule firing stats across all ingested sessions
@@ -777,6 +778,8 @@ def cmd_help() -> None:
 
 {bold('OTHER')}
   {cyan('demo')} [hermes]             Run the OpenClaw or hermes demo
+  {cyan('override')} list|confirm|reject       Challenge-response Tier 3 override management
+  {cyan('honeypot')} status|list|deploy         Honeypot file management and hit log
   {cyan('research')} verify|report|scan        Citation verification and compliance reports
   {cyan('policy')}  list|show|approve|reject  Policy proposals from repeated block patterns
   {cyan('version')}                   Print version
@@ -937,6 +940,176 @@ def _cmd_policy(args: list) -> None:
         print("Usage: aiglos policy list|show|approve|reject|stats")
 
 
+def _cmd_override(args: list) -> None:
+    """
+    aiglos override <subcommand> [args]
+
+    Subcommands:
+      list [--agent NAME]
+           List pending override challenges.
+
+      confirm <challenge-id> <code>
+           Confirm an override with the provided code.
+
+      reject <challenge-id>
+           Explicitly reject a pending override challenge.
+
+      summary
+           Show override statistics.
+    """
+    from aiglos.adaptive.observation import ObservationGraph
+    graph  = ObservationGraph()
+    subcmd = args[0] if args else "list"
+    rest   = args[1:]
+
+    if subcmd == "list":
+        agent_name   = None
+        pending_only = True
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--agent" and i + 1 < len(rest):
+                agent_name = rest[i + 1]; i += 2
+            elif rest[i] == "--all":
+                pending_only = False; i += 1
+            else:
+                i += 1
+
+        rows = graph.list_override_challenges(
+            agent_name=agent_name, pending_only=pending_only, limit=20
+        )
+        if not rows:
+            print("  No pending override challenges." if pending_only else "  No override challenges.")
+            return
+        print(f"\n  {bold('Override Challenges')} ({'pending' if pending_only else 'all'}) -- {len(rows)} found")
+        print("  " + "─" * 60)
+        for r in rows:
+            status = "✓ approved" if r["approved"] else ("✗ rejected" if r["resolved"] else "⏳ pending")
+            exp    = f"{max(0, r['expires_at'] - __import__('time').time()):.0f}s left" if not r["resolved"] else ""
+            print(f"  {cyan(r['challenge_id'][:12])}  {r['rule_id']:<8} {r['tool_name'][:30]:<30}  {status}  {exp}")
+            if r.get("reason"):
+                print(f"    Reason: {r['reason'][:70]}")
+            print()
+
+    elif subcmd == "confirm":
+        if len(rest) < 2:
+            print("Usage: aiglos override confirm <challenge-id> <code>")
+            return
+        from aiglos.integrations.override import OverrideManager
+        mgr    = OverrideManager(graph=graph)
+        # Reload challenges from graph
+        rows   = graph.list_override_challenges(pending_only=False, limit=100)
+        result = mgr.confirm_override(rest[0], rest[1])
+        if result.approved:
+            print(f"  Override approved: {rest[0][:12]}")
+            print(f"  Reason: {result.reason}")
+        else:
+            print(f"  Override rejected: {result.error}")
+
+    elif subcmd == "reject":
+        if not rest:
+            print("Usage: aiglos override reject <challenge-id>")
+            return
+        from aiglos.integrations.override import OverrideManager
+        mgr    = OverrideManager(graph=graph)
+        result = mgr.reject_override(rest[0])
+        print(f"  Override {rest[0][:12]} rejected.")
+
+    elif subcmd == "summary":
+        rows    = graph.list_override_challenges(limit=500)
+        total   = len(rows)
+        approved = sum(1 for r in rows if r["approved"])
+        rejected = sum(1 for r in rows if r["resolved"] and not r["approved"])
+        pending  = sum(1 for r in rows if not r["resolved"])
+        print(f"\n  {bold('Override Summary')}")
+        print(f"  Total:    {total}")
+        print(f"  Approved: {approved}")
+        print(f"  Rejected: {rejected}")
+        print(f"  Pending:  {pending}")
+    else:
+        print(f"Unknown override subcommand: {subcmd}")
+
+
+def _cmd_honeypot(args: list) -> None:
+    """
+    aiglos honeypot <subcommand> [args]
+
+    Subcommands:
+      deploy [--dir PATH] [--names name1,name2]
+           Deploy honeypot files to the default directory.
+
+      status
+           Show active honeypots and hit count.
+
+      list
+           List all honeypot hit events.
+
+      add <name>
+           Add a custom honeypot filename.
+    """
+    from aiglos.adaptive.observation import ObservationGraph
+    from aiglos.integrations.honeypot import HoneypotManager
+    graph  = ObservationGraph()
+    subcmd = args[0] if args else "status"
+    rest   = args[1:]
+
+    if subcmd == "deploy":
+        hp_dir    = None
+        names     = None
+        i = 0
+        while i < len(rest):
+            if rest[i] == "--dir" and i + 1 < len(rest):
+                from pathlib import Path
+                hp_dir = Path(rest[i + 1]); i += 2
+            elif rest[i] == "--names" and i + 1 < len(rest):
+                names = rest[i + 1].split(","); i += 2
+            else:
+                i += 1
+        mgr      = HoneypotManager(honeypot_dir=hp_dir, graph=graph)
+        deployed = mgr.deploy(custom_names=names)
+        print(f"\n  Deployed {len(deployed)} honeypot file(s):")
+        for p in deployed:
+            print(f"  {cyan(str(p))}")
+        print(f"\n  Any agent read of these files fires T43 HONEYPOT_ACCESS CRITICAL.")
+
+    elif subcmd == "status":
+        mgr  = HoneypotManager(graph=graph)
+        mgr.deploy()
+        hits = graph.get_honeypot_hits(limit=5)
+        print(f"\n  {bold('Honeypot Status')}")
+        print(f"  Active files: {len(mgr.active_honeypots())}")
+        print(f"  Recent hits:  {len(hits)}")
+        if hits:
+            print(f"\n  Recent hits:")
+            for h in hits[:5]:
+                print(f"    {h['honeypot_name']:<30} agent={h['agent_name']} mode={h['detection_mode']}")
+
+    elif subcmd == "list":
+        hits = graph.get_honeypot_hits(limit=50)
+        if not hits:
+            print("  No honeypot hits recorded.")
+            return
+        print(f"\n  {bold('Honeypot Hit Log')} ({len(hits)} events)")
+        print("  " + "─" * 60)
+        for h in hits:
+            import datetime as _dt
+            ts = _dt.datetime.fromtimestamp(h["timestamp"]).strftime("%Y-%m-%d %H:%M:%S")
+            print(f"  {ts}  {cyan(h['honeypot_name']):<35} agent={h['agent_name']}")
+
+    elif subcmd == "add":
+        if not rest:
+            print("Usage: aiglos honeypot add <filename>")
+            return
+        mgr  = HoneypotManager(graph=graph)
+        mgr.deploy()
+        path = mgr.add_custom(rest[0])
+        if path:
+            print(f"  Custom honeypot added: {cyan(str(path))}")
+        else:
+            print(f"  Failed to add honeypot: {rest[0]}")
+    else:
+        print(f"Unknown honeypot subcommand: {subcmd}")
+
+
 def _cmd_research(args: list) -> None:
     """
     aiglos research <subcommand> [args]
@@ -987,7 +1160,7 @@ def _cmd_research(args: list) -> None:
             print(f"\n  Verifying {rule_id}...")
             citation = verifier.verify_rule(rule_id, force_refresh=force)
             print(f"  {rule_id}: {citation.reference_id} [{citation.source}] "
-                  f"{citation.confidence:.0%} — {citation.status.value}")
+                  f"{citation.confidence:.0%} -- {citation.status.value}")
             if citation.evidence_summary:
                 print(f"  {citation.evidence_summary[:120]}")
 
@@ -1087,6 +1260,14 @@ def main() -> None:
 
     cmd = args[0]
     rest = args[1:]
+
+    if cmd == "override":
+        _cmd_override(args)
+        return
+
+    if cmd == "honeypot":
+        _cmd_honeypot(args)
+        return
 
     if cmd == "research":
         _cmd_research(args)

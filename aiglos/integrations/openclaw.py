@@ -4,7 +4,7 @@ aiglos_openclaw
 Runtime security middleware for OpenClaw agents.
 
 Wraps any OpenClaw MCP tool call pipeline with Aiglos T01–T39 threat detection,
-signed attestation, and policy enforcement — in a single import.
+signed attestation, and policy enforcement -- in a single import.
 
 INSTALLATION
 ------------
@@ -89,6 +89,7 @@ Full T01–T39 library: https://github.com/aiglos/aiglos-cves
 """
 
 
+
 import hashlib
 import json
 import logging
@@ -141,7 +142,7 @@ _OPENCLAW_RULES: list[dict] = [
             )
         ),
     },
-    # T36: Memory poisoning — writes to agent memory index with injection payloads
+    # T36: Memory poisoning -- writes to agent memory index with injection payloads
     {
         "id": "T36",
         "name": "MEMORY_POISON",
@@ -158,43 +159,6 @@ _OPENCLAW_RULES: list[dict] = [
                     "disable monitoring", "bypass security", "forget everything",
                     "disregard your", "new instructions", "dan",
                 )
-            )
-        ),
-    },
-    # T37: Financial API misuse — high-value transactions or payment API calls
-    {
-        "id": "T37",
-        "name": "FIN_EXEC",
-        "desc": "Unauthorized financial operation via payment API",
-        "score": 0.88,
-        "critical": True,
-        "match": lambda name, args: (
-            name in ("http.post", "http.put", "api.call", "http.request")
-        ) and any(
-            kw in str(args).lower()
-            for kw in (
-                "stripe.com", "paypal.com", "charges", "transfer",
-                "payment", "invoice", "checkout", "billing",
-                "plaid.com", "square.com/v2",
-            )
-        ),
-    },
-    # T31: Memory poisoning via store_memory or agent memory APIs
-    {
-        "id": "T31",
-        "name": "MEMORY_POISON",
-        "desc": "Injection payload written to agent memory store",
-        "score": 0.88,
-        "critical": True,
-        "match": lambda name, args: (
-            "memory" in name.lower() or "store" in name.lower()
-        ) and any(
-            kw in str(args).lower()
-            for kw in (
-                "pre-authorized", "override", "bypass",
-                "ignore previous", "forget all", "new instructions",
-                "disregard", "overrides all", "disable",
-                "always allow", "do not require",
             )
         ),
     },
@@ -273,7 +237,7 @@ _OPENCLAW_RULES: list[dict] = [
             for p in ("/etc/", "/usr/", "/bin/", "/sbin/", "/root/", "/var/spool/cron")
         ),
     },
-    # T13: SSRF — metadata endpoint or private range
+    # T13: SSRF -- metadata endpoint or private range
     {
         "id": "T13",
         "name": "SSRF",
@@ -331,7 +295,7 @@ _OPENCLAW_RULES: list[dict] = [
             for kw in ("cron/", "heartbeat.md", "schedule.yaml", "schedule.json", ".hermes/cron")
         ),
     },
-    # T30: Supply chain — force-install without scan
+    # T30: Supply chain -- force-install without scan
     {
         "id": "T30",
         "name": "SUPPLY_CHAIN",
@@ -352,6 +316,65 @@ _OPENCLAW_RULES: list[dict] = [
             name in ("postiz.schedule", "distribution.push", "api.call")
             and re.search(r"(all|every|fleet|broadcast)", str(args), re.IGNORECASE)
             is not None
+        ),
+    },
+    # T40: Shared context directory write with injection payload
+    {
+        "id": "T40",
+        "name": "SHARED_CONTEXT_POISON",
+        "desc": "Write to shared multi-agent context directory containing injection signals",
+        "score": 0.92,
+        "critical": True,
+        "match": lambda name, args: (
+            __import__("aiglos.integrations.context_guard",
+                       fromlist=["is_shared_context_write"])
+            .is_shared_context_write(name, args)
+        ),
+    },
+    # T41: Outbound secret leakage -- only fires on write/send/post operations
+    # Inbound reads (filesystem.read_file etc) are covered by T19/T22.
+    # T41 fires when args passed to a SEND/POST/WRITE operation contain
+    # actual API key values (not just path names).
+    {
+        "id": "T41",
+        "name": "OUTBOUND_SECRET_LEAK",
+        "desc": "Agent transmitting API keys or credentials in a send/post/write operation",
+        "score": 0.97,
+        "critical": True,
+        "match": lambda name, args: (
+            any(kw in name.lower() for kw in (
+                "send", "post", "publish", "transmit", "upload",
+                "notify", "message", "email", "webhook", "slack",
+                "discord", "telegram", "write", "append",
+            ))
+            and __import__("aiglos.integrations.outbound_guard",
+                           fromlist=["contains_secret"])
+               .contains_secret(str(args))
+        ),
+    },
+    # T42: Agent self-modifying instructions via autogrowth/feedback loop
+    {
+        "id": "T42",
+        "name": "INSTRUCTION_REWRITE_POISON",
+        "desc": "Agent writing to its own instruction/cron files via a feedback or scoring loop",
+        "score": 0.88,
+        "critical": True,
+        "match": lambda name, args: (
+            (
+                "write" in name.lower()
+                or "filesystem" in name.lower()
+                or "shell" in name.lower()
+            )
+            and any(
+                kw in str(args).lower()
+                for kw in (
+                    "instructions.md", "crons.json", "agent.yml",
+                    "agent.yaml", "cron.json", "tasks.json",
+                    "autogrowth", "self_improve", "feedback_loop",
+                    "modify_cron", "update_instructions",
+                    "rewrite_agent", "update_agent", "patch_instructions",
+                )
+            )
         ),
     },
 ]
@@ -596,11 +619,11 @@ class OpenClawGuard:
             logging.basicConfig(level=logging.DEBUG)
 
         logger.info(
-            "Aiglos OpenClaw guard initialized — agent=%s  policy=%s  session=%s",
+            "Aiglos OpenClaw guard initialized -- agent=%s  policy=%s  session=%s",
             agent_name, policy, self.session_id,
         )
         self._log_line(
-            f"[AIGLOS] Runtime guard active — {agent_name}  policy={policy}  "
+            f"[AIGLOS] Runtime guard active -- {agent_name}  policy={policy}  "
             f"session={self.session_id}"
         )
 
@@ -613,7 +636,7 @@ class OpenClawGuard:
         """
         self._heartbeat_n += 1
         logger.info(
-            "Aiglos heartbeat #%d — agent=%s  trust=%.2f",
+            "Aiglos heartbeat #%d -- agent=%s  trust=%.2f",
             self._heartbeat_n, self.agent_name, self._trust_score,
         )
         self._log_line(f"[HEARTBEAT] cycle={self._heartbeat_n}  trust={self._trust_score:.2f}")
@@ -647,7 +670,7 @@ class OpenClawGuard:
         )
         sid = session_id or self.session_id
 
-        # Memory tool interception (T31 semantic scoring)
+        # ByteRover memory tool interception (T31 semantic scoring)
         try:
             from aiglos.integrations.memory_guard import is_memory_tool, MemoryWriteGuard
             if is_memory_tool(tool_name):
@@ -686,6 +709,37 @@ class OpenClawGuard:
             logger.debug("[OpenClawGuard] Memory guard check skipped: %s", _br_err)
 
         # Run all rules
+        # T43: Honeypot detection -- fires before rule matching (no threshold, CRITICAL)
+        if hasattr(self, "_honeypot_mgr"):
+            try:
+                hp_result = self._honeypot_mgr.check_tool_call(tool_name, args_dict)
+                if hp_result.triggered:
+                    result = GuardResult(
+                        verdict      = Verdict.BLOCK,
+                        tool_name    = tool_name,
+                        tool_args    = args_dict,
+                        threat_class = "T43",
+                        threat_name  = "HONEYPOT_ACCESS",
+                        reason       = (
+                            f"CRITICAL: Honeypot file accessed -- "
+                            f"'{hp_result.honeypot_name}' -- "
+                            f"credential harvesting intent confirmed"
+                        ),
+                        score        = 1.0,
+                        session_id   = sid,
+                    )
+                    self._results.append(result)
+                    self._log_line(result.to_log_line())
+                    logger.critical(
+                        "[OpenClawGuard] T43 HONEYPOT_ACCESS CRITICAL "
+                        "agent=%s file=%s tool=%s session=%s",
+                        self.agent_name, hp_result.honeypot_name,
+                        tool_name, sid,
+                    )
+                    return result
+            except Exception as _hp_e:
+                logger.debug("[OpenClawGuard] T43 honeypot check error: %s", _hp_e)
+
         matched_rule: dict | None = None
         max_score = 0.0
 
@@ -784,7 +838,7 @@ class OpenClawGuard:
         Scan the output of a tool call for embedded injection payloads.
 
         Call this immediately after a tool call returns and before the
-        agent processes the result. Catches indirect prompt injection —
+        agent processes the result. Catches indirect prompt injection --
         adversarial instructions embedded in retrieved documents, API
         responses, search results, and memory reads.
 
@@ -812,7 +866,7 @@ class OpenClawGuard:
         )
         if result.injected:
             logger.warning(
-                "INBOUND INJECTION %s — tool=%s risk=%s score=%.2f agent=%s",
+                "INBOUND INJECTION %s -- tool=%s risk=%s score=%.2f agent=%s",
                 result.verdict, tool_name, result.risk, result.score, self.agent_name,
             )
         return result
@@ -854,11 +908,167 @@ class OpenClawGuard:
             self._baseline_engine = _engine
             self._baseline_graph  = _graph
             logger.debug(
-                "[OpenClawGuard] Behavioral baseline enabled — agent=%s ready=%s",
+                "[OpenClawGuard] Behavioral baseline enabled -- agent=%s ready=%s",
                 self.agent_name, _engine.is_ready,
             )
         except Exception as e:
             logger.debug("[OpenClawGuard] Behavioral baseline init error: %s", e)
+
+    def enable_honeypot(
+        self,
+        custom_names=None,
+        honeypot_dir=None,
+    ) -> None:
+        """
+        Deploy honeypot files and enable T43 HONEYPOT_ACCESS detection.
+
+        Any agent read of a honeypot file triggers immediate CRITICAL
+        lockdown with no scoring threshold -- the read itself is the
+        evidence of credential harvesting intent.
+
+        Custom names can be added for app-specific targets like
+        'myapp_prod_keys.json' or '.stripe_webhook_secret'.
+        """
+        try:
+            from aiglos.integrations.honeypot import HoneypotManager
+            from pathlib import Path
+            mgr = HoneypotManager(
+                honeypot_dir = Path(honeypot_dir) if honeypot_dir else None,
+                session_id   = getattr(self, "_session_id", ""),
+                agent_name   = self.agent_name,
+            )
+            mgr.deploy(custom_names=custom_names)
+            self._honeypot_mgr = mgr
+            logger.info(
+                "[OpenClawGuard] Honeypot enabled: %d files deployed -- agent=%s",
+                len(mgr.active_honeypots()), self.agent_name,
+            )
+        except Exception as e:
+            logger.debug("[OpenClawGuard] Honeypot enable error: %s", e)
+
+    def request_override(
+        self,
+        rule_id:   str,
+        tool_name: str = "",
+        args:      dict = None,
+        reason:    str = "",
+    ):
+        """
+        Issue a challenge-response override for a blocked Tier 3 action.
+
+        Returns an OverrideChallenge with a 6-character code the human
+        must provide within 120 seconds to authorize the action.
+
+        The override and its resolution are stored in the observation
+        graph as a compliance artifact.
+
+        Example:
+            challenge = guard.request_override(
+                rule_id="T37",
+                tool_name="http.post",
+                args={"url": "https://api.stripe.com/v1/charges"},
+                reason="Authorizing contract renewal payment",
+            )
+            print(challenge.terminal_prompt())
+            # Human types: guard.confirm_override(challenge.challenge_id, "A7X2K9")
+        """
+        try:
+            from aiglos.integrations.override import OverrideManager
+            if not hasattr(self, "_override_mgr"):
+                from aiglos.adaptive.observation import ObservationGraph
+                graph = ObservationGraph()
+                self._override_mgr = OverrideManager(
+                    graph=graph,
+                    agent_name=self.agent_name,
+                )
+            challenge = self._override_mgr.request_override(
+                rule_id    = rule_id,
+                tool_name  = tool_name,
+                tool_args  = args or {},
+                session_id = getattr(self, "_session_id", ""),
+                reason     = reason,
+            )
+            print(challenge.terminal_prompt())
+            return challenge
+        except Exception as e:
+            logger.debug("[OpenClawGuard] request_override error: %s", e)
+            return None
+
+    def confirm_override(self, challenge_id: str, code: str):
+        """
+        Validate a human-provided override code.
+        Returns OverrideResult(approved=True/False).
+        """
+        try:
+            if not hasattr(self, "_override_mgr"):
+                from aiglos.integrations.override import OverrideManager
+                self._override_mgr = OverrideManager(agent_name=self.agent_name)
+            return self._override_mgr.confirm_override(challenge_id, code)
+        except Exception as e:
+            logger.debug("[OpenClawGuard] confirm_override error: %s", e)
+            return None
+
+    def before_send(
+        self,
+        tool_name:   str,
+        content:     str,
+    ):
+        """
+        Scan outbound content for secret leakage before transmission.
+
+        Call this before any content leaves the agent:
+          - Before sending a response to the user
+          - Before posting to an external webhook or API
+          - Before writing to any external log
+
+        Returns an OutboundScanResult. If result.blocked is True,
+        suppress the transmission and log the incident.
+
+        Example:
+            result = guard.before_send("http.post", response_text)
+            if result.blocked:
+                return "[Response suppressed: security policy]"
+        """
+        try:
+            from aiglos.integrations.outbound_guard import OutboundGuard
+            og = OutboundGuard(
+                session_id = self._active_session_id or "",
+                mode       = "block" if self.policy in (
+                    "block", "enterprise", "strict", "federal"
+                ) else "warn",
+            )
+            result = og.before_send(tool_name, content)
+            verdict_str = getattr(result, "verdict", "ALLOW")
+            if verdict_str == "BLOCK":
+                logger.warning(
+                    "[OpenClawGuard] T41 OUTBOUND_SECRET_LEAK BLOCK "
+                    "reason=%s",
+                    getattr(result, "reason", ""),
+                )
+            elif verdict_str == "WARN":
+                logger.warning(
+                    "[OpenClawGuard] T41 OUTBOUND_SECRET_LEAK WARN "
+                    "reason=%s",
+                    getattr(result, "reason", ""),
+                )
+            v = (Verdict.BLOCK if verdict_str == "BLOCK"
+                 else Verdict.WARN if verdict_str == "WARN"
+                 else Verdict.ALLOW)
+            result.verdict = v
+            result.threat_class = "T41" if verdict_str in ("BLOCK", "WARN") else ""
+            result.tier = "3" if verdict_str == "BLOCK" else "2" if verdict_str == "WARN" else "1"
+            return result
+        except Exception as e:
+            logger.debug("[OpenClawGuard] before_send error: %s", e)
+            return None
+
+    @property
+    def _active_session_id(self):
+        """Return the current session ID if a session is open."""
+        try:
+            return self._session_id
+        except AttributeError:
+            return ""
 
     def enable_federation(
         self,
@@ -897,12 +1107,12 @@ class OpenClawGuard:
                 if warmed:
                     logger.info(
                         "[OpenClawGuard] Intent predictor warm-started from "
-                        "global prior v%s — agent=%s",
+                        "global prior v%s -- agent=%s",
                         prior.prior_version, self.agent_name,
                     )
 
             logger.debug(
-                "[OpenClawGuard] Federation enabled — agent=%s key=%s endpoint=%s",
+                "[OpenClawGuard] Federation enabled -- agent=%s key=%s endpoint=%s",
                 self.agent_name,
                 "set" if client.has_key else "none",
                 client._endpoint,
@@ -930,7 +1140,7 @@ class OpenClawGuard:
             _engine.expire_stale_proposals()
             self._proposal_engine = _engine
             logger.debug(
-                "[OpenClawGuard] Policy proposals enabled — agent=%s",
+                "[OpenClawGuard] Policy proposals enabled -- agent=%s",
                 self.agent_name,
             )
         except Exception as e:
@@ -999,7 +1209,7 @@ class OpenClawGuard:
             self._child_guards: list["OpenClawGuard"] = []
         self._child_guards.append(child)
         logger.info(
-            "Sub-agent guard spawned — parent=%s  child=%s",
+            "Sub-agent guard spawned -- parent=%s  child=%s",
             self.agent_name, sub_agent_name,
         )
         return child
@@ -1091,13 +1301,49 @@ class OpenClawGuard:
                 )
                 if pushed:
                     logger.debug(
-                        "[OpenClawGuard] Federation contribution submitted — agent=%s",
+                        "[OpenClawGuard] Federation contribution submitted -- agent=%s",
                         self.agent_name,
                     )
             except Exception as e:
                 logger.debug("[OpenClawGuard] Federation push error: %s", e)
 
-        # Behavioral baseline scoring — scored at session close
+        # T40: Shared context directory write check
+        try:
+            from aiglos.integrations.context_guard import ContextDirectoryGuard
+            ctx_guard = ContextDirectoryGuard(
+                session_id = sid,
+                agent_name = self.agent_name,
+                mode       = self.policy if self.policy in ("block", "warn", "audit") else "block",
+            )
+            ctx_result = ctx_guard.before_tool_call(tool_name, args_dict)
+            if ctx_result and ctx_result.blocked:
+                result = GuardResult(
+                    verdict    = Verdict.BLOCK,
+                    tool_name  = tool_name,
+                    tool_args  = args_dict,
+                    threat_class = "T40",
+                    threat_name  = "SHARED_CONTEXT_POISON",
+                    reason     = (
+                        f"Shared context directory write blocked: "
+                        f"score={ctx_result.score:.2f} "
+                        f"signals={ctx_result.signals_found[:2]}"
+                    ),
+                    score      = ctx_result.score,
+                    session_id = sid,
+                )
+                self._results.append(result)
+                return result
+            elif ctx_result and ctx_result.warned:
+                logger.warning(
+                    "[OpenClawGuard] T40 SHARED_CONTEXT_POISON WARN "
+                    "path=%s score=%.2f signals=%s",
+                    ctx_result.path, ctx_result.score,
+                    ctx_result.signals_found[:2],
+                )
+        except Exception as _ctx_e:
+            logger.debug("[OpenClawGuard] T40 context guard error: %s", _ctx_e)
+
+        # Behavioral baseline scoring -- scored at session close
         if hasattr(self, "_baseline_engine"):
             try:
                 from aiglos.core.behavioral_baseline import SessionStats
@@ -1131,7 +1377,7 @@ class OpenClawGuard:
 
                 if bl_score.risk in ("MEDIUM", "HIGH"):
                     logger.warning(
-                        "[OpenClawGuard] BEHAVIORAL ANOMALY %s — agent=%s "
+                        "[OpenClawGuard] BEHAVIORAL ANOMALY %s -- agent=%s "
                         "composite=%.2f features=%s",
                         bl_score.risk, self.agent_name,
                         bl_score.composite, bl_score.anomalous_features,
@@ -1237,7 +1483,7 @@ def close() -> SessionArtifact | None:
 
 def _run_demo() -> None:
     """Callable demo for use in tests and python -m aiglos demo."""
-    print(f"\naiglos-openclaw v{__version__} — OpenClaw runtime security middleware\n")
+    print(f"\naiglos-openclaw v{__version__} -- OpenClaw runtime security middleware\n")
     print("Running demo scan against synthetic OpenClaw tool call sequence...\n")
 
     guard = OpenClawGuard(
@@ -1280,7 +1526,7 @@ def _run_demo() -> None:
 if __name__ == "__main__":
     import sys
 
-    print(f"aiglos-openclaw v{__version__} — OpenClaw runtime security middleware")
+    print(f"aiglos-openclaw v{__version__} -- OpenClaw runtime security middleware")
     print()
 
     if len(sys.argv) > 1 and sys.argv[1] == "demo":

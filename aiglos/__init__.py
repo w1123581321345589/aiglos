@@ -1,9 +1,9 @@
 """
-Aiglos — AI Agent Security Runtime
+Aiglos -- AI Agent Security Runtime
 ===================================
 Protocol-agnostic runtime security for AI agents. Intercepts every agent
-action before execution — MCP tool calls, direct HTTP/API calls, CLI
-execution, subprocess spawning — and applies T01–T39 threat detection.
+action before execution -- MCP tool calls, direct HTTP/API calls, CLI
+execution, subprocess spawning -- and applies T01–T39 threat detection.
 
 Signed session artifacts cover all three execution surfaces in a single
 compliance document. compliance artifact ready.
@@ -34,6 +34,7 @@ Framework integrations:
 """
 
 
+
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -48,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.14.0"  # canonical version for this release
+    __version__ = "0.16.0"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -96,6 +97,43 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     inspect_memory_write,
     is_memory_tool,
 )
+from aiglos.integrations.honeypot import (  # noqa: F401
+    HoneypotManager,
+    HoneypotResult,
+)
+from aiglos.integrations.override import (  # noqa: F401
+    OverrideManager,
+    OverrideChallenge,
+    OverrideResult,
+)
+
+from aiglos.integrations.context_guard import (  # noqa: F401
+    ContextDirectoryGuard,
+    ContextWriteResult,
+)
+from aiglos.integrations.outbound_guard import (  # noqa: F401
+    OutboundGuard,
+    OutboundScanResult,
+)
+
+from aiglos.autoresearch.citation_verifier import (  # noqa: F401
+    CitationVerifier,
+    VerifiedCitation,
+    CitationStatus,
+)
+from aiglos.autoresearch.threat_literature import (  # noqa: F401
+    ThreatLiteratureSearch,
+    ThreatSignal,
+)
+from aiglos.autoresearch.verified_rule_engine import (  # noqa: F401
+    VerifiedRuleEngine,
+    VerifiedRunResult,
+)
+from aiglos.autoresearch.compliance_report import (  # noqa: F401
+    ComplianceReportGenerator,
+    ComplianceReport,
+)
+
 from aiglos.core.federation import (   # noqa: F401
     FederationClient,
     GlobalPrior,
@@ -152,24 +190,6 @@ from aiglos.integrations.rl_guard import (  # noqa: F401
 from aiglos.autoresearch.coupling import (  # noqa: F401
     SecurityAwareReward,
     CoupledRewardResult,
-)
-
-from aiglos.autoresearch.citation_verifier import (  # noqa: F401
-    CitationVerifier,
-    VerifiedCitation,
-    CitationStatus,
-)
-from aiglos.autoresearch.threat_literature import (  # noqa: F401
-    ThreatLiteratureSearch,
-    ThreatSignal,
-)
-from aiglos.autoresearch.verified_rule_engine import (  # noqa: F401
-    VerifiedRuleEngine,
-    VerifiedRunResult,
-)
-from aiglos.autoresearch.compliance_report import (  # noqa: F401
-    ComplianceReportGenerator,
-    ComplianceReport,
 )
 
 
@@ -302,7 +322,7 @@ def attach(
             log.warning("[Aiglos] Adaptive engine failed to init: %s", e)
 
     log.info(
-        "[Aiglos v%s] Attached — agent=%s policy=%s mcp=on http=%s subprocess=%s "
+        "[Aiglos v%s] Attached -- agent=%s policy=%s mcp=on http=%s subprocess=%s "
         "multi_agent=%s agent_def_guard=%s adaptive=%s",
         __version__, agent_name, policy,
         "on" if _http_intercept_active else "off",
@@ -654,6 +674,17 @@ __all__ = [
     "FederationClient",
     "GlobalPrior",
     "extract_shareable_transitions",
+    # v0.16.0
+    "HoneypotManager",
+    "HoneypotResult",
+    "OverrideManager",
+    "OverrideChallenge",
+    "OverrideResult",
+    # v0.15.0
+    "ContextDirectoryGuard",
+    "ContextWriteResult",
+    "OutboundGuard",
+    "OutboundScanResult",
     # v0.14.0
     "CitationVerifier",
     "VerifiedCitation",

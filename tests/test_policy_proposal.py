@@ -708,7 +708,7 @@ class TestRepeatedTier3Trigger:
 class TestV0120ModuleAPI:
 
     def test_version_is_0120(self):
-        assert aiglos.__version__ == "0.14.0"
+        assert aiglos.__version__ == "0.16.0"
 
     def test_policy_proposal_engine_in_all(self):
         assert "PolicyProposalEngine" in aiglos.__all__

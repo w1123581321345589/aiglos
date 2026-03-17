@@ -1,7 +1,7 @@
 """
 aiglos.adaptive.observation
 ============================
-Phase 1: Observation graph — SQLite-backed storage of session artifacts,
+Phase 1: Observation graph -- SQLite-backed storage of session artifacts,
 rule firing history, and agent definition snapshots.
 
 Everything the adaptive layer needs as input is already in the v0.3.0 session
@@ -9,12 +9,12 @@ artifact. This module structures that output into a queryable graph keyed by
 rule, agent, command pattern, and outcome.
 
 Schema:
-  rules         — one row per rule family (T01-T38)
-  sessions      — one row per session
-  events        — one row per inspected action (MCP, HTTP, subprocess)
-  agentdef_obs  — one row per agent definition observation
-  spawn_events  — one row per T38 spawn
-  amendments    — one row per proposed/applied rule amendment (Phase 4)
+  rules         -- one row per rule family (T01-T38)
+  sessions      -- one row per session
+  events        -- one row per inspected action (MCP, HTTP, subprocess)
+  agentdef_obs  -- one row per agent definition observation
+  spawn_events  -- one row per T38 spawn
+  amendments    -- one row per proposed/applied rule amendment (Phase 4)
 
 Usage:
     from aiglos.adaptive.observation import ObservationGraph
@@ -26,6 +26,7 @@ Usage:
     # { "fires": 12, "blocks": 9, "warns": 2, "allows": 1,
     #   "override_rate": 0.08, "trend": "STABLE" }
 """
+
 
 
 import hashlib
@@ -139,6 +140,36 @@ CREATE TABLE IF NOT EXISTS causal_chains (
     chains_json        TEXT NOT NULL DEFAULT '[]',
     timestamp          REAL NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS honeypot_hits (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    honeypot_name   TEXT NOT NULL DEFAULT '',
+    honeypot_path   TEXT NOT NULL DEFAULT '',
+    tool_name       TEXT NOT NULL DEFAULT '',
+    agent_name      TEXT NOT NULL DEFAULT '',
+    session_id      TEXT NOT NULL DEFAULT '',
+    detection_mode  TEXT NOT NULL DEFAULT 'TOOL_CALL',
+    timestamp       REAL NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_honeypot_agent ON honeypot_hits(agent_name);
+CREATE INDEX IF NOT EXISTS idx_honeypot_ts    ON honeypot_hits(timestamp);
+
+CREATE TABLE IF NOT EXISTS override_challenges (
+    challenge_id   TEXT PRIMARY KEY,
+    rule_id        TEXT NOT NULL DEFAULT '',
+    tool_name      TEXT NOT NULL DEFAULT '',
+    reason         TEXT NOT NULL DEFAULT '',
+    agent_name     TEXT NOT NULL DEFAULT '',
+    session_id     TEXT NOT NULL DEFAULT '',
+    issued_at      REAL NOT NULL DEFAULT 0,
+    expires_at     REAL NOT NULL DEFAULT 0,
+    resolved       INTEGER NOT NULL DEFAULT 0,
+    approved       INTEGER NOT NULL DEFAULT 0,
+    resolved_at    REAL,
+    attempts       INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_override_agent   ON override_challenges(agent_name);
+CREATE INDEX IF NOT EXISTS idx_override_session ON override_challenges(session_id);
 
 CREATE TABLE IF NOT EXISTS rule_citations (
     rule_id         TEXT PRIMARY KEY,
@@ -624,7 +655,7 @@ class ObservationGraph:
 
     def ingest_causal_result(self, attribution_result, session_id: str) -> None:
         """Ingest a CausalTracer AttributionResult into the observation graph.
-        Thread-safe — write lock acquired for the INSERT.
+        Thread-safe -- write lock acquired for the INSERT.
         """
         if hasattr(attribution_result, "to_dict"):
             d = attribution_result.to_dict()
@@ -691,6 +722,92 @@ class ObservationGraph:
         except Exception:
             d["chains"] = []
         return d
+
+    # ── Honeypot and override support ────────────────────────────────────────────
+
+    def record_honeypot_hit(self, result) -> None:
+        """Persist a honeypot access event."""
+        d = result.to_dict() if hasattr(result, "to_dict") else result
+        with self._write_lock, self._conn() as conn:
+            conn.execute("""
+                INSERT INTO honeypot_hits
+                    (honeypot_name, honeypot_path, tool_name, agent_name,
+                     session_id, detection_mode, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                d.get("honeypot_name", ""),
+                d.get("honeypot_path", ""),
+                d.get("tool_name", ""),
+                d.get("agent_name", ""),
+                d.get("session_id", ""),
+                d.get("detection_mode", "TOOL_CALL"),
+                d.get("timestamp", time.time()),
+            ))
+
+    def get_honeypot_hits(self, agent_name: str = None, limit: int = 50) -> list:
+        """Retrieve honeypot hit records."""
+        with self._conn() as conn:
+            if agent_name:
+                rows = conn.execute("""
+                    SELECT * FROM honeypot_hits WHERE agent_name=?
+                    ORDER BY timestamp DESC LIMIT ?
+                """, (agent_name, limit)).fetchall()
+            else:
+                rows = conn.execute("""
+                    SELECT * FROM honeypot_hits
+                    ORDER BY timestamp DESC LIMIT ?
+                """, (limit,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def upsert_override_challenge(self, challenge) -> None:
+        """Persist or update an OverrideChallenge."""
+        d = challenge.to_dict() if hasattr(challenge, "to_dict") else challenge
+        with self._write_lock, self._conn() as conn:
+            conn.execute("""
+                INSERT INTO override_challenges
+                    (challenge_id, rule_id, tool_name, reason, agent_name,
+                     session_id, issued_at, expires_at, resolved, approved,
+                     resolved_at, attempts)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(challenge_id) DO UPDATE SET
+                    resolved   = excluded.resolved,
+                    approved   = excluded.approved,
+                    resolved_at = excluded.resolved_at,
+                    attempts   = excluded.attempts
+            """, (
+                d.get("challenge_id", ""),
+                d.get("rule_id", ""),
+                d.get("tool_name", ""),
+                d.get("reason", ""),
+                d.get("agent_name", ""),
+                d.get("session_id", ""),
+                d.get("issued_at", time.time()),
+                d.get("expires_at", time.time() + 120),
+                1 if d.get("resolved") else 0,
+                1 if d.get("approved") else 0,
+                d.get("resolved_at"),
+                d.get("attempts", 0),
+            ))
+
+    def list_override_challenges(
+        self,
+        agent_name: str = None,
+        pending_only: bool = False,
+        limit: int = 50,
+    ) -> list:
+        """List override challenges."""
+        with self._conn() as conn:
+            if pending_only:
+                q = "SELECT * FROM override_challenges WHERE resolved=0 ORDER BY issued_at DESC LIMIT ?"
+                args = (limit,)
+            elif agent_name:
+                q = "SELECT * FROM override_challenges WHERE agent_name=? ORDER BY issued_at DESC LIMIT ?"
+                args = (agent_name, limit)
+            else:
+                q = "SELECT * FROM override_challenges ORDER BY issued_at DESC LIMIT ?"
+                args = (limit,)
+            rows = conn.execute(q, args).fetchall()
+        return [dict(r) for r in rows]
 
     # ── Citation and threat signal support ──────────────────────────────────────
 
@@ -991,7 +1108,7 @@ class ObservationGraph:
 
         Reads individual event records for surface/rule breakdown.
         Falls back to sessions-table totals (total_events, blocked_events)
-        when the events table has no records for a session — this handles
+        when the events table has no records for a session -- this handles
         sessions ingested via the threats list rather than subproc/http events.
         """
         from aiglos.core.behavioral_baseline import SessionStats

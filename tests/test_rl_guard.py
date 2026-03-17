@@ -653,7 +653,7 @@ class TestRewardManipulationPattern:
 class TestV060ModuleAPI:
 
     def test_version_is_060(self):
-        assert aiglos.__version__ == "0.14.0"
+        assert aiglos.__version__ == "0.16.0"
 
     def test_exports_rl_guard_types(self):
         assert hasattr(aiglos, "RLFeedbackGuard")
