@@ -567,7 +567,7 @@ def _cmd_trace(args: List[str]) -> None:
             else dim(conf)
         )
 
-        step_num = action.get('step', '?')
+        step_num = action.get("step", "?")
         print(f"  {bold(f'Step {step_num:>3}')}  "
               f"{_severity_color(action.get('verdict','ALLOW')):<7}  "
               f"{action.get('tool_name','?')}  "
@@ -1040,6 +1040,148 @@ def _schedule_nightly_audit() -> None:
         print(f"  Cron scheduling error: {e}")
 
 
+def _cmd_baseline(args: list) -> None:
+    """aiglos baseline reset|history|status [--agent name] [--reason str]"""
+    from aiglos.adaptive.observation import ObservationGraph
+    import time as _time
+
+    graph  = ObservationGraph()
+    subcmd = args[0] if args else "status"
+    rest   = args[1:]
+
+    agent = None
+    reason = ""
+    for i, t in enumerate(rest):
+        if t == "--agent" and i + 1 < len(rest):
+            agent = rest[i + 1]
+        if t == "--reason" and i + 1 < len(rest):
+            reason = rest[i + 1]
+
+    if subcmd == "reset":
+        if not agent:
+            print("  Usage: aiglos baseline reset --agent <name> [--reason <str>]")
+            return
+        sessions_before = graph.get_agent_session_count_since(agent, 0)
+        suppress_until  = sessions_before + 20
+        graph.record_baseline_event(
+            agent_name               = agent,
+            event_type               = "reset",
+            reason                   = reason or "manual reset",
+            sessions_before          = sessions_before,
+            suppressed_until_session = suppress_until,
+        )
+        print("")
+        print(f"  Baseline reset -- agent: {cyan(agent)}")
+        print(f"  Sessions before reset:  {sessions_before}")
+        print(f"  Anomaly suppression:    next 20 sessions (until #{suppress_until})")
+        print(f"  Reason:                 {reason or 'manual reset'}")
+        print("")
+        print("  Note: Agents may feel dumber after hardening. That is normal.")
+        print("  The baseline rebuilds against the new permission profile.")
+        print("")
+
+    elif subcmd == "history":
+        if not agent:
+            print("  Usage: aiglos baseline history --agent <name>")
+            return
+        events = graph.get_baseline_events(agent)
+        if not events:
+            print(f"  No baseline events for agent: {agent}")
+            return
+        print("")
+        print(f"  Baseline History -- {bold(agent)}")
+        print(f"  {'─' * 56}")
+        import datetime as _dt
+        for e in events:
+            dt = _dt.datetime.fromtimestamp(e['occurred_at']).strftime("%Y-%m-%d %H:%M")
+            print(f"  {dt}  {e['event_type']:<10}  {e['reason']}")
+        print("")
+
+    elif subcmd == "status":
+        if not agent:
+            print("  Usage: aiglos baseline status --agent <name>")
+            return
+        latest = graph.get_latest_baseline_reset(agent)
+        if not latest:
+            print(f"  Agent {cyan(agent)}: baseline active, no reset events.")
+            return
+        current       = graph.get_agent_session_count_since(agent, 0)
+        suppress_until = latest.get("suppressed_until_session", 0)
+        if current < suppress_until:
+            remaining = suppress_until - current
+            print("")
+            print(f"  Agent {cyan(agent)}: hardening mode active")
+            print(f"  BEHAVIORAL_ANOMALY suppressed for {remaining} more session(s)")
+            print(f"  Reset reason: {latest.get('reason', '')}")
+            print("")
+        else:
+            print(f"  Agent {cyan(agent)}: baseline active, no suppression in effect.")
+
+    else:
+        print(f"  Unknown baseline subcommand: {subcmd}. Use reset|history|status.")
+
+
+def _cmd_benchmark(args: list) -> None:
+    """
+    aiglos benchmark <subcommand>
+
+    run  [--dimension D1|D2|D3|D4|D5] [--format summary|json] [--agent name]
+         Run GOVBENCH -- the governance benchmark for AI agents.
+         Measures what SWE-CI didn't: campaign detection, agent definition
+         file resistance, memory belief layer, RL feedback exploitation,
+         multi-agent cascading failure.
+    """
+    from aiglos.benchmark.govbench import GovBench
+    from aiglos.integrations.openclaw import OpenClawGuard
+    import tempfile, os
+
+    subcmd = args[0] if args else "run"
+    rest   = args[1:]
+
+    if subcmd != "run":
+        print(f"Unknown benchmark subcommand: {subcmd}. Use 'run'.")
+        return
+
+    dimension  = None
+    fmt        = "summary"
+    agent_name = "govbench-agent"
+
+    i = 0
+    while i < len(rest):
+        if rest[i] == "--dimension" and i + 1 < len(rest):
+            dimension = [rest[i + 1].upper()]; i += 2
+        elif rest[i] == "--format" and i + 1 < len(rest):
+            fmt = rest[i + 1]; i += 2
+        elif rest[i] == "--agent" and i + 1 < len(rest):
+            agent_name = rest[i + 1]; i += 2
+        else:
+            i += 1
+
+    dim_str = f" [dimension={dimension[0]}]" if dimension else " [all dimensions]"
+    print("")
+    print(f"  {cyan('GOVBENCH')} running{dim_str}...")
+
+    with tempfile.NamedTemporaryFile(suffix=".log", delete=False) as tf:
+        log_path = tf.name
+
+    try:
+        guard = OpenClawGuard(
+            agent_name  = agent_name,
+            policy      = "enterprise",
+            log_path    = log_path,
+        )
+        bench  = GovBench(guard=guard)
+        result = bench.run(dimensions=dimension)
+    finally:
+        try: os.unlink(log_path)
+        except: pass
+
+    if fmt == "json":
+        print(result.to_json())
+    else:
+        print(result.summary())
+
+
 def _cmd_skill_reputation(args: list) -> None:
     """
     aiglos skill <subcommand> [args]
@@ -1458,7 +1600,7 @@ def _cmd_research(args: list) -> None:
                 print(f"  {citation.evidence_summary[:120]}")
 
         elif all_rules:
-            all_rule_ids = [f"T{i:02d}" for i in range(1, 40)] + ["T36_AGENTDEF"]
+            all_rule_ids = [f"T{i:02d}" for i in range(1, 67)] + ["T36_AGENTDEF"]
             print(f"\n  Verifying {len(all_rule_ids)} rules against NVD, OWASP, MITRE ATLAS...")
             print(f"  (This takes ~30s due to NVD rate limits)")
             engine = VerifiedRuleEngine(graph=graph)
@@ -1560,6 +1702,14 @@ def main() -> None:
 
     if cmd == "skill":
         _cmd_skill_reputation(args)
+        return
+
+    if cmd == "baseline":
+        _cmd_baseline(args)
+        return
+
+    if cmd == "benchmark":
+        _cmd_benchmark(args)
         return
 
     if cmd == "reputation":
