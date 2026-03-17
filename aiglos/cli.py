@@ -779,6 +779,9 @@ def cmd_help() -> None:
 
 {bold('OTHER')}
   {cyan('demo')} [hermes]             Run the OpenClaw or hermes demo
+  {cyan('audit')}      [--deep] [--format summary|full|json|briefing] [--schedule nightly]
+                                   Security posture audit -- host, skills, runtime, network
+  {cyan('skill')}      scan|import|blocked        Skill reputation -- ClawKeeper badge ingestion
   {cyan('reputation')} top|show|clear           Source reputation -- URL and document threat history
   {cyan('override')} list|confirm|reject       Challenge-response Tier 3 override management
   {cyan('honeypot')} status|list|deploy         Honeypot file management and hit log
@@ -940,6 +943,197 @@ def _cmd_policy(args: list) -> None:
     else:
         print(f"Unknown policy subcommand: {subcmd}")
         print("Usage: aiglos policy list|show|approve|reject|stats")
+
+
+def _cmd_audit(args: list) -> None:
+    """
+    aiglos audit [--deep] [--format summary|full|json|briefing|clawkeeper]
+                 [--schedule nightly] [--clawkeeper path/to/audit.json]
+                 [--save]
+
+    Security posture audit for AI agent deployments.
+
+    --deep       Runs additional phases: injection scan, reputation check,
+                 citation coverage analysis
+    --format     Output format (default: summary)
+    --schedule   Set up a nightly cron job to run the audit automatically
+    --clawkeeper Merge with a ClawKeeper host audit JSON file
+    --save       Save the report to ~/.aiglos/reports/
+    """
+    from aiglos.audit.scanner import AuditScanner
+    from aiglos.audit.report  import AuditReporter
+
+    deep             = "--deep" in args
+    fmt              = "summary"
+    schedule         = False
+    clawkeeper_path  = None
+    save             = "--save" in args
+
+    i = 0
+    while i < len(args):
+        if args[i] == "--format" and i + 1 < len(args):
+            fmt = args[i + 1]; i += 2
+        elif args[i] == "--schedule" and i + 1 < len(args):
+            schedule = args[i + 1] == "nightly"; i += 2
+        elif args[i] == "--clawkeeper" and i + 1 < len(args):
+            clawkeeper_path = args[i + 1]; i += 2
+        else:
+            i += 1
+
+    if schedule:
+        _schedule_nightly_audit()
+        return
+
+    print(f"\n  {cyan('Aiglos Security Audit')} {'[deep]' if deep else ''}  running...")
+    scanner = AuditScanner(deep=deep)
+    result  = scanner.run()
+    reporter = AuditReporter(result)
+
+    if fmt == "full":
+        print(reporter.full())
+    elif fmt == "json":
+        print(reporter.to_json())
+    elif fmt == "briefing":
+        print(reporter.briefing())
+    elif fmt == "clawkeeper":
+        ck_data = None
+        if clawkeeper_path:
+            import json as _json
+            try:
+                with open(clawkeeper_path) as f:
+                    ck_data = _json.load(f)
+            except Exception as e:
+                print(f"  Could not load ClawKeeper audit: {e}")
+        print(reporter.to_clawkeeper_json(ck_data))
+    else:
+        print(reporter.summary())
+
+    if save:
+        path = reporter.save()
+        print(f"  Report saved: {cyan(str(path))}")
+
+
+def _schedule_nightly_audit() -> None:
+    """Write a nightly cron job for the audit."""
+    import subprocess
+    try:
+        cron_line = "0 6 * * * aiglos audit --deep --format briefing --save >> ~/.aiglos/audit.log 2>&1"
+        result = subprocess.run(
+            ["crontab", "-l"], capture_output=True, text=True
+        )
+        existing = result.stdout
+        if "aiglos audit" in existing:
+            print("  Nightly audit already scheduled.")
+            return
+        new_cron = existing.rstrip() + "\n" + cron_line + "\n"
+        proc = subprocess.run(
+            ["crontab", "-"], input=new_cron, text=True, capture_output=True
+        )
+        if proc.returncode == 0:
+            print(f"  Nightly audit scheduled at 6:00 AM.")
+            print(f"  Output: ~/.aiglos/audit.log")
+            print(f"  To view: cat ~/.aiglos/audit.log")
+            print(f"  {bold('Important:')} Do not set --auto-fix. Review each finding manually.")
+        else:
+            print(f"  Failed to schedule cron: {proc.stderr[:100]}")
+    except Exception as e:
+        print(f"  Cron scheduling error: {e}")
+
+
+def _cmd_skill_reputation(args: list) -> None:
+    """
+    aiglos skill <subcommand> [args]
+
+    Subcommands:
+      scan <skill-name>
+           Scan a single skill against ClawKeeper badge data and Aiglos rules.
+
+      import [--clawkeeper path/to/audit.json] [--feed]
+           Ingest ClawKeeper badge data into source reputation graph.
+           --clawkeeper: import from local ClawKeeper audit JSON
+           --feed: poll live ClawKeeper security feed
+
+      blocked
+           List all skills with BLOCKED reputation.
+
+      suspicious
+           List all skills with SUSPICIOUS reputation.
+    """
+    from aiglos.adaptive.skill_reputation import SkillReputationGraph
+    from aiglos.adaptive.observation import ObservationGraph
+
+    graph = ObservationGraph()
+    srg   = SkillReputationGraph(graph=graph)
+    subcmd = args[0] if args else "blocked"
+    rest   = args[1:]
+
+    if subcmd == "scan":
+        if not rest:
+            print("Usage: aiglos skill scan <skill-name>")
+            return
+        skill = rest[0]
+        risk  = srg.get_skill_risk(skill)
+        badge_colors = {"Blocked": "\033[91m", "Suspicious": "\033[33m", "Clean": "\033[92m"}
+        color = badge_colors.get(risk.badge, "")
+        reset = "\033[0m"
+        print(f"\n  Skill: {bold(skill)}")
+        print(f"  Badge: {color}{risk.badge}{reset}")
+        print(f"  Level: {risk.level}")
+        print(f"  Score: {risk.score:.2f}")
+        if risk.detail:
+            print(f"  {risk.detail}")
+        if risk.should_block:
+            print(f"  {cyan('→')} {bold('DO NOT INSTALL')} -- T30 SUPPLY_CHAIN will block at runtime.")
+        elif risk.should_warn:
+            print(f"  {cyan('→')} Install with caution. T30 SUPPLY_CHAIN will WARN at runtime.")
+
+    elif subcmd == "import":
+        count  = 0
+        source = ""
+        if "--feed" in rest:
+            print("  Polling ClawKeeper security feed...")
+            count  = srg.sync_security_feed()
+            source = "security feed"
+        else:
+            ck_path = None
+            for i, token in enumerate(rest):
+                if token == "--clawkeeper" and i + 1 < len(rest):
+                    ck_path = rest[i + 1]
+            if ck_path:
+                import json as _json
+                try:
+                    with open(ck_path) as f:
+                        data = _json.load(f)
+                    count  = srg.ingest_clawkeeper_audit(data)
+                    source = ck_path
+                except Exception as e:
+                    print(f"  Import error: {e}")
+                    return
+            else:
+                print("Usage: aiglos skill import [--clawkeeper path] [--feed]")
+                return
+        print(f"  Imported {count} skill reputation record(s) from {source}.")
+
+    elif subcmd in ("blocked", "list-blocked"):
+        blocked = srg.blocked_skills()
+        if not blocked:
+            print("  No blocked skills in reputation graph.")
+            print("  Run: aiglos skill import --feed")
+        else:
+            print(f"\n  {bold('Blocked Skills')} ({len(blocked)})")
+            for s in blocked[:20]:
+                print(f"  ⛔ {s}")
+
+    elif subcmd == "suspicious":
+        suspicious = srg.suspicious_skills()
+        if not suspicious:
+            print("  No suspicious skills in reputation graph.")
+        else:
+            print(f"\n  {bold('Suspicious Skills')} ({len(suspicious)})")
+            for s in suspicious[:20]:
+                print(f"  ⚠ {s}")
+    else:
+        print(f"Unknown skill subcommand: {subcmd}")
 
 
 def _cmd_reputation(args: list) -> None:
@@ -1359,6 +1553,14 @@ def main() -> None:
 
     cmd = args[0]
     rest = args[1:]
+
+    if cmd == "audit":
+        _cmd_audit(args)
+        return
+
+    if cmd == "skill":
+        _cmd_skill_reputation(args)
+        return
 
     if cmd == "reputation":
         _cmd_reputation(args)

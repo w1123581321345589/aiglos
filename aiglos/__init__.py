@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.17.0"  # canonical version for this release
+    __version__ = "0.18.0"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -97,6 +97,17 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     inspect_memory_write,
     is_memory_tool,
 )
+from aiglos.audit.scanner import AuditScanner, AuditResult, CheckResult  # noqa: F401
+from aiglos.audit.report  import AuditReporter  # noqa: F401
+from aiglos.adaptive.skill_reputation import (  # noqa: F401
+    SkillReputationGraph,
+    SkillRisk,
+)
+from aiglos.integrations.sandbox_policy import (  # noqa: F401
+    SandboxPolicy,
+    SandboxCheckResult,
+)
+
 from aiglos.adaptive.source_reputation import (  # noqa: F401
     SourceReputationGraph,
     SourceRecord,
@@ -723,6 +734,15 @@ __all__ = [
     "FederationClient",
     "GlobalPrior",
     "extract_shareable_transitions",
+    # v0.18.0
+    "AuditScanner",
+    "AuditResult",
+    "CheckResult",
+    "AuditReporter",
+    "SkillReputationGraph",
+    "SkillRisk",
+    "SandboxPolicy",
+    "SandboxCheckResult",
     # v0.17.0
     "SourceReputationGraph",
     "SourceRecord",
