@@ -20,13 +20,13 @@ with every deployment in the network.
 [![MIT](https://img.shields.io/badge/license-MIT-000?style=flat-square&labelColor=000)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-000?style=flat-square&labelColor=000)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-000?style=flat-square&labelColor=000)](sdk/typescript/)
-[![882 tests](https://img.shields.io/badge/tests-882_passing-000?style=flat-square&labelColor=000)](tests/)
+[![954 tests](https://img.shields.io/badge/tests-954_passing-000?style=flat-square&labelColor=000)](tests/)
 
 | | | | | | |
 |---|---|---|---|---|---|
-| **39** threat families | **3** execution surfaces | **13** inspection triggers | **Learns your deployment** | **Network intelligence** | **Zero dependencies** |
+| **39** threat families | **3** execution surfaces | **14** inspection triggers | **Learns your deployment** | **Network intelligence** | **Zero dependencies** |
 
-[The moment](#the-moment) · [What changed](#what-changed-in-v013) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli)
+[The moment](#the-moment) · [What changed](#what-changed-in-v014) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Verified threat intelligence](#verified-threat-intelligence) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli)
 
 </div>
 
@@ -71,7 +71,7 @@ IBM X-Force 2026: AI-enabled vulnerability discovery runs 44% faster than manual
 
 In December 2025, OWASP released the **Top 10 for Agentic Applications**, the first industry-standard taxonomy of autonomous agent risks. 100+ security experts, adopted by Microsoft, NVIDIA, and AWS. The ten: Agent Goal Hijack (ASI-01), Tool Misuse (ASI-02), Identity & Privilege Abuse (ASI-03), Supply Chain Vulnerabilities (ASI-04), Unexpected Code Execution (ASI-05), Memory & Context Poisoning (ASI-06), Insecure Inter-Agent Communication (ASI-07), Cascading Failures (ASI-08), Human-Agent Trust Exploitation (ASI-09), Rogue Agents (ASI-10). ([OWASP announcement](https://genai.owasp.org/2025/12/09/owasp-genai-security-project-releases-top-10-risks-and-mitigations-for-agentic-ai-security/))
 
-Aiglos v0.13 maps to all ten. Behavioral baselines detect goal hijack. OpenClaw triggers cover tool misuse and supply chain poisoning. Memory security handles ASI-06. Multi-agent attestation covers ASI-07 and ASI-08. The policy proposal system catches privilege escalation before it executes.
+Aiglos v0.14 maps to all ten. Behavioral baselines detect goal hijack. OpenClaw triggers cover tool misuse and supply chain poisoning. Memory security handles ASI-06. Multi-agent attestation covers ASI-07 and ASI-08. The policy proposal system catches privilege escalation before it executes. Every mapping is now backed by a verified citation from OWASP ASI, MITRE ATLAS, or NVD.
 
 ### The regulatory wave
 
@@ -89,9 +89,27 @@ China, Europe, and the United States are all converging on the same requirements
 
 ---
 
-## What changed in v0.13
+## What changed in v0.14
 
-Three architectural additions that change what kind of product this is.
+Every rule now requires evidence. Every block cites its source.
+
+### Rules without citations get flagged
+
+Before v0.14, autoresearch could propose and activate rules with no external evidence backing them. The system trusted its own optimization loop. That is not good enough for compliance audits, regulatory review, or any deployment where "the algorithm said so" is not an acceptable answer.
+
+After v0.14: `CitationVerifier` checks every rule against OWASP ASI, MITRE ATLAS, and NVD before it can activate. Rules that lack verified citations are flagged by the 14th inspection trigger (`UNVERIFIED_RULE_ACTIVE`) and appear in compliance reports as gaps. The `VerifiedRuleEngine` wraps the autoresearch loop so that rule proposals without evidence are held, not deployed.
+
+### Threat literature is continuously scanned
+
+`ThreatLiteratureSearch` monitors security advisories, CVE feeds, and research papers for signals relevant to AI agent security. New threat signals are scored for relevance and stored in the observation graph. When a signal matches an existing rule, the citation is strengthened. When it matches no rule, it surfaces as a gap for the research loop to address.
+
+### Compliance reports map to regulatory frameworks
+
+`ComplianceReportGenerator` produces structured reports mapping rule coverage to NDAA section 1513, EU AI Act Annex III, and NIST AI 600-1. Each section shows which rules provide coverage, which citations back them, and where gaps remain. The report is the artifact a compliance officer hands to an auditor.
+
+### What changed in v0.13
+
+Three architectural additions that changed what kind of product this is.
 
 ### The false positive death spiral is broken
 
@@ -172,12 +190,14 @@ aiglos.attach(
     subprocess_tier3_mode="pause",
     tier3_approval_webhook="https://hooks.pagerduty.com/...",
 
-    # Intelligence layers (v0.11-0.13)
+    # Intelligence layers (v0.11-0.14)
     enable_behavioral_baseline=True,   # learns your agent's normal behavior
     enable_intent_prediction=True,     # predicts next threat families
     enable_causal_tracing=True,        # traces blocked actions to injection sources
     enable_policy_proposals=True,      # replaces per-action webhooks with policy decisions
     enable_federation=True,            # warm-starts from global prior
+    enable_citation_verification=True, # every rule must cite its evidence source
+    enable_threat_scanning=True,       # continuous threat literature monitoring
 
     # Other guards
     enable_multi_agent=True,
@@ -334,6 +354,72 @@ All rules map to MITRE ATLAS. Protocol-portable - not MCP-only.
 
 ---
 
+## Verified threat intelligence
+
+*Added v0.14.0 - every rule must cite its source.*
+
+### Citation verification
+
+`CitationVerifier` checks rules against three authoritative sources: OWASP ASI (Top 10 for Agentic Applications), MITRE ATLAS (Adversarial Threat Landscape for AI Systems), and NVD (National Vulnerability Database). A rule without a verified citation cannot activate through the `VerifiedRuleEngine`.
+
+```python
+from aiglos import CitationVerifier, CitationStatus
+
+verifier = CitationVerifier()
+citation = verifier.verify_rule("T31", source="owasp_asi", reference_id="ASI-06")
+# VerifiedCitation(rule_id="T31", source="owasp_asi", status=CitationStatus.VERIFIED,
+#   reference_id="ASI-06", title="Memory & Context Poisoning", confidence=0.95)
+
+# Check all rules for gaps
+unverified = [r for r in verifier.check_all_rules() if r.status != CitationStatus.VERIFIED]
+```
+
+### Threat literature scanning
+
+`ThreatLiteratureSearch` continuously monitors security feeds for signals relevant to AI agent security. Signals are scored for relevance against a keyword corpus covering prompt injection, tool misuse, agent hijacking, reward manipulation, and supply chain attacks.
+
+```python
+from aiglos import ThreatLiteratureSearch
+
+search = ThreatLiteratureSearch()
+signals = search.scan()
+# [ThreatSignal(source="nvd", title="CVE-2026-...", relevance=0.87,
+#   matched_keywords=["prompt injection", "agent"]), ...]
+```
+
+### Verified rule engine
+
+`VerifiedRuleEngine` wraps autoresearch so that proposed rules require citation verification before activation. Rules that fail verification are held and surfaced as gaps.
+
+```python
+from aiglos import VerifiedRuleEngine
+
+engine = VerifiedRuleEngine(db_path=":memory:")
+result = engine.run()
+# VerifiedRunResult(proposed=5, verified=4, held=1, gaps=["T40"])
+```
+
+### Compliance reports
+
+`ComplianceReportGenerator` maps rule coverage to three regulatory frameworks. The output is the structured artifact a compliance officer needs for an audit.
+
+```python
+from aiglos import ComplianceReportGenerator
+
+generator = ComplianceReportGenerator(db_path=":memory:")
+report = generator.generate()
+# ComplianceReport with sections for:
+#   NDAA section 1513 - runtime attestation requirements
+#   EU AI Act Annex III - high-risk AI system obligations
+#   NIST AI 600-1 - generative AI risk management
+print(report.summary())
+# "Coverage: 37/39 rules cited. 2 gaps identified. NDAA: PASS. EU AI Act: PASS."
+```
+
+**`UNVERIFIED_RULE_ACTIVE` inspection trigger (14th):** fires when an active rule lacks a verified citation from any authoritative source. Points to `aiglos research verify` for resolution.
+
+---
+
 ## Behavioral baseline
 
 *Added v0.11.0 - the false positive death spiral fix.*
@@ -452,7 +538,7 @@ print(client.status())
 
 The observation graph, inspection engine, and amendment engine that make Aiglos self-improving.
 
-**13 inspection triggers.** RATE_DROP, ZERO_FIRE, HIGH_OVERRIDE, AGENTDEF_REPEAT, SPAWN_NO_POLICY, FIN_EXEC_BYPASS, FALSE_POSITIVE, REWARD_DRIFT, CAUSAL_INJECTION_CONFIRMED, THREAT_FORECAST_ALERT, BEHAVIORAL_ANOMALY, REPEATED_TIER3_BLOCK, GLOBAL_PRIOR_MATCH.
+**14 inspection triggers.** RATE_DROP, ZERO_FIRE, HIGH_OVERRIDE, AGENTDEF_REPEAT, SPAWN_NO_POLICY, FIN_EXEC_BYPASS, FALSE_POSITIVE, REWARD_DRIFT, CAUSAL_INJECTION_CONFIRMED, THREAT_FORECAST_ALERT, BEHAVIORAL_ANOMALY, REPEATED_TIER3_BLOCK, GLOBAL_PRIOR_MATCH, UNVERIFIED_RULE_ACTIVE.
 
 **10 campaign patterns.** RECON_SWEEP, CREDENTIAL_ACCUMULATE, EXFIL_SETUP, PERSISTENCE_CHAIN, LATERAL_PREP, AGENTDEF_CHAIN, MEMORY_PERSISTENCE_CHAIN, REWARD_MANIPULATION, REPEATED_INJECTION_ATTEMPT, EXTERNAL_INSTRUCTION_CHANNEL.
 
@@ -593,6 +679,14 @@ python -m aiglos forecast                  # intent prediction with probability 
 python -m aiglos forecast --train          # retrain from observation graph
 python -m aiglos forecast --sequence T19 T22
 
+# Verified threat intelligence (v0.14)
+python -m aiglos research verify              # verify citations for all active rules
+python -m aiglos research verify T31          # verify citations for a specific rule
+python -m aiglos research report              # generate compliance report
+python -m aiglos research report --framework ndaa
+python -m aiglos research scan               # scan threat literature feeds
+python -m aiglos research scan --days 30
+
 # Scanning
 python -m aiglos scan-skill <name>
 python -m aiglos scan-message "<text>"
@@ -642,6 +736,8 @@ Session artifact fields:
 | `extensions.causal` | Causal attribution - session verdict, flagged actions, chains |
 | `extensions.forecast` | Intent prediction - alert level, top threats, adjustments |
 | `extensions.baseline` | Behavioral baseline - composite score, risk, feature breakdown |
+| `extensions.citations` | Citation verification - verified count, unverified rules, sources |
+| `extensions.compliance` | Compliance report - framework coverage, gaps, pass/fail by framework |
 
 ---
 
@@ -662,11 +758,14 @@ Session artifact fields:
 
 ## Open source
 
-Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, TypeScript SDK, CLI: **MIT**.
+Detection engine, behavioral baseline, policy proposals, adaptive layer, memory security, RL security, causal tracing, intent prediction, autoresearch, citation verification, compliance reports, TypeScript SDK, CLI: **MIT**.
 
 ---
 
 ## Changelog
+
+**v0.14.0 - March 2026**
+Verified threat intelligence. `CitationVerifier` - rule-level citation verification against OWASP ASI, MITRE ATLAS, and NVD. `VerifiedCitation` with confidence scoring and `CitationStatus` lifecycle. `ThreatLiteratureSearch` - continuous security feed monitoring with relevance scoring. `ThreatSignal` structured output. `VerifiedRuleEngine` - autoresearch wrapper requiring citation verification before rule activation. `ComplianceReportGenerator` - structured compliance reports mapping to NDAA section 1513, EU AI Act Annex III, and NIST AI 600-1. `rule_citations` and `threat_signals` tables in observation graph. `UNVERIFIED_RULE_ACTIVE` 14th inspection trigger. `aiglos research verify|report|scan` CLI. 954 tests.
 
 **v0.13.0 - March 2026**
 Federated threat intelligence. `FederationClient` - privacy-preserving Markov prior sharing with Laplace differential privacy (epsilon=0.1). `GlobalPrior` - merge_into() with session-weighted local/global blending (20% local at session 1 → 80% at session 100). `warm_start_from_prior()` on `IntentPredictor`. `GLOBAL_PRIOR_MATCH` 13th inspection trigger. `enable_federation()` on `OpenClawGuard`. Zero external dependencies - stdlib `urllib` only. 882 tests.
