@@ -3,13 +3,14 @@
 ## Overview
 Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provides real-time monitoring, event logging, trust management, policy configuration, CMMC compliance tracking, autonomous threat scanning, and full administrative capabilities for AI agents operating through MCP (Model Context Protocol) proxies.
 
-## Python Package (aiglos/ v0.20.0)
+## Python Package (aiglos/ v0.21.0)
 The `aiglos/` directory contains the Python security runtime package covering threat families T01-T66.
 
 ### Package Structure
-- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.20.0
-- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T66)
+- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.21.0
+- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T66), lockdown policy, sandbox_context, allow_tool/tool_grants
 - `aiglos/core/threat_engine_v2.py` -- T44-T66 threat rule library (23 new rules: inference hijack, cross-tenant, simulation poison, context smuggling, tool forgery, etc.)
+- `aiglos/core/behavioral_baseline.py` -- AgentBaseline, BaselineScore, set_hardening_mode, is_suppressed
 - `aiglos/integrations/hermes.py` -- Hermes integration guard with trajectory signing
 - `aiglos/integrations/multi_agent.py` -- AgentDefGuard, MultiAgentRegistry, SessionIdentityChain
 - `aiglos/integrations/memory_guard.py` -- Memory write guard (T31) with C2 channel corpus signals
@@ -21,15 +22,17 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/integrations/honeypot.py` -- T43 HONEYPOT_ACCESS (HoneypotManager, synthetic credential files)
 - `aiglos/integrations/override.py` -- OverrideManager (6-char codes, 120s expiry, 3 attempts)
 - `aiglos/adaptive/source_reputation.py` -- SourceReputationGraph (cross-session source tracking, 4 risk levels)
-- `aiglos/adaptive/observation.py` -- ObservationGraph with source_records, honeypot_events, override_challenges tables
-- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (17 patterns including GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN)
+- `aiglos/adaptive/observation.py` -- ObservationGraph with source_records, honeypot_events, override_challenges, baseline_events tables
+- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (18 patterns including SANDBOX_CONFIRMED_ESCAPE, GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN)
+- `aiglos/adaptive/permission_recommender.py` -- PermissionRecommender, PermissionRecommendation (minimum viable allowlist from observation graph)
 - `aiglos/adaptive/skill_reputation.py` -- SkillReputationGraph (ClawKeeper badge data, sync_security_feed)
+- `aiglos/benchmark/govbench.py` -- GovBench, GovBenchResult (5-dimension governance benchmark: campaign detection, agentdef resistance, memory belief, RL exploitation, outbound leakage)
 - `aiglos/audit/scanner.py` -- AuditScanner (5-phase, 50+ checks, A-F grade)
 - `aiglos/audit/report.py` -- AuditReporter (5 formats: summary, full, json, briefing, clawkeeper)
 - `aiglos/autoresearch/` -- CitationVerifier, ThreatLiteratureSearch, ComplianceReportGenerator
 - `aiglos/skills/SKILL.md` -- Context Hub skill distribution for Claude Code
 - `aiglos/desktop/` -- Tauri desktop app (main.rs, App.jsx, aiglos_sidecar.py, install.sh)
-- `aiglos/cli.py` -- CLI: scan-message, honeypot, override, reputation, audit, skill
+- `aiglos/cli.py` -- CLI: scan-message, honeypot, override, reputation, audit, skill, baseline, benchmark
 
 - `server/federation/` -- Federation server (FastAPI, aggregator, auth, Supabase store, Railway deploy)
 - `sdk/typescript/src/` -- TypeScript SDK (full parity: behavioral_baseline, policy_proposals, federation, security_surfaces, index)
@@ -37,7 +40,7 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `.github/actions/aiglos-scan/action.yml` -- Reusable GitHub Action for Aiglos security audit
 - `.github/workflows/aiglos-scan.yml` -- CI workflow (push/PR/nightly scan, deep mode, grade gating)
 
-### Test Suites (1471 tests)
+### Test Suites (1536 tests)
 22 test files covering all modules and integrations.
 
 ### Class Name Map (important for imports)

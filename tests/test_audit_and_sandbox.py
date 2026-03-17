@@ -425,7 +425,7 @@ class TestSandboxCampaignPattern:
 class TestV0180ModuleAPI:
 
     def test_version_is_0180(self):
-        assert aiglos.__version__ == "0.20.0"
+        assert aiglos.__version__ == "0.21.0"
 
     def test_audit_scanner_in_all(self):
         assert "AuditScanner" in aiglos.__all__

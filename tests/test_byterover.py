@@ -701,7 +701,7 @@ class TestMemoryPersistenceChain:
 class TestV050ModuleAPI:
 
     def test_version_is_050(self):
-        assert aiglos.__version__ == "0.20.0"
+        assert aiglos.__version__ == "0.21.0"
 
     def test_exports_byterover_types(self):
         assert hasattr(aiglos, "MemoryWriteGuard")

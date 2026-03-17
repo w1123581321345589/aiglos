@@ -17,7 +17,7 @@ Deviation from the baseline is an anomaly signal that is:
   - Orthogonal to per-call rule scoring (catches what rules miss)
   - Orthogonal to campaign-mode (which needs a known attack sequence)
   - Agent-specific (a credential read is normal for a DevOps agent, anomalous
-    for a code review agent — the baseline knows which is which)
+    for a code review agent -- the baseline knows which is which)
 
 Three feature spaces, each independently scored:
 
@@ -62,6 +62,7 @@ Usage:
     result = engine.score_session(session_events, session_stats)
     # BaselineScore(composite=0.72, risk="HIGH", feature_scores={...})
 """
+
 
 
 import logging
@@ -437,6 +438,26 @@ class BaselineEngine:
         )
 
     # ── Scoring ───────────────────────────────────────────────────────────────
+
+    def set_hardening_mode(self, suppressed_until_session: int) -> None:
+        """
+        Enter hardening mode: suppress BEHAVIORAL_ANOMALY for the next N sessions.
+        Called after aiglos baseline reset when a hardening event occurs.
+        The baseline rebuilds against the new permission profile without
+        generating false positive alerts during the transition window.
+        """
+        self._hardening_suppressed_until = suppressed_until_session
+        log.info(
+            "[BaselineEngine] Hardening mode active for agent=%s "
+            "suppressed_until_session=%d",
+            self._agent_name, suppressed_until_session
+        )
+
+    def is_suppressed(self, current_session_number: int) -> bool:
+        """Return True if anomaly scoring is suppressed (post-hardening window)."""
+        return current_session_number < getattr(
+            self, "_hardening_suppressed_until", 0
+        )
 
     def score_session(
         self,

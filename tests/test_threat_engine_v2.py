@@ -306,7 +306,7 @@ class TestNewCampaignPatterns:
         assert "CAPABILITY_EXPLOIT_CHAIN" in self._names()
     def test_17_total_patterns(self):
         from aiglos.adaptive.campaign import _CAMPAIGN_PATTERNS
-        assert len(_CAMPAIGN_PATTERNS) == 17
+        assert len(_CAMPAIGN_PATTERNS) == 18
 
 # ── Inspection triggers ───────────────────────────────────────────────────────
 class TestNewInspectionTriggers:
@@ -364,7 +364,7 @@ class TestOpenClawGuardT44T66:
 # ── Module API ───────────────────────────────────────────────────────────────
 class TestV0190ModuleAPI:
     def test_version_is_0190(self):
-        assert aiglos.__version__ == "0.20.0"
+        assert aiglos.__version__ == "0.21.0"
     def test_rules_t44_t66_in_all(self):
         assert "RULES_T44_T66" in aiglos.__all__
     def test_all_exports_importable(self):

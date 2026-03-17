@@ -141,6 +141,17 @@ CREATE TABLE IF NOT EXISTS causal_chains (
     timestamp          REAL NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS baseline_events (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    agent_name    TEXT NOT NULL,
+    event_type    TEXT NOT NULL DEFAULT 'reset',  -- reset | hardening | restore
+    reason        TEXT NOT NULL DEFAULT '',
+    sessions_before INT NOT NULL DEFAULT 0,
+    suppressed_until_session INT NOT NULL DEFAULT 0,
+    occurred_at   REAL NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_baseline_events_agent ON baseline_events(agent_name);
+
 CREATE TABLE IF NOT EXISTS source_records (
     source_key      TEXT PRIMARY KEY,
     source_type     TEXT NOT NULL DEFAULT 'url',
@@ -738,6 +749,55 @@ class ObservationGraph:
         except Exception:
             d["chains"] = []
         return d
+
+    # ── Baseline event support ────────────────────────────────────────────────────
+
+    def record_baseline_event(
+        self,
+        agent_name: str,
+        event_type: str,
+        reason: str,
+        sessions_before: int = 0,
+        suppressed_until_session: int = 0,
+    ) -> None:
+        """Record a baseline lifecycle event (reset, hardening, restore)."""
+        with self._write_lock, self._conn() as conn:
+            conn.execute("""
+                INSERT INTO baseline_events
+                    (agent_name, event_type, reason, sessions_before,
+                     suppressed_until_session, occurred_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (agent_name, event_type, reason,
+                  sessions_before, suppressed_until_session, time.time()))
+
+    def get_baseline_events(self, agent_name: str, limit: int = 20) -> list:
+        """Get baseline lifecycle events for an agent."""
+        with self._conn() as conn:
+            rows = conn.execute("""
+                SELECT * FROM baseline_events WHERE agent_name=?
+                ORDER BY occurred_at DESC LIMIT ?
+            """, (agent_name, limit)).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_latest_baseline_reset(self, agent_name: str) -> Optional[dict]:
+        """Get the most recent reset event for suppression check."""
+        with self._conn() as conn:
+            row = conn.execute("""
+                SELECT * FROM baseline_events
+                WHERE agent_name=? AND event_type='reset'
+                ORDER BY occurred_at DESC LIMIT 1
+            """, (agent_name,)).fetchone()
+        return dict(row) if row else None
+
+    def get_agent_session_count_since(self, agent_name: str, since_ts: float) -> int:
+        """Count sessions recorded after a given timestamp."""
+        with self._conn() as conn:
+            row = conn.execute("""
+                SELECT COUNT(DISTINCT args_fingerprint) as c
+                FROM block_patterns
+                WHERE agent_name=? AND occurred_at >= ?
+            """, (agent_name, since_ts)).fetchone()
+        return row["c"] if row else 0
 
     # ── Source reputation support ─────────────────────────────────────────────────
 

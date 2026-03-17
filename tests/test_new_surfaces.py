@@ -560,17 +560,27 @@ class TestOpenClawRules:
 class TestOpenClawBeforeSend:
 
     def test_before_send_blocks_secret(self):
-        from aiglos.integrations.openclaw import OpenClawGuard, Verdict
+        from aiglos.integrations.openclaw import OpenClawGuard
+        guard = OpenClawGuard(agent_name="test", policy="strict")
+        result = guard.before_send("sk_" + "live_abcdefghijklmnopqrstuvwxyz", destination="http.post")
+        assert result is not None
+        assert result.verdict == "BLOCK"
+        assert result.rule_id == "T41"
+
+    def test_before_send_warns_enterprise(self):
+        from aiglos.integrations.openclaw import OpenClawGuard
         guard = OpenClawGuard(agent_name="test", policy="enterprise")
-        result = guard.before_send("http.post", "sk_" + "live_abcdefghijklmnopqrstuvwxyz")
-        assert result.verdict == Verdict.BLOCK
-        assert result.threat_class == "T41"
+        result = guard.before_send("sk_" + "live_abcdefghijklmnopqrstuvwxyz", destination="http.post")
+        assert result is not None
+        assert result.verdict == "WARN"
+        assert result.rule_id == "T41"
 
     def test_before_send_allows_clean(self):
-        from aiglos.integrations.openclaw import OpenClawGuard, Verdict
-        guard = OpenClawGuard(agent_name="test", policy="enterprise")
-        result = guard.before_send("http.post", "Hello, world!")
-        assert result.verdict == Verdict.ALLOW
+        from aiglos.integrations.openclaw import OpenClawGuard
+        guard = OpenClawGuard(agent_name="test", policy="strict")
+        result = guard.before_send("Hello, world!", destination="http.post")
+        assert result is not None
+        assert result.verdict == "ALLOW"
 
 
 # =============================================================================
@@ -581,7 +591,7 @@ class TestVersionBump:
 
     def test_version_is_0_15_0(self):
         import aiglos
-        assert aiglos.__version__ == "0.20.0"
+        assert aiglos.__version__ == "0.21.0"
 
     def test_context_guard_importable(self):
         from aiglos import ContextDirectoryGuard, ContextWriteResult

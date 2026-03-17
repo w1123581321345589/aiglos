@@ -1,0 +1,179 @@
+{
+  "colorScheme": "dark",
+  "fonts": [
+    {
+      "family": "ui-sans-serif",
+      "count": 81
+    },
+    {
+      "family": "system-ui",
+      "count": 81
+    },
+    {
+      "family": "sans-serif",
+      "count": 81
+    },
+    {
+      "family": "Apple Color Emoji",
+      "count": 81
+    },
+    {
+      "family": "Segoe UI Emoji",
+      "count": 81
+    },
+    {
+      "family": "Segoe UI Symbol",
+      "count": 81
+    },
+    {
+      "family": "Noto Color Emoji",
+      "count": 81
+    }
+  ],
+  "colors": {
+    "primary": "#00B8DB",
+    "accent": "#00B8DB",
+    "background": "#0A0A0A",
+    "textPrimary": "#0A0A0A",
+    "link": "#002429"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "ui-sans-serif",
+      "heading": "ui-sans-serif"
+    },
+    "fontStacks": {
+      "body": [
+        "ui-sans-serif",
+        "system-ui",
+        "sans-serif",
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        "Segoe UI Symbol",
+        "Noto Color Emoji"
+      ],
+      "heading": [
+        "ui-sans-serif",
+        "system-ui",
+        "sans-serif",
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        "Segoe UI Symbol",
+        "Noto Color Emoji"
+      ],
+      "paragraph": [
+        "ui-sans-serif",
+        "system-ui",
+        "sans-serif",
+        "Apple Color Emoji",
+        "Segoe UI Emoji",
+        "Segoe UI Symbol",
+        "Noto Color Emoji"
+      ]
+    },
+    "fontSizes": {
+      "h1": "60px",
+      "h2": "30px",
+      "body": "18px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 8,
+    "borderRadius": "4px"
+  },
+  "components": {
+    "input": {
+      "background": "#111113",
+      "textColor": "#FFFFFF",
+      "borderColor": "#232323",
+      "borderRadius": "10px",
+      "borderRadiusCorners": {
+        "topLeft": "10px",
+        "topRight": "10px",
+        "bottomRight": "10px",
+        "bottomLeft": "10px"
+      },
+      "shadow": "none"
+    },
+    "buttonPrimary": {
+      "background": "#00B8DB",
+      "textColor": "#000000",
+      "borderRadius": "700px",
+      "borderRadiusCorners": {
+        "topLeft": "700px",
+        "topRight": "700px",
+        "bottomRight": "700px",
+        "bottomLeft": "700px"
+      },
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "#010101",
+      "textColor": "#9F9FA9",
+      "borderRadius": "8px",
+      "borderRadiusCorners": {
+        "topLeft": "8px",
+        "topRight": "8px",
+        "bottomRight": "8px",
+        "bottomLeft": "8px"
+      },
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.png",
+    "favicon": "File saved at: attached_assets/favicon.ico",
+    "ogImage": null,
+    "logoHref": "File saved at: attached_assets/logoHref.html",
+    "logoAlt": "Clawkeeper by RAD Security"
+  },
+  "__llm_logo_reasoning": {
+    "selectedIndex": 0,
+    "reasoning": "Selected #0 because it is visible, located in the header, links to the homepage, and matches the brand inferred from the URL and page title.",
+    "confidence": 0.9,
+    "source": "llm"
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 0,
+      "text": "Get started free",
+      "reasoning": "Button #0 'Get started free' uses the vibrant brand color #00B8DB, which is a strong indicator of a primary CTA. The text is action-oriented, encouraging users to begin using the service."
+    },
+    "secondary": {
+      "index": 4,
+      "text": "Sign in",
+      "reasoning": "Button #2 'Sign in' has a different background color (#010101) and serves as a secondary action, allowing users to access their accounts."
+    },
+    "confidence": 0.95
+  },
+  "personality": {
+    "tone": "modern",
+    "energy": "medium",
+    "targetAudience": "tech-savvy professionals"
+  },
+  "designSystem": {
+    "framework": "tailwind",
+    "componentLibrary": ""
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  },
+  "__llm_metadata": {
+    "logoSelection": {
+      "llmCalled": true,
+      "llmSucceeded": true,
+      "finalSource": "llm",
+      "rawLogoSelection": {
+        "selectedLogoIndex": 0,
+        "selectedLogoReasoning": "Selected #0 because it is visible, located in the header, links to the homepage, and matches the brand inferred from the URL and page title.",
+        "confidence": 0.9
+      }
+    },
+    "buttonClassification": {
+      "llmCalled": true,
+      "llmSucceeded": true
+    }
+  }
+}
