@@ -141,6 +141,22 @@ CREATE TABLE IF NOT EXISTS causal_chains (
     timestamp          REAL NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS source_records (
+    source_key      TEXT PRIMARY KEY,
+    source_type     TEXT NOT NULL DEFAULT 'url',
+    event_count     INTEGER NOT NULL DEFAULT 0,
+    max_score       REAL NOT NULL DEFAULT 0.0,
+    avg_score       REAL NOT NULL DEFAULT 0.0,
+    last_seen       REAL NOT NULL DEFAULT 0,
+    first_seen      REAL NOT NULL DEFAULT 0,
+    verdicts_json   TEXT NOT NULL DEFAULT '[]',
+    rule_ids_json   TEXT NOT NULL DEFAULT '[]',
+    tool_names_json TEXT NOT NULL DEFAULT '[]',
+    network_flags   INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_source_score ON source_records(max_score DESC);
+CREATE INDEX IF NOT EXISTS idx_source_type  ON source_records(source_type);
+
 CREATE TABLE IF NOT EXISTS honeypot_hits (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     honeypot_name   TEXT NOT NULL DEFAULT '',
@@ -723,7 +739,104 @@ class ObservationGraph:
             d["chains"] = []
         return d
 
-    # ── Honeypot and override support ────────────────────────────────────────────
+    # ── Source reputation support ─────────────────────────────────────────────────
+
+    def upsert_source_record(self, record) -> None:
+        """Persist or update a SourceRecord."""
+        import json as _json
+        d = record.to_dict() if hasattr(record, "to_dict") else record
+        with self._write_lock, self._conn() as conn:
+            conn.execute("""
+                INSERT INTO source_records
+                    (source_key, source_type, event_count, max_score, avg_score,
+                     last_seen, first_seen, verdicts_json, rule_ids_json,
+                     tool_names_json, network_flags)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(source_key) DO UPDATE SET
+                    event_count     = excluded.event_count,
+                    max_score       = MAX(max_score, excluded.max_score),
+                    avg_score       = excluded.avg_score,
+                    last_seen       = excluded.last_seen,
+                    verdicts_json   = excluded.verdicts_json,
+                    rule_ids_json   = excluded.rule_ids_json,
+                    tool_names_json = excluded.tool_names_json,
+                    network_flags   = excluded.network_flags
+            """, (
+                d.get("source_key", ""),
+                d.get("source_type", "url"),
+                d.get("event_count", 0),
+                d.get("max_score", 0.0),
+                d.get("avg_score", 0.0),
+                d.get("last_seen", time.time()),
+                d.get("first_seen", time.time()),
+                _json.dumps(d.get("verdicts", [])[-10:]),
+                _json.dumps(list(set(d.get("rule_ids", [])))),
+                _json.dumps(list(set(d.get("tool_names", [])))),
+                d.get("network_flags", 0),
+            ))
+
+    def get_source_record(self, source_key: str):
+        """Load a SourceRecord by key. Returns None if not found."""
+        from aiglos.adaptive.source_reputation import SourceRecord
+        import json as _json
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM source_records WHERE source_key=?",
+                (source_key,)
+            ).fetchone()
+        if not row:
+            return None
+        d = dict(row)
+        return SourceRecord(
+            source_key   = d["source_key"],
+            source_type  = d["source_type"],
+            event_count  = d["event_count"],
+            max_score    = d["max_score"],
+            avg_score    = d["avg_score"],
+            last_seen    = d["last_seen"],
+            first_seen   = d["first_seen"],
+            verdicts     = _json.loads(d.get("verdicts_json", "[]")),
+            rule_ids     = _json.loads(d.get("rule_ids_json", "[]")),
+            tool_names   = _json.loads(d.get("tool_names_json", "[]")),
+            network_flags = d.get("network_flags", 0),
+        )
+
+    def list_source_records(
+        self,
+        min_score: float = 0.0,
+        source_type: str = None,
+        limit: int = 50,
+    ) -> list:
+        """List source records filtered by min score and type."""
+        from aiglos.adaptive.source_reputation import SourceRecord
+        import json as _json
+        if source_type:
+            q    = "SELECT * FROM source_records WHERE max_score >= ? AND source_type=? ORDER BY max_score DESC LIMIT ?"
+            args = (min_score, source_type, limit)
+        else:
+            q    = "SELECT * FROM source_records WHERE max_score >= ? ORDER BY max_score DESC LIMIT ?"
+            args = (min_score, limit)
+        with self._conn() as conn:
+            rows = conn.execute(q, args).fetchall()
+        results = []
+        for row in rows:
+            d = dict(row)
+            results.append(SourceRecord(
+                source_key   = d["source_key"],
+                source_type  = d["source_type"],
+                event_count  = d["event_count"],
+                max_score    = d["max_score"],
+                avg_score    = d["avg_score"],
+                last_seen    = d["last_seen"],
+                first_seen   = d["first_seen"],
+                verdicts     = _json.loads(d.get("verdicts_json", "[]")),
+                rule_ids     = _json.loads(d.get("rule_ids_json", "[]")),
+                tool_names   = _json.loads(d.get("tool_names_json", "[]")),
+                network_flags = d.get("network_flags", 0),
+            ))
+        return results
+
+    # ── Honeypot and override support ─────────────────────────────────────────────
 
     def record_honeypot_hit(self, result) -> None:
         """Persist a honeypot access event."""

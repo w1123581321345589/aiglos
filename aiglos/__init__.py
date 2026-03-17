@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.16.0"  # canonical version for this release
+    __version__ = "0.17.0"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -97,6 +97,12 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     inspect_memory_write,
     is_memory_tool,
 )
+from aiglos.adaptive.source_reputation import (  # noqa: F401
+    SourceReputationGraph,
+    SourceRecord,
+    SourceRisk,
+)
+
 from aiglos.integrations.honeypot import (  # noqa: F401
     HoneypotManager,
     HoneypotResult,
@@ -110,10 +116,13 @@ from aiglos.integrations.override import (  # noqa: F401
 from aiglos.integrations.context_guard import (  # noqa: F401
     ContextDirectoryGuard,
     ContextWriteResult,
+    is_shared_context_write,
 )
 from aiglos.integrations.outbound_guard import (  # noqa: F401
     OutboundGuard,
     OutboundScanResult,
+    scan_for_secrets,
+    contains_secret,
 )
 
 from aiglos.autoresearch.citation_verifier import (  # noqa: F401
@@ -310,6 +319,46 @@ def attach(
     if kwargs.get("enable_causal_tracing", False):
         try:
             _active_guard.enable_causal_tracing()
+        except Exception:
+            pass
+
+    # 6c. Source reputation
+    if kwargs.get("enable_source_reputation", False):
+        try:
+            _active_guard.enable_source_reputation()
+        except Exception:
+            pass
+
+    # 6d. Behavioral baseline
+    if kwargs.get("enable_behavioral_baseline", False):
+        try:
+            _active_guard.enable_behavioral_baseline()
+        except Exception:
+            pass
+
+    # 6e. Policy proposals
+    if kwargs.get("enable_policy_proposals", False):
+        try:
+            _active_guard.enable_policy_proposals()
+        except Exception:
+            pass
+
+    # 6f. Federation
+    if kwargs.get("enable_federation", False):
+        try:
+            fed_kwargs = {k: v for k, v in kwargs.items()
+                         if k in ("api_key", "endpoint")}
+            _active_guard.enable_federation(**fed_kwargs)
+        except Exception:
+            pass
+
+    # 6g. Honeypot
+    if kwargs.get("enable_honeypot", False):
+        try:
+            _active_guard.enable_honeypot(
+                custom_names = kwargs.get("honeypot_custom_names"),
+                honeypot_dir = kwargs.get("honeypot_dir"),
+            )
         except Exception:
             pass
 
@@ -674,6 +723,10 @@ __all__ = [
     "FederationClient",
     "GlobalPrior",
     "extract_shareable_transitions",
+    # v0.17.0
+    "SourceReputationGraph",
+    "SourceRecord",
+    "SourceRisk",
     # v0.16.0
     "HoneypotManager",
     "HoneypotResult",
@@ -683,8 +736,11 @@ __all__ = [
     # v0.15.0
     "ContextDirectoryGuard",
     "ContextWriteResult",
+    "is_shared_context_write",
     "OutboundGuard",
     "OutboundScanResult",
+    "scan_for_secrets",
+    "contains_secret",
     # v0.14.0
     "CitationVerifier",
     "VerifiedCitation",

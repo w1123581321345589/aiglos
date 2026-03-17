@@ -740,6 +740,45 @@ class OpenClawGuard:
             except Exception as _hp_e:
                 logger.debug("[OpenClawGuard] T43 honeypot check error: %s", _hp_e)
 
+        # Source reputation pre-check -- elevate scrutiny for known-bad sources
+        if hasattr(self, "_reputation_graph"):
+            try:
+                # Extract source URL from args if present
+                _src_url = (args_dict.get("url") or args_dict.get("source_url")
+                            or args_dict.get("endpoint") or "")
+                if _src_url:
+                    _risk = self._reputation_graph.get_risk(source_url=_src_url)
+                    if _risk.should_block:
+                        result = GuardResult(
+                            verdict      = Verdict.BLOCK,
+                            tool_name    = tool_name,
+                            tool_args    = args_dict,
+                            threat_class = "T27",
+                            threat_name  = "SOURCE_REPUTATION_BLOCK",
+                            reason       = (
+                                f"Source blocked by reputation: "
+                                f"{_risk.evidence_summary}"
+                            ),
+                            score        = _risk.score,
+                            session_id   = sid,
+                        )
+                        self._results.append(result)
+                        self._log_line(result.to_log_line())
+                        logger.warning(
+                            "[OpenClawGuard] SOURCE_REPUTATION_BLOCK "
+                            "url=%s score=%.2f events=%d",
+                            _src_url, _risk.score, _risk.event_count,
+                        )
+                        return result
+                    elif _risk.should_elevate:
+                        logger.debug(
+                            "[OpenClawGuard] Source reputation ELEVATED "
+                            "url=%s level=%s",
+                            _src_url, _risk.level,
+                        )
+            except Exception as _rep_e:
+                logger.debug("[OpenClawGuard] Reputation pre-check error: %s", _rep_e)
+
         matched_rule: dict | None = None
         max_score = 0.0
 
@@ -869,6 +908,23 @@ class OpenClawGuard:
                 "INBOUND INJECTION %s -- tool=%s risk=%s score=%.2f agent=%s",
                 result.verdict, tool_name, result.risk, result.score, self.agent_name,
             )
+
+        # Update source reputation if enabled
+        if hasattr(self, "_reputation_graph") and result.score >= 0.25:
+            try:
+                content_str = str(tool_output) if tool_output else ""
+                self._reputation_graph.record_event(
+                    source_url  = source_url,
+                    tool_name   = tool_name,
+                    score       = result.score,
+                    verdict     = result.verdict,
+                    rule_id     = result.rule_id or "",
+                    session_id  = getattr(self, "_session_id", ""),
+                    content     = content_str[:500] if content_str else None,
+                )
+            except Exception as _rep_e:
+                logger.debug("[OpenClawGuard] Reputation update error: %s", _rep_e)
+
         return result
 
     def enable_causal_tracing(self) -> "CausalTracer":
@@ -1021,12 +1077,12 @@ class OpenClawGuard:
           - Before posting to an external webhook or API
           - Before writing to any external log
 
-        Returns an OutboundScanResult. If result.blocked is True,
+        Returns a result with verdict attribute. If verdict is BLOCK,
         suppress the transmission and log the incident.
 
         Example:
             result = guard.before_send("http.post", response_text)
-            if result.blocked:
+            if result.verdict == Verdict.BLOCK:
                 return "[Response suppressed: security policy]"
         """
         try:
@@ -1069,6 +1125,31 @@ class OpenClawGuard:
             return self._session_id
         except AttributeError:
             return ""
+
+    def enable_source_reputation(self) -> None:
+        """
+        Enable source reputation tracking.
+
+        After each tool call, injection scan results are recorded against
+        the source URL. Before future fetches from the same source, the
+        scan threshold is pre-elevated based on accumulated reputation.
+
+        Context Hub mechanism applied to threat intelligence:
+          Session 1: injection detected from a URL, annotated.
+          Session 2: that URL gets elevated scrutiny automatically.
+          Session N: pattern confirmed, source blocked on fetch.
+        """
+        try:
+            from aiglos.adaptive.source_reputation import SourceReputationGraph
+            from aiglos.adaptive.observation import ObservationGraph
+            _graph = ObservationGraph()
+            self._reputation_graph = SourceReputationGraph(graph=_graph)
+            logger.debug(
+                "[OpenClawGuard] Source reputation enabled -- agent=%s",
+                self.agent_name,
+            )
+        except Exception as e:
+            logger.debug("[OpenClawGuard] Source reputation init error: %s", e)
 
     def enable_federation(
         self,
