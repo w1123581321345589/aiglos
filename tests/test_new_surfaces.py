@@ -433,12 +433,12 @@ class TestSkillChainCampaign:
 
 
 # =============================================================================
-# Inspection Trigger: SHARED_CONTEXT_ANOMALY
+# Inspection Trigger: New v0.20.0 triggers (replaced SHARED_CONTEXT_ANOMALY)
 # =============================================================================
 
-class TestSharedContextAnomalyTrigger:
+class TestNewV020InspectionTriggers:
 
-    def test_trigger_method_exists(self):
+    def test_gaas_escalation_method_exists(self):
         from aiglos.adaptive.inspect import InspectionEngine
 
         class FakeGraph:
@@ -464,60 +464,66 @@ class TestSharedContextAnomalyTrigger:
                 return contextlib.closing(conn)
 
         engine = InspectionEngine(FakeGraph())
-        triggers = engine._check_shared_context_anomaly()
+        triggers = engine._check_gaas_escalation()
         assert isinstance(triggers, list)
 
-    def test_trigger_fires_with_events(self):
+    def test_inference_hijack_method_exists(self):
         from aiglos.adaptive.inspect import InspectionEngine
-        import sqlite3
-        import contextlib
 
-        conn = sqlite3.connect(":memory:")
-        conn.row_factory = sqlite3.Row
-        conn.execute("""
-            CREATE TABLE events (
-                rule_id TEXT, session_id TEXT, rule_name TEXT,
-                verdict TEXT, surface TEXT, tier TEXT,
-                cmd_hash TEXT, cmd_preview TEXT,
-                latency_ms REAL, timestamp REAL, tool_name TEXT,
-                agent_name TEXT
-            )
-        """)
-        for i in range(5):
-            conn.execute(
-                "INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                ("T40", "sess1", "SHARED_CONTEXT_POISON", "BLOCK", "mcp", "3",
-                 "", "", 1.0, time.time(), "file.write", "agent1"),
-            )
-        conn.commit()
-
-        class PersistentGraph:
-            def __init__(self, c):
-                self._c = c
+        class FakeGraph:
             def _conn(self):
-                return contextlib.closing(self._c)
+                import contextlib
+                import sqlite3
+                conn = sqlite3.connect(":memory:")
+                conn.row_factory = sqlite3.Row
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS events (
+                        rule_id TEXT, session_id TEXT, rule_name TEXT,
+                        verdict TEXT, surface TEXT, tier TEXT,
+                        cmd_hash TEXT, cmd_preview TEXT,
+                        latency_ms REAL, timestamp REAL, tool_name TEXT,
+                        agent_name TEXT
+                    )
+                """)
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS sessions (
+                        session_id TEXT, agent_name TEXT, ingested_at REAL
+                    )
+                """)
+                return contextlib.closing(conn)
 
-        class NonClosingConn:
-            def __init__(self, c):
-                self._c = c
-            def execute(self, *a, **kw):
-                return self._c.execute(*a, **kw)
-            def close(self):
-                pass
-            @property
-            def row_factory(self):
-                return self._c.row_factory
-            @row_factory.setter
-            def row_factory(self, v):
-                self._c.row_factory = v
+        engine = InspectionEngine(FakeGraph())
+        triggers = engine._check_inference_hijack()
+        assert isinstance(triggers, list)
 
-        nc = NonClosingConn(conn)
-        engine = InspectionEngine(PersistentGraph(nc))
-        triggers = engine._check_shared_context_anomaly()
-        assert len(triggers) >= 1
-        assert triggers[0].trigger_type == "SHARED_CONTEXT_ANOMALY"
-        assert triggers[0].rule_id == "T40"
-        conn.close()
+    def test_context_drift_method_exists(self):
+        from aiglos.adaptive.inspect import InspectionEngine
+
+        class FakeGraph:
+            def _conn(self):
+                import contextlib
+                import sqlite3
+                conn = sqlite3.connect(":memory:")
+                conn.row_factory = sqlite3.Row
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS events (
+                        rule_id TEXT, session_id TEXT, rule_name TEXT,
+                        verdict TEXT, surface TEXT, tier TEXT,
+                        cmd_hash TEXT, cmd_preview TEXT,
+                        latency_ms REAL, timestamp REAL, tool_name TEXT,
+                        agent_name TEXT
+                    )
+                """)
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS sessions (
+                        session_id TEXT, agent_name TEXT, ingested_at REAL
+                    )
+                """)
+                return contextlib.closing(conn)
+
+        engine = InspectionEngine(FakeGraph())
+        triggers = engine._check_context_drift()
+        assert isinstance(triggers, list)
 
 
 # =============================================================================
@@ -575,7 +581,7 @@ class TestVersionBump:
 
     def test_version_is_0_15_0(self):
         import aiglos
-        assert aiglos.__version__ == "0.19.0"
+        assert aiglos.__version__ == "0.20.0"
 
     def test_context_guard_importable(self):
         from aiglos import ContextDirectoryGuard, ContextWriteResult
