@@ -160,6 +160,24 @@ _CAMPAIGN_PATTERNS = [
         },
     },
     {
+        "name":        "SANDBOX_CONFIRMED_ESCAPE",
+        "description": (
+            "Tool call confirmed impossible in sandbox context followed by "
+            "additional escape attempts. When sandbox_context=True, a single "
+            "impossible call is already CRITICAL. A second attempt in the same "
+            "session window confirms the agent is actively probing or has "
+            "partially escaped -- not a misconfiguration, a campaign."
+        ),
+        "sequence":    [
+            {"T50"},   # agentic loop escape / sandbox escape confirmed
+            {"T50"},   # second confirmed escape = active campaign
+        ],
+        "min_events":  2,
+        "confidence":  0.96,
+        "surfaces":    None,
+        "amplifiers":  {},
+    },
+    {
         "name":        "SANDBOX_ESCAPE_ATTEMPT",
         "description": (
             "Three or more sandbox policy violations in one session. "
