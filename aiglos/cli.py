@@ -1040,6 +1040,149 @@ def _schedule_nightly_audit() -> None:
         print(f"  Cron scheduling error: {e}")
 
 
+def _cmd_scan_exposed(args: list) -> None:
+    """
+    aiglos scan-exposed <ip-or-hostname> [--port PORT]
+
+    Probe an exposed OpenClaw instance for security misconfigurations.
+    Returns a security grade and the specific findings that make it
+    vulnerable. Designed for the 40,000+ instances found by SecurityScorecard.
+
+    Examples:
+        aiglos scan-exposed 192.168.1.100
+        aiglos scan-exposed myclaw.example.com --port 3000
+        aiglos scan-exposed 10.0.0.1 --port 8080
+    """
+    import socket, urllib.request, urllib.error, json as _json, time as _time
+
+    if not args:
+        print("  Usage: aiglos scan-exposed <ip-or-hostname> [--port PORT]")
+        print("  Probes an exposed OpenClaw gateway for security misconfigurations.")
+        return
+
+    target = args[0]
+    port   = 3000
+    for i, t in enumerate(args):
+        if t == "--port" and i + 1 < len(args):
+            port = int(args[i + 1])
+
+    print("")
+    print(f"  {cyan('Aiglos Exposure Scanner')} -- probing {bold(target)}:{port}")
+    print(f"  {'---' * 19}")
+
+    findings = []
+    score    = 100
+    start    = _time.time()
+
+    def _check(label, fn, on_fail_sev="FAIL", on_fail_detail="", remediation=""):
+        nonlocal score
+        try:
+            result = fn()
+            if result is True:
+                print(f"  {_c('92', 'OK')} {label}")
+            elif result is False:
+                deduct = {"CRITICAL": 30, "FAIL": 15, "WARN": 5}.get(on_fail_sev, 15)
+                score -= deduct
+                findings.append((on_fail_sev, label, on_fail_detail, remediation))
+                print(f"  {_c('91' if on_fail_sev == 'CRITICAL' else '33', 'X')} [{on_fail_sev}] {label}")
+                if on_fail_detail:
+                    print(f"      {on_fail_detail[:80]}")
+        except Exception as e:
+            print(f"  {_c('2', '?')} {label} -- {str(e)[:60]}")
+
+    gateway_url = f"http://{target}:{port}"
+    is_open = False
+    try:
+        req = urllib.request.Request(
+            f"{gateway_url}/api/status",
+            headers={"User-Agent": "aiglos-scanner/0.22.0"},
+        )
+        resp = urllib.request.urlopen(req, timeout=5)
+        is_open = True
+        print(f"  {_c('91', '!')} [CRITICAL] Gateway reachable on {target}:{port}")
+        findings.append((
+            "CRITICAL",
+            f"OpenClaw gateway exposed on {target}:{port}",
+            "Gateway responded to unauthenticated status probe.",
+            "Set allow_remote=false or add authentication.",
+        ))
+        score -= 30
+    except urllib.error.HTTPError as e:
+        if e.code in (401, 403):
+            print(f"  {_c('92', 'OK')} Gateway requires authentication (HTTP {e.code})")
+            is_open = True
+        else:
+            print(f"  {_c('91', '?')} Gateway returned HTTP {e.code}")
+            is_open = True
+    except Exception:
+        print(f"  {_c('92', 'OK')} Port {port} not reachable from this network")
+
+    if is_open:
+        for endpoint in ["/api/config", "/api/agents", "/api/cron"]:
+            try:
+                req = urllib.request.Request(
+                    f"{gateway_url}{endpoint}",
+                    headers={"User-Agent": "aiglos-scanner/0.22.0"},
+                )
+                resp = urllib.request.urlopen(req, timeout=3)
+                if resp.status == 200:
+                    findings.append((
+                        "CRITICAL",
+                        f"Unauthenticated access to {endpoint}",
+                        f"Endpoint returned 200 with no credentials.",
+                        "Add API key authentication to all endpoints.",
+                    ))
+                    print(f"  {_c('91', 'X')} [CRITICAL] {endpoint} accessible without credentials")
+                    score -= 30
+            except urllib.error.HTTPError as e:
+                if e.code in (401, 403):
+                    print(f"  {_c('92', 'OK')} {endpoint} requires authentication")
+            except Exception:
+                pass
+
+        try:
+            req = urllib.request.Request(
+                f"{gateway_url}/socket.io/",
+                headers={"User-Agent": "aiglos-scanner/0.22.0"},
+            )
+            resp = urllib.request.urlopen(req, timeout=3)
+            findings.append((
+                "CRITICAL",
+                "WebSocket endpoint exposed (CVE-2026-25253 surface)",
+                "Gateway WebSocket accessible without authentication. "
+                "Attack vector for token theft and remote code execution.",
+                "Require authentication on all WebSocket connections.",
+            ))
+            print(f"  {_c('91', 'X')} [CRITICAL] WebSocket endpoint exposed (CVE-2026-25253)")
+            score -= 30
+        except Exception:
+            print(f"  {_c('92', 'OK')} WebSocket endpoint requires authentication or not exposed")
+
+    score = max(0, score)
+    grade = "A" if score >= 90 else "B" if score >= 75 else "C" if score >= 60 else "D" if score >= 45 else "F"
+    grade_color = "92" if grade == "A" else "93" if grade in "BC" else "91"
+
+    print("")
+    print(f"  Security Grade: {_c(grade_color, bold(grade))}  Score: {score}/100")
+    print(f"  Scan duration: {(_time.time()-start)*1000:.0f}ms")
+    print("")
+
+    if not findings:
+        print(f"  {_c('92', 'OK')} No critical exposures found from this network.")
+    else:
+        print(f"  {bold('Findings:')}")
+        for sev, label, detail, rem in findings[:6]:
+            sev_icon = "X" if sev == "CRITICAL" else "!"
+            print(f"  {sev_icon} [{sev}] {label}")
+        print("")
+        print(f"  This instance appears in the 40,000+ exposed OpenClaw deployments")
+        print(f"  documented by SecurityScorecard (February 2026).")
+        print("")
+        print(f"  Fix with Aiglos: {cyan('pip install aiglos && aiglos audit --deep')}")
+        print(f"  Detailed report: {cyan('aiglos.dev/intel')}")
+    print("")
+
+
 def _cmd_baseline(args: list) -> None:
     """aiglos baseline reset|history|status [--agent name] [--reason str]"""
     from aiglos.adaptive.observation import ObservationGraph
@@ -1706,6 +1849,10 @@ def main() -> None:
 
     if cmd == "baseline":
         _cmd_baseline(args)
+        return
+
+    if cmd == "scan-exposed":
+        _cmd_scan_exposed(args)
         return
 
     if cmd == "benchmark":
