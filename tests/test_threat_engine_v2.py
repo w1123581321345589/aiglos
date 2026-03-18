@@ -304,9 +304,11 @@ class TestNewCampaignPatterns:
         assert "MULTI_AGENT_IMPERSONATION" in self._names()
     def test_capability_exploit_chain_exists(self):
         assert "CAPABILITY_EXPLOIT_CHAIN" in self._names()
-    def test_17_total_patterns(self):
+    def test_19_total_patterns(self):
         from aiglos.adaptive.campaign import _CAMPAIGN_PATTERNS
-        assert len(_CAMPAIGN_PATTERNS) == 18
+        assert len(_CAMPAIGN_PATTERNS) == 19
+    def test_superpowers_plan_hijack_exists(self):
+        assert "SUPERPOWERS_PLAN_HIJACK" in self._names()
 
 # ── Inspection triggers ───────────────────────────────────────────────────────
 class TestNewInspectionTriggers:
@@ -315,11 +317,14 @@ class TestNewInspectionTriggers:
         _inspect_path = os.path.join(os.path.dirname(__file__), "..", "aiglos", "adaptive", "inspect.py")
         return open(_inspect_path).read()
 
-    def test_17_triggers(self):
+    def test_18_triggers(self):
         import re
         src = self._read_inspect()
         triggers = sorted(set(re.findall(r'trigger_type\s*=\s*["\'](\w+)', src)))
-        assert len(triggers) == 17
+        assert len(triggers) == 18
+    def test_plan_drift_detected_trigger_exists(self):
+        src = self._read_inspect()
+        assert "PLAN_DRIFT_DETECTED" in src
     def test_gaas_escalation_trigger_exists(self):
         src = self._read_inspect()
         assert "GAAS_ESCALATION_DETECTED" in src

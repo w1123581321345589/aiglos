@@ -1007,6 +1007,30 @@ class InspectionEngine:
                 ))
         except Exception as e:
             log.debug("[InspectionEngine] context_drift check error: %s", e)
+
+        try:
+            drift = self.graph.conn.execute("""
+                SELECT COUNT(*) as c FROM events
+                WHERE rule_id = 'T69'
+                  AND timestamp > ?
+            """, (self._session_window(),)).fetchone()
+            if drift and drift["c"] >= 1:
+                triggers.append(InspectionTrigger(
+                    trigger_type  = "PLAN_DRIFT_DETECTED",
+                    rule_id       = "T69",
+                    severity      = "HIGH",
+                    evidence_summary = (
+                        f"Superpowers plan drift detected -- agent executed tool calls "
+                        f"outside approved plan scope. {drift['c']} drift event(s) in window."
+                    ),
+                    evidence_data = {
+                        "drift_count": drift["c"],
+                    },
+                    amendment_candidate = False,
+                ))
+        except Exception as e:
+            log.debug("[InspectionEngine] plan_drift check error: %s", e)
+
         return triggers
 
     def _session_window(self) -> float:

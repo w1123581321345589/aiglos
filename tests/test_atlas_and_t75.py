@@ -336,3 +336,145 @@ class TestV0240RuleCount:
     def test_all_exports_importable(self):
         missing = [e for e in aiglos.__all__ if not hasattr(aiglos, e)]
         assert missing == [], f"Missing exports: {missing}"
+
+
+class TestATLASCoverageAliases:
+    def test_coverage_report_returns_dict(self):
+        cov = aiglos.ATLASCoverage()
+        r = cov.coverage_report()
+        assert isinstance(r, dict)
+        assert "weighted_coverage" in r
+        assert "grade" in r
+
+    def test_gap_analysis_returns_list(self):
+        cov = aiglos.ATLASCoverage()
+        gaps = cov.gap_analysis()
+        assert isinstance(gaps, list)
+
+    def test_compliance_score_returns_float(self):
+        cov = aiglos.ATLASCoverage()
+        s = cov.compliance_score()
+        assert isinstance(s, float)
+        assert 0.0 <= s <= 1.0
+
+    def test_coverage_report_keys(self):
+        cov = aiglos.ATLASCoverage()
+        r = cov.coverage_report()
+        for k in ("total_threats", "full_coverage", "partial_coverage",
+                   "no_coverage", "weighted_coverage", "grade", "rules_used"):
+            assert k in r, f"Missing key: {k}"
+
+    def test_gap_analysis_returns_partial_threats(self):
+        cov = aiglos.ATLASCoverage()
+        gaps = cov.gap_analysis()
+        for g in gaps:
+            assert "atlas_id" in g
+            assert "coverage" in g
+
+    def test_compliance_score_in_range(self):
+        cov = aiglos.ATLASCoverage()
+        s = cov.compliance_score()
+        assert 0.0 < s <= 1.0
+
+
+class TestGHSAWatcherAliases:
+    def test_local_only_constructor(self):
+        from aiglos.autoresearch.ghsa_watcher import GHSAWatcher
+        w = GHSAWatcher(local_only=True)
+        assert w._local_only is True
+
+    def test_check_local_returns_dict(self):
+        from aiglos.autoresearch.ghsa_watcher import GHSAWatcher
+        w = GHSAWatcher(local_only=True)
+        r = w.check_local()
+        assert isinstance(r, dict)
+        assert "total" in r
+        assert "covered" in r
+
+    def test_ghsa_advisory_rule_mappings(self):
+        from aiglos.autoresearch.ghsa_watcher import GHSAWatcher
+        w = GHSAWatcher(local_only=True)
+        r = w.check_local()
+        by_id = {a["ghsa_id"]: a for a in r["advisories"]}
+        assert sorted(by_id["GHSA-g8p2-7wf7-98mq"]["matched_rules"]) == ["T03", "T12", "T19", "T68"]
+        assert sorted(by_id["GHSA-q284-4pvr-m585"]["matched_rules"]) == ["T03", "T04", "T70"]
+        assert sorted(by_id["GHSA-mc68-q9jw-2h3v"]["matched_rules"]) == ["T03", "T70"]
+
+
+class TestSuperpowersModule:
+    def test_import_mark_function(self):
+        from aiglos.integrations.superpowers import mark_as_superpowers_session
+        assert callable(mark_as_superpowers_session)
+
+    def test_create_session(self):
+        from aiglos.integrations.superpowers import mark_as_superpowers_session
+        s = mark_as_superpowers_session(
+            plan_text="Build auth",
+            allowed_files=["src/"],
+            allowed_hosts=["api.example.com"],
+        )
+        assert s.plan_hash is not None
+        assert len(s.plan_hash) == 16
+
+    def test_phase_transitions(self):
+        from aiglos.integrations.superpowers import SuperpowersSession
+        s = SuperpowersSession("test plan", ["f/"], ["h.com"])
+        assert s.phase == "planning"
+        s.set_phase("brainstorm")
+        assert s.phase == "brainstorm"
+        s.set_phase("execute")
+        assert s.phase == "execute"
+        s.set_phase("tdd_loop")
+        assert s.phase == "tdd_loop"
+        assert s.is_tdd_phase()
+        s.set_phase("commit")
+        assert not s.is_tdd_phase()
+        s.set_phase("review")
+        assert s.phase == "review"
+
+    def test_invalid_phase_raises(self):
+        from aiglos.integrations.superpowers import SuperpowersSession
+        s = SuperpowersSession("plan", [], [])
+        with pytest.raises(ValueError):
+            s.set_phase("invalid_phase")
+
+    def test_file_scope_check(self):
+        from aiglos.integrations.superpowers import SuperpowersSession
+        s = SuperpowersSession("plan", ["src/", "tests/"], [])
+        assert s.check_file_scope("src/auth.py") is True
+        assert s.check_file_scope("/etc/passwd") is False
+
+    def test_host_scope_check(self):
+        from aiglos.integrations.superpowers import SuperpowersSession
+        s = SuperpowersSession("plan", [], ["api.example.com"])
+        assert s.check_host_scope("api.example.com") is True
+        assert s.check_host_scope("evil.com") is False
+
+    def test_drift_recording(self):
+        from aiglos.integrations.superpowers import SuperpowersSession
+        s = SuperpowersSession("plan", ["src/"], [])
+        s.record_drift("file_scope", "/etc/shadow", "outside allowed files")
+        data = s.artifact_data()
+        assert data["drift_events"] == 1
+
+    def test_artifact_data_structure(self):
+        from aiglos.integrations.superpowers import SuperpowersSession
+        s = SuperpowersSession("plan", [], [])
+        data = s.artifact_data()
+        assert "plan_hash" in data
+        assert "phase_history" in data
+        assert "tdd_step_count" in data
+        assert "drift_events" in data
+        assert "final_phase" in data
+
+    def test_campaign_pattern_count_19(self):
+        from aiglos.adaptive.campaign import _CAMPAIGN_PATTERNS
+        names = [p["name"] for p in _CAMPAIGN_PATTERNS]
+        assert len(names) == 19
+        assert "SUPERPOWERS_PLAN_HIJACK" in names
+
+    def test_superpowers_plan_hijack_confidence(self):
+        from aiglos.adaptive.campaign import _CAMPAIGN_PATTERNS
+        hijack = [p for p in _CAMPAIGN_PATTERNS if p["name"] == "SUPERPOWERS_PLAN_HIJACK"][0]
+        assert hijack["confidence"] == 0.97
+        assert {"T69"} in hijack["sequence"]
