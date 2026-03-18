@@ -186,6 +186,13 @@ footer {
 .cm { color: #5c6370; font-style: italic; }
 .nb { color: #e5c07b; }
 
+.compare-dropdown { position: relative; }
+.compare-dropdown > a { cursor: pointer; }
+.compare-menu { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; background: #fff; border: 1px solid var(--rule); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); min-width: 180px; padding: 6px; z-index: 200; }
+.compare-dropdown:hover .compare-menu { display: block; }
+.compare-menu a { display: block; padding: 8px 12px; font-size: 13px; color: var(--mid); border-radius: 5px; transition: all .12s; }
+.compare-menu a:hover { background: #f5f5f4; color: var(--ink); }
+
 @media (max-width: 768px) {
   nav { padding: 0 20px; }
   .nav-links { display: none; }
@@ -205,6 +212,8 @@ footer {
     <li><a href="/threats.html">Threats</a></li>
     <li><a href="/intel">Intel</a></li>
     <li><a href="/skills">Skills</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li class="compare-dropdown"><a>Compare ▾</a><div class="compare-menu"><a href="/compare/clawkeeper">vs ClawKeeper</a><a href="/compare/openshell">vs OpenShell</a></div></li>
     <li><a href="/docs.html" class="active">Docs</a></li>
   </ul>
   <div class="nav-right">

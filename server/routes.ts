@@ -120,6 +120,13 @@ export async function registerRoutes(
     next();
   });
 
+  app.get("/compare/clawkeeper", (_req, res) => {
+    res.sendFile("compare-clawkeeper.html", { root: publicRoot });
+  });
+  app.get("/compare/openshell", (_req, res) => {
+    res.sendFile("compare-openshell.html", { root: publicRoot });
+  });
+
   const loginSchema = z.object({
     username: z.string().min(1),
     password: z.string().min(1),

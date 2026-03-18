@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aiglos vs ClawKeeper -- Aiglos</title>
+<meta name="description" content="Compare Aiglos runtime behavioral security with ClawKeeper host scanning. Understand the architectural differences and when to use each.">
+<meta property="og:title" content="Aiglos vs ClawKeeper">
+<meta property="og:description" content="Runtime behavioral intelligence vs host scanning. A factual comparison.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+:root {
+  --bg: #fafaf9;
+  --ink: #0a0a0a;
+  --mid: #525252;
+  --dim: #a3a3a3;
+  --rule: #e5e5e5;
+  --green: #16a34a;
+  --orange: #ea580c;
+}
+body { background: var(--bg); color: var(--ink); font-family: 'Geist', sans-serif; font-size: 15px; line-height: 1.6; }
+a { color: inherit; text-decoration: none; }
+
+nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px; height: 56px;
+  background: rgba(250,250,249,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rule);
+}
+.nav-logo { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
+.nav-links a { font-size: 14px; color: var(--mid); transition: color .15s; }
+.nav-links a:hover, .nav-links a.active { color: var(--ink); }
+.nav-right { display: flex; gap: 10px; align-items: center; }
+.btn-ghost { font-size: 13px; color: var(--mid); background: none; border: 1px solid var(--rule); padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all .15s; text-decoration: none; display: inline-block; }
+.btn-ghost:hover { border-color: #a3a3a3; color: var(--ink); }
+.btn-dark { font-size: 13px; color: #fff; background: var(--ink); border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; display: inline-block; text-decoration: none; }
+.btn-dark:hover { opacity: .8; }
+
+.compare-dropdown { position: relative; }
+.compare-dropdown > a { cursor: pointer; }
+.compare-menu { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; background: #fff; border: 1px solid var(--rule); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); min-width: 180px; padding: 6px; z-index: 200; }
+.compare-dropdown:hover .compare-menu { display: block; }
+.compare-menu a { display: block; padding: 8px 12px; font-size: 13px; color: var(--mid); border-radius: 5px; transition: all .12s; }
+.compare-menu a:hover { background: #f5f5f4; color: var(--ink); }
+
+.page { max-width: 860px; margin: 0 auto; padding: 96px 40px 80px; }
+
+.eyebrow { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.12em; color: var(--dim); text-transform: uppercase; margin-bottom: 16px; }
+
+h1 { font-size: clamp(30px, 4vw, 46px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 16px; }
+
+.page-sub { font-size: 17px; color: var(--mid); line-height: 1.7; max-width: 540px; margin-bottom: 72px; }
+
+h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.025em; margin-bottom: 28px; }
+
+.section { margin-bottom: 72px; }
+
+.compare-table { width: 100%; border-collapse: collapse; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; }
+.compare-table thead { background: #f5f5f4; }
+.compare-table th { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); padding: 14px 20px; text-align: left; font-weight: 500; }
+.compare-table th:first-child { width: 40%; }
+.compare-table td { padding: 14px 20px; font-size: 14px; color: var(--mid); border-top: 1px solid var(--rule); line-height: 1.5; vertical-align: top; }
+.compare-table td:first-child { font-weight: 500; color: var(--ink); }
+.compare-table tbody tr:hover { background: #fafaf8; }
+.check-yes { color: var(--green); font-weight: 500; }
+.check-no { color: var(--dim); }
+.check-partial { color: var(--orange); font-weight: 500; }
+
+.arch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+.arch-col { background: var(--bg); padding: 32px 28px; }
+.arch-col.alt { background: #fff; }
+.arch-label { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-bottom: 16px; }
+.arch-col h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 12px; }
+.arch-col p { font-size: 14px; color: var(--mid); line-height: 1.65; }
+.arch-col ul { list-style: none; margin-top: 12px; }
+.arch-col ul li { font-size: 13px; color: var(--mid); padding: 6px 0; border-bottom: 1px solid #f0f0ef; display: flex; gap: 8px; align-items: flex-start; }
+.arch-col ul li:last-child { border-bottom: none; }
+.arch-col ul li::before { content: '→'; color: var(--dim); flex-shrink: 0; }
+
+.pricing-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+.pricing-box { background: #fff; padding: 32px 28px; text-align: center; }
+.pricing-box.bg { background: var(--bg); }
+.pricing-name { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); margin-bottom: 12px; }
+.pricing-amount { font-size: 36px; font-weight: 600; letter-spacing: -0.04em; margin-bottom: 6px; }
+.pricing-desc { font-size: 13px; color: var(--mid); line-height: 1.6; }
+
+.when-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+.when-col { background: #fff; padding: 32px 28px; }
+.when-col.bg { background: var(--bg); }
+.when-col h3 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 14px; }
+.when-col ul { list-style: none; }
+.when-col ul li { font-size: 14px; color: var(--mid); padding: 8px 0; border-bottom: 1px solid #f0f0ef; display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
+.when-col ul li:last-child { border-bottom: none; }
+.when-col ul li::before { content: '✓'; color: var(--green); flex-shrink: 0; }
+
+.complement-note { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 28px 32px; margin-bottom: 24px; }
+.complement-note h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.complement-note p { font-size: 14px; color: var(--mid); line-height: 1.65; }
+
+.cta-block { text-align: center; padding: 64px 20px; border-top: 1px solid var(--rule); margin-top: 72px; }
+.cta-block h2 { margin-bottom: 12px; }
+.cta-block p { font-size: 15px; color: var(--mid); margin-bottom: 28px; }
+.cta-block .btn-dark { font-size: 15px; padding: 12px 28px; border-radius: 8px; }
+
+footer { border-top: 1px solid var(--rule); padding: 28px 40px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--dim); }
+.footer-links { display: flex; gap: 22px; list-style: none; }
+.footer-links a { color: var(--dim); transition: color .15s; }
+.footer-links a:hover { color: var(--ink); }
+
+@media (max-width: 768px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .page { padding: 56px 20px 60px; }
+  .arch-grid, .pricing-compare, .when-grid { grid-template-columns: 1fr; }
+  .compare-table { font-size: 13px; }
+  .compare-table th, .compare-table td { padding: 10px 14px; }
+  footer { flex-direction: column; gap: 16px; padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo" data-testid="link-home">Aiglos</a>
+  <ul class="nav-links">
+    <li><a href="/#how" data-testid="link-product">Product</a></li>
+    <li><a href="/pricing.html" data-testid="link-pricing">Pricing</a></li>
+    <li class="compare-dropdown">
+      <a class="active" data-testid="link-compare">Compare ▾</a>
+      <div class="compare-menu">
+        <a href="/compare/clawkeeper" data-testid="link-compare-clawkeeper">vs ClawKeeper</a>
+        <a href="/compare/openshell" data-testid="link-compare-openshell">vs OpenShell</a>
+      </div>
+    </li>
+    <li><a href="/docs.html" data-testid="link-docs">Docs</a></li>
+  </ul>
+  <div class="nav-right">
+    <a href="#" class="btn-ghost" data-testid="button-signin">Sign In</a>
+    <a href="#" class="btn-dark" data-testid="button-get-started" onclick="openModal(); return false;">Try Aiglos</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="eyebrow">Comparison</div>
+  <h1>Aiglos vs ClawKeeper</h1>
+  <p class="page-sub">
+    ClawKeeper scans your host once and exits. Aiglos inspects every tool call your agents make, in real time. They solve different problems — and work best together.
+  </p>
+
+  <div class="section">
+    <h2>Feature comparison</h2>
+    <table class="compare-table" data-testid="table-feature-comparison">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>Aiglos</th>
+          <th>ClawKeeper</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Approach</td>
+          <td><span class="check-yes">Runtime SDK — wraps every tool call</span></td>
+          <td>Host scanner — run once and exit</td>
+        </tr>
+        <tr>
+          <td>Detection method</td>
+          <td><span class="check-yes">Behavioral learning + campaign detection</span></td>
+          <td>Deterministic file checks</td>
+        </tr>
+        <tr>
+          <td>Threat coverage</td>
+          <td><span class="check-yes">T01–T66 (66 threat families)</span></td>
+          <td><span class="check-partial">11 static signals</span></td>
+        </tr>
+        <tr>
+          <td>Behavioral baseline</td>
+          <td><span class="check-yes">Yes — learns your deployment</span></td>
+          <td><span class="check-no">No</span></td>
+        </tr>
+        <tr>
+          <td>Campaign detection</td>
+          <td><span class="check-yes">Yes — federated Markov prior</span></td>
+          <td><span class="check-no">No</span></td>
+        </tr>
+        <tr>
+          <td>Outbound secret scanning</td>
+          <td><span class="check-yes">Yes (T41)</span></td>
+          <td><span class="check-no">No</span></td>
+        </tr>
+        <tr>
+          <td>Honeypot detection</td>
+          <td><span class="check-yes">Yes (T43)</span></td>
+          <td><span class="check-no">No</span></td>
+        </tr>
+        <tr>
+          <td>Policy tiers / enforcement</td>
+          <td><span class="check-yes">BLOCK / WARN / CLEAN verdicts</span></td>
+          <td><span class="check-no">Pass / fail only</span></td>
+        </tr>
+        <tr>
+          <td>Compliance (NDAA, EU AI Act, NIST)</td>
+          <td><span class="check-yes">Citation-verified rules</span></td>
+          <td><span class="check-no">No</span></td>
+        </tr>
+        <tr>
+          <td>GOVBENCH scoring</td>
+          <td><span class="check-yes">Yes — A-F grade, 50+ checks</span></td>
+          <td><span class="check-no">No</span></td>
+        </tr>
+        <tr>
+          <td>Signed attestation artifacts</td>
+          <td><span class="check-yes">Yes</span></td>
+          <td><span class="check-no">No</span></td>
+        </tr>
+        <tr>
+          <td>MCP client support</td>
+          <td><span class="check-yes">Any MCP client (Claude Code, Cursor, etc.)</span></td>
+          <td><span class="check-no">N/A — host-level only</span></td>
+        </tr>
+        <tr>
+          <td>Ingests ClawKeeper data</td>
+          <td><span class="check-yes">Yes — badge ingestion, 13,000+ skills</span></td>
+          <td>N/A</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Architecture</h2>
+    <div class="arch-grid">
+      <div class="arch-col alt">
+        <div class="arch-label">Aiglos</div>
+        <h3>Runtime behavioral intelligence</h3>
+        <p>Aiglos is an in-process SDK that intercepts tool calls, HTTP requests, and subprocess commands before they execute. It builds a behavioral baseline of your agent's normal activity and detects deviations in real time.</p>
+        <ul>
+          <li>Patches MCP ClientSession at import time</li>
+          <li>Synchronous scanning — under 1ms per call</li>
+          <li>Continuous protection for the full agent session</li>
+          <li>Federated intelligence across deployments</li>
+        </ul>
+      </div>
+      <div class="arch-col">
+        <div class="arch-label">ClawKeeper</div>
+        <h3>Point-in-time host scanner</h3>
+        <p>ClawKeeper scans the host environment for known misconfigurations and vulnerable files. It runs as a CLI tool, produces a report, and exits. It does not monitor runtime behavior.</p>
+        <ul>
+          <li>Checks 11 static signals on the host</li>
+          <li>Produces a pass/fail report</li>
+          <li>Runs once — no continuous monitoring</li>
+          <li>No awareness of agent tool call behavior</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Pricing</h2>
+    <div class="pricing-compare">
+      <div class="pricing-box">
+        <div class="pricing-name">Aiglos Pro</div>
+        <div class="pricing-amount" data-testid="text-aiglos-price">$49<span style="font-size:18px;font-weight:400;color:var(--dim)">/mo</span></div>
+        <p class="pricing-desc">Per developer. Runtime behavioral intelligence, full T01–T66 stack, compliance, attestation.</p>
+      </div>
+      <div class="pricing-box bg">
+        <div class="pricing-name">ClawKeeper</div>
+        <div class="pricing-amount" data-testid="text-clawkeeper-price">$30<span style="font-size:18px;font-weight:400;color:var(--dim)">/mo</span></div>
+        <p class="pricing-desc">Per host. Static host scanning, 11 signal checks, pass/fail reporting.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>When to use each</h2>
+    <div class="when-grid">
+      <div class="when-col">
+        <h3>Use Aiglos when</h3>
+        <ul>
+          <li>Your AI agents make tool calls you need inspected at runtime</li>
+          <li>You need behavioral anomaly detection across sessions</li>
+          <li>You need compliance evidence (NDAA §1513, EU AI Act, NIST)</li>
+          <li>You want campaign-level threat detection</li>
+          <li>You need outbound secret scanning and honeypot detection</li>
+          <li>You want a security grade (GOVBENCH) for your deployment</li>
+        </ul>
+      </div>
+      <div class="when-col bg">
+        <h3>Use ClawKeeper when</h3>
+        <ul>
+          <li>You need a quick scan of your host environment</li>
+          <li>You want a pass/fail check before deploying</li>
+          <li>You need to verify static file integrity</li>
+          <li>You want a lightweight pre-flight check</li>
+        </ul>
+      </div>
+    </div>
+    <div class="complement-note" data-testid="text-complement-note">
+      <h3>Better together</h3>
+      <p>Aiglos and ClawKeeper are complementary. Aiglos ingests ClawKeeper badge data (13,000+ skills) to enrich its runtime decisions. Use ClawKeeper to scan your host before deployment, and Aiglos to protect every tool call once your agents are running.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="cta-block">
+  <h2>Ready to protect your agents?</h2>
+  <p>One import. Every tool call inspected. Under 1ms.</p>
+  <a href="#" class="btn-dark" data-testid="button-try-aiglos" onclick="openModal(); return false;">Try Aiglos</a>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-label">Aiglos Pro</div>
+    <h3>Get started</h3>
+    <p class="modal-sub">$49/month. Full protection from your first tool call.</p>
+    <input id="m-email" type="email" class="modal-input" placeholder="you@company.com" data-testid="input-email">
+    <button class="modal-submit" onclick="submitModal()" data-testid="button-submit">Create Account</button>
+    <p class="modal-legal">Cancel anytime. No contracts.</p>
+  </div>
+</div>
+
+<footer>
+  <span>Aiglos</span>
+  <ul class="footer-links">
+    <li><a href="/docs.html">Docs</a></li>
+    <li><a href="https://github.com/aiglos">GitHub</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+    <li><a href="/changelog.html">Changelog</a></li>
+  </ul>
+  <span>aiglos.io</span>
+</footer>
+
+<style>
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); backdrop-filter: blur(6px); z-index: 500; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 40px; width: 400px; max-width: 92vw; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
+.modal-close { position: absolute; top: 14px; right: 16px; background: none; border: none; font-size: 20px; color: var(--dim); cursor: pointer; }
+.modal-label { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+.modal h3 { font-size: 22px; font-weight: 600; letter-spacing: -0.025em; margin-bottom: 8px; }
+.modal-sub { font-size: 13px; color: var(--mid); line-height: 1.65; margin-bottom: 24px; }
+.modal-input { width: 100%; border: 1px solid var(--rule); border-radius: 6px; padding: 10px 14px; font-family: 'Geist', sans-serif; font-size: 13px; color: var(--ink); background: var(--bg); outline: none; margin-bottom: 10px; transition: border-color .15s; }
+.modal-input:focus { border-color: #a3a3a3; }
+.modal-submit { width: 100%; background: var(--ink); color: #fff; border: none; border-radius: 6px; padding: 12px; font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; margin-bottom: 12px; transition: opacity .15s; }
+.modal-submit:hover { opacity: .82; }
+.modal-legal { font-size: 11px; color: var(--dim); text-align: center; }
+</style>
+
+<script>
+function openModal() { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function submitModal() {
+  const email = document.getElementById('m-email').value.trim();
+  if (!email) { document.getElementById('m-email').focus(); return; }
+  document.querySelector('.modal').innerHTML =
+    '<div style="text-align:center;padding:16px 0">' +
+    '<div style="font-size:36px;margin-bottom:16px">✓</div>' +
+    '<h3 style="font-size:20px;font-weight:600;letter-spacing:-0.02em;margin-bottom:10px">You\'re in</h3>' +
+    '<p style="font-size:13px;color:var(--mid);line-height:1.65;margin-bottom:24px">Check your email to complete setup and get your API key.</p>' +
+    '<button onclick="closeModal()" style="background:var(--ink);color:#fff;border:none;border-radius:6px;padding:10px 24px;font-size:14px;cursor:pointer">Close</button>' +
+    '</div>';
+}
+</script>
+
+</body>
+</html>
