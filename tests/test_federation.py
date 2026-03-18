@@ -646,7 +646,7 @@ class TestGlobalPriorMatchTrigger:
 class TestV0130ModuleAPI:
 
     def test_version_is_0130(self):
-        assert aiglos.__version__ == "0.23.0"
+        assert aiglos.__version__ == "0.24.0"
 
     def test_federation_client_in_all(self):
         assert "FederationClient" in aiglos.__all__

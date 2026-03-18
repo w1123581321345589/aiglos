@@ -845,6 +845,147 @@ def match_T70(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
+# ── T71: Pairing Grace Abuse ────────────────────────────────────────────────
+# OpenClaw device pairing has a 30-second grace period where a new device
+# can pair without full authentication. This window is exploitable via race
+# condition. T71 fires on pairing-related tool calls with suspicious timing
+# or pattern (multiple rapid pairing attempts, pairing in unexpected context).
+
+_T71_PAIRING = re.compile(
+    r'(?:pair(?:ing)?|device[_\s]*pair|node[_\s]*pair|'
+    r'pairing[_\s]*code|pair[_\s]*token|'
+    r'sessions[_\s]*spawn|node[_\s]*register|'
+    r'grace[_\s]*period|device[_\s]*auth)',
+    re.IGNORECASE
+)
+
+def match_T71(name: str, args: Dict[str, Any]) -> bool:
+    """T71 PAIRING_GRACE_ABUSE -- suspicious pairing activity pattern."""
+    n = _tool_lower(name)
+    s = _args_str(args)
+    if bool(_T71_PAIRING.search(n) or _T71_PAIRING.search(s)):
+        return any(
+            kw in s for kw in (
+                "force", "override", "bypass", "retry", "attempt",
+                "rapid", "flood", "multiple", "resend", "race"
+            )
+        ) or "sessions_spawn" in n
+    return False
+
+
+# ── T72: Channel Identity Spoof ─────────────────────────────────────────────
+# AllowFrom validation in OpenClaw uses sender identity from channel metadata.
+# A spoofed phone number (WhatsApp), Telegram user ID, or Discord snowflake
+# can pass the AllowFrom check if the validation doesn't verify at the
+# cryptographic layer. T72 fires when message routing metadata contains
+# explicit identity override attempts or channel probing patterns.
+
+_T72_SPOOF = re.compile(
+    r'(?:allowfrom|allow[_\s]*from|sender[_\s]*(?:id|identity|spoof)|'
+    r'from[_\s]*(?:number|phone|user)[_\s]*(?:override|spoof|fake)|'
+    r'channel[_\s]*(?:probe|scan|enumerate|discover)|'
+    r'webhook[_\s]*(?:spoof|fake|override)|'
+    r'x[_\-]forwarded[_\-]for|x[_\-]real[_\-]ip)',
+    re.IGNORECASE
+)
+
+def match_T72(name: str, args: Dict[str, Any]) -> bool:
+    """T72 CHANNEL_IDENTITY_SPOOF -- AllowFrom spoofing or channel probing."""
+    n = _tool_lower(name)
+    s = _args_str(args)
+    return bool(_T72_SPOOF.search(n) or _T72_SPOOF.search(s))
+
+
+# ── T73: Tool Enumeration ───────────────────────────────────────────────────
+# An agent probing its own tool list is classic pre-exploitation recon.
+# The signature: many distinct tool calls, minimal or empty arguments,
+# rapid succession, no meaningful output. Like a port scan but for capabilities.
+# T73 fires when an individual tool call is part of a clear enumeration pattern.
+
+_T73_ENUM = re.compile(
+    r'(?:tools?[_\s]*(?:list|enumerate|available|help|get|all)|'
+    r'list[_\s]*tools?|'
+    r'capabilities|'
+    r'mcp[_\s]*(?:list|tools?|resources?|prompts?)|'
+    r'server[_\s]*(?:list|info|capabilities)|'
+    r'get[_\s]*(?:tools?|capabilities|schema))',
+    re.IGNORECASE
+)
+
+def match_T73(name: str, args: Dict[str, Any]) -> bool:
+    """T73 TOOL_ENUMERATION -- capability reconnaissance via tool probing."""
+    n = _tool_lower(name)
+    s = _args_str(args)
+    if bool(_T73_ENUM.search(n)):
+        return True
+    if args == {} or args == {"test": True} or args == {"probe": True}:
+        return True
+    if any(kw in n for kw in ("list_tools", "list_resources", "list_prompts")):
+        return True
+    return False
+
+
+# ── T74: Content Wrapper Escape ─────────────────────────────────────────────
+# OpenClaw wraps fetched external content in XML tags to prevent direct
+# injection into the agent context. T74 fires when content contains patterns
+# designed to break out of that wrapping: XML tag terminators that would
+# close the wrapper, CDATA sequences, entity injection, or encoding tricks.
+
+_T74_WRAPPER_ESCAPE = re.compile(
+    r'(?:<!\[CDATA\[|'
+    r'\]\]>|'
+    r'</(?:external|fetched|url|content|data|result|response|document)\s*>|'
+    r'<!--.*?inject|'
+    r'&(?:#x[0-9a-f]+|#[0-9]+);.*(?:ignore|disregard|forget)|'
+    r'\u003c|\u003e|'
+    r'%3C|%3E|'
+    r'.*?</|'
+    r'(?:ignore|disregard|forget)\s+(?:above|previous|prior|all)\s+(?:instruction|content|context))',
+    re.IGNORECASE | re.DOTALL
+)
+
+def match_T74(name: str, args: Dict[str, Any]) -> bool:
+    """T74 CONTENT_WRAPPER_ESCAPE -- XML wrapper escape in fetched content."""
+    n = _tool_lower(name)
+    if not any(kw in n for kw in (
+        "fetch", "get", "read", "load", "retrieve", "browse",
+        "web", "http", "url", "download", "email", "message"
+    )):
+        return False
+    content = _content(args)
+    s = _args_str(args)
+    return bool(_T74_WRAPPER_ESCAPE.search(content) or _T74_WRAPPER_ESCAPE.search(s))
+
+
+# ── T75: Session Data Extraction ────────────────────────────────────────────
+# ATLAS T-DISC-002. An agent accessing sessions.list / sessions.preview /
+# chat.history is touching data that crosses session boundaries. The OpenClaw
+# threat model documents this explicitly: sessionKey is routing, not auth.
+# Inside one Gateway, any caller can enumerate session metadata.
+# Bulk or rapid-succession session enumeration = lateral data collection.
+
+_T75_SESSION = re.compile(
+    r"(?:sessions?[_\s\.]*(?:list|preview|all|enumerate|dump|export|get|history)|"
+    r"chat[_\s\.]*history|"
+    r"session[_\s\.]*(?:metadata|data|transcript|log|export)|"
+    r"history[_\s\.]*(?:get|list|fetch|export)|"
+    r"transcripts?[_\s\.]*(?:list|get|export|all))",
+    re.IGNORECASE
+)
+
+
+def match_T75(name: str, args: Dict[str, Any]) -> bool:
+    """T75 SESSION_DATA_EXTRACT -- lateral session data collection."""
+    n = _tool_lower(name)
+    s = _args_str(args)
+    if bool(_T75_SESSION.search(n)):
+        return True
+    if bool(_T75_SESSION.search(s)):
+        if any(kw in s for kw in ("all", "list", "enumerate", "export", "dump", "bulk")):
+            return True
+    return False
+
+
 # ── Rule table for import into openclaw._RULES ───────────────────────────────
 
 RULES_T44_T66: List[Dict] = [
@@ -942,4 +1083,43 @@ RULES_T44_T66: List[Dict] = [
          "that changes what 'python' or 'node' resolves to."
      ),
      "score": 0.88, "critical": True, "match": match_T70},
+    {"id": "T71", "name": "PAIRING_GRACE_ABUSE",
+     "desc": (
+         "Exploitation of the 30-second device pairing grace period -- "
+         "OpenClaw ATLAS T-ACCESS-001. Race condition on pairing code "
+         "interception. Fires on pairing tool calls with force/bypass/flood "
+         "indicators inconsistent with legitimate device enrollment."
+     ),
+     "score": 0.82, "critical": True, "match": match_T71},
+    {"id": "T72", "name": "CHANNEL_IDENTITY_SPOOF",
+     "desc": (
+         "AllowFrom sender identity spoofing or channel integration probing -- "
+         "OpenClaw ATLAS T-ACCESS-002 + T-RECON-002. Fires when message routing "
+         "metadata contains identity override attempts or channel probing patterns."
+     ),
+     "score": 0.85, "critical": True, "match": match_T72},
+    {"id": "T73", "name": "TOOL_ENUMERATION",
+     "desc": (
+         "Agent systematically probing its own tool list -- OpenClaw ATLAS T-DISC-001. "
+         "Classic pre-exploitation recon: empty/probe args across many distinct tools "
+         "in rapid succession. mcp.list_tools and list_resources always fire."
+     ),
+     "score": 0.75, "critical": False, "match": match_T73},
+    {"id": "T74", "name": "CONTENT_WRAPPER_ESCAPE",
+     "desc": (
+         "Attempt to escape OpenClaw XML content wrapping -- "
+         "OpenClaw ATLAS T-EVADE-001 + T-EVADE-002. "
+         "CDATA sequences, tag terminators, or encoding tricks designed to "
+         "break fetched content out of its wrapper and inject into agent context."
+     ),
+     "score": 0.86, "critical": True, "match": match_T74},
+    {"id": "T75", "name": "SESSION_DATA_EXTRACT",
+     "desc": (
+         "Lateral session data collection via sessions.list, sessions.preview, "
+         "or chat.history. ATLAS T-DISC-002. OpenClaw sessionKey is routing "
+         "not auth -- any gateway-authenticated caller can enumerate session "
+         "metadata. Bulk or rapid-succession session enumeration signals "
+         "lateral data collection across session boundaries."
+     ),
+     "score": 0.82, "critical": True, "match": match_T75},
 ]

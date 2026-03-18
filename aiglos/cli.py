@@ -984,6 +984,10 @@ def _cmd_audit(args: list) -> None:
         _cmd_audit_ghsa(args)
         return
 
+    if "--atlas" in args:
+        _cmd_audit_atlas(args)
+        return
+
     if schedule:
         _schedule_nightly_audit()
         return
@@ -1058,6 +1062,32 @@ def _cmd_audit_ghsa(args: list) -> None:
         print(f"  {bold(f'{artifact.total_covered}/{artifact.total_ghsa}. {artifact.coverage_pct:.0f}%.')}")
         print(f"  Every published OpenClaw GHSA caught by existing Aiglos rules.")
         print()
+
+
+def _cmd_audit_atlas(args: list) -> None:
+    """
+    aiglos audit --atlas [--format json|gaps-only]
+
+    ATLAS coverage report -- maps OpenClaw ATLAS threat model to Aiglos rules.
+    """
+    from aiglos.autoresearch.atlas_coverage import ATLASCoverage
+
+    fmt = "summary"
+    i = 0
+    while i < len(args):
+        if args[i] == "--format" and i + 1 < len(args):
+            fmt = args[i + 1]; i += 2
+        else:
+            i += 1
+
+    cov = ATLASCoverage()
+
+    if fmt == "json":
+        print(cov.to_json())
+    elif fmt == "gaps-only":
+        print(cov.report(gaps_only=True))
+    else:
+        print(cov.report())
 
 
 def _schedule_nightly_audit() -> None:
