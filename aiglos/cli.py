@@ -980,6 +980,10 @@ def _cmd_audit(args: list) -> None:
         else:
             i += 1
 
+    if "--ghsa" in args:
+        _cmd_audit_ghsa(args)
+        return
+
     if schedule:
         _schedule_nightly_audit()
         return
@@ -1011,6 +1015,49 @@ def _cmd_audit(args: list) -> None:
     if save:
         path = reporter.save()
         print(f"  Report saved: {cyan(str(path))}")
+
+
+def _cmd_audit_ghsa(args: list) -> None:
+    """
+    aiglos audit --ghsa [--format markdown|json|summary]
+
+    GHSA coverage report -- maps published OpenClaw advisories to Aiglos rules.
+    """
+    from aiglos.autoresearch.ghsa_coverage import generate_coverage_artifact
+
+    fmt = "summary"
+    i = 0
+    while i < len(args):
+        if args[i] == "--format" and i + 1 < len(args):
+            fmt = args[i + 1]; i += 2
+        else:
+            i += 1
+
+    artifact = generate_coverage_artifact()
+
+    if fmt == "markdown":
+        print(artifact.to_markdown())
+    elif fmt == "json":
+        print(artifact.to_json())
+    else:
+        print(f"\n  {cyan('Aiglos GHSA Coverage Report')}  v{artifact.version}")
+        print(f"  {'=' * 50}")
+        print(f"  Published advisories:  {artifact.total_ghsa}")
+        print(f"  Covered by rules:      {artifact.total_covered}")
+        print(f"  Coverage:              {green(f'{artifact.coverage_pct:.0f}%')}")
+        print()
+        for e in artifact.entries:
+            cvss_str = f"CVSS {e.cvss}" if e.cvss else "CVSS N/A"
+            rules_str = ", ".join(e.rules)
+            print(f"  {green('+')} {e.ghsa_id}  [{e.severity}]  {cvss_str}")
+            print(f"    {e.title[:65]}")
+            print(f"    Rules: {cyan(rules_str)}")
+            if e.disclosed_by:
+                print(f"    Disclosed by: {e.disclosed_by}")
+            print()
+        print(f"  {bold(f'{artifact.total_covered}/{artifact.total_ghsa}. {artifact.coverage_pct:.0f}%.')}")
+        print(f"  Every published OpenClaw GHSA caught by existing Aiglos rules.")
+        print()
 
 
 def _schedule_nightly_audit() -> None:

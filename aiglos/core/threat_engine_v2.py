@@ -707,6 +707,144 @@ def match_T68(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
+# ── T69: Plan Drift ───────────────────────────────────────────────────────────
+_SUPERPOWERS_PLAN: dict = {}
+
+
+def register_superpowers_plan(
+    session_id: str,
+    allowed_files: list,
+    allowed_hosts: list,
+    task_names: list,
+) -> None:
+    _SUPERPOWERS_PLAN[session_id] = {
+        "allowed_files":  [str(f).lower() for f in allowed_files],
+        "allowed_hosts":  [str(h).lower() for h in allowed_hosts],
+        "task_names":     task_names,
+    }
+
+
+def clear_superpowers_plan(session_id: str) -> None:
+    _SUPERPOWERS_PLAN.pop(session_id, None)
+
+
+def match_T69(name: str, args: Dict[str, Any]) -> bool:
+    """
+    T69 PLAN_DRIFT -- agent behavior deviates from the approved Superpowers plan.
+    Silent if no plan is registered. Fires if:
+      - Filesystem access to a file not in any allowed_files pattern
+      - HTTP/network call to a host not in allowed_hosts
+    """
+    if not _SUPERPOWERS_PLAN:
+        return False
+
+    plan = next(iter(_SUPERPOWERS_PLAN.values()))
+    allowed_files = plan.get("allowed_files", [])
+    allowed_hosts = plan.get("allowed_hosts", [])
+
+    if not allowed_files and not allowed_hosts:
+        return False
+
+    n = _tool_lower(name)
+    s = _args_str(args)
+
+    if allowed_files and any(
+        kw in n for kw in ("read", "write", "edit", "delete", "open", "create")
+    ):
+        path = str(args.get("path", args.get("file", args.get("filename", "")))).lower()
+        if path and not any(
+            path.startswith(af) or af in path
+            for af in allowed_files + [".git", "tmp", "test", "spec", "__pycache__"]
+        ):
+            return True
+
+    if allowed_hosts and any(
+        kw in n for kw in ("http", "fetch", "request", "get", "post", "put")
+    ):
+        url = str(args.get("url", args.get("endpoint", args.get("host", "")))).lower()
+        if url and not any(h in url for h in allowed_hosts + ["localhost", "127.0.0.1"]):
+            return True
+
+    return False
+
+
+# ── T70: Environment Path Hijack ──────────────────────────────────────────────
+_T70_HIJACK_VARS = frozenset({
+    "path", "ld_preload", "ld_library_path", "pythonpath",
+    "node_path", "gem_path", "gopath", "cargo_home",
+    "perl5lib", "ruby_lib", "classpath",
+})
+
+_T70_HIJACK_RE = re.compile(
+    r"(?:PATH|LD_PRELOAD|LD_LIBRARY_PATH|PYTHONPATH|NODE_PATH|"
+    r"GEM_PATH|GOPATH|CARGO_HOME|PERL5LIB|RUBY_LIB|CLASSPATH)"
+    r"\\s*=\\s*\\S+",
+    re.MULTILINE | re.IGNORECASE
+)
+
+_T70_SUSPICIOUS_PATH = re.compile(
+    r'(?:/tmp/|/var/tmp/|~/\.|\.local/|/proc/|/dev/shm/|\.\.\/)',
+    re.IGNORECASE
+)
+
+_T70_DANGEROUS_ENV_VARS = re.compile(
+    r'(?:PATH|LD_PRELOAD|LD_LIBRARY_PATH|PYTHONPATH|NODE_PATH|'
+    r'RUBYLIB|PERL5LIB|GOPATH|DYLD_LIBRARY_PATH|DYLD_INSERT_LIBRARIES)',
+    re.IGNORECASE
+)
+
+_T70_SUSPICIOUS_VALUE = re.compile(
+    r'(?:/tmp/|/var/tmp/|/dev/shm/|\.\.\/|~\/\.|/home/[^/]+/\.)',
+    re.IGNORECASE
+)
+
+
+def match_T70(name: str, args: Dict[str, Any]) -> bool:
+    """
+    T70 ENV_PATH_HIJACK -- dangerous env var modification in execution context.
+    Catches the attack class documented in GHSA-mc68-q9jw-2h3v.
+    Three independent detection tiers; any one firing returns True.
+    """
+    n = _tool_lower(name)
+    s = _args_str(args)
+
+    env_assign = re.search(
+        r"(?:path|ld_preload|ld_library_path|pythonpath|node_path|"
+        r"rubylib|perl5lib|gopath|dyld_library_path)\s*[=:]",
+        s
+    )
+    if env_assign and _T70_SUSPICIOUS_VALUE.search(s):
+        return True
+
+    if env_assign and any(
+        kw in n for kw in ("shell", "exec", "bash", "run", "spawn", "docker",
+                            "subprocess", "popen", "system")
+    ):
+        return True
+
+    for key_name in ("env", "environment", "envs", "environ"):
+        env = args.get(key_name)
+        if not isinstance(env, dict):
+            continue
+        for key in env:
+            key_lower = str(key).lower()
+            if not re.match(
+                r"(?:path|ld_preload|ld_library_path|pythonpath|node_path|"
+                r"rubylib|perl5lib|gopath|dyld_library_path)",
+                key_lower
+            ):
+                continue
+            val = str(env[key]).lower()
+            if _T70_SUSPICIOUS_VALUE.search(val):
+                return True
+            if key_lower == "path" and any(
+                kw in n for kw in ("exec", "run", "spawn", "docker", "shell")
+            ):
+                return True
+
+    return False
+
+
 # ── Rule table for import into openclaw._RULES ───────────────────────────────
 
 RULES_T44_T66: List[Dict] = [
@@ -785,4 +923,23 @@ RULES_T44_T66: List[Dict] = [
     {"id": "T68", "name": "INSECURE_DEFAULT_CONFIG",
      "desc": "allow_remote=true with no auth -- root cause of 40,000+ exposed instances",
      "score": 0.95, "critical": True, "match": match_T68},
+    {"id": "T69", "name": "PLAN_DRIFT",
+     "desc": (
+         "Agent executing behavior that deviates from the approved Superpowers "
+         "implementation plan. The human approved a specific plan; the agent is "
+         "doing something different. Requires Superpowers integration. When present, "
+         "this is the highest-confidence detection signal available -- the deviation "
+         "is measured against explicit human approval, not statistical baseline."
+     ),
+     "score": 0.95, "critical": True, "match": match_T69},
+    {"id": "T70", "name": "ENV_PATH_HIJACK",
+     "desc": (
+         "Modification of PATH, LD_PRELOAD, LD_LIBRARY_PATH, PYTHONPATH, or NODE_PATH "
+         "in an execution context. Proven attack class: GHSA-mc68-q9jw-2h3v documented "
+         "command injection in Clawdbot Docker via PATH manipulation, redirecting execution "
+         "to a malicious binary without any shell metacharacter. Invisible to T03 "
+         "SHELL_INJECTION because there are no metacharacters -- just a clean env var write "
+         "that changes what 'python' or 'node' resolves to."
+     ),
+     "score": 0.88, "critical": True, "match": match_T70},
 ]
