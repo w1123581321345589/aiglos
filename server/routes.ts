@@ -108,11 +108,19 @@ export async function registerRoutes(
 
   const staticPages = new Set([
     "landing", "aiglos", "scan", "defense", "docs",
-    "demo", "changelog", "pricing", "coding-agents", "supernova-plan",
+    "demo", "changelog", "pricing", "coding-agents",
     "intel", "skills", "govbench-paper", "nist-submission",
-    "tutorial-github-actions", "tutorial-openclaw-hardening", "tutorial-advanced",
+    "tutorial-openclaw-hardening", "tutorial-advanced",
   ]);
   const publicRoot = new URL("../client/public", import.meta.url).pathname;
+
+  app.get("/", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  app.get("/supernova-plan", (_req, res) => res.redirect(301, "/landing"));
+  app.get("/tutorial-github-actions", (_req, res) => res.redirect(301, "/landing"));
+  app.get("/atlas", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  app.get("/ghsa", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  app.get("/superpowers", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  app.get("/benchmark", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
 
   app.get("/:page", (req, res, next) => {
     if (staticPages.has(req.params.page)) {
