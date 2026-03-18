@@ -1,7 +1,7 @@
 """
 aiglos/core/threat_engine_v2.py
 =================================
-T44-T66 threat rule library -- second-generation threat families.
+T44-T66 threat rule library — second-generation threat families.
 
 T01-T43 covered the original OpenClaw attack surface:
   credential access, prompt injection, shell injection, supply chain,
@@ -47,7 +47,7 @@ OWASP and MITRE mappings (for citation_verifier.py):
   T65 → MITRE AML.T0057 (LLM Data Extraction)
   T66 → OWASP ASI-03 (Identity/Privilege Abuse)
 """
-
+from __future__ import annotations
 
 import re
 from typing import Any, Dict, List, Optional, Tuple
@@ -263,7 +263,7 @@ def match_T49(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T50: Agentic Loop Escape ──────────────────────────────────────────────────
-# Agent breaking out of declared workflow scope -- executing steps,
+# Agent breaking out of declared workflow scope — executing steps,
 # accessing systems, or spawning tasks not in the declared loop definition.
 
 _T50_SCOPE_ESCAPE = re.compile(
@@ -292,7 +292,7 @@ def match_T50(name: str, args: Dict[str, Any]) -> bool:
 
 # ── T51: Model Fingerprint Probe ─────────────────────────────────────────────
 # Systematic prompting to extract model identity, version, training data,
-# or system prompt -- reconnaissance for follow-on attacks.
+# or system prompt — reconnaissance for follow-on attacks.
 
 _T51_PROBE = re.compile(
     r'(?:what[_\s]*(?:model|version|are\s+you)|'
@@ -410,7 +410,7 @@ def match_T55(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T56: Capability Boundary Probe ───────────────────────────────────────────
-# Systematic reconnaissance of what the agent can do -- probing tool limits,
+# Systematic reconnaissance of what the agent can do — probing tool limits,
 # scope boundaries, and capability edges before exploitation.
 
 _T56_PROBE = re.compile(
@@ -429,7 +429,7 @@ def match_T56(name: str, args: Dict[str, Any]) -> bool:
 
 # ── T57: Instruction Hierarchy Bypass ────────────────────────────────────────
 # Exploiting the trust hierarchy between system prompt, user prompt,
-# and tool output -- using one layer to override another.
+# and tool output — using one layer to override another.
 
 _T57_HIERARCHY = re.compile(
     r'(?:system[_\s]*(?:prompt|instruction)[_\s]*(?:says?|told|instructed)\s+you|'
@@ -532,7 +532,7 @@ def match_T61(name: str, args: Dict[str, Any]) -> bool:
 
 # ── T62: Secrets in Logs ─────────────────────────────────────────────────────
 # Sensitive data leaking into log, trace, or observability outputs.
-# Complements T41 (outbound secrets) -- catches log-destination leakage
+# Complements T41 (outbound secrets) — catches log-destination leakage
 # specifically: logging API keys, tokens, or PII to log aggregators.
 
 _T62_LOG_TOOLS = re.compile(
@@ -647,6 +647,9 @@ def match_T66(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T67: Heartbeat Silence ────────────────────────────────────────────────────
+# Absence of expected heartbeat events when baseline says they should be present.
+# Detects gateway kill / cron death — the quietest failure mode.
+
 _T67_SILENCE = re.compile(
     r'(?:heartbeat[_\s]*(?:stop|kill|disable|silence|suppress)|'
     r'kill[_\s]*(?:gateway|cron|heartbeat|scheduler)|'
@@ -656,7 +659,7 @@ _T67_SILENCE = re.compile(
 )
 
 def match_T67(name: str, args: Dict[str, Any]) -> bool:
-    """T67 HEARTBEAT_SILENCE -- explicit heartbeat/cron suppression attempt."""
+    """T67 HEARTBEAT_SILENCE — explicit heartbeat/cron suppression attempt."""
     s = _args_str(args)
     n = _tool_lower(name)
     return bool(
@@ -670,6 +673,11 @@ def match_T67(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T68: Insecure Default Config ──────────────────────────────────────────────
+# Fires when agent runtime is configured with allow_remote=true and no auth,
+# no allowlist, and no network restriction — root cause of 40,214 exposed instances.
+# Detected both as a static audit check (Phase 3) and as a runtime rule
+# when an agent writes or modifies gateway configuration.
+
 _T68_ALLOW_REMOTE = re.compile(
     r'allow[_\s]*remote[_\s]*[=:][_\s]*(?:true|yes|1|on)',
     re.IGNORECASE
@@ -688,17 +696,20 @@ _T68_NO_AUTH = re.compile(
 )
 
 def match_T68(name: str, args: Dict[str, Any]) -> bool:
-    """T68 INSECURE_DEFAULT_CONFIG -- allow_remote=true with no auth/allowlist."""
+    """T68 INSECURE_DEFAULT_CONFIG — allow_remote=true with no auth/allowlist."""
     s = _args_str(args)
     content = _content(args)
     combined = s + " " + content
 
+    # Must contain allow_remote signal
     if not _T68_ALLOW_REMOTE.search(combined):
         return False
 
+    # Fire when allow_remote=true is paired with disabled auth
     if _T68_NO_AUTH.search(combined):
         return True
 
+    # Fire when allow_remote=true appears with no auth keywords at all
     auth_keywords = ("api_key", "apikey", "token", "password", "auth",
                      "secret", "allowlist", "allow_list", "whitelist", "credential")
     if not any(kw in combined for kw in auth_keywords):
@@ -780,9 +791,9 @@ RULES_T44_T66: List[Dict] = [
      "desc": "GaaS agent acquiring cross-tenant privileges via API key confusion",
      "score": 0.92, "critical": True, "match": match_T66},
     {"id": "T67", "name": "HEARTBEAT_SILENCE",
-     "desc": "Explicit heartbeat, cron, or gateway suppression -- the quietest failure mode",
+     "desc": "Explicit heartbeat, cron, or gateway suppression — the quietest failure mode",
      "score": 0.88, "critical": True, "match": match_T67},
     {"id": "T68", "name": "INSECURE_DEFAULT_CONFIG",
-     "desc": "allow_remote=true with no auth -- root cause of 40,000+ exposed instances",
+     "desc": "allow_remote=true with no auth — root cause of 40,000+ exposed instances",
      "score": 0.95, "critical": True, "match": match_T68},
 ]

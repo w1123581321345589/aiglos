@@ -7,25 +7,25 @@ Single-command security posture audit for AI agent deployments.
 
 Five phases, 50+ checks, A-F letter grade.
 
-Phase 1 -- Secrets & Credentials
+Phase 1 — Secrets & Credentials
   Check for plaintext secrets in common locations:
   .env files, config files, shell history, agent definition files.
   Each exposed secret is an immediate F finding.
 
-Phase 2 -- Skill & Agent Definition Integrity
+Phase 2 — Skill & Agent Definition Integrity
   Scan ~/.claude/agents/, ~/.claude/skills/, .openclaw/, .cursor/rules/
   for injection payloads, suspicious permissions, and known-bad content.
 
-Phase 3 -- Runtime Configuration
+Phase 3 — Runtime Configuration
   Check OpenClaw/agent config for hardening gaps:
   sandbox mode, elevated tools, network restrictions.
 
-Phase 4 -- Aiglos Runtime Health
+Phase 4 — Aiglos Runtime Health
   Report on current Aiglos deployment status:
   rules active, behavioral baseline ready, honeypot deployed,
   pending policy proposals, unverified rules, source reputation events.
 
-Phase 5 -- Network & Host Exposure
+Phase 5 — Network & Host Exposure
   Identify open outbound paths, missing firewall rules,
   MCP server exposure, and webhook endpoint security.
 
@@ -40,7 +40,7 @@ The --deep flag adds:
   - Citation verification status for all active rules
   - Cross-session behavioral drift analysis
 """
-
+from __future__ import annotations
 
 import json
 import logging
@@ -368,7 +368,7 @@ class AuditScanner:
                                   "PASS",
                                   f"Scanned {scanned} agent definition file(s). No injection payloads found."))
 
-        # 2b. SKILL.md integrity -- check if it loads Aiglos
+        # 2b. SKILL.md integrity — check if it loads Aiglos
         skill_path = Path.home() / ".claude" / "skills" / "aiglos" / "SKILL.md"
         if skill_path.exists():
             self._add(CheckResult("P2-02", 2, "Aiglos SKILL.md installed", "PASS",
@@ -441,7 +441,7 @@ class AuditScanner:
                     remediation="Add a network.allowlist to your OpenClaw config.",
                 ))
 
-            # T68: Check allow_remote -- root cause of 40,000+ exposed instances
+            # T68: Check allow_remote — root cause of 40,000+ exposed instances
             gateway = config.get("gateway", config)
             allow_remote = gateway.get("allow_remote", False)
             auth_configured = bool(
@@ -511,7 +511,7 @@ class AuditScanner:
                 self._add(CheckResult(
                     "P4-01b", 4, f"Honeypot triggered ({len(hits)} hit(s))",
                     "CRITICAL",
-                    f"A honeypot file was accessed -- credential harvesting attempted.",
+                    f"A honeypot file was accessed — credential harvesting attempted.",
                     remediation="Review aiglos honeypot list for details.",
                 ))
         except Exception:
@@ -666,7 +666,7 @@ class AuditScanner:
             if result.returncode == 0:
                 self._add(CheckResult(
                     "P5-03", 5, ".env file tracked in git", "FAIL",
-                    ".env is tracked by git -- secrets may be in commit history.",
+                    ".env is tracked by git — secrets may be in commit history.",
                     remediation=(
                         "Run: git rm --cached .env && "
                         'echo ".env" >> .gitignore && '
@@ -788,7 +788,7 @@ class AuditScanner:
     # ── Utility ───────────────────────────────────────────────────────────────
 
     def _add(self, check: CheckResult) -> None:
-        # Deduplicate by check_id -- keep worst
+        # Deduplicate by check_id — keep worst
         existing = next((c for c in self._checks if c.check_id == check.check_id), None)
         if existing:
             order = {"CRITICAL": 0, "FAIL": 1, "WARN": 2, "INFO": 3, "PASS": 4}

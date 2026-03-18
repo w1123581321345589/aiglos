@@ -17,18 +17,18 @@ from aiglos.core.threat_engine_v2 import (
     match_T49, match_T50, match_T51, match_T52, match_T53,
     match_T54, match_T55, match_T56, match_T57, match_T58,
     match_T59, match_T60, match_T61, match_T62, match_T63,
-    match_T64, match_T65, match_T66,
+    match_T64, match_T65, match_T66, match_T67, match_T68,
 )
 
 # ── Rule table sanity ─────────────────────────────────────────────────────────
 
 class TestRuleTable:
     def test_23_rules_in_table(self):
-        assert len(RULES_T44_T66) == 23
+        assert len(RULES_T44_T66) == 25
 
     def test_all_ids_present(self):
         ids = {r["id"] for r in RULES_T44_T66}
-        for n in range(44, 67):
+        for n in range(44, 69):
             assert f"T{n}" in ids
 
     def test_all_rules_have_required_fields(self):
@@ -361,10 +361,40 @@ class TestOpenClawGuardT44T66:
         # T45 or T66 -- both indicate cross-tenant threat
         assert r.threat_class in ("T45", "T66")
 
+# ── T67 ───────────────────────────────────────────────────────────────────────
+class TestT67:
+    def test_heartbeat_stop_fires(self):
+        assert match_T67("cron.manage", {"command": "heartbeat_stop"})
+    def test_kill_gateway_fires(self):
+        assert match_T67("shell.execute", {"command": "kill_gateway process"})
+    def test_disable_cron_fires(self):
+        assert match_T67("config.write", {"content": "disable_cron=true"})
+    def test_stop_monitoring_fires(self):
+        assert match_T67("admin.config", {"stop_monitoring": "all"})
+    def test_normal_heartbeat_safe(self):
+        assert not match_T67("system.heartbeat", {"status": "alive"})
+    def test_kill_scheduler_fires(self):
+        assert match_T67("admin.execute", {"action": "kill_scheduler now"})
+
+# ── T68 ───────────────────────────────────────────────────────────────────────
+class TestT68:
+    def test_allow_remote_no_auth_fires(self):
+        assert match_T68("config.write", {"content": "allow_remote=true"})
+    def test_allow_remote_with_auth_disabled_fires(self):
+        assert match_T68("config.write", {"content": "allow_remote=true authentication=false"})
+    def test_allow_remote_with_api_key_safe(self):
+        assert not match_T68("config.write", {"content": "allow_remote=true api_key=sk-123"})
+    def test_no_allow_remote_safe(self):
+        assert not match_T68("config.write", {"content": "gateway mode=local"})
+    def test_allow_remote_with_no_auth_keyword_fires(self):
+        assert match_T68("gateway.config", {"content": "allow_remote: true\nhost: 0.0.0.0"})
+    def test_allow_remote_with_token_safe(self):
+        assert not match_T68("config.write", {"content": "allow_remote=yes token=abc123"})
+
 # ── Module API ───────────────────────────────────────────────────────────────
 class TestV0190ModuleAPI:
-    def test_version_is_0190(self):
-        assert aiglos.__version__ == "0.21.0"
+    def test_version_is_0220(self):
+        assert aiglos.__version__ == "0.22.0"
     def test_rules_t44_t66_in_all(self):
         assert "RULES_T44_T66" in aiglos.__all__
     def test_all_exports_importable(self):

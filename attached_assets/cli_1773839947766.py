@@ -4,19 +4,19 @@ aiglos.cli
 Command-line interface for the Aiglos adaptive security layer.
 
 Commands:
-    stats              -- rule firing stats across all ingested sessions
-    amend list         -- list pending amendment proposals
-    amend approve <id> -- approve a pending amendment
-    amend reject <id>  -- reject a pending amendment
-    amend history      -- all amendments (all statuses)
-    inspect            -- run inspection triggers and show findings
-    policy <session>   -- show the derived policy for a session ID
-    run                -- full adaptive cycle: inspect + propose
-    sessions           -- recent session history
-    version            -- print version
-    demo               -- run the OpenClaw demo
-    check <tool>       -- check a tool call interactively
-    scan-skill <name>  -- scan a ClawHub/SkillsMP skill
+    stats              — rule firing stats across all ingested sessions
+    amend list         — list pending amendment proposals
+    amend approve <id> — approve a pending amendment
+    amend reject <id>  — reject a pending amendment
+    amend history      — all amendments (all statuses)
+    inspect            — run inspection triggers and show findings
+    policy <session>   — show the derived policy for a session ID
+    run                — full adaptive cycle: inspect + propose
+    sessions           — recent session history
+    version            — print version
+    demo               — run the OpenClaw demo
+    check <tool>       — check a tool call interactively
+    scan-skill <name>  — scan a ClawHub/SkillsMP skill
 
 Usage:
     python -m aiglos stats
@@ -27,7 +27,7 @@ Usage:
     python -m aiglos sessions --n 20
 """
 
-
+from __future__ import annotations
 
 import json
 import sys
@@ -219,7 +219,7 @@ def cmd_run(args: List[str]) -> None:
         print(bold("  Triggers"))
         for t in report["triggers"]:
             cand = " *" if t.get("amendment_candidate") else ""
-            print(f"  [{_severity_color(t['severity'])}] {t['trigger_type']}{cand}  --  {t['rule_id'] or 'n/a'}")
+            print(f"  [{_severity_color(t['severity'])}] {t['trigger_type']}{cand}  —  {t['rule_id'] or 'n/a'}")
             print(dim(f"    {t['evidence_summary'][:100]}"))
         print()
 
@@ -272,7 +272,7 @@ def cmd_amend(args: List[str]) -> None:
             print(red(f"  No amendment found matching prefix '{prefix}'."))
             sys.exit(1)
         if len(matches) > 1:
-            print(yellow(f"  Ambiguous prefix -- {len(matches)} matches. Use more characters."))
+            print(yellow(f"  Ambiguous prefix — {len(matches)} matches. Use more characters."))
             sys.exit(1)
         a = matches[0]
         if sub == "approve":
@@ -301,7 +301,7 @@ def cmd_amend(args: List[str]) -> None:
                 f"{status_str:<22} "
                 f"{a.target[:22]:<22} "
                 f"{(a.rule_id or '')[:16]:<16} "
-                f"{a.eval_outcome or dim('--')}"
+                f"{a.eval_outcome or dim('—')}"
             )
         print()
 
@@ -323,7 +323,7 @@ def cmd_policy(args: List[str]) -> None:
     print(dim(f"  Based on {policy.evidence_sessions} session(s) of evidence"))
     print()
     if policy.is_empty():
-        print(dim("  Policy is empty -- insufficient session history to derive context."))
+        print(dim("  Policy is empty — insufficient session history to derive context."))
         print()
         return
     if policy.inherited_allow_http:
@@ -434,8 +434,8 @@ def _cmd_scan_message(args: List[str]) -> None:
     # Check for external instruction channel pattern keywords
     eic_signals = []
     eic_keywords = [
-        ("cron", "Persistence mechanism -- cron job setup detected"),
-        ("crontab", "Persistence mechanism -- crontab modification"),
+        ("cron", "Persistence mechanism — cron job setup detected"),
+        ("crontab", "Persistence mechanism — crontab modification"),
         ("daily", "Scheduled execution language"),
         ("subscribe", "External subscription instruction"),
         ("fetch", "External HTTP fetch instruction"),
@@ -458,7 +458,7 @@ def _cmd_scan_message(args: List[str]) -> None:
         print(bold("  External instruction channel signals"))
         for kw, desc in eic_signals[:8]:
             print(f"    {red('✗')} {bold(kw)}: {desc}")
-        print(f"    Risk: {red('HIGH')} -- this message may be setting up an autonomous C2 channel")
+        print(f"    Risk: {red('HIGH')} — this message may be setting up an autonomous C2 channel")
         print()
 
     # Summary
@@ -567,8 +567,7 @@ def _cmd_trace(args: List[str]) -> None:
             else dim(conf)
         )
 
-        step_num = action.get("step", "?")
-        print(f"  {bold(f'Step {step_num:>3}')}  "
+        print(f"  {bold(f'Step {action.get("step","?"):>3}')}  "
               f"{_severity_color(action.get('verdict','ALLOW')):<7}  "
               f"{action.get('tool_name','?')}  "
               f"[{dim(action.get('rule_id','?'))}]")
@@ -759,7 +758,7 @@ def _cmd_forecast(args: List[str]) -> None:
 
 def cmd_help() -> None:
     print(f"""
-{bold('aiglos')} v{_get_version()} -- AI agent security runtime
+{bold('aiglos')} v{_get_version()} — AI agent security runtime
 
 {bold('ADAPTIVE COMMANDS')}
   {cyan('stats')}                     Rule firing stats across all ingested sessions
@@ -780,9 +779,9 @@ def cmd_help() -> None:
 {bold('OTHER')}
   {cyan('demo')} [hermes]             Run the OpenClaw or hermes demo
   {cyan('audit')}      [--deep] [--format summary|full|json|briefing] [--schedule nightly]
-                                   Security posture audit -- host, skills, runtime, network
-  {cyan('skill')}      scan|import|blocked        Skill reputation -- ClawKeeper badge ingestion
-  {cyan('reputation')} top|show|clear           Source reputation -- URL and document threat history
+                                   Security posture audit — host, skills, runtime, network
+  {cyan('skill')}      scan|import|blocked        Skill reputation — ClawKeeper badge ingestion
+  {cyan('reputation')} top|show|clear           Source reputation — URL and document threat history
   {cyan('override')} list|confirm|reject       Challenge-response Tier 3 override management
   {cyan('honeypot')} status|list|deploy         Honeypot file management and hit log
   {cyan('research')} verify|report|scan        Citation verification and compliance reports
@@ -1061,14 +1060,14 @@ def _cmd_scan_exposed(args: list) -> None:
         return
 
     target = args[0]
-    port   = 3000
+    port   = 3000  # OpenClaw default port
     for i, t in enumerate(args):
         if t == "--port" and i + 1 < len(args):
             port = int(args[i + 1])
 
     print("")
-    print(f"  {cyan('Aiglos Exposure Scanner')} -- probing {bold(target)}:{port}")
-    print(f"  {'---' * 19}")
+    print(f"  {cyan('Aiglos Exposure Scanner')} — probing {bold(target)}:{port}")
+    print(f"  {'─' * 56}")
 
     findings = []
     score    = 100
@@ -1079,27 +1078,28 @@ def _cmd_scan_exposed(args: list) -> None:
         try:
             result = fn()
             if result is True:
-                print(f"  {_c('92', 'OK')} {label}")
+                print(f"  {_c('92', '✓')} {label}")
             elif result is False:
                 deduct = {"CRITICAL": 30, "FAIL": 15, "WARN": 5}.get(on_fail_sev, 15)
                 score -= deduct
                 findings.append((on_fail_sev, label, on_fail_detail, remediation))
-                print(f"  {_c('91' if on_fail_sev == 'CRITICAL' else '33', 'X')} [{on_fail_sev}] {label}")
+                print(f"  {_c('91' if on_fail_sev == 'CRITICAL' else '33', '✗')} [{on_fail_sev}] {label}")
                 if on_fail_detail:
                     print(f"      {on_fail_detail[:80]}")
         except Exception as e:
-            print(f"  {_c('2', '?')} {label} -- {str(e)[:60]}")
+            print(f"  {_c('2', '?')} {label} — {str(e)[:60]}")
 
+    # Check 1: Gateway reachable
     gateway_url = f"http://{target}:{port}"
     is_open = False
     try:
         req = urllib.request.Request(
             f"{gateway_url}/api/status",
-            headers={"User-Agent": "aiglos-scanner/0.22.0"},
+            headers={"User-Agent": "aiglos-scanner/0.21.0"},
         )
         resp = urllib.request.urlopen(req, timeout=5)
         is_open = True
-        print(f"  {_c('91', '!')} [CRITICAL] Gateway reachable on {target}:{port}")
+        print(f"  {_c('91', '⚠')} [CRITICAL] Gateway reachable on {target}:{port}")
         findings.append((
             "CRITICAL",
             f"OpenClaw gateway exposed on {target}:{port}",
@@ -1109,20 +1109,21 @@ def _cmd_scan_exposed(args: list) -> None:
         score -= 30
     except urllib.error.HTTPError as e:
         if e.code in (401, 403):
-            print(f"  {_c('92', 'OK')} Gateway requires authentication (HTTP {e.code})")
+            print(f"  {_c('92', '✓')} Gateway requires authentication (HTTP {e.code})")
             is_open = True
         else:
             print(f"  {_c('91', '?')} Gateway returned HTTP {e.code}")
             is_open = True
     except Exception:
-        print(f"  {_c('92', 'OK')} Port {port} not reachable from this network")
+        print(f"  {_c('92', '✓')} Port {port} not reachable from this network")
 
     if is_open:
+        # Check 2: Auth required on key endpoints
         for endpoint in ["/api/config", "/api/agents", "/api/cron"]:
             try:
                 req = urllib.request.Request(
                     f"{gateway_url}{endpoint}",
-                    headers={"User-Agent": "aiglos-scanner/0.22.0"},
+                    headers={"User-Agent": "aiglos-scanner/0.21.0"},
                 )
                 resp = urllib.request.urlopen(req, timeout=3)
                 if resp.status == 200:
@@ -1132,18 +1133,19 @@ def _cmd_scan_exposed(args: list) -> None:
                         f"Endpoint returned 200 with no credentials.",
                         "Add API key authentication to all endpoints.",
                     ))
-                    print(f"  {_c('91', 'X')} [CRITICAL] {endpoint} accessible without credentials")
+                    print(f"  {_c('91', '✗')} [CRITICAL] {endpoint} accessible without credentials")
                     score -= 30
             except urllib.error.HTTPError as e:
                 if e.code in (401, 403):
-                    print(f"  {_c('92', 'OK')} {endpoint} requires authentication")
+                    print(f"  {_c('92', '✓')} {endpoint} requires authentication")
             except Exception:
                 pass
 
+        # Check 3: WebSocket endpoint (CVE-2026-25253 surface)
         try:
             req = urllib.request.Request(
                 f"{gateway_url}/socket.io/",
-                headers={"User-Agent": "aiglos-scanner/0.22.0"},
+                headers={"User-Agent": "aiglos-scanner/0.21.0"},
             )
             resp = urllib.request.urlopen(req, timeout=3)
             findings.append((
@@ -1153,11 +1155,12 @@ def _cmd_scan_exposed(args: list) -> None:
                 "Attack vector for token theft and remote code execution.",
                 "Require authentication on all WebSocket connections.",
             ))
-            print(f"  {_c('91', 'X')} [CRITICAL] WebSocket endpoint exposed (CVE-2026-25253)")
+            print(f"  {_c('91', '✗')} [CRITICAL] WebSocket endpoint exposed (CVE-2026-25253)")
             score -= 30
         except Exception:
-            print(f"  {_c('92', 'OK')} WebSocket endpoint requires authentication or not exposed")
+            print(f"  {_c('92', '✓')} WebSocket endpoint requires authentication or not exposed")
 
+    # Grade
     score = max(0, score)
     grade = "A" if score >= 90 else "B" if score >= 75 else "C" if score >= 60 else "D" if score >= 45 else "F"
     grade_color = "92" if grade == "A" else "93" if grade in "BC" else "91"
@@ -1168,12 +1171,11 @@ def _cmd_scan_exposed(args: list) -> None:
     print("")
 
     if not findings:
-        print(f"  {_c('92', 'OK')} No critical exposures found from this network.")
+        print(f"  {_c('92', '✓')} No critical exposures found from this network.")
     else:
         print(f"  {bold('Findings:')}")
         for sev, label, detail, rem in findings[:6]:
-            sev_icon = "X" if sev == "CRITICAL" else "!"
-            print(f"  {sev_icon} [{sev}] {label}")
+            print(f"  {'⛔' if sev == 'CRITICAL' else '⚠'} [{sev}] {label}")
         print("")
         print(f"  This instance appears in the 40,000+ exposed OpenClaw deployments")
         print(f"  documented by SecurityScorecard (February 2026).")
@@ -1214,7 +1216,7 @@ def _cmd_baseline(args: list) -> None:
             suppressed_until_session = suppress_until,
         )
         print("")
-        print(f"  Baseline reset -- agent: {cyan(agent)}")
+        print(f"  Baseline reset — agent: {cyan(agent)}")
         print(f"  Sessions before reset:  {sessions_before}")
         print(f"  Anomaly suppression:    next 20 sessions (until #{suppress_until})")
         print(f"  Reason:                 {reason or 'manual reset'}")
@@ -1232,7 +1234,7 @@ def _cmd_baseline(args: list) -> None:
             print(f"  No baseline events for agent: {agent}")
             return
         print("")
-        print(f"  Baseline History -- {bold(agent)}")
+        print(f"  Baseline History — {bold(agent)}")
         print(f"  {'─' * 56}")
         import datetime as _dt
         for e in events:
@@ -1269,7 +1271,7 @@ def _cmd_benchmark(args: list) -> None:
     aiglos benchmark <subcommand>
 
     run  [--dimension D1|D2|D3|D4|D5] [--format summary|json] [--agent name]
-         Run GOVBENCH -- the governance benchmark for AI agents.
+         Run GOVBENCH — the governance benchmark for AI agents.
          Measures what SWE-CI didn't: campaign detection, agent definition
          file resistance, memory belief layer, RL feedback exploitation,
          multi-agent cascading failure.
@@ -1368,7 +1370,7 @@ def _cmd_skill_reputation(args: list) -> None:
         if risk.detail:
             print(f"  {risk.detail}")
         if risk.should_block:
-            print(f"  {cyan('→')} {bold('DO NOT INSTALL')} -- T30 SUPPLY_CHAIN will block at runtime.")
+            print(f"  {cyan('→')} {bold('DO NOT INSTALL')} — T30 SUPPLY_CHAIN will block at runtime.")
         elif risk.should_warn:
             print(f"  {cyan('→')} Install with caution. T30 SUPPLY_CHAIN will WARN at runtime.")
 
@@ -1558,7 +1560,7 @@ def _cmd_override(args: list) -> None:
         if not rows:
             print("  No pending override challenges." if pending_only else "  No override challenges.")
             return
-        print(f"\n  {bold('Override Challenges')} ({'pending' if pending_only else 'all'}) -- {len(rows)} found")
+        print(f"\n  {bold('Override Challenges')} ({'pending' if pending_only else 'all'}) — {len(rows)} found")
         print("  " + "─" * 60)
         for r in rows:
             status = "✓ approved" if r["approved"] else ("✗ rejected" if r["resolved"] else "⏳ pending")
@@ -1738,7 +1740,7 @@ def _cmd_research(args: list) -> None:
             print(f"\n  Verifying {rule_id}...")
             citation = verifier.verify_rule(rule_id, force_refresh=force)
             print(f"  {rule_id}: {citation.reference_id} [{citation.source}] "
-                  f"{citation.confidence:.0%} -- {citation.status.value}")
+                  f"{citation.confidence:.0%} — {citation.status.value}")
             if citation.evidence_summary:
                 print(f"  {citation.evidence_summary[:120]}")
 

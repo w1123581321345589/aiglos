@@ -1,9 +1,9 @@
 """
-Aiglos -- AI Agent Security Runtime
+Aiglos — AI Agent Security Runtime
 ===================================
 Protocol-agnostic runtime security for AI agents. Intercepts every agent
-action before execution -- MCP tool calls, direct HTTP/API calls, CLI
-execution, subprocess spawning -- and applies T01–T39 threat detection.
+action before execution — MCP tool calls, direct HTTP/API calls, CLI
+execution, subprocess spawning — and applies T01–T39 threat detection.
 
 Signed session artifacts cover all three execution surfaces in a single
 compliance document. compliance artifact ready.
@@ -33,7 +33,7 @@ Framework integrations:
     from aiglos.integrations.hermes   import HermesGuard
 """
 
-
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, List, Optional
@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.22.0"  # canonical version for this release
+    __version__ = "0.21.0"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -138,11 +138,11 @@ from aiglos.integrations.override import (  # noqa: F401
 
 from aiglos.integrations.context_guard import (  # noqa: F401
     ContextDirectoryGuard,
-    ContextWriteResult,
+    ContextGuardResult,
     is_shared_context_write,
 )
 from aiglos.integrations.outbound_guard import (  # noqa: F401
-    OutboundGuard,
+    OutboundSecretGuard,
     OutboundScanResult,
     scan_for_secrets,
     contains_secret,
@@ -394,7 +394,7 @@ def attach(
             log.warning("[Aiglos] Adaptive engine failed to init: %s", e)
 
     log.info(
-        "[Aiglos v%s] Attached -- agent=%s policy=%s mcp=on http=%s subprocess=%s "
+        "[Aiglos v%s] Attached — agent=%s policy=%s mcp=on http=%s subprocess=%s "
         "multi_agent=%s agent_def_guard=%s adaptive=%s",
         __version__, agent_name, policy,
         "on" if _http_intercept_active else "off",
@@ -746,6 +746,7 @@ __all__ = [
     "FederationClient",
     "GlobalPrior",
     "extract_shareable_transitions",
+    # v0.21.0 — T67 HEARTBEAT_SILENCE, T68 INSECURE_DEFAULT_CONFIG, scan-exposed
     # v0.20.0
     "PermissionRecommender",
     "PermissionRecommendation",
@@ -776,9 +777,9 @@ __all__ = [
     "OverrideResult",
     # v0.15.0
     "ContextDirectoryGuard",
-    "ContextWriteResult",
+    "ContextGuardResult",
     "is_shared_context_write",
-    "OutboundGuard",
+    "OutboundSecretGuard",
     "OutboundScanResult",
     "scan_for_secrets",
     "contains_secret",

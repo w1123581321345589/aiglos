@@ -3,13 +3,13 @@
 ## Overview
 Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provides real-time monitoring, event logging, trust management, policy configuration, CMMC compliance tracking, autonomous threat scanning, and full administrative capabilities for AI agents operating through MCP (Model Context Protocol) proxies.
 
-## Python Package (aiglos/ v0.21.0)
-The `aiglos/` directory contains the Python security runtime package covering threat families T01-T66.
+## Python Package (aiglos/ v0.22.0)
+The `aiglos/` directory contains the Python security runtime package covering threat families T01-T68.
 
 ### Package Structure
-- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.21.0
-- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T66), lockdown policy, sandbox_context, allow_tool/tool_grants
-- `aiglos/core/threat_engine_v2.py` -- T44-T66 threat rule library (23 new rules: inference hijack, cross-tenant, simulation poison, context smuggling, tool forgery, etc.)
+- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.22.0
+- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T68), lockdown policy, sandbox_context, allow_tool/tool_grants
+- `aiglos/core/threat_engine_v2.py` -- T44-T68 threat rule library (25 rules: inference hijack, cross-tenant, simulation poison, context smuggling, tool forgery, T67 HEARTBEAT_SILENCE, T68 INSECURE_DEFAULT_CONFIG)
 - `aiglos/core/behavioral_baseline.py` -- AgentBaseline, BaselineScore, set_hardening_mode, is_suppressed
 - `aiglos/integrations/hermes.py` -- Hermes integration guard with trajectory signing
 - `aiglos/integrations/multi_agent.py` -- AgentDefGuard, MultiAgentRegistry, SessionIdentityChain
@@ -32,7 +32,7 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/autoresearch/` -- CitationVerifier, ThreatLiteratureSearch, ComplianceReportGenerator
 - `aiglos/skills/SKILL.md` -- Context Hub skill distribution for Claude Code
 - `aiglos/desktop/` -- Tauri desktop app (main.rs, App.jsx, aiglos_sidecar.py, install.sh)
-- `aiglos/cli.py` -- CLI: scan-message, honeypot, override, reputation, audit, skill, baseline, benchmark
+- `aiglos/cli.py` -- CLI: scan-message, scan-exposed, honeypot, override, reputation, audit, skill, baseline, benchmark
 
 - `server/federation/` -- Federation server (FastAPI, aggregator, auth, Supabase store, Railway deploy)
 - `sdk/typescript/src/` -- TypeScript SDK (full parity: behavioral_baseline, policy_proposals, federation, security_surfaces, index)
@@ -40,7 +40,7 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `.github/actions/aiglos-scan/action.yml` -- Reusable GitHub Action for Aiglos security audit
 - `.github/workflows/aiglos-scan.yml` -- CI workflow (push/PR/nightly scan, deep mode, grade gating)
 
-### Test Suites (1536 tests)
+### Test Suites (1548 tests)
 22 test files covering all modules and integrations.
 
 ### Class Name Map (important for imports)
