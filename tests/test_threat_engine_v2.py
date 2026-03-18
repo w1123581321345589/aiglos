@@ -24,11 +24,11 @@ from aiglos.core.threat_engine_v2 import (
 
 class TestRuleTable:
     def test_23_rules_in_table(self):
-        assert len(RULES_T44_T66) == 27
+        assert len(RULES_T44_T66) == 32
 
     def test_all_ids_present(self):
         ids = {r["id"] for r in RULES_T44_T66}
-        for n in range(44, 71):
+        for n in range(44, 76):
             assert f"T{n}" in ids
 
     def test_all_rules_have_required_fields(self):
@@ -394,7 +394,7 @@ class TestT68:
 # ── Module API ───────────────────────────────────────────────────────────────
 class TestV0190ModuleAPI:
     def test_version_is_0220(self):
-        assert aiglos.__version__ == "0.23.0"
+        assert aiglos.__version__ == "0.24.0"
     def test_rules_t44_t66_in_all(self):
         assert "RULES_T44_T66" in aiglos.__all__
     def test_all_exports_importable(self):
