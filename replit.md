@@ -3,14 +3,17 @@
 ## Overview
 Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provides real-time monitoring, event logging, trust management, policy configuration, CMMC compliance tracking, autonomous threat scanning, and full administrative capabilities for AI agents operating through MCP (Model Context Protocol) proxies.
 
-## Python Package (aiglos/ v0.22.0)
-The `aiglos/` directory contains the Python security runtime package covering threat families T01-T68.
+## Python Package (aiglos/ v0.24.0)
+The `aiglos/` directory contains the Python security runtime package covering threat families T01-T75 (75 total). 1,644 tests passing.
 
 ### Package Structure
-- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.22.0
-- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T68), lockdown policy, sandbox_context, allow_tool/tool_grants
-- `aiglos/core/threat_engine_v2.py` -- T44-T68 threat rule library (25 rules: inference hijack, cross-tenant, simulation poison, context smuggling, tool forgery, T67 HEARTBEAT_SILENCE, T68 INSECURE_DEFAULT_CONFIG)
+- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.24.0. Exports ATLASCoverage, GHSAWatcher.
+- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T75), lockdown policy, sandbox_context, allow_tool/tool_grants
+- `aiglos/core/threat_engine_v2.py` -- T44-T75 threat rule library (32 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS wave)
 - `aiglos/core/behavioral_baseline.py` -- AgentBaseline, BaselineScore, set_hardening_mode, is_suppressed
+- `aiglos/autoresearch/atlas_coverage.py` -- ATLASCoverage, ATLAS_THREAT_MAP (22 threats, 93% coverage), coverage_report(), gap_analysis(), compliance_score()
+- `aiglos/autoresearch/ghsa_watcher.py` -- GHSAWatcher, KNOWN_ADVISORIES (3/3 covered), local_only param, check_local(), coverage_artifact()
+- `aiglos/autoresearch/ghsa_coverage.py` -- generate_coverage_artifact, CoverageArtifact
 - `aiglos/integrations/hermes.py` -- Hermes integration guard with trajectory signing
 - `aiglos/integrations/multi_agent.py` -- AgentDefGuard, MultiAgentRegistry, SessionIdentityChain
 - `aiglos/integrations/memory_guard.py` -- Memory write guard (T31) with C2 channel corpus signals
@@ -29,10 +32,10 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/benchmark/govbench.py` -- GovBench, GovBenchResult (5-dimension governance benchmark: campaign detection, agentdef resistance, memory belief, RL exploitation, outbound leakage)
 - `aiglos/audit/scanner.py` -- AuditScanner (5-phase, 50+ checks, A-F grade)
 - `aiglos/audit/report.py` -- AuditReporter (5 formats: summary, full, json, briefing, clawkeeper)
-- `aiglos/autoresearch/` -- CitationVerifier, ThreatLiteratureSearch, ComplianceReportGenerator
+- `aiglos/autoresearch/` -- CitationVerifier, ThreatLiteratureSearch, ComplianceReportGenerator, ATLASCoverage, GHSAWatcher
 - `aiglos/skills/SKILL.md` -- Context Hub skill distribution for Claude Code
 - `aiglos/desktop/` -- Tauri desktop app (main.rs, App.jsx, aiglos_sidecar.py, install.sh)
-- `aiglos/cli.py` -- CLI: scan-message, scan-exposed, honeypot, override, reputation, audit, skill, baseline, benchmark
+- `aiglos/cli.py` -- CLI: scan-message, scan-exposed, honeypot, override, reputation, audit (--ghsa, --atlas), skill, baseline, benchmark
 
 - `server/federation/` -- Federation server (FastAPI, aggregator, auth, Supabase store, Railway deploy)
 - `sdk/typescript/src/` -- TypeScript SDK (full parity: behavioral_baseline, policy_proposals, federation, security_surfaces, index)
@@ -40,8 +43,8 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `.github/actions/aiglos-scan/action.yml` -- Reusable GitHub Action for Aiglos security audit
 - `.github/workflows/aiglos-scan.yml` -- CI workflow (push/PR/nightly scan, deep mode, grade gating)
 
-### Test Suites (1548 tests)
-22 test files covering all modules and integrations.
+### Test Suites (1644 tests)
+23 test files covering all modules and integrations. Includes `tests/test_atlas_and_t75.py` (51 tests for v0.24.0 ATLAS coverage and T71-T75).
 
 ### Class Name Map (important for imports)
 - `ContextWriteResult` (NOT ContextGuardResult)
@@ -191,19 +194,20 @@ All prefixed with `/api/`:
 - `server/middleware.ts` - Auth, RBAC, audit logging middleware
 - `client/src/pages/engine.tsx` - Command Center UI
 
-## Landing Page
-- **Route**: `/landing` — standalone vanilla HTML/CSS/JS landing page
-- **File**: `client/public/landing.html`
-- **Design**: cursor.com aesthetic — warm bg (#F7F7F4), text (#26251E), borders (#E6E5E0), Helvetica Neue system font stack, pill buttons (border-radius: 9999px), dark product panels (#111113)
-- **Sections**: Hero with live interceptor feed, logo strip, 3 feature sections (alternating layout), OSS callout, footer
-- **No pricing** on this page — pricing lives at `/pricing`
-
-## Pricing Page
-- **Route**: `/pricing` — standalone vanilla HTML/CSS/JS pricing page
-- **File**: `client/public/pricing.html`
-- **Design**: Same cursor.com warm palette, Helvetica Neue system font, pill buttons, sharp-cornered inputs (border-radius: 0)
-- **Tiers**: Pro ($39/mo per developer) + Enterprise (custom/contact)
-- **Features**: Two-column pricing grid, 6-item FAQ accordion, email signup modal with confirmation flow
+## Website (Dark Theme)
+- **Design**: Dark theme (#09090b bg), Plus Jakarta Sans + DM Mono fonts, blue (#2563eb) accent
+- **Routes**: 12 static HTML pages served from `client/public/`
+  - `/landing` and `/aiglos` -- hero with live interceptor feed, ATLAS coverage grid, pricing
+  - `/intel` -- security intelligence feed
+  - `/compare/clawkeeper` and `/compare/openshell` -- competitive comparison pages
+  - `/changelog` -- v0.19 through v0.24 changelog
+  - `/govbench-paper` -- GOVBENCH governance benchmark paper
+  - `/nist-submission` -- NIST AI agent standards submission draft
+  - `/tutorial-github-actions` -- CI integration tutorial
+  - `/tutorial-openclaw-hardening` -- OpenClaw hardening tutorial
+  - `/tutorial-advanced` -- Advanced topics (lockdown policy, GOVBENCH, scan-exposed)
+  - `/docs` -- documentation
+  - `/pricing` -- pricing tiers (Pro $39/dev/mo + Enterprise)
 
 ## Demo Credentials
 - admin / admin123 (full access)
