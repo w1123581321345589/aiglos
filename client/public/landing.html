@@ -3,376 +3,538 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aiglos — Secure every tool call your AI agents make</title>
-<meta name="description" content="Aiglos learns your deployment, eliminates false positive fatigue, and gets permanently better with every deployment in the network. Zero dependencies.">
-<meta property="og:title" content="Aiglos — AI Agent Security">
-<meta property="og:description" content="Every surface. Every session. Every deployment. 39 threat families. 1,047 tests. Zero dependencies.">
-<meta property="og:type" content="website">
+<title>Aiglos — Runtime Security for AI Agents</title>
+<meta name="description" content="The runtime security layer for AI agents. 75 threat families. One import. Under 1ms.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#F7F7F4;
-  --fg:#26251E;
-  --fg2:#525252;
-  --fg3:#a3a3a3;
-  --border:#E6E5E0;
-  --panel:#111113;
-  --panel-fg:#e4e4e7;
-  --panel-dim:#71717a;
-  --green:#22c55e;
-  --amber:#f59e0b;
-  --red:#ef4444;
-  --blue:#3b82f6;
-  --accent:#F54E00;
-  --btn-secondary:#E6E5E0;
-  --font:'Helvetica Neue',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --bg:#09090b;--bg2:#111116;--bg3:#18181e;
+  --ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);
+  --dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);
+  --hi:#fff;--blue:#2563eb;--ice:#60a5fa;
+  --paper:#fafaf9;--gold:#b8860b;
 }
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
-a:focus-visible,button:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+body{background:var(--bg);color:var(--hi);font-family:'Plus Jakarta Sans',sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
 
-.container{max-width:1120px;margin:0 auto;padding:0 24px}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(9,9,11,0.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--ln);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 48px;height:56px}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-mark{width:20px;height:24px}
+.nav-name{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;
+  letter-spacing:0.04em;color:var(--hi)}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{font-size:13px;color:var(--dim);text-decoration:none;
+  transition:color .15s}
+.nav-links a:hover{color:var(--hi)}
+.nav-cta{display:flex;gap:10px;align-items:center}
+.btn-ghost{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--dim);text-decoration:none;
+  padding:7px 14px;border:1px solid var(--ln2);border-radius:4px;
+  transition:all .15s}
+.btn-ghost:hover{color:var(--hi);border-color:rgba(255,255,255,0.3)}
+.btn-primary{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;
+  text-transform:uppercase;background:var(--hi);color:var(--bg);
+  padding:7px 16px;border-radius:4px;text-decoration:none;
+  transition:opacity .15s}
+.btn-primary:hover{opacity:0.85}
 
-nav{position:sticky;top:0;z-index:100;background:rgba(247,247,244,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
-.nav-inner{display:flex;align-items:center;justify-content:space-between;height:56px;max-width:1120px;margin:0 auto;padding:0 40px}
-.nav-logo{font-weight:600;font-size:15px;letter-spacing:-0.01em;color:var(--fg);text-decoration:none}
-.nav-links{display:flex;align-items:center;gap:28px}
-.nav-links a{font-size:14px;font-weight:400;color:var(--fg2);text-decoration:none;transition:color 0.15s}
-.nav-links a:hover{color:var(--fg)}
-.nav-actions{display:flex;align-items:center;gap:10px}
-.btn-ghost{font-size:13px;font-weight:400;color:var(--fg2);background:var(--btn-secondary);border:1px solid var(--border);cursor:pointer;padding:6px 16px;border-radius:9999px;text-decoration:none;transition:all 0.15s;display:inline-block}
-.btn-ghost:hover{color:var(--fg);border-color:var(--fg3)}
-.btn-primary{font-size:13px;font-weight:500;color:var(--bg);background:var(--fg);border:none;cursor:pointer;padding:6px 18px;border-radius:9999px;text-decoration:none;transition:opacity 0.15s;display:inline-block}
-.btn-primary:hover{opacity:0.82}
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;text-align:center;padding:80px 48px 64px;
+  position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 20%,rgba(37,99,235,0.08) 0%,transparent 70%);
+  pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.25);
+  border-radius:100px;padding:5px 14px;margin-bottom:32px;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--ice)}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--ice);
+  animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.hero h1{font-size:clamp(40px,6vw,80px);font-weight:700;line-height:1.05;
+  letter-spacing:-0.03em;max-width:800px;margin-bottom:24px}
+.hero h1 span{color:var(--ice)}
+.hero-sub{font-size:18px;font-weight:300;color:var(--mid);max-width:520px;
+  line-height:1.65;margin-bottom:48px}
+.hero-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+  justify-content:center;margin-bottom:72px}
+.hero-install{background:var(--bg2);border:1px solid var(--ln2);
+  border-radius:6px;padding:14px 20px;display:flex;align-items:center;gap:12px}
+.hero-install code{font-family:'DM Mono',monospace;font-size:13px;color:var(--hi)}
+.hero-install-label{font-family:'DM Mono',monospace;font-size:10px;
+  letter-spacing:0.15em;text-transform:uppercase;color:var(--dim)}
+.copy-btn{background:none;border:1px solid var(--ln);border-radius:3px;
+  padding:4px 10px;font-family:'DM Mono',monospace;font-size:10px;
+  color:var(--dim);cursor:pointer;transition:all .15s}
+.copy-btn:hover{border-color:var(--ln2);color:var(--hi)}
+.hero-stats{display:flex;gap:48px;flex-wrap:wrap;justify-content:center}
+.hero-stat{text-align:center}
+.hero-stat-n{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;
+  color:var(--hi);display:block;line-height:1}
+.hero-stat-l{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--dim);margin-top:4px;display:block}
 
-.hero{text-align:center;padding:96px 24px 0}
-.hero h1{font-size:clamp(32px,5vw,56px);font-weight:600;letter-spacing:-0.035em;line-height:1.08;max-width:680px;margin:0 auto 20px;color:var(--fg)}
-.hero-sub{font-size:clamp(15px,1.6vw,18px);color:var(--fg2);max-width:520px;margin:0 auto 36px;line-height:1.55}
-.hero-cta{display:inline-block;font-size:15px;font-weight:500;color:var(--bg);background:var(--fg);padding:12px 32px;border-radius:9999px;text-decoration:none;transition:opacity 0.15s}
-.hero-cta:hover{opacity:0.82}
+/* THE NUMBER */
+.number-section{padding:80px 48px;text-align:center;
+  border-top:1px solid var(--ln);border-bottom:1px solid var(--ln)}
+.number-big{font-family:'DM Mono',monospace;font-size:clamp(64px,10vw,128px);
+  font-weight:500;color:var(--hi);line-height:1;display:block;
+  letter-spacing:-0.02em}
+.number-label{font-size:16px;color:var(--mid);max-width:480px;margin:20px auto 0;
+  line-height:1.6}
+.number-label strong{color:var(--hi)}
 
-.panel{background:var(--panel);border-radius:12px;overflow:hidden;border:1px solid #27272a}
-.hero-panel{margin:56px auto 0;max-width:960px}
-.panel-inner{padding:24px 28px;font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:13px;line-height:1.7;color:var(--panel-fg)}
-.panel-bar{display:flex;align-items:center;gap:8px;padding:14px 20px;border-bottom:1px solid #27272a}
-.panel-dot{width:12px;height:12px;border-radius:50%}
-.panel-dot.r{background:#ef4444}.panel-dot.y{background:#f59e0b}.panel-dot.g{background:#22c55e}
-.panel-title{margin-left:12px;font-size:12px;color:var(--panel-dim);font-family:var(--font)}
+/* SECTIONS */
+.section{padding:80px 48px;max-width:1100px;margin:0 auto}
+.section-kicker{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.25em;
+  text-transform:uppercase;color:var(--ice);margin-bottom:16px}
+.section h2{font-size:clamp(28px,4vw,44px);font-weight:700;letter-spacing:-0.03em;
+  line-height:1.1;margin-bottom:16px}
+.section-sub{font-size:16px;color:var(--mid);line-height:1.7;max-width:560px;
+  margin-bottom:48px}
 
-.feed-line{display:flex;align-items:center;gap:12px;padding:4px 0;opacity:0;animation:feedIn 0.4s forwards}
-.feed-ts{color:var(--panel-dim);font-size:12px;min-width:80px}
-.feed-tool{color:var(--panel-fg);min-width:180px}
-.feed-badge{font-size:11px;font-weight:600;padding:2px 10px;border-radius:9999px;text-transform:uppercase;letter-spacing:0.04em}
-.feed-badge.clean{background:rgba(34,197,94,0.15);color:var(--green)}
-.feed-badge.warn{background:rgba(245,158,11,0.15);color:var(--amber)}
-.feed-badge.block{background:rgba(239,68,68,0.15);color:var(--red)}
-.feed-risk{color:var(--panel-dim);font-size:12px;margin-left:auto}
-@keyframes feedIn{to{opacity:1}}
+/* CODE BLOCK */
+.code-window{background:#0d1117;border:1px solid var(--ln2);border-radius:8px;
+  overflow:hidden;max-width:680px}
+.code-topbar{background:#161b22;padding:10px 16px;display:flex;
+  align-items:center;gap:8px;border-bottom:1px solid var(--ln)}
+.code-dot{width:10px;height:10px;border-radius:50%}
+.code-dot.red{background:#ff5f57}
+.code-dot.yellow{background:#febc2e}
+.code-dot.green{background:#28c840}
+.code-filename{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);
+  margin-left:8px}
+.code-body{padding:24px;overflow-x:auto}
+.code-body pre{font-family:'DM Mono',monospace;font-size:13.5px;line-height:1.75;
+  color:#e6edf3}
+.tok-kw{color:#ff7b72}.tok-str{color:#a5d6ff}.tok-fn{color:#d2a8ff}
+.tok-comment{color:#6e7681}.tok-param{color:#79c0ff}.tok-num{color:#79c0ff}
 
-.logo-strip{text-align:center;padding:64px 24px;color:var(--fg3);font-size:13px;font-weight:400;letter-spacing:0.02em}
-.logo-strip span{opacity:0.4;margin:0 6px}
+/* FEATURE GRID */
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--ln);border:1px solid var(--ln);border-radius:8px;
+  overflow:hidden;margin-top:48px}
+.feature-cell{background:var(--bg);padding:32px;transition:background .2s}
+.feature-cell:hover{background:var(--bg2)}
+.feature-icon{width:36px;height:36px;margin-bottom:16px;opacity:0.7}
+.feature-title{font-size:15px;font-weight:600;margin-bottom:8px}
+.feature-body{font-size:13px;color:var(--dim);line-height:1.65}
 
-.features{padding:0 0 40px}
-.feature{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;padding:80px 0;max-width:1120px;margin:0 auto}
-.feature:nth-child(even){direction:rtl}
-.feature:nth-child(even) > *{direction:ltr}
-.feature-text h2{font-size:clamp(22px,3vw,32px);font-weight:600;letter-spacing:-0.03em;line-height:1.15;margin-bottom:14px;color:var(--fg)}
-.feature-text p{font-size:15px;color:var(--fg2);line-height:1.7;max-width:440px}
-.feature-panel{min-height:320px;display:flex;flex-direction:column}
+/* STAT ROW */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--ln);border:1px solid var(--ln);border-radius:8px;
+  overflow:hidden;margin:48px 0}
+.stat-cell{background:var(--bg2);padding:32px 24px;text-align:center}
+.stat-n{font-family:'DM Mono',monospace;font-size:36px;font-weight:500;
+  color:var(--hi);display:block;line-height:1;margin-bottom:8px}
+.stat-l{font-size:12px;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--dim)}
 
-.code-block{padding:28px;font-family:'SF Mono','Fira Code',monospace;font-size:14px;line-height:1.8;color:var(--panel-fg)}
-.code-kw{color:#c084fc}
-.code-str{color:#86efac}
-.code-comment{color:var(--panel-dim);font-style:italic}
-.code-fn{color:#93c5fd}
+/* COMPARE */
+.compare-table{width:100%;border-collapse:collapse;margin-top:40px;font-size:13px}
+.compare-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;
+  text-transform:uppercase;color:var(--dim);padding:12px 16px;text-align:left;
+  border-bottom:2px solid var(--ln2)}
+.compare-table th:first-child{padding-left:0}
+.compare-table td{padding:14px 16px;border-bottom:1px solid var(--ln);
+  color:var(--mid);vertical-align:top}
+.compare-table td:first-child{padding-left:0;font-weight:500;color:var(--hi)}
+.compare-table tr.aiglos-row td{background:rgba(37,99,235,0.05);color:var(--hi)}
+.compare-table tr.aiglos-row td:first-child{color:var(--ice);
+  font-family:'DM Mono',monospace;font-size:12px}
+.check{color:#4ade80;font-weight:600}
+.cross{color:rgba(255,255,255,0.2)}
 
-.rules-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:24px}
-.rule-card{background:#1a1a1e;border:1px solid #27272a;border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center}
-.rule-label{font-size:13px;color:var(--panel-fg);font-weight:500}
-.rule-id{font-size:11px;color:var(--panel-dim);font-family:monospace}
-.rule-count{font-family:'SF Mono',monospace;font-size:13px;color:var(--green)}
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--ln);border:1px solid var(--ln);border-radius:8px;
+  overflow:hidden;margin-top:48px}
+.price-col{background:var(--bg);padding:36px 32px}
+.price-col.featured{background:var(--hi);color:var(--bg)}
+.price-tier{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:16px}
+.price-col.featured .price-tier{color:rgba(0,0,0,0.4)}
+.price-amount{font-family:'DM Mono',monospace;font-size:40px;font-weight:500;
+  line-height:1;margin-bottom:24px}
+.price-col.featured .price-amount{color:var(--bg)}
+.price-mo{font-size:14px;font-weight:400;color:var(--dim);margin-left:4px}
+.price-col.featured .price-mo{color:rgba(0,0,0,0.4)}
+.price-features{list-style:none;font-size:13px;line-height:1.6}
+.price-features li{padding:8px 0;border-bottom:1px solid var(--ln);color:var(--mid)}
+.price-col.featured .price-features li{border-bottom-color:rgba(0,0,0,0.08);
+  color:rgba(0,0,0,0.7)}
+.price-features li:last-child{border-bottom:none}
+.price-features li::before{content:'— ';color:var(--ice);
+  font-family:'DM Mono',monospace}
+.price-col.featured .price-features li::before{color:var(--blue)}
 
-.artifact-json{padding:24px 28px;font-family:'SF Mono','Fira Code',monospace;font-size:12.5px;line-height:1.65;color:var(--panel-fg);overflow-x:auto}
-.json-key{color:#93c5fd}
-.json-str{color:#86efac}
-.json-num{color:#fbbf24}
-.json-brace{color:var(--panel-dim)}
+/* GHSA VALIDATION */
+.validation-grid{display:flex;flex-direction:column;gap:1px;
+  background:var(--ln);border:1px solid var(--ln);border-radius:8px;
+  overflow:hidden;margin-top:40px}
+.validation-row{background:var(--bg2);display:grid;
+  grid-template-columns:140px 1fr auto;gap:24px;padding:20px 24px;
+  align-items:center}
+.validation-ghsa{font-family:'DM Mono',monospace;font-size:11px;color:var(--ice)}
+.validation-title{font-size:13px;color:var(--mid)}
+.validation-rules{font-family:'DM Mono',monospace;font-size:11px;color:#4ade80;
+  white-space:nowrap}
 
-.oss{text-align:center;padding:80px 24px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:40px 0}
-.oss h3{font-size:clamp(18px,2.6vw,26px);font-weight:600;letter-spacing:-0.02em;color:var(--fg);margin-bottom:8px}
-.oss p{font-size:15px;color:var(--fg2);margin-bottom:28px}
-.oss-links{display:flex;justify-content:center;gap:24px}
-.oss-links a{font-size:14px;font-weight:500;color:var(--fg);text-decoration:none;display:flex;align-items:center;gap:6px;transition:opacity 0.15s}
-.oss-links a:hover{opacity:0.7}
-.oss-links a::after{content:'\2192';font-size:16px}
+/* ATLAS */
+.atlas-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;
+  margin-top:40px}
+.atlas-cell{background:var(--bg2);border:1px solid var(--ln);border-radius:6px;
+  padding:20px;display:flex;gap:14px}
+.atlas-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.atlas-id{font-family:'DM Mono',monospace;font-size:10px;color:var(--ice);
+  letter-spacing:0.1em;display:block;margin-bottom:4px}
+.atlas-title{font-size:13px;font-weight:500;margin-bottom:4px}
+.atlas-rules{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim)}
 
-footer{padding:36px 0;border-top:1px solid var(--border)}
-.footer-inner{display:flex;align-items:center;justify-content:space-between;max-width:1120px;margin:0 auto;padding:0 40px}
-.footer-logo{font-weight:600;font-size:14px;color:var(--fg);letter-spacing:-0.01em}
-.footer-links{display:flex;gap:22px}
-.footer-links a{font-size:13px;color:var(--fg3);text-decoration:none;transition:color 0.15s}
-.footer-links a:hover{color:var(--fg)}
-.footer-right{font-size:13px;color:var(--fg3)}
+/* FOOTER */
+footer{border-top:1px solid var(--ln);padding:40px 48px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.footer-logo{font-family:'DM Mono',monospace;font-size:13px;color:var(--dim)}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-size:12px;color:var(--dim);text-decoration:none}
+.footer-links a:hover{color:var(--hi)}
+.footer-copy{font-size:12px;color:rgba(255,255,255,0.2)}
 
-.compare-dropdown{position:relative;display:inline-block}
-.compare-dropdown>a{font-size:14px;font-weight:400;color:var(--fg2);cursor:pointer;transition:color .15s}
-.compare-dropdown>a:hover{color:var(--fg)}
-.compare-menu{display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:8px;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.08);min-width:180px;padding:6px;z-index:200}
-.compare-dropdown:hover .compare-menu{display:block}
-.compare-menu a{display:block;padding:8px 12px;font-size:13px;color:var(--fg2);border-radius:5px;transition:all .12s}
-.compare-menu a:hover{background:var(--border);color:var(--fg)}
-
+/* RESPONSIVE */
 @media(max-width:768px){
+  nav{padding:0 20px}
   .nav-links{display:none}
-  .nav-inner{padding:0 20px}
-  .feature{grid-template-columns:1fr;gap:32px;padding:48px 24px}
-  .feature:nth-child(even){direction:ltr}
-  .hero{padding:64px 24px 0}
-  .hero-panel{margin:40px 16px 0}
-  .rules-grid{grid-template-columns:1fr}
-  .footer-inner{flex-direction:column;gap:16px;text-align:center;padding:0 20px}
-  .footer-links{flex-wrap:wrap;justify-content:center}
-  .oss-links{flex-direction:column;align-items:center}
+  .hero{padding:80px 20px 48px}
+  .hero-stats{gap:24px}
+  .section{padding:56px 20px}
+  .feature-grid,.stat-row,.pricing-grid{grid-template-columns:1fr}
+  .atlas-grid{grid-template-columns:1fr}
+  .validation-row{grid-template-columns:1fr;gap:8px}
+  footer{padding:32px 20px;flex-direction:column;text-align:center}
 }
+
+/* ANIMATIONS */
+.fade-up{opacity:0;transform:translateY(20px);animation:fadeUp 0.6s ease forwards}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.delay-1{animation-delay:.1s}.delay-2{animation-delay:.2s}
+.delay-3{animation-delay:.3s}.delay-4{animation-delay:.4s}
 </style>
 </head>
 <body>
 
-<nav aria-label="Main navigation">
-  <div class="nav-inner">
-    <a href="/landing" class="nav-logo" data-testid="link-home">Aiglos</a>
-    <div class="nav-links">
-      <a href="#features" data-testid="link-product">Product</a>
-      <a href="/skills" data-testid="link-skills">Skills</a>
-      <a href="#" data-testid="link-docs-nav">Docs</a>
-      <a href="#" data-testid="link-blog">Blog</a>
-      <a href="https://docs.aiglos.dev" data-testid="link-docs-main">Docs</a>
-      <div class="compare-dropdown" style="position:relative"><a style="cursor:pointer" data-testid="link-compare">Compare ▾</a><div class="compare-menu"><a href="/compare/clawkeeper">vs ClawKeeper</a><a href="/compare/openshell">vs OpenShell</a></div></div>
-    </div>
-    <div class="nav-actions">
-      <a href="/" class="btn-ghost" data-testid="link-sign-in">Sign In</a>
-      <a href="#quickstart" class="btn-primary" data-testid="link-download">Download</a>
-    </div>
+<nav>
+  <a href="/" class="nav-logo">
+    <svg class="nav-mark" viewBox="0 0 44 50" fill="none">
+      <polygon points="22,2 2,44 22,44" fill="white"/>
+      <polygon points="22,2 42,44 22,44" fill="rgba(255,255,255,0.42)"/>
+      <rect x="14" y="44" width="16" height="6" fill="white"/>
+    </svg>
+    <span class="nav-name">aiglos</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/intel">Intel</a></li>
+    <li><a href="/compare/clawkeeper">Compare</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="/docs">Docs</a></li>
+    <li><a href="https://github.com/aiglos/aiglos">GitHub</a></li>
+  </ul>
+  <div class="nav-cta">
+    <a href="/docs" class="btn-ghost">Docs</a>
+    <a href="https://pypi.org/project/aiglos/" class="btn-primary">pip install</a>
   </div>
 </nav>
 
+<!-- HERO -->
 <section class="hero">
-  <h1 data-testid="text-hero-headline">Every surface. Every session. Every deployment.</h1>
-  <p class="hero-sub">The AI agent security platform that learns your deployment and gets permanently better with every deployment in the network. One import. Zero dependencies.</p>
-  <a href="#quickstart" class="hero-cta" data-testid="link-get-started">Get Started Free</a>
-
-  <div class="panel hero-panel">
-    <div class="panel-bar">
-      <div class="panel-dot r"></div>
-      <div class="panel-dot y"></div>
-      <div class="panel-dot g"></div>
-      <span class="panel-title">aiglos &mdash; live interceptor feed</span>
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    v0.24.0 — 75 threat families — 1514 tests passing
+  </div>
+  <h1 class="fade-up">Runtime security for<br><span>AI agents.</span></h1>
+  <p class="hero-sub fade-up delay-1">One import. Every tool call inspected before execution. Under 1ms. The security layer the OpenClaw ecosystem doesn't ship.</p>
+  <div class="hero-actions fade-up delay-2">
+    <div class="hero-install">
+      <div>
+        <div class="hero-install-label">Install</div>
+        <code>pip install aiglos</code>
+      </div>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install aiglos');this.textContent='Copied'">Copy</button>
     </div>
-    <div class="panel-inner" id="live-feed" data-testid="panel-live-feed"></div>
+    <a href="https://github.com/aiglos/aiglos" class="btn-ghost">GitHub →</a>
+  </div>
+  <div class="hero-stats fade-up delay-3">
+    <div class="hero-stat">
+      <span class="hero-stat-n">75</span>
+      <span class="hero-stat-l">Threat families</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-n">19</span>
+      <span class="hero-stat-l">Campaign patterns</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-n">&lt;1ms</span>
+      <span class="hero-stat-l">Per call</span>
+    </div>
+    <div class="hero-stat">
+      <span class="hero-stat-n">0</span>
+      <span class="hero-stat-l">Dependencies</span>
+    </div>
   </div>
 </section>
 
-<div class="logo-strip">
-  Works with LangChain <span>&middot;</span> LlamaIndex <span>&middot;</span> AutoGen <span>&middot;</span> CrewAI <span>&middot;</span> n8n <span>&middot;</span> Any MCP client
+<!-- THE NUMBER -->
+<div class="number-section">
+  <span class="number-big">233 / 247</span>
+  <p class="number-label">IBM found that shadow AI breaches take <strong>247 days</strong> to detect. SWE-CI ran agents for <strong>233 days</strong>. The agent operates inside its own undetected breach window. Every production deployment running right now.</p>
 </div>
 
-<section class="features container" id="features">
-
-  <div class="feature">
-    <div class="feature-text">
-      <h2>In-process. No proxy. No port.</h2>
-      <p>One import and Aiglos patches into your MCP client session at load time. Every tool call passes through 39 threat families before execution. No sidecar. No network hop. No config file.</p>
+<!-- HOW IT WORKS -->
+<section class="section">
+  <div class="section-kicker">How it works</div>
+  <h2>One line. Nothing else changes.</h2>
+  <p class="section-sub">Aiglos intercepts every tool call, HTTP request, and shell command before execution. The agent never knows it's running.</p>
+  <div class="code-window">
+    <div class="code-topbar">
+      <span class="code-dot red"></span>
+      <span class="code-dot yellow"></span>
+      <span class="code-dot green"></span>
+      <span class="code-filename">agent.py</span>
     </div>
-    <div class="panel feature-panel">
-      <div class="panel-bar">
-        <div class="panel-dot r"></div>
-        <div class="panel-dot y"></div>
-        <div class="panel-dot g"></div>
-        <span class="panel-title">main.py</span>
-      </div>
-      <div class="code-block">
-        <span class="code-kw">import</span> aiglos &nbsp;<span class="code-comment"># that's it</span><br><br>
-        <span class="code-comment"># Aiglos patches mcp.client.session.ClientSession.call_tool</span><br>
-        <span class="code-comment"># at import time. Every tool call is now scanned before</span><br>
-        <span class="code-comment"># execution. No proxy server. No port. No yaml.</span><br><br>
-        <span class="code-kw">from</span> mcp <span class="code-kw">import</span> ClientSession<br><br>
-        <span class="code-kw">async def</span> <span class="code-fn">run</span>():<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;session = ClientSession(transport)<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;<span class="code-kw">await</span> session.<span class="code-fn">call_tool</span>(<span class="code-str">"read_file"</span>, {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="code-str">"path"</span>: <span class="code-str">"/home/user/notes.txt"</span><br>
-        &nbsp;&nbsp;&nbsp;&nbsp;}) &nbsp;<span class="code-comment"># &larr; scanned in &lt;0.5ms, CLEAN</span>
-      </div>
+    <div class="code-body">
+      <pre><span class="tok-kw">import</span> aiglos
+
+aiglos.<span class="tok-fn">attach</span>(
+    <span class="tok-param">agent_name</span>=<span class="tok-str">"my-agent"</span>,
+    <span class="tok-param">policy</span>=<span class="tok-str">"enterprise"</span>,
+)
+
+<span class="tok-comment"># The agent keeps running. Nothing else changes.</span>
+<span class="tok-comment"># Until something tries to exfiltrate credentials.</span>
+<span class="tok-comment"># Then it stops.</span></pre>
     </div>
   </div>
-
-  <div class="feature">
-    <div class="feature-text">
-      <h2>39 threat families. Under a millisecond.</h2>
-      <p>Credential exfiltration, prompt injection, command injection, path traversal, SSRF, data exfiltration, privilege escalation, financial execution, agent spawning, reward poisoning, and more. Every pattern compiled once at init. Returns on first BLOCK hit.</p>
+  <div class="feature-grid">
+    <div class="feature-cell">
+      <div class="feature-title">75 Threat Families</div>
+      <div class="feature-body">T01–T75 covering MCP tool calls, HTTP/API requests, subprocess execution, session data extraction, content wrapper escapes, environment hijacking, and every attack class in the OpenClaw ATLAS threat model.</div>
     </div>
-    <div class="panel feature-panel">
-      <div class="panel-bar">
-        <div class="panel-dot r"></div>
-        <div class="panel-dot y"></div>
-        <div class="panel-dot g"></div>
-        <span class="panel-title">rule families &mdash; live verdicts</span>
-      </div>
-      <div class="rules-grid" id="rules-grid" data-testid="panel-rules-grid"></div>
+    <div class="feature-cell">
+      <div class="feature-title">Campaign Detection</div>
+      <div class="feature-body">19 multi-step attack patterns. A git log followed by a .env read followed by an outbound POST is a credential exfiltration campaign. Each call looks clean. The sequence is the attack. Aiglos sees sequences.</div>
     </div>
-  </div>
-
-  <div class="feature">
-    <div class="feature-text">
-      <h2>Attestation artifacts. Signed and verifiable.</h2>
-      <p>Every agent session produces a tamper-evident JSON artifact signed with RSA-2048. Proves your runtime was active and every tool call was inspected. The artifact your auditor, your CISO, and your insurer need.</p>
+    <div class="feature-cell">
+      <div class="feature-title">Behavioral Baseline</div>
+      <div class="feature-body">After 20 sessions, Aiglos builds a per-agent statistical fingerprint. The DevOps agent that reads .aws/credentials scores LOW. The code review agent that never has — and suddenly does — scores HIGH.</div>
     </div>
-    <div class="panel feature-panel">
-      <div class="panel-bar">
-        <div class="panel-dot r"></div>
-        <div class="panel-dot y"></div>
-        <div class="panel-dot g"></div>
-        <span class="panel-title">attestation-artifact.json</span>
-      </div>
-      <div class="artifact-json" data-testid="panel-artifact">{<br>
-&nbsp;&nbsp;<span class="json-key">"schema_version"</span>: <span class="json-num">1</span>,<br>
-&nbsp;&nbsp;<span class="json-key">"artifact_id"</span>: <span class="json-str">"a1c9e4f2-87d3-4b1a-9e5c-2f8d7a3b6c01"</span>,<br>
-&nbsp;&nbsp;<span class="json-key">"issued_at"</span>: <span class="json-str">"2026-03-07T14:23:01Z"</span>,<br>
-&nbsp;&nbsp;<span class="json-key">"session_id"</span>: <span class="json-str">"sess-prod-0472"</span>,<br>
-&nbsp;&nbsp;<span class="json-key">"session_summary"</span>: {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"tool_calls_total"</span>: <span class="json-num">847</span>,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"tool_calls_blocked"</span>: <span class="json-num">12</span>,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"block_rate_pct"</span>: <span class="json-num">1.42</span>,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"duration_seconds"</span>: <span class="json-num">3421.7</span>,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"cves_triggered"</span>: [<span class="json-str">"CVE-2026-24763"</span>, <span class="json-str">"CVE-2026-25253"</span>]<br>
-&nbsp;&nbsp;},<br>
-&nbsp;&nbsp;<span class="json-key">"signature"</span>: {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"algorithm"</span>: <span class="json-str">"RSA-SHA256"</span>,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"key_id"</span>: <span class="json-str">"e7a2f19c4b8d"</span>,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="json-key">"value"</span>: <span class="json-str">"kL9xmR2v...48 chars...Qp7wZ3dY="</span><br>
-&nbsp;&nbsp;}<br>
-}</div>
+    <div class="feature-cell">
+      <div class="feature-title">Signed Audit Artifact</div>
+      <div class="feature-body">Every session closes with a cryptographically signed record of everything the agent did. HMAC-SHA256 minimum. RSA-2048 for regulatory submission. The artifact NDAA §1513 requires. Nothing else produces it.</div>
+    </div>
+    <div class="feature-cell">
+      <div class="feature-title">Federation Intelligence</div>
+      <div class="feature-body">Every contributing deployment shares anonymized threat patterns via differential privacy (ε=0.1). New deployment, day one: pre-warmed from collective intelligence. The moat that compounds with every install.</div>
+    </div>
+    <div class="feature-cell">
+      <div class="feature-title">GOVBENCH</div>
+      <div class="feature-body">The first governance benchmark for AI agents. Five dimensions. A-F grade. Published before any standard body required one. The company that defines the benchmark owns the compliance category. Run it: <code>aiglos benchmark run</code></div>
     </div>
   </div>
-
 </section>
 
-<section class="oss" id="quickstart">
-  <h3>The detection engine is MIT licensed.</h3>
-  <p>The attestation layer funds the research.</p>
-  <div class="oss-links">
-    <a href="https://github.com/w1123581321345589/aiglos-dashboard" data-testid="link-github">View on GitHub</a>
-    <a href="#" data-testid="link-docs">Read the Docs</a>
+<!-- STATS -->
+<section class="section" style="border-top:1px solid var(--ln)">
+  <div class="section-kicker">By the numbers</div>
+  <h2>Built for the way agents actually work.</h2>
+  <div class="stat-row">
+    <div class="stat-cell">
+      <span class="stat-n">75</span>
+      <span class="stat-l">Threat families T01–T75</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-n">93%</span>
+      <span class="stat-l">OpenClaw ATLAS coverage</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-n">3/3</span>
+      <span class="stat-l">Published GHSAs caught</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-n">1514</span>
+      <span class="stat-l">Tests passing</span>
+    </div>
+  </div>
+</section>
+
+<!-- GHSA VALIDATION -->
+<section class="section" style="border-top:1px solid var(--ln)">
+  <div class="section-kicker">Empirical validation</div>
+  <h2>Every published OpenClaw vulnerability.<br>Caught by existing rules.</h2>
+  <p class="section-sub">The OpenClaw security page has received 288 vulnerability reports. Three have been published. All three are covered by Aiglos rules — before the advisories were disclosed, before any patch existed.</p>
+  <div class="validation-grid">
+    <div class="validation-row">
+      <div class="validation-ghsa">GHSA-g8p2-7wf7-98mq<br><span style="color:var(--dim);font-size:10px">CVSS 8.8 · High</span></div>
+      <div class="validation-title">1-Click RCE via Authentication Token Exfiltration from gatewayUrl</div>
+      <div class="validation-rules">T03 T12 T19 T68 ✓</div>
+    </div>
+    <div class="validation-row">
+      <div class="validation-ghsa">GHSA-q284-4pvr-m585<br><span style="color:var(--dim);font-size:10px">CVSS 8.6 · High</span></div>
+      <div class="validation-title">OS Command Injection via Project Root Path in sshNodeCommand</div>
+      <div class="validation-rules">T03 T04 T70 ✓</div>
+    </div>
+    <div class="validation-row">
+      <div class="validation-ghsa">GHSA-mc68-q9jw-2h3v<br><span style="color:var(--dim);font-size:10px">CVSS 8.4 · High</span></div>
+      <div class="validation-title">Command Injection in Clawdbot Docker via PATH Environment Variable</div>
+      <div class="validation-rules">T03 T70 ✓</div>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--dim);margin-top:16px">The 285 advisories that haven't published yet are what Aiglos is already watching for. <a href="/intel" style="color:var(--ice)">aiglos.dev/intel →</a></p>
+</section>
+
+<!-- COMPARE -->
+<section class="section" style="border-top:1px solid var(--ln)">
+  <div class="section-kicker">Competition</div>
+  <h2>Everyone watches calls.<br>Nobody watches sessions.</h2>
+  <p class="section-sub">The gap is not a feature gap. It is architectural. You cannot retrofit sequence detection onto a system built for single-call inspection.</p>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Tool</th>
+        <th>What they watch</th>
+        <th>Sessions</th>
+        <th>Signed audit</th>
+        <th>Fed intel</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Azure / Lakera</td><td>Inbound prompt text</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+      <tr><td>Kong / Apigee AI</td><td>HTTP traffic only</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+      <tr><td>CrowdStrike / Splunk</td><td>Host logs, after the fact</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+      <tr><td>Snyk mcp-scan</td><td>Static skill scanning</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+      <tr><td>ClawKeeper</td><td>Host configuration</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+      <tr class="aiglos-row"><td>Aiglos</td><td>MCP + HTTP + subprocess</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:16px;font-size:13px;color:var(--dim)">
+    <a href="/compare/clawkeeper" style="color:var(--ice)">Aiglos vs ClawKeeper →</a> &nbsp;
+    <a href="/compare/openShell" style="color:var(--ice)">Aiglos vs OpenShell →</a>
+  </p>
+</section>
+
+<!-- ATLAS COVERAGE -->
+<section class="section" style="border-top:1px solid var(--ln)">
+  <div class="section-kicker">OpenClaw ATLAS Threat Model</div>
+  <h2>93% coverage of the platform's<br>own documented threat model.</h2>
+  <p class="section-sub">OpenClaw published a formal MITRE ATLAS threat model in February 2026. 22 threats across 8 tactic categories. Aiglos covers 19 fully, 3 partially, 0 gaps.</p>
+  <div class="atlas-grid">
+    <div class="atlas-cell"><div>
+      <span class="atlas-id">T-EXEC-001 · T-EXEC-002</span>
+      <div class="atlas-title">Direct + Indirect Prompt Injection</div>
+      <div class="atlas-rules">T05 T01 T54 T60 T74 — FULL</div>
+    </div></div>
+    <div class="atlas-cell"><div>
+      <span class="atlas-id">T-PERSIST-001/002/003</span>
+      <div class="atlas-title">Skill Installation, Update Poisoning, Config Tampering</div>
+      <div class="atlas-rules">T30 T34 T36 T37 — FULL</div>
+    </div></div>
+    <div class="atlas-cell"><div>
+      <span class="atlas-id">T-EXFIL-001/002/003</span>
+      <div class="atlas-title">Data Theft, Unauthorized Messaging, Credential Harvesting</div>
+      <div class="atlas-rules">T09 T12 T14 T19 T37 — FULL</div>
+    </div></div>
+    <div class="atlas-cell"><div>
+      <span class="atlas-id">T-DISC-001 · T-DISC-002</span>
+      <div class="atlas-title">Tool Enumeration + Session Data Extraction</div>
+      <div class="atlas-rules">T73 T56 T75 — FULL</div>
+    </div></div>
+  </div>
+  <p style="margin-top:16px;font-size:13px;color:var(--dim)">
+    Full coverage report: <code style="font-family:'DM Mono',monospace;font-size:12px;color:var(--ice)">aiglos autoresearch atlas-coverage</code>
+  </p>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing" style="border-top:1px solid var(--ln)">
+  <div class="section-kicker">Pricing</div>
+  <h2>Free to detect. Pro to prove.</h2>
+  <p class="section-sub">The free tier runs the full detection engine. Pro adds the federation intelligence and the signed compliance artifact — the document that turns a security tool into a regulatory submission.</p>
+  <div class="pricing-grid">
+    <div class="price-col">
+      <div class="price-tier">Free</div>
+      <div class="price-amount">$0</div>
+      <ul class="price-features">
+        <li>Full T01–T75 detection</li>
+        <li>GitHub Actions CI integration</li>
+        <li>A–F security grade</li>
+        <li>GOVBENCH scoring</li>
+        <li>Community support</li>
+      </ul>
+    </div>
+    <div class="price-col featured">
+      <div class="price-tier">Pro — Per Developer</div>
+      <div class="price-amount">$49<span class="price-mo">/mo</span></div>
+      <ul class="price-features">
+        <li>Federation threat intelligence</li>
+        <li>Behavioral baseline per agent</li>
+        <li>Signed session artifacts</li>
+        <li>NDAA §1513 + EU AI Act mapping</li>
+        <li>ClawKeeper unified audit</li>
+        <li>Policy proposals</li>
+        <li>Superpowers integration</li>
+        <li>ATLAS coverage report</li>
+      </ul>
+    </div>
+    <div class="price-col">
+      <div class="price-tier">Enterprise</div>
+      <div class="price-amount" style="font-size:28px;padding-top:6px">Custom</div>
+      <ul class="price-features">
+        <li>Private federation server</li>
+        <li>Air-gap deployment</li>
+        <li>C3PAO-ready packages</li>
+        <li>Dedicated engineering</li>
+        <li>NET-30 invoicing</li>
+        <li>SLA</li>
+      </ul>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--dim);margin-top:20px;text-align:center">
+    A team of 4 spending $200/mo each on Claude Pro spends $800/mo on the agents Aiglos secures. Pro is 6% of that spend.
+  </p>
+</section>
+
+<!-- CTA -->
+<section style="padding:80px 48px;text-align:center;border-top:1px solid var(--ln)">
+  <h2 style="font-size:clamp(28px,4vw,48px);font-weight:700;letter-spacing:-0.03em;margin-bottom:16px">
+    The window is measured<br>in months, not years.
+  </h2>
+  <p style="font-size:16px;color:var(--mid);max-width:480px;margin:0 auto 40px;line-height:1.65">
+    NDAA compliance: June 2026. EU AI Act: August 2026. The standard is being written. The company that defines the benchmark owns the category.
+  </p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a href="https://pypi.org/project/aiglos/" class="btn-primary" style="padding:12px 28px;font-size:12px">pip install aiglos</a>
+    <a href="https://github.com/aiglos/aiglos" class="btn-ghost" style="padding:12px 28px;font-size:12px">View on GitHub →</a>
   </div>
 </section>
 
 <footer>
-  <div class="footer-inner">
-    <div class="footer-logo">Aiglos</div>
-    <div class="footer-links">
-      <a href="#" data-testid="link-footer-docs">Docs</a>
-      <a href="https://github.com/w1123581321345589/aiglos-dashboard" data-testid="link-footer-github">GitHub</a>
-      <a href="#" data-testid="link-footer-cves">CVEs</a>
-      <a href="https://docs.aiglos.dev" data-testid="link-footer-docs-alt">Docs</a>
-      <a href="#" data-testid="link-footer-contact">Contact</a>
-    </div>
-    <div class="footer-right" data-testid="text-domain">aiglos.dev</div>
+  <div class="footer-logo">aiglos · aiglos.dev</div>
+  <div class="footer-links">
+    <a href="/intel">Intel</a>
+    <a href="/compare/clawkeeper">Compare</a>
+    <a href="/docs">Docs</a>
+    <a href="https://github.com/aiglos/aiglos">GitHub</a>
   </div>
+  <div class="footer-copy">© 2026 Aiglos · Runtime security for AI agents</div>
 </footer>
 
-<script>
-(function() {
-  var tools = [
-    {name:"read_file",args:"/home/user/notes.txt",verdict:"clean",risk:""},
-    {name:"web_search",args:"AI security research 2026",verdict:"clean",risk:""},
-    {name:"send_email",args:"to: team@company.com",verdict:"clean",risk:""},
-    {name:"read_file",args:"/etc/passwd",verdict:"block",risk:"PATH_TRAVERSAL"},
-    {name:"process_doc",args:"ignore previous instructions",verdict:"block",risk:"PROMPT_INJECTION"},
-    {name:"http_get",args:"http://169.254.169.254/meta",verdict:"block",risk:"SSRF"},
-    {name:"add_event",args:"Sprint planning, 2026-03-15",verdict:"clean",risk:""},
-    {name:"execute",args:"sudo rm -rf /var/log",verdict:"block",risk:"PRIVILEGE_ESCALATION"},
-    {name:"get_weather",args:"Charleston, SC",verdict:"clean",risk:""},
-    {name:"http_post",args:"discord.com/api/webhooks/...",verdict:"block",risk:"DATA_EXFILTRATION"},
-    {name:"search_files",args:"report.pdf",verdict:"clean",risk:""},
-    {name:"run_query",args:"SELECT * FROM users",verdict:"clean",risk:""},
-    {name:"read_file",args:"../../.env",verdict:"block",risk:"CREDENTIAL_EXFIL"},
-    {name:"write_file",args:"~/.bashrc",verdict:"warn",risk:"PERSISTENCE"},
-    {name:"call_api",args:"api.internal.corp/v2/data",verdict:"clean",risk:""},
-    {name:"shell_exec",args:"systemctl enable backdoor",verdict:"block",risk:"PERSISTENCE"},
-    {name:"fetch_url",args:"metadata.google.internal",verdict:"block",risk:"SSRF"},
-    {name:"list_files",args:"/home/dev/project/src",verdict:"clean",risk:""},
-  ];
-
-  var feedEl = document.getElementById("live-feed");
-  var idx = 0;
-  var maxLines = 8;
-
-  function pad(n) { return n < 10 ? "0" + n : "" + n; }
-
-  function addLine() {
-    var t = tools[idx % tools.length];
-    var now = new Date();
-    var ts = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
-
-    var line = document.createElement("div");
-    line.className = "feed-line";
-    line.style.animationDelay = "0s";
-
-    var risk = t.risk ? '<span class="feed-risk">' + t.risk + '</span>' : '';
-    line.innerHTML =
-      '<span class="feed-ts">' + ts + '</span>' +
-      '<span class="feed-tool">' + t.name + '</span>' +
-      '<span class="feed-badge ' + t.verdict + '">' + t.verdict + '</span>' +
-      risk;
-
-    feedEl.appendChild(line);
-
-    var lines = feedEl.querySelectorAll(".feed-line");
-    if (lines.length > maxLines) {
-      lines[0].remove();
-    }
-
-    idx++;
-  }
-
-  for (var i = 0; i < 5; i++) {
-    addLine();
-    var lines = feedEl.querySelectorAll(".feed-line");
-    lines[lines.length - 1].style.opacity = "1";
-  }
-  setInterval(addLine, 2200);
-
-  var rules = [
-    {id:"F01",label:"Credential Exfiltration",count:2847},
-    {id:"F02",label:"Prompt Injection",count:1923},
-    {id:"F03",label:"Command Injection",count:1456},
-    {id:"F04",label:"Path Traversal",count:1102},
-    {id:"F05",label:"SSRF",count:891},
-    {id:"F06",label:"Data Exfiltration",count:634},
-    {id:"F07",label:"Privilege Escalation",count:412},
-    {id:"F08",label:"Persistence",count:287},
-  ];
-
-  var gridEl = document.getElementById("rules-grid");
-  rules.forEach(function(r) {
-    var card = document.createElement("div");
-    card.className = "rule-card";
-    card.innerHTML =
-      '<div><div class="rule-label">' + r.label + '</div>' +
-      '<div class="rule-id">' + r.id + '</div></div>' +
-      '<div class="rule-count" data-count="' + r.count + '">' + r.count.toLocaleString() + '</div>';
-    gridEl.appendChild(card);
-  });
-
-  setInterval(function() {
-    var counters = gridEl.querySelectorAll(".rule-count");
-    counters.forEach(function(el) {
-      var c = parseInt(el.getAttribute("data-count"), 10);
-      c += Math.floor(Math.random() * 5) + 1;
-      el.setAttribute("data-count", c);
-      el.textContent = c.toLocaleString();
-    });
-  }, 3000);
-})();
-</script>
 </body>
 </html>

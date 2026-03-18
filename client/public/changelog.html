@@ -3,619 +3,187 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Changelog -- Aiglos</title>
+<title>Changelog — Aiglos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-:root {
-  --bg: #fafaf9;
-  --ink: #0a0a0a;
-  --mid: #525252;
-  --dim: #a3a3a3;
-  --rule: #e5e5e5;
-  --green: #16a34a;
-  --red: #dc2626;
-  --orange: #d97706;
-  --blue: #2563eb;
-}
-body { background: var(--bg); color: var(--ink); font-family: 'Geist', sans-serif; font-size: 15px; line-height: 1.6; }
-a { color: inherit; text-decoration: none; }
-
-nav {
-  position: sticky; top: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 40px; height: 56px;
-  background: rgba(250,250,249,0.94); backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--rule);
-}
-.nav-logo { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
-.nav-links { display: flex; gap: 28px; list-style: none; }
-.nav-links a { font-size: 14px; color: var(--mid); transition: color .15s; }
-.nav-links a:hover, .nav-links a.active { color: var(--ink); }
-.nav-right { display: flex; gap: 10px; align-items: center; }
-.btn-ghost { font-size: 13px; color: var(--mid); background: none; border: 1px solid var(--rule); padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all .15s; }
-.btn-ghost:hover { border-color: #a3a3a3; color: var(--ink); }
-.btn-dark { font-size: 13px; color: #fff; background: var(--ink); border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
-.btn-dark:hover { opacity: .8; }
-
-.page { max-width: 760px; margin: 0 auto; padding: 80px 40px; }
-
-.page-eyebrow {
-  font-family: 'Geist Mono', monospace; font-size: 11px;
-  letter-spacing: 0.12em; color: var(--dim); text-transform: uppercase;
-  margin-bottom: 16px;
-}
-
-h1 {
-  font-size: clamp(28px, 3.6vw, 40px); font-weight: 600;
-  letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 12px;
-}
-
-.page-sub { font-size: 15px; color: var(--mid); line-height: 1.65; margin-bottom: 64px; }
-
-/* Filter tabs */
-.filter-row {
-  display: flex; gap: 4px; margin-bottom: 48px;
-  border-bottom: 1px solid var(--rule); padding-bottom: 0;
-}
-.filter-tab {
-  font-size: 13px; color: var(--mid); padding: 8px 16px;
-  border-bottom: 2px solid transparent; cursor: pointer;
-  transition: all .15s; background: none; border-top: none;
-  border-left: none; border-right: none; font-family: 'Geist', sans-serif;
-  margin-bottom: -1px;
-}
-.filter-tab:hover { color: var(--ink); }
-.filter-tab.active { color: var(--ink); border-bottom-color: var(--ink); font-weight: 500; }
-
-/* Entry */
-.entry {
-  padding: 40px 0;
-  border-bottom: 1px solid var(--rule);
-}
-.entry:last-child { border-bottom: none; }
-
-.entry-meta {
-  display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
-}
-
-.entry-date {
-  font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--dim);
-}
-
-.entry-tag {
-  font-family: 'Geist Mono', monospace; font-size: 10px;
-  padding: 3px 8px; border-radius: 4px; letter-spacing: 0.06em; font-weight: 500;
-}
-.entry-tag.release   { background: #f0f0ef; color: var(--mid); }
-.entry-tag.cve       { background: #fef2f2; color: var(--red); }
-.entry-tag.feature   { background: #f0fdf4; color: var(--green); }
-.entry-tag.fix       { background: #eff6ff; color: var(--blue); }
-.entry-tag.security  { background: #fff7ed; color: var(--orange); }
-
-.entry-version {
-  font-family: 'Geist Mono', monospace; font-size: 12px;
-  color: var(--mid); background: #f5f5f4; padding: 2px 8px; border-radius: 4px;
-}
-
-.entry h2 {
-  font-size: 20px; font-weight: 600; letter-spacing: -0.02em;
-  color: var(--ink); margin-bottom: 10px; border-top: none; padding-top: 0;
-}
-
-.entry p {
-  font-size: 14px; color: var(--mid); line-height: 1.7; margin-bottom: 12px;
-}
-.entry p:last-of-type { margin-bottom: 0; }
-.entry p strong { color: var(--ink); font-weight: 500; }
-.entry p code {
-  font-family: 'Geist Mono', monospace; font-size: 12px;
-  background: #f0f0ef; padding: 2px 6px; border-radius: 4px; color: var(--ink);
-}
-
-.entry-list { margin: 12px 0 0 0; padding-left: 0; list-style: none; }
-.entry-list li {
-  font-size: 13px; color: var(--mid); padding: 5px 0;
-  display: flex; gap: 10px; align-items: flex-start; line-height: 1.5;
-}
-.entry-list li::before { color: var(--dim); flex-shrink: 0; margin-top: 1px; content: '·'; }
-.entry-list li.added::before   { content: '+'; color: var(--green); }
-.entry-list li.fixed::before   { content: '↑'; color: var(--blue); }
-.entry-list li.changed::before { content: '~'; color: var(--orange); }
-.entry-list li.removed::before { content: '−'; color: var(--red); }
-
-/* CVE entry special treatment */
-.cve-block {
-  background: #fef2f2; border: 1px solid #fecaca;
-  border-radius: 8px; padding: 16px 20px; margin: 14px 0;
-}
-.cve-block-id {
-  font-family: 'Geist Mono', monospace; font-size: 11px;
-  color: var(--red); margin-bottom: 4px;
-}
-.cve-block-score {
-  font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px;
-}
-.cve-block-desc { font-size: 13px; color: var(--mid); line-height: 1.55; }
-.cve-block-status {
-  margin-top: 10px; font-family: 'Geist Mono', monospace; font-size: 11px;
-}
-.cve-block-status.patched   { color: var(--green); }
-.cve-block-status.reviewing { color: var(--orange); }
-
-.entry-link {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 13px; color: var(--ink); margin-top: 14px;
-  border-bottom: 1px solid var(--rule); padding-bottom: 1px;
-  transition: border-color .15s;
-}
-.entry-link:hover { border-color: var(--ink); }
-
-/* Footer */
-footer {
-  border-top: 1px solid var(--rule); padding: 28px 40px;
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 13px; color: var(--dim);
-}
-.footer-links { display: flex; gap: 20px; list-style: none; }
-.footer-links a { color: var(--dim); transition: color .15s; }
-.footer-links a:hover { color: var(--ink); }
-
-.compare-dropdown { position: relative; }
-.compare-dropdown > a { cursor: pointer; }
-.compare-menu { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; background: #fff; border: 1px solid var(--rule); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); min-width: 180px; padding: 6px; z-index: 200; }
-.compare-dropdown:hover .compare-menu { display: block; }
-.compare-menu a { display: block; padding: 8px 12px; font-size: 13px; color: var(--mid); border-radius: 5px; transition: all .12s; }
-.compare-menu a:hover { background: #f5f5f4; color: var(--ink); }
-
-@media (max-width: 768px) {
-  nav { padding: 0 20px; }
-  .nav-links { display: none; }
-  .page { padding: 48px 20px; }
-  footer { flex-direction: column; gap: 16px; padding: 24px 20px; }
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#09090b;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--gold:#b8860b;--amber:#fbbf24}
+body{background:var(--bg);color:var(--hi);font-family:'Plus Jakarta Sans',sans-serif;-webkit-font-smoothing:antialiased}
+nav{background:rgba(9,9,11,0.9);border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;position:sticky;top:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-mark{width:18px;height:22px}
+.nav-name{font-family:'DM Mono',monospace;font-size:13px;color:var(--hi)}
+main{max-width:760px;margin:0 auto;padding:72px 48px 100px}
+h1{font-size:40px;font-weight:700;letter-spacing:-0.03em;margin-bottom:12px}
+.header-sub{font-size:15px;color:var(--mid);margin-bottom:56px}
+.release{margin-bottom:56px}
+.release-header{display:flex;align-items:baseline;gap:16px;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--ln2)}
+.release-version{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--hi)}
+.release-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:0.1em}
+.release-badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;padding:3px 8px;border-radius:3px;text-transform:uppercase}
+.badge-latest{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);color:var(--green)}
+.badge-stable{background:var(--bg2);border:1px solid var(--ln);color:var(--dim)}
+.release-summary{font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:20px}
+.change-group{margin-bottom:16px}
+.change-type{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.change-type::after{content:'';display:block;height:1px;flex:1;background:var(--ln)}
+.type-new{color:var(--green)}
+.type-improved{color:var(--ice)}
+.type-fixed{color:var(--amber)}
+.change-list{list-style:none}
+.change-list li{font-size:13px;color:var(--mid);padding:6px 0;border-bottom:1px solid var(--ln);line-height:1.55;display:flex;gap:12px;align-items:flex-start}
+.change-list li:last-child{border-bottom:none}
+.change-list li::before{content:'—';color:var(--dim);flex-shrink:0;padding-top:1px}
+.change-list li strong{color:var(--hi);font-weight:500}
+.rule-tag{font-family:'DM Mono',monospace;font-size:10px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2);color:var(--ice);padding:2px 7px;border-radius:3px;margin-right:4px;white-space:nowrap}
+.test-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)}
+@media(max-width:640px){main{padding:48px 20px}}
 </style>
 </head>
 <body>
-
 <nav>
-  <a href="/" class="nav-logo">Aiglos</a>
-  <ul class="nav-links">
-    <li><a href="/#how">Product</a></li>
-    <li><a href="/threats.html">Threats</a></li>
-    <li><a href="/intel">Intel</a></li>
-    <li><a href="/skills">Skills</a></li>
-    <li><a href="/pricing.html">Pricing</a></li>
-    <li class="compare-dropdown"><a>Compare ▾</a><div class="compare-menu"><a href="/compare/clawkeeper">vs ClawKeeper</a><a href="/compare/openshell">vs OpenShell</a></div></li>
-    <li><a href="/docs.html">Docs</a></li>
-  </ul>
-  <div class="nav-right">
-    <a href="#" class="btn-ghost">Sign In</a>
-    <a href="/docs.html#install" class="btn-dark">Get Started</a>
-  </div>
+  <a href="/" class="nav-logo">
+    <svg class="nav-mark" viewBox="0 0 44 50" fill="none">
+      <polygon points="22,2 2,44 22,44" fill="white"/>
+      <polygon points="22,2 42,44 22,44" fill="rgba(255,255,255,0.42)"/>
+      <rect x="14" y="44" width="16" height="6" fill="white"/>
+    </svg>
+    <span class="nav-name">aiglos</span>
+  </a>
 </nav>
 
-<div class="page">
-  <div class="page-eyebrow">Changelog</div>
-  <h1>What's changed.</h1>
-  <p class="page-sub">Every release, every CVE disclosure, in reverse chronological order.</p>
+<main>
+  <h1>Changelog</h1>
+  <p class="header-sub">All notable changes to Aiglos. Current release: v0.24.0 · 1,514 tests passing.</p>
 
-  <div class="filter-row">
-    <button class="filter-tab active" onclick="filterEntries('all', this)">All</button>
-    <button class="filter-tab" onclick="filterEntries('release', this)">Releases</button>
-    <button class="filter-tab" onclick="filterEntries('cve', this)">CVE Disclosures</button>
-    <button class="filter-tab" onclick="filterEntries('security', this)">Security</button>
+  <!-- v0.24.0 -->
+  <div class="release">
+    <div class="release-header">
+      <span class="release-version">v0.24.0</span>
+      <span class="release-date">March 2026</span>
+      <span class="release-badge badge-latest">Latest</span>
+      <span class="test-count">1,514 tests</span>
+    </div>
+    <p class="release-summary">ATLAS threat model coverage. T71-T75 rules from the OpenClaw formal threat model review. GHSA watcher automation. 93% coverage of the only published formal threat model for an AI agent platform at production scale.</p>
+    <div class="change-group">
+      <div class="change-type type-new">New</div>
+      <ul class="change-list">
+        <li><span class="rule-tag">T71</span> <strong>PAIRING_GRACE_ABUSE</strong> — Device pairing code interception during the 30-second grace period (ATLAS T-ACCESS-001)</li>
+        <li><span class="rule-tag">T72</span> <strong>CHANNEL_IDENTITY_SPOOF</strong> — AllowFrom spoofing, X-Forwarded-For abuse, channel sender identity manipulation (ATLAS T-ACCESS-002)</li>
+        <li><span class="rule-tag">T73</span> <strong>TOOL_ENUMERATION</strong> — Capability reconnaissance via tools.list, mcp.list_tools, empty-arg probes (ATLAS T-DISC-001)</li>
+        <li><span class="rule-tag">T74</span> <strong>CONTENT_WRAPPER_ESCAPE</strong> — XML wrapper termination, CDATA sequences, encoding tricks to break fetched content out of its wrapper (ATLAS T-EVADE-002)</li>
+        <li><span class="rule-tag">T75</span> <strong>SESSION_DATA_EXTRACT</strong> — Lateral session data collection via sessions.list, sessions.preview, chat.history (ATLAS T-DISC-002). Newly documented by OpenClaw threat model: sessionKey is routing, not auth.</li>
+        <li><strong>atlas_coverage.py</strong> — Complete mapping of all 22 OpenClaw ATLAS threats to Aiglos rules. 19 fully covered, 3 partial, 0 gaps. 93% coverage. Run: <code style="font-family:'DM Mono',monospace;font-size:11px">aiglos autoresearch atlas-coverage</code></li>
+        <li><strong>GHSA watcher</strong> — Automated pipeline polling GitHub Advisory Database, NVD, and OSV.dev for new OpenClaw CVEs. Auto-matches to T01-T75 taxonomy. Generates pending rule proposals for gaps. Run: <code style="font-family:'DM Mono',monospace;font-size:11px">aiglos autoresearch ghsa-coverage</code></li>
+        <li><strong>aiglos scan-exposed</strong> — Probes exposed OpenClaw gateway instances for CVE-2026-25253 attack surface. Tests auth, WebSocket endpoint, config endpoints. Returns grade + remediation. Targets the 40,214 exposed instances documented by SecurityScorecard.</li>
+      </ul>
+    </div>
   </div>
 
-  <!-- Entries -->
-  <div id="entries">
-
-    <div class="entry" data-type="cve">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag cve">CVE Disclosure</span>
-      </div>
-      <h2>Two new CVEs: supply chain RCE and A2A spoofing</h2>
-      <p>Aiglos researchers identified two new vulnerabilities in the MCP ecosystem during routine fuzzing of the T30 Supply Chain and T25 A2A Protocol rule families.</p>
-
-      <div class="cve-block">
-        <div class="cve-block-id">CVE-2026-26319</div>
-        <div class="cve-block-score">CVSS 9.0 -- Critical</div>
-        <div class="cve-block-desc">Remote code execution via malicious tool registration overriding a trusted server namespace. An attacker controlling a malicious MCP server can register a tool with the same name as a trusted tool, causing the client to execute attacker-controlled code.</div>
-        <div class="cve-block-status reviewing">● In coordinated disclosure</div>
-      </div>
-
-      <div class="cve-block">
-        <div class="cve-block-id">CVE-2026-26322</div>
-        <div class="cve-block-score">CVSS 7.7 -- High</div>
-        <div class="cve-block-desc">Agent delegation spoofing via crafted A2A task message. A malicious agent can forge a task message appearing to originate from a trusted orchestrator, causing unauthorized tool execution under a different agent's permissions.</div>
-        <div class="cve-block-status reviewing">● In coordinated disclosure</div>
-      </div>
-
-      <p>Detection rules for both are included in <code>aiglos-core</code> v1.2.0 and above. Patches are in coordinated disclosure with affected vendors.</p>
-      <a href="/threats.html" class="entry-link">View full CVE database →</a>
+  <!-- v0.23.0 -->
+  <div class="release">
+    <div class="release-header">
+      <span class="release-version">v0.23.0</span>
+      <span class="release-date">March 2026</span>
+      <span class="release-badge badge-stable">Stable</span>
+      <span class="test-count">1,463 tests</span>
     </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v1.2.0</span>
-      </div>
-      <h2>T35 Personal Agent Monitor + 8 new CVEs</h2>
-      <p>Major detection expansion. T35 covers the personal agent attack surface -- devices running local MCP servers, Claude Desktop, and similar single-user agent environments.</p>
-      <ul class="entry-list">
-        <li class="added">T35 rule family: WebSocket localhost guard, log poisoning detector, messaging channel guard, exposed instance detector</li>
-        <li class="added">T36 embedded library: zero-config <code>import aiglos</code> auto-patching for pip environments</li>
-        <li class="added">8 new CVEs filed against personal agent and embedded scenarios</li>
-        <li class="added">30-day Pro trial mechanic -- auto-starts on first <code>aiglos.attest()</code> call</li>
-        <li class="fixed">Gate hits now persisted to <code>~/.aiglos/license.json</code> on every call</li>
-        <li class="fixed">Concurrent trial start race condition resolved (trial starts exactly once under 20-thread load)</li>
-        <li class="changed">Free tier attestation locked at zero artifacts (previously 3/month)</li>
+    <p class="release-summary">T70 ENV_PATH_HIJACK from GHSA-mc68-q9jw-2h3v proof case. 3/3 published OpenClaw GHSAs now covered. GHSA watcher foundation.</p>
+    <div class="change-group">
+      <div class="change-type type-new">New</div>
+      <ul class="change-list">
+        <li><span class="rule-tag">T70</span> <strong>ENV_PATH_HIJACK</strong> — PATH, LD_PRELOAD, LD_LIBRARY_PATH, PYTHONPATH, NODE_PATH modification in execution context. GHSA-mc68-q9jw-2h3v proof case (CVSS 8.4). Closes the gap T03 left: T03 catches metacharacter injection, T70 catches the upstream env manipulation that redirects execution before the shell sees the command.</li>
+        <li><strong>GHSA coverage automation</strong> — Seed pipeline for the three known OpenClaw advisories. 3/3 covered: GHSA-g8p2-7wf7-98mq (T03, T12, T19, T68), GHSA-q284-4pvr-m585 (T03, T04, T70), GHSA-mc68-q9jw-2h3v (T03, T70).</li>
+        <li><strong>aiglos audit --hardening-check</strong> — Compares running OpenClaw config against the official hardened baseline. Flags 12 deviations from docs.openclaw.ai/gateway/security.</li>
       </ul>
     </div>
+  </div>
 
-    <div class="entry" data-type="cve security">
-      <div class="entry-meta">
-        <span class="entry-date">February 2026</span>
-        <span class="entry-tag cve">CVE Disclosure</span>
-        <span class="entry-tag security">Security</span>
-      </div>
-      <h2>CVE-2026-25253: WebSocket localhost hijack -- CVSS 8.8</h2>
-      <p>A malicious MCP server can register a tool that proxies calls to a locally running WebSocket server, bypassing same-origin restrictions and gaining access to local-only services including Claude Desktop's internal API surface.</p>
-
-      <div class="cve-block">
-        <div class="cve-block-id">CVE-2026-25253</div>
-        <div class="cve-block-score">CVSS 8.8 -- Critical</div>
-        <div class="cve-block-desc">WebSocket localhost hijack via malicious MCP tool registration. Affected: any MCP client running on a host with locally bound WebSocket services. Patch: aiglos-core v1.1.3 adds T35 WebSocket guard blocking <code>ws://localhost:*</code> and <code>ws://127.0.0.1:*</code> destinations in tool arguments.</div>
-        <div class="cve-block-status patched">✓ Patched in v1.1.3</div>
-      </div>
-
-      <a href="/threats.html" class="entry-link">View all CVEs →</a>
+  <!-- v0.22.0 -->
+  <div class="release">
+    <div class="release-header">
+      <span class="release-version">v0.22.0</span>
+      <span class="release-date">March 2026</span>
+      <span class="release-badge badge-stable">Stable</span>
+      <span class="test-count">1,418 tests</span>
     </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">February 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v1.1.0</span>
-      </div>
-      <h2>A2A protocol coverage + attestation artifacts</h2>
-      <p>Aiglos now covers the Google Agent-to-Agent protocol (T25–T29) and ships the first production-ready attestation artifact generator.</p>
-      <ul class="entry-list">
-        <li class="added">T25–T29 rule families: A2A protocol coverage -- task spoofing, replay, unauthorized delegation, orchestrator impersonation</li>
-        <li class="added">RSA-2048 attestation artifact generation (<code>aiglos.attest()</code>)</li>
-        <li class="added">Offline artifact verification (<code>aiglos.verify()</code>)</li>
-        <li class="added">LicenseManager tier system -- FREE / TRIAL / PRO / TEAM / ENTERPRISE</li>
-        <li class="added">TypeScript / Node.js SDK: <code>npm install aiglos</code></li>
-        <li class="fixed">Metering flush thread no longer blocks process exit</li>
+    <p class="release-summary">Superpowers integration. T69 PLAN_DRIFT — the highest-confidence detection signal possible: deviation from a human-approved implementation plan. SUPERPOWERS_PLAN_HIJACK campaign pattern.</p>
+    <div class="change-group">
+      <div class="change-type type-new">New</div>
+      <ul class="change-list">
+        <li><span class="rule-tag">T69</span> <strong>PLAN_DRIFT</strong> — Agent behavior deviates from the approved Superpowers implementation plan. Score 0.95. Silent when no plan is registered. When active: the highest-confidence detection signal in the system, measured against explicit human approval rather than statistical baseline.</li>
+        <li><strong>superpowers.py integration</strong> — <code style="font-family:'DM Mono',monospace;font-size:11px">SuperpowersSession</code>, <code style="font-family:'DM Mono',monospace;font-size:11px">SuperpowersPhase</code>, <code style="font-family:'DM Mono',monospace;font-size:11px">mark_as_superpowers_session()</code>. Phase-aware anomaly suppression (brainstorm/planning phases suppress BEHAVIORAL_ANOMALY). TDD loop recognition (write-test → fail → write-impl → pass → commit). Plan-as-policy via T69.</li>
+        <li><strong>SUPERPOWERS_PLAN_HIJACK</strong> — Campaign pattern (confidence 0.97): T69 plan drift followed by data exfiltration. The highest-confidence campaign signature in the system.</li>
+        <li><strong>PLAN_DRIFT_DETECTED</strong> — Inspection trigger. Fires on first T69 event — no minimum count, because the plan represents explicit human approval.</li>
+        <li><strong>OpenClawGuard.attach_superpowers()</strong> — Wire a SuperpowersSession to the guard. Extends sub_agents with declared task subagents. Registers plan with T69 engine.</li>
       </ul>
     </div>
+  </div>
 
-    <div class="entry" data-type="cve security">
-      <div class="entry-meta">
-        <span class="entry-date">January 2026</span>
-        <span class="entry-tag cve">CVE Disclosure</span>
-        <span class="entry-tag security">Security</span>
-      </div>
-      <h2>CVE-2026-25593: SSRF via MCP file-fetch tool</h2>
-      <p>A tool argument validation gap allows agents to reach internal network endpoints via a seemingly innocuous file-fetch MCP tool. The vulnerability was discovered during T13 Network rule family development.</p>
-
-      <div class="cve-block">
-        <div class="cve-block-id">CVE-2026-25593</div>
-        <div class="cve-block-score">CVSS 5.9 -- Medium</div>
-        <div class="cve-block-desc">SSRF via internal network probe through file-fetch MCP tool. The tool accepts a URL argument with no scheme or host restrictions, allowing requests to <code>http://169.254.169.254</code> (AWS metadata), <code>http://10.x.x.x</code> (internal networks), and <code>file://</code> URIs.</div>
-        <div class="cve-block-status patched">✓ Patched in v1.0.4</div>
-      </div>
+  <!-- v0.21.0 -->
+  <div class="release">
+    <div class="release-header">
+      <span class="release-version">v0.21.0</span>
+      <span class="release-date">March 2026</span>
+      <span class="release-badge badge-stable">Stable</span>
+      <span class="test-count">1,364 tests</span>
     </div>
-
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.18.0</span>
-      </div>
-      <h2>Security posture audit + ClawKeeper integration + sandbox enforcement</h2>
-      <p>One command covers your entire pre-deployment security posture. Merges with ClawKeeper host audit for a unified host + runtime report. Enforces OpenClaw sandbox hardening at the Aiglos layer.</p>
-      <ul class="entry-list">
-        <li class="added"><code>AuditScanner</code> -- 5-phase, 50+ checks, A-F letter grade</li>
-        <li class="added"><code>AuditReporter</code> -- summary/full/json/briefing/clawkeeper formats</li>
-        <li class="added"><code>SkillReputationGraph</code> -- ingests ClawKeeper Skill Marketplace badge data (13,000+ skills)</li>
-        <li class="added"><code>SandboxPolicy</code> -- runtime enforcement of <code>tools.elevated.enabled=false</code> and <code>sandbox.mode=non-main</code></li>
-        <li class="added"><code>SANDBOX_ESCAPE_ATTEMPT</code> -- 12th campaign pattern</li>
-        <li class="added"><code>aiglos audit [--deep] [--schedule nightly]</code> CLI</li>
-        <li class="added"><code>aiglos skill scan|import|blocked</code> CLI</li>
-        <li class="added">1208 tests</li>
+    <p class="release-summary">T67 HEARTBEAT_SILENCE and T68 INSECURE_DEFAULT_CONFIG — the quietest failure modes. Closes the gap the cron-reliability post identified. Root cause of 40,214 exposed instances.</p>
+    <div class="change-group">
+      <div class="change-type type-new">New</div>
+      <ul class="change-list">
+        <li><span class="rule-tag">T67</span> <strong>HEARTBEAT_SILENCE</strong> — Explicit heartbeat, cron, or gateway suppression signals. Score 0.88. Catches the adversary who kills the gateway rather than modifying it. T34 caught malicious writes to heartbeat files. T67 catches malicious silence.</li>
+        <li><span class="rule-tag">T68</span> <strong>INSECURE_DEFAULT_CONFIG</strong> — allow_remote=true with no auth/allowlist. Score 0.95. Root cause of 40,214 exposed OpenClaw instances (SecurityScorecard, February 2026). Integrated into AuditScanner Phase 3 as CRITICAL finding.</li>
       </ul>
     </div>
+  </div>
 
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.17.0</span>
-      </div>
-      <h2>Source reputation + Context Hub distribution</h2>
-      <p>The Context Hub annotation mechanism applied to threat intelligence. URLs and documents accumulate threat history across sessions. New deployments start with pre-populated source reputation from the federation layer.</p>
-      <ul class="entry-list">
-        <li class="added"><code>SourceReputationGraph</code> -- URL/domain/document reputation with 4 levels</li>
-        <li class="added"><code>enable_source_reputation()</code> on <code>OpenClawGuard</code></li>
-        <li class="added"><code>after_tool_call()</code> auto-records injection scan results by source</li>
-        <li class="added"><code>SKILL_CHAIN</code> -- 11th campaign pattern</li>
-        <li class="added"><code>aiglos/skills/SKILL.md</code> -- Context Hub distribution</li>
-        <li class="added">T36_AGENTDEF extended to cover <code>~/.claude/skills/</code> and <code>SKILL.md</code></li>
-        <li class="added"><code>aiglos reputation top|show|domains</code> CLI</li>
-        <li class="added">1143 tests</li>
+  <!-- v0.20.0 -->
+  <div class="release">
+    <div class="release-header">
+      <span class="release-version">v0.20.0</span>
+      <span class="release-date">March 2026</span>
+      <span class="release-badge badge-stable">Stable</span>
+      <span class="test-count">1,364 tests</span>
+    </div>
+    <p class="release-summary">Five missed features from the ClawKeeper 5-step hardening framework. Baseline reset, permission recommender, sandbox_context, lockdown policy, GOVBENCH.</p>
+    <div class="change-group">
+      <div class="change-type type-new">New</div>
+      <ul class="change-list">
+        <li><strong>aiglos baseline reset</strong> — Post-hardening anomaly suppression for 20 sessions. The fix for "agents feel dumber after hardening" — Aiglos now knows the difference between post-hardening adjustment and a real behavioral anomaly.</li>
+        <li><strong>aiglos policy recommend</strong> — PermissionRecommender queries observation graph history, returns minimum viable allowlist from what the agent actually used. The answer to "lock every door first, then open them one by one."</li>
+        <li><strong>sandbox_context=True</strong> — Tool calls physically impossible in a non-main sandbox fire CRITICAL at score=1.0. SANDBOX_CONFIRMED_ESCAPE campaign pattern (confidence 0.96).</li>
+        <li><strong>policy="lockdown"</strong> — Deny-first tier. Every tool blocked unless in explicit allowlist. allow_tool() generates compliance artifact. Highest-confidence enforcement mode.</li>
+        <li><strong>GOVBENCH</strong> — First governance benchmark for AI agents. Five dimensions, 20 scenarios, A-F grade. Run: <code style="font-family:'DM Mono',monospace;font-size:11px">aiglos benchmark run</code></li>
       </ul>
     </div>
+  </div>
 
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.16.0</span>
-      </div>
-      <h2>Honeypot detection + challenge-response override + Aiglos Desktop</h2>
-      <p>Deception-based threat detection with perfect signal-to-noise ratio. The read is the evidence. Human override via time-limited challenge codes with full compliance logging.</p>
-      <ul class="entry-list">
-        <li class="added">T43 <code>HONEYPOT_ACCESS</code> -- deploys 10 synthetic credential files, CRITICAL with no threshold</li>
-        <li class="added"><code>OverrideManager</code> -- 6-char codes, 120s expiry, compliance audit trail</li>
-        <li class="added"><code>request_override()</code> / <code>confirm_override()</code> on <code>OpenClawGuard</code></li>
-        <li class="added">Tauri Desktop app skeleton -- system tray, real-time alert feed, override modal</li>
-        <li class="added"><code>aiglos honeypot deploy|status|list</code> CLI</li>
-        <li class="added"><code>aiglos override list|confirm|reject</code> CLI</li>
-        <li class="added">1081 tests</li>
+  <!-- v0.19.0 -->
+  <div class="release">
+    <div class="release-header">
+      <span class="release-version">v0.19.0</span>
+      <span class="release-date">February 2026</span>
+      <span class="release-badge badge-stable">Stable</span>
+      <span class="test-count">1,341 tests</span>
+    </div>
+    <p class="release-summary">T44-T66: 23 new threat families for the GTC 2026 threat surface. Inference router hijack, GaaS tenant escalation, simulation environment poisoning, vector DB injection, and 19 more.</p>
+    <div class="change-group">
+      <div class="change-type type-new">New Rules — T44 through T66</div>
+      <ul class="change-list">
+        <li><span class="rule-tag">T44</span> INFERENCE_ROUTER_HIJACK — Model swap, system prompt modification via inference router</li>
+        <li><span class="rule-tag">T45</span> CROSS_TENANT_DATA_ACCESS + <span class="rule-tag">T66</span> GaaS_TENANT_ESCALATION — Multi-tenant GaaS threat surface</li>
+        <li><span class="rule-tag">T46</span> SIMULATION_ENV_POISON — Isaac/Omniverse physical AI simulation poisoning</li>
+        <li><span class="rule-tag">T47</span> TOKEN_BUDGET_EXHAUSTION + <span class="rule-tag">T61</span> COMPUTE_RESOURCE_ABUSE — Resource exhaustion attacks</li>
+        <li><span class="rule-tag">T54</span> VECTOR_DB_INJECTION + <span class="rule-tag">T60</span> DATA_PIPELINE_INJECTION — RAG and pipeline attack classes</li>
+        <li><span class="rule-tag">T64</span> AGENT_IDENTITY_SPOOFING — Actor name and identity spoofing in multi-agent systems</li>
+        <li>5 new campaign patterns (GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN)</li>
+        <li>3 new inspection triggers (GAAS_ESCALATION_DETECTED, INFERENCE_HIJACK_CONFIRMED, CONTEXT_DRIFT_DETECTED)</li>
       </ul>
     </div>
+  </div>
 
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.15.0</span>
-      </div>
-      <h2>Three new attack surfaces</h2>
-      <p>Shared context directory poisoning. Outbound secret leakage. Instruction rewrite via autogrowth feedback loops. All three surfaces were discovered through production deployments and had no existing coverage.</p>
-      <ul class="entry-list">
-        <li class="added">T40 <code>SHARED_CONTEXT_POISON</code> -- multi-agent coordination directory injection</li>
-        <li class="added">T41 <code>OUTBOUND_SECRET_LEAK</code> -- API keys in outbound content (8 pattern families)</li>
-        <li class="added">T42 <code>INSTRUCTION_REWRITE_POISON</code> -- autogrowth self-modification detection</li>
-        <li class="added"><code>before_send()</code> hook on <code>OpenClawGuard</code></li>
-        <li class="added">1026 tests</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.14.0</span>
-      </div>
-      <h2>Verified threat intelligence</h2>
-      <p>Every Aiglos rule now traces to a real CVE, OWASP reference, or MITRE ATLAS technique. Audit-ready compliance reports for NDAA §1513, EU AI Act Annex III, and NIST AI 600-1.</p>
-      <ul class="entry-list">
-        <li class="added"><code>CitationVerifier</code> -- OWASP ASI, MITRE ATLAS, NVD in priority order</li>
-        <li class="added"><code>ComplianceReportGenerator</code> -- NDAA §1513, EU AI Act, NIST AI 600-1</li>
-        <li class="added"><code>UNVERIFIED_RULE_ACTIVE</code> -- 14th inspection trigger</li>
-        <li class="added"><code>aiglos research verify|report|scan</code> CLI</li>
-        <li class="added">954 tests</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.13.0</span>
-      </div>
-      <h2>Federated threat intelligence</h2>
-      <p>Privacy-preserving Markov prior sharing across deployments. New deployments warm-start from collective intelligence. The network effect that makes every rule compound.</p>
-      <ul class="entry-list">
-        <li class="added"><code>FederationClient</code> -- Laplace DP (epsilon=0.1), rate limiting, graceful degradation</li>
-        <li class="added"><code>GlobalPrior</code> -- session-weighted local/global blending</li>
-        <li class="added"><code>GLOBAL_PRIOR_MATCH</code> -- 13th inspection trigger</li>
-        <li class="added">Federation server -- FastAPI, Supabase, Railway one-click deploy</li>
-        <li class="added">882 tests</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.10.0</span>
-      </div>
-      <h2>Predictive intent modeling</h2>
-      <p>Deployment-specific Markov chain trained from the observation graph. No external ML dependencies. Predicts likely next threat families and pre-tightens blast radius thresholds before predicted actions fire.</p>
-      <ul class="entry-list">
-        <li class="added"><code>IntentPredictor</code> -- per-agent model file, bigram + unigram + co-occurrence scoring</li>
-        <li class="added"><code>SessionForecaster</code> -- elevation decay, <code>effective_tier()</code></li>
-        <li class="added"><code>THREAT_FORECAST_ALERT</code> -- 10th inspection trigger</li>
-        <li class="added"><code>python -m aiglos forecast</code> with probability bars</li>
-        <li class="added">688 tests</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.9.0</span>
-      </div>
-      <h2>Session-level causal attribution</h2>
-      <p>Answers the question no other tool does: which specific input caused this specific blocked action?</p>
-      <ul class="entry-list">
-        <li class="added"><code>CausalTracer</code> -- rolling context window, outbound action tagging</li>
-        <li class="added"><code>AttributionResult</code> -- HIGH/MEDIUM/LOW/NONE confidence chains</li>
-        <li class="added"><code>CAUSAL_INJECTION_CONFIRMED</code> -- 9th inspection trigger</li>
-        <li class="added"><code>python -m aiglos trace &lt;session-id&gt;</code> investigation report</li>
-        <li class="added"><code>causal_chains</code> table in observation graph</li>
-        <li class="added">619 tests</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.8.0</span>
-      </div>
-      <h2>Indirect prompt injection scanner</h2>
-      <p>Closes the inbound data surface -- tool outputs, retrieved documents, API responses, memory reads.</p>
-      <ul class="entry-list">
-        <li class="added"><code>InjectionScanner</code> -- tiered phrase corpus + encoding anomaly detection</li>
-        <li class="added">Base64, Unicode homoglyphs, invisible characters, RTL override detection</li>
-        <li class="added"><code>after_tool_call()</code> lifecycle hook on <code>OpenClawGuard</code></li>
-        <li class="added"><code>REPEATED_INJECTION_ATTEMPT</code> -- 10th campaign pattern</li>
-        <li class="added">571 tests</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.7.0</span>
-      </div>
-      <h2>External instruction channel detection</h2>
-      <ul class="entry-list">
-        <li class="added"><code>scan-message</code> CLI command</li>
-        <li class="added"><code>EXTERNAL_INSTRUCTION_CHANNEL</code> -- 9th campaign pattern (confidence 0.91)</li>
-        <li class="added">17 new memory corpus signals for C2 channel setup language</li>
-        <li class="added">515 tests</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.6.0</span>
-      </div>
-      <h2>RL training security -- T39 REWARD_POISON</h2>
-      <ul class="entry-list">
-        <li class="added"><code>RLFeedbackGuard</code> -- Binary RL reward scoring + Hindsight OPD inspection</li>
-        <li class="added"><code>SecurityAwareReward</code> -- safety as learned objective</li>
-        <li class="added"><code>REWARD_DRIFT</code> -- 8th inspection trigger</li>
-        <li class="added"><code>REWARD_MANIPULATION</code> -- 8th campaign pattern</li>
-        <li class="added">489 tests</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.5.0</span>
-      </div>
-      <h2>Memory security -- T31 semantic scoring</h2>
-      <ul class="entry-list">
-        <li class="added"><code>MemoryWriteGuard</code> -- 38-phrase corpus on every structured memory write</li>
-        <li class="added"><code>MemoryProvenanceGraph</code> -- cross-session belief tracking, drift detection</li>
-        <li class="added"><code>MEMORY_PERSISTENCE_CHAIN</code> -- 7th campaign pattern</li>
-        <li class="added">416 tests</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.4.0</span>
-      </div>
-      <h2>Adaptive layer + campaign mode</h2>
-      <ul class="entry-list">
-        <li class="added">Adaptive layer -- observe → inspect → amend → evaluate loop</li>
-        <li class="added">T06 campaign-mode -- 6 patterns, RECON_SWEEP through AGENTDEF_CHAIN</li>
-        <li class="added">TypeScript SDK</li>
-        <li class="added">Semantic <code>AgentDefGuard</code>, policy inheritance for spawned agents</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">March 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.3.0</span>
-      </div>
-      <h2>Agent definition + financial + spawn threat coverage</h2>
-      <ul class="entry-list">
-        <li class="added">T36_AGENTDEF -- semantic scoring on agent definition writes</li>
-        <li class="added">T37 FIN_EXEC -- autonomous financial execution gating</li>
-        <li class="added">T38 AGENT_SPAWN -- sub-agent registry with parent verification</li>
-        <li class="added"><code>SessionIdentityChain</code>, <code>MultiAgentRegistry</code></li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">February 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.2.0</span>
-      </div>
-      <h2>HTTP/API and subprocess interception</h2>
-      <ul class="entry-list">
-        <li class="added">HTTP surface -- patches requests/httpx/aiohttp/fetch</li>
-        <li class="added">Subprocess surface -- three-tier blast radius, Tier 3 pause mode</li>
-        <li class="added">Webhook approval integration for Tier 3 actions</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">February 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.1.1</span>
-      </div>
-      <h2>Autoresearch two-loop system</h2>
-      <ul class="entry-list">
-        <li class="added">Research loop -- optimizes detection rules against labeled corpus</li>
-        <li class="added">Adversarial loop -- generates evasion cases, rules and attacks co-evolve</li>
-        <li class="added">Run logs are compliance audit evidence</li>
-      </ul>
-    </div>
-
-    <div class="entry" data-type="release">
-      <div class="entry-meta">
-        <span class="entry-date">January 2026</span>
-        <span class="entry-tag release">Release</span>
-        <span class="entry-version">v0.1.0</span>
-      </div>
-      <h2>Initial release -- T01–T39, 688 tests passing</h2>
-      <p>First public release of Aiglos. The T01–T39 rule families cover the full MCP attack surface known at time of release. Detection engine is MIT licensed.</p>
-      <ul class="entry-list">
-        <li class="added">T01–T06: Injection &amp; Exfiltration</li>
-        <li class="added">T07–T12: Shell &amp; OS Abuse</li>
-        <li class="added">T13–T18: Network &amp; SSRF</li>
-        <li class="added">T19–T24: Secrets &amp; Credentials</li>
-        <li class="added">T25–T29: A2A Protocol (initial coverage)</li>
-        <li class="added">T30–T34: Supply Chain</li>
-        <li class="added">In-process MCP SDK patching -- zero proxy, zero config</li>
-        <li class="added">Sync and async interceptor paths</li>
-        <li class="added">MeterClient with 30s batch flush, graceful degradation</li>
-        <li class="added">688 unit tests, 17 test files</li>
-      </ul>
-    </div>
-
-  </div><!-- /entries -->
-</div>
-
-<footer>
-  <span>Aiglos</span>
-  <ul class="footer-links">
-    <li><a href="/docs.html">Docs</a></li>
-    <li><a href="https://github.com/aiglos">GitHub</a></li>
-    <li><a href="/threats.html">CVEs</a></li>
-    <li><a href="/pricing.html">Pricing</a></li>
-    <li><a href="mailto:hello@aiglos.dev">Defense</a></li>
-    <li><a href="/cdn-cgi/l/email-protection#e695878a8395a6878f818a8995c88f89">Contact</a></li>
-  </ul>
-  <span>aiglos.io</span>
-</footer>
-
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-function filterEntries(type, btn) {
-  document.querySelectorAll('.filter-tab').forEach(b =
+</main>
+</body>
+</html>

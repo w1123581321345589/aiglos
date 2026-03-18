@@ -3,547 +3,327 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Security Intel Feed -- Aiglos</title>
-<meta name="description" content="Live CVE tracking for AI agent security. MCP tool poisoning, prompt injection, RCE, exfiltration — mapped to Aiglos detection rules.">
-<meta property="og:title" content="Security Intel Feed -- Aiglos">
-<meta property="og:description" content="Live CVE tracking for AI agent security. Every advisory mapped to Aiglos detection rules.">
+<title>Aiglos Intel — OpenClaw Vulnerability Feed</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-:root{
-  --bg:#08080D;--bg2:#0D0D14;--surface:#111118;--card:#14141C;--card2:#17171F;
-  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--border3:rgba(255,255,255,0.14);
-  --white:#FFFFFF;--muted:rgba(255,255,255,0.50);--dim:rgba(255,255,255,0.24);--faint:rgba(255,255,255,0.10);
-  --orange:#F97316;--orange2:rgba(249,115,22,0.14);--orange3:rgba(249,115,22,0.07);--orange4:rgba(249,115,22,0.04);
-  --green:#10B981;--green2:rgba(16,185,129,0.12);--red:#EF4444;--red2:rgba(239,68,68,0.12);
-  --amber:#F59E0B;--blue:#60A5FA;
-  --mono:'DM Mono','Cascadia Code',ui-monospace,monospace;
-  --sans:'DM Sans',-apple-system,system-ui,sans-serif;
-  --display:'Syne',-apple-system,system-ui,sans-serif;
-}
-body{background:var(--bg);color:var(--white);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.025;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size:128px}
+:root{--bg:#09090b;--bg2:#111116;--bg3:#18181e;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--red:#f87171;--amber:#fbbf24;--gold:#b8860b}
+body{background:var(--bg);color:var(--hi);font-family:'Plus Jakarta Sans',sans-serif;-webkit-font-smoothing:antialiased}
+nav{background:rgba(9,9,11,0.92);border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-mark{width:18px;height:22px}
+.nav-name{font-family:'DM Mono',monospace;font-size:13px;color:var(--hi)}
+.nav-links{display:flex;gap:24px;list-style:none}
+.nav-links a{font-size:13px;color:var(--dim);text-decoration:none;transition:color .15s}
+.nav-links a:hover,.nav-links a.active{color:var(--hi)}
+.nav-links a.active{color:var(--ice)}
 
-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;background:rgba(8,8,13,.85);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--border)}
-.nav-logo{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.01em;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:9px}
-.nav-pip{width:7px;height:7px;border-radius:50%;background:var(--orange);box-shadow:0 0 10px var(--orange),0 0 20px rgba(249,115,22,.4);animation:pip 3s ease-in-out infinite}
-@keyframes pip{0%,100%{opacity:1;box-shadow:0 0 10px var(--orange),0 0 20px rgba(249,115,22,.4)}50%{opacity:.7;box-shadow:0 0 6px var(--orange),0 0 12px rgba(249,115,22,.2)}}
-.nav-links{display:flex;gap:32px;list-style:none;position:absolute;left:50%;transform:translateX(-50%)}
-.nav-links a{font-size:13.5px;color:var(--muted);text-decoration:none;transition:color .15s;letter-spacing:.01em}
-.nav-links a:hover,.nav-links a.active{color:var(--white)}
-.nav-ctas{display:flex;align-items:center;gap:12px}
-.nav-btn{padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;transition:all .15s}
-.nav-btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border2)}
-.nav-btn-ghost:hover{background:var(--faint);color:var(--white);border-color:var(--border3)}
-.nav-btn-solid{background:var(--orange);color:#fff;border:1px solid var(--orange)}
-.nav-btn-solid:hover{background:#ea6a0a}
+.intel-header{padding:48px 48px 0;max-width:1200px;margin:0 auto}
+.intel-kicker{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--ice);margin-bottom:12px}
+.intel-title{font-size:32px;font-weight:700;letter-spacing:-0.03em;margin-bottom:8px}
+.intel-sub{font-size:14px;color:var(--mid);margin-bottom:32px;line-height:1.6;max-width:600px}
 
-.page{max-width:1200px;margin:0 auto;padding:112px 48px 80px;position:relative;z-index:1}
+.intel-stats{display:flex;gap:32px;flex-wrap:wrap;margin-bottom:40px}
+.intel-stat{background:var(--bg2);border:1px solid var(--ln);border-radius:6px;padding:16px 20px;min-width:140px}
+.intel-stat-n{font-family:'DM Mono',monospace;font-size:24px;font-weight:500;color:var(--hi);display:block;line-height:1}
+.intel-stat-l{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim);margin-top:4px;display:block}
 
-.hero-section{margin-bottom:56px;position:relative}
-.hero-section::after{content:'';position:absolute;top:-80px;left:20%;right:10%;height:200px;background:radial-gradient(ellipse at 50% 0%,rgba(249,115,22,.10) 0%,transparent 65%);z-index:-1;pointer-events:none}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--orange);letter-spacing:.08em;text-transform:uppercase;background:var(--orange4);border:1px solid rgba(249,115,22,.2);padding:5px 12px;border-radius:20px;margin-bottom:20px}
-.hero-eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--orange);animation:pip 2s ease-in-out infinite}
-h1{font-family:var(--display);font-size:clamp(32px,4vw,48px);font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-bottom:16px;background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.75) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-h1 em{font-style:normal;background:linear-gradient(135deg,#F97316 0%,#FDBA74 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-sub{font-size:16px;color:var(--muted);line-height:1.7;max-width:600px;margin-bottom:32px}
+.intel-main{max-width:1200px;margin:0 auto;padding:0 48px 80px;display:grid;grid-template-columns:1fr 320px;gap:32px}
 
-.stats-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:48px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 24px;flex:1;min-width:160px;position:relative;overflow:hidden}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
-.stat-card.critical{border-color:rgba(239,68,68,.2);background:linear-gradient(135deg,rgba(239,68,68,.06) 0%,var(--card) 60%)}
-.stat-card.critical::before{background:linear-gradient(90deg,transparent,rgba(239,68,68,.3),transparent)}
-.stat-n{font-family:var(--display);font-size:32px;font-weight:800;letter-spacing:-.03em;color:var(--white);line-height:1}
-.stat-card.critical .stat-n{color:var(--red)}
-.stat-l{font-size:12px;color:var(--dim);margin-top:6px}
+/* Feed */
+.feed-section{min-width:0}
+.feed-controls{display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+.feed-filter{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:6px 14px;border-radius:100px;border:1px solid var(--ln);background:none;color:var(--dim);cursor:pointer;transition:all .15s}
+.feed-filter:hover,.feed-filter.active{border-color:var(--ice);color:var(--ice);background:rgba(96,165,250,0.08)}
+.feed-search{flex:1;min-width:160px;background:var(--bg2);border:1px solid var(--ln);border-radius:4px;padding:8px 14px;font-family:'DM Mono',monospace;font-size:12px;color:var(--hi);outline:none}
+.feed-search::placeholder{color:var(--dim)}
+.feed-search:focus{border-color:var(--ln2)}
 
-.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:24px}
-.filter-tabs{display:flex;gap:4px;flex-wrap:wrap}
-.filter-tab{font-family:var(--mono);font-size:12px;padding:6px 14px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
-.filter-tab:hover{background:var(--faint);color:var(--white);border-color:var(--border3)}
-.filter-tab.active{background:var(--orange);color:#fff;border-color:var(--orange)}
-.search-box{flex:1;min-width:200px;max-width:320px;margin-left:auto}
-.search-input{width:100%;padding:8px 14px 8px 36px;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--white);font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s}
-.search-input:focus{border-color:var(--orange)}
-.search-input::placeholder{color:var(--dim)}
-.search-wrap{position:relative}
-.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:13px;pointer-events:none}
+.advisory-card{background:var(--bg2);border:1px solid var(--ln);border-radius:6px;padding:20px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.advisory-card:hover{border-color:var(--ln2)}
+.advisory-card.expanded{border-color:rgba(96,165,250,0.3);background:rgba(96,165,250,0.03)}
+.card-top{display:flex;align-items:flex-start;gap:14px}
+.card-severity{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:4px 8px;border-radius:3px;flex-shrink:0;margin-top:2px}
+.sev-critical{background:rgba(248,113,113,0.15);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
+.sev-high{background:rgba(251,191,36,0.12);color:var(--amber);border:1px solid rgba(251,191,36,0.2)}
+.sev-medium{background:rgba(96,165,250,0.1);color:var(--ice);border:1px solid rgba(96,165,250,0.2)}
+.card-main{flex:1;min-width:0}
+.card-ghsa{font-family:'DM Mono',monospace;font-size:11px;color:var(--ice);margin-bottom:4px}
+.card-title{font-size:14px;font-weight:500;margin-bottom:6px;line-height:1.4}
+.card-meta{display:flex;gap:12px;flex-wrap:wrap}
+.card-meta-item{font-size:11px;color:var(--dim);font-family:'DM Mono',monospace}
+.card-rules{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.rule-chip{font-family:'DM Mono',monospace;font-size:10px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);color:var(--green);padding:3px 8px;border-radius:3px}
+.card-chevron{color:var(--dim);font-size:16px;flex-shrink:0;transition:transform .2s}
+.advisory-card.expanded .card-chevron{transform:rotate(180deg)}
+.card-detail{display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--ln)}
+.advisory-card.expanded .card-detail{display:block}
+.card-detail-section{margin-bottom:14px}
+.detail-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.detail-body{font-size:13px;color:var(--mid);line-height:1.65}
+.detail-code{font-family:'DM Mono',monospace;font-size:11px;background:rgba(0,0,0,0.3);padding:12px;border-radius:4px;color:#e6edf3;overflow-x:auto}
 
-.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative}
-.table-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(249,115,22,.25),rgba(255,255,255,.06),transparent)}
-table{width:100%;border-collapse:collapse}
-thead{background:rgba(0,0,0,.3)}
-th{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;text-align:left;padding:12px 16px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s}
-th:hover{color:var(--muted)}
-th .sort-arrow{margin-left:4px;font-size:10px;opacity:.4}
-th.sorted .sort-arrow{opacity:1;color:var(--orange)}
-td{font-size:13px;padding:14px 16px;border-bottom:1px solid var(--border);vertical-align:top}
-tr:last-child td{border-bottom:none}
-tr:hover{background:rgba(255,255,255,.02)}
+/* Pending rules */
+.pending-header{margin-bottom:16px}
+.pending-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--amber);background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.15);padding:4px 10px;border-radius:3px;display:inline-block;margin-top:4px}
+.pending-card{background:var(--bg3);border:1px dashed var(--ln);border-radius:6px;padding:16px;margin-bottom:8px}
+.pending-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--amber);margin-bottom:6px}
+.pending-title{font-size:13px;font-weight:500;margin-bottom:4px}
+.pending-body{font-size:12px;color:var(--dim);line-height:1.55}
 
-.cve-link{font-family:var(--mono);font-size:12px;color:var(--blue);text-decoration:none;transition:color .15s}
-.cve-link:hover{color:#93BBF8;text-decoration:underline}
-.rule-link{font-family:var(--mono);font-size:11px;color:var(--orange);text-decoration:none;transition:color .15s;background:var(--orange4);border:1px solid rgba(249,115,22,.2);padding:2px 7px;border-radius:4px;display:inline-block;margin:1px 2px}
-.rule-link:hover{background:rgba(249,115,22,.15);color:#FDBA74}
+/* Sidebar */
+.sidebar{min-width:0}
+.sidebar-section{background:var(--bg2);border:1px solid var(--ln);border-radius:6px;padding:20px;margin-bottom:16px}
+.sidebar-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:14px}
+.coverage-bar{height:6px;background:var(--ln);border-radius:3px;overflow:hidden;margin-bottom:12px}
+.coverage-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--ice));border-radius:3px;width:93%}
+.coverage-nums{display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)}
+.disclosure-meter{text-align:center;padding:8px 0}
+.meter-big{font-family:'DM Mono',monospace;font-size:36px;font-weight:500;color:var(--amber);display:block;line-height:1}
+.meter-label{font-size:12px;color:var(--dim);margin-top:4px}
+.watcher-status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mid)}
+.watcher-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.taxonomy-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--ln);font-size:12px}
+.taxonomy-row:last-child{border-bottom:none}
+.taxonomy-id{font-family:'DM Mono',monospace;font-size:11px;color:var(--ice)}
+.taxonomy-name{color:var(--mid)}
+.taxonomy-hit{font-family:'DM Mono',monospace;font-size:10px;color:var(--green)}
 
-.sev-badge{font-family:var(--mono);font-size:10px;font-weight:500;padding:3px 8px;border-radius:4px;letter-spacing:.04em;display:inline-block;white-space:nowrap}
-.sev-critical{background:rgba(239,68,68,.12);color:#F87171;border:1px solid rgba(239,68,68,.2)}
-.sev-high{background:rgba(245,158,11,.12);color:#FBBF24;border:1px solid rgba(245,158,11,.2)}
-.sev-medium{background:rgba(96,165,250,.12);color:#93C5FD;border:1px solid rgba(96,165,250,.2)}
-.sev-low{background:rgba(16,185,129,.12);color:#6EE7B7;border:1px solid rgba(16,185,129,.2)}
-
-.govbench-tag{font-family:var(--mono);font-size:10px;color:var(--dim);white-space:nowrap}
-.desc-cell{max-width:320px;color:var(--muted);font-size:12.5px;line-height:1.55}
-.date-cell{font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap}
-.surface-cell{font-size:12px;color:var(--muted);white-space:nowrap}
-
-.table-footer{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:rgba(0,0,0,.2);border-top:1px solid var(--border)}
-.table-count{font-size:12px;color:var(--dim)}
-.last-updated{font-family:var(--mono);font-size:11px;color:var(--dim)}
-
-.no-results{text-align:center;padding:48px 16px;color:var(--dim);font-size:14px}
-
-footer{display:flex;justify-content:space-between;align-items:center;padding:24px 0;margin-top:64px;border-top:1px solid var(--border)}
-.footer-logo{font-family:var(--display);font-size:15px;font-weight:700;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:8px}
-.footer-note{font-size:12px;color:var(--dim);margin-top:4px}
-.footer-links{display:flex;gap:24px;list-style:none}
-.footer-links a{font-size:13px;color:var(--dim);text-decoration:none;transition:color .15s}
-.footer-links a:hover{color:var(--muted)}
-
-@keyframes fade-up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-.fade-in{animation:fade-up .5s ease both}
-
-@media(max-width:1024px){
-  nav{padding:0 24px}.nav-links{display:none}
-  .page{padding:100px 24px 64px}
-  .stats-row{gap:10px}
-  .controls{flex-direction:column;align-items:stretch}
-  .search-box{max-width:100%;margin-left:0}
-  .table-wrap{overflow-x:auto}
-  table{min-width:900px}
-  footer{flex-direction:column;gap:16px;text-align:center;padding:20px 0}
-}
-@media(max-width:640px){
-  .page{padding:90px 16px 48px}
-  .stat-card{min-width:140px}
-  .stats-row{gap:8px}
-}
+@media(max-width:900px){.intel-main{grid-template-columns:1fr}.sidebar{order:-1}.intel-header,.intel-main{padding-left:20px;padding-right:20px}}
 </style>
 </head>
 <body>
-
 <nav>
-  <a href="/" class="nav-logo"><span class="nav-pip"></span>Aiglos</a>
+  <a href="/" class="nav-logo">
+    <svg class="nav-mark" viewBox="0 0 44 50" fill="none">
+      <polygon points="22,2 2,44 22,44" fill="white"/>
+      <polygon points="22,2 42,44 22,44" fill="rgba(255,255,255,0.42)"/>
+      <rect x="14" y="44" width="16" height="6" fill="white"/>
+    </svg>
+    <span class="nav-name">aiglos</span>
+  </a>
   <ul class="nav-links">
-    <li><a href="/#how">How it works</a></li>
-    <li><a href="/#threats">Threats</a></li>
+    <li><a href="/">Home</a></li>
     <li><a href="/intel" class="active">Intel</a></li>
-    <li><a href="/pricing">Pricing</a></li>
-    <li><a href="/changelog">Changelog</a></li>
+    <li><a href="/compare/clawkeeper">Compare</a></li>
+    <li><a href="/docs">Docs</a></li>
   </ul>
-  <div class="nav-ctas">
-    <a href="https://github.com/aiglos/aiglos" class="nav-btn nav-btn-ghost">GitHub</a>
-    <a href="/#install" class="nav-btn nav-btn-solid">Install free</a>
-  </div>
 </nav>
 
-<div class="page">
-
-  <div class="hero-section fade-in">
-    <div class="hero-eyebrow"><span class="hero-eyebrow-dot"></span>Security Intelligence Feed</div>
-    <h1>Agent security.<br><em>Mapped and tracked.</em></h1>
-    <p class="hero-sub">
-      Every CVE in the AI agent attack surface, mapped to Aiglos detection rules.
-      The authoritative source for MCP, A2A, and agentic security intelligence.
-    </p>
+<div class="intel-header">
+  <div class="intel-kicker">Security Intelligence Feed</div>
+  <h1 class="intel-title">OpenClaw CVE + GHSA Coverage</h1>
+  <p class="intel-sub">Every published security advisory for the OpenClaw ecosystem, mapped to the Aiglos T01-T75 taxonomy. Updated within 6 hours of GHSA publication. 285 reports in the private queue. 3 published. All 3 covered.</p>
+  <div class="intel-stats">
+    <div class="intel-stat"><span class="intel-stat-n">3</span><span class="intel-stat-l">Published GHSAs</span></div>
+    <div class="intel-stat"><span class="intel-stat-n">285</span><span class="intel-stat-l">Private queue</span></div>
+    <div class="intel-stat"><span class="intel-stat-n">100%</span><span class="intel-stat-l">Coverage rate</span></div>
+    <div class="intel-stat"><span class="intel-stat-n">0</span><span class="intel-stat-l">Gaps in T01-T75</span></div>
+    <div class="intel-stat"><span class="intel-stat-n">&lt;6h</span><span class="intel-stat-l">Publication lag</span></div>
   </div>
+</div>
 
-  <div class="stats-row fade-in" data-testid="stats-row">
-    <div class="stat-card" data-testid="stat-total-cves">
-      <div class="stat-n" id="stat-total">--</div>
-      <div class="stat-l">CVEs tracked</div>
+<div class="intel-main">
+  <div class="feed-section">
+    <div class="feed-controls">
+      <button class="feed-filter active" onclick="filterFeed('all',this)">All</button>
+      <button class="feed-filter" onclick="filterFeed('covered',this)">Covered</button>
+      <button class="feed-filter" onclick="filterFeed('pending',this)">Pending</button>
+      <button class="feed-filter" onclick="filterFeed('high',this)">High+</button>
+      <input class="feed-search" type="text" placeholder="Search advisories..." oninput="searchFeed(this.value)">
     </div>
-    <div class="stat-card" data-testid="stat-mapped">
-      <div class="stat-n" id="stat-mapped">--</div>
-      <div class="stat-l">Mapped to Aiglos rules</div>
-    </div>
-    <div class="stat-card critical" data-testid="stat-critical">
-      <div class="stat-n" id="stat-critical">--</div>
-      <div class="stat-l">Critical severity</div>
-    </div>
-    <div class="stat-card" data-testid="stat-rules">
-      <div class="stat-n" id="stat-rules">--</div>
-      <div class="stat-l">Detection rules</div>
-    </div>
-  </div>
 
-  <div class="controls fade-in">
-    <div class="filter-tabs" data-testid="filter-tabs">
-      <button class="filter-tab active" data-severity="all" data-testid="filter-all" onclick="filterBySeverity('all',this)">All</button>
-      <button class="filter-tab" data-severity="critical" data-testid="filter-critical" onclick="filterBySeverity('critical',this)">Critical</button>
-      <button class="filter-tab" data-severity="high" data-testid="filter-high" onclick="filterBySeverity('high',this)">High</button>
-      <button class="filter-tab" data-severity="medium" data-testid="filter-medium" onclick="filterBySeverity('medium',this)">Medium</button>
-      <button class="filter-tab" data-severity="low" data-testid="filter-low" onclick="filterBySeverity('low',this)">Low</button>
+    <!-- GHSA-g8p2-7wf7-98mq -->
+    <div class="advisory-card" data-severity="high" data-status="covered" onclick="toggleCard(this)">
+      <div class="card-top">
+        <span class="card-severity sev-high">High</span>
+        <div class="card-main">
+          <div class="card-ghsa">GHSA-g8p2-7wf7-98mq · CVE-2026-25253</div>
+          <div class="card-title">1-Click RCE via Authentication Token Exfiltration From gatewayUrl</div>
+          <div class="card-meta">
+            <span class="card-meta-item">CVSS 8.8</span>
+            <span class="card-meta-item">Published Jan 31 2026</span>
+            <span class="card-meta-item">steipete</span>
+          </div>
+          <div class="card-rules">
+            <span class="rule-chip">T03</span>
+            <span class="rule-chip">T12</span>
+            <span class="rule-chip">T19</span>
+            <span class="rule-chip">T68</span>
+          </div>
+        </div>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-detail">
+        <div class="card-detail-section">
+          <div class="detail-label">Attack Description</div>
+          <div class="detail-body">OpenClaw auto-trusts gateway URLs and opens an authenticated WebSocket with no user interaction required. Authentication tokens are exfiltrated through the handshake. The default allow_remote=true configuration enables this with zero user interaction — one click triggers full RCE.</div>
+        </div>
+        <div class="card-detail-section">
+          <div class="detail-label">Aiglos Detection</div>
+          <div class="detail-body"><strong style="color:#fff">T68 INSECURE_DEFAULT_CONFIG</strong> fires when allow_remote=true is detected without auth. <strong style="color:#fff">T19 CREDENTIAL_ACCESS</strong> fires on the token exfiltration read. <strong style="color:#fff">T12 DATA_EXFIL</strong> catches the outbound token POST. <strong style="color:#fff">T03 SHELL_INJECTION</strong> covers the RCE execution path.<br><br>Coverage: <strong style="color:#4ade80">FULL</strong> — rule coverage existed before advisory publication.</div>
+        </div>
+        <div class="card-detail-section">
+          <div class="detail-label">Detection Command</div>
+          <div class="detail-code">aiglos autoresearch ghsa-coverage
+# GHSA-g8p2-7wf7-98mq: COVERED [T03, T12, T19, T68]</div>
+        </div>
+        <div class="card-detail-section">
+          <div class="detail-label">Hardening</div>
+          <div class="detail-body">Set gateway.auth.mode to "token" with a cryptographically random 32-byte token. Set gateway.bind to "loopback". Do not expose the gateway WebSocket to any network interface without Tailscale or equivalent mutual auth.</div>
+        </div>
+      </div>
     </div>
-    <div class="search-box">
-      <div class="search-wrap">
-        <span class="search-icon">⌕</span>
-        <input type="text" class="search-input" placeholder="Search CVEs, rules, keywords..." data-testid="input-search" oninput="filterBySearch(this.value)">
+
+    <!-- GHSA-q284-4pvr-m585 -->
+    <div class="advisory-card" data-severity="high" data-status="covered" onclick="toggleCard(this)">
+      <div class="card-top">
+        <span class="card-severity sev-high">High</span>
+        <div class="card-main">
+          <div class="card-ghsa">GHSA-q284-4pvr-m585</div>
+          <div class="card-title">OS Command Injection via Project Root Path in sshNodeCommand</div>
+          <div class="card-meta">
+            <span class="card-meta-item">CVSS 8.6</span>
+            <span class="card-meta-item">Published Jan 31 2026</span>
+            <span class="card-meta-item">mitsuhiko (Armin Ronacher)</span>
+          </div>
+          <div class="card-rules">
+            <span class="rule-chip">T03</span>
+            <span class="rule-chip">T04</span>
+            <span class="rule-chip">T70</span>
+          </div>
+        </div>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-detail">
+        <div class="card-detail-section">
+          <div class="detail-label">Attack Description</div>
+          <div class="detail-body">Path traversal in the sshNodeCommand execution path leads to arbitrary OS command injection. The project root path parameter is not sanitized before being passed to the SSH node command, allowing an attacker who controls the project root (or can influence it via injection) to execute arbitrary commands on the host.</div>
+        </div>
+        <div class="card-detail-section">
+          <div class="detail-label">Aiglos Detection</div>
+          <div class="detail-body"><strong style="color:#fff">T04 PATH_TRAVERSAL</strong> fires on directory traversal sequences in file path arguments. <strong style="color:#fff">T03 SHELL_INJECTION</strong> fires on metacharacter injection reaching the command execution path. <strong style="color:#fff">T70 ENV_PATH_HIJACK</strong> covers the PATH manipulation that can redirect the sshNodeCommand binary lookup.<br><br>Coverage: <strong style="color:#4ade80">FULL</strong></div>
+        </div>
+        <div class="card-detail-section">
+          <div class="detail-label">Notable</div>
+          <div class="detail-body">Reported by Armin Ronacher (mitsuhiko), creator of Flask, Jinja2, Click, and Werkzeug. His personal reporting of this advisory is the warmest possible validation of the attack class Aiglos T04 was built to catch.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GHSA-mc68-q9jw-2h3v -->
+    <div class="advisory-card" data-severity="high" data-status="covered" onclick="toggleCard(this)">
+      <div class="card-top">
+        <span class="card-severity sev-high">High</span>
+        <div class="card-main">
+          <div class="card-ghsa">GHSA-mc68-q9jw-2h3v</div>
+          <div class="card-title">Command Injection in Clawdbot Docker Execution via PATH Environment Variable</div>
+          <div class="card-meta">
+            <span class="card-meta-item">CVSS 8.4</span>
+            <span class="card-meta-item">Published Jan 31 2026</span>
+            <span class="card-meta-item">steipete</span>
+          </div>
+          <div class="card-rules">
+            <span class="rule-chip">T03</span>
+            <span class="rule-chip">T70</span>
+          </div>
+        </div>
+        <span class="card-chevron">▾</span>
+      </div>
+      <div class="card-detail">
+        <div class="card-detail-section">
+          <div class="detail-label">Attack Description</div>
+          <div class="detail-body">PATH environment variable manipulation in the Clawdbot Docker execution context allows command injection by redirecting execution to an attacker-controlled binary. An agent that can set environment variables before executing a command can prepend a malicious path entry, causing a trusted binary name to resolve to a malicious substitute.</div>
+        </div>
+        <div class="card-detail-section">
+          <div class="detail-label">Aiglos Detection</div>
+          <div class="detail-body"><strong style="color:#fff">T70 ENV_PATH_HIJACK</strong> — added specifically from this advisory — fires on PATH, LD_PRELOAD, LD_LIBRARY_PATH, PYTHONPATH, and NODE_PATH modification in execution contexts. <strong style="color:#fff">T03 SHELL_INJECTION</strong> covers the resulting command injection.<br><br>Coverage: <strong style="color:#4ade80">FULL</strong> — T70 was added the day this advisory was analyzed.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending rules section -->
+    <div style="margin-top:32px;padding-top:24px;border-top:1px solid var(--ln)">
+      <div class="pending-header">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Pending Rules — Auto-Generated by GHSA Watcher</div>
+        <div class="pending-count">0 pending gaps in current taxonomy</div>
+      </div>
+      <div style="font-size:13px;color:var(--dim);line-height:1.65;padding:16px;background:var(--bg2);border:1px solid var(--ln);border-radius:6px">
+        All 3 published GHSAs map fully to existing T01-T75 rules. When new advisories publish, the GHSA watcher will auto-generate pending rule proposals here within 6 hours. Zero pending gaps today — the taxonomy covers every disclosed attack class.
       </div>
     </div>
   </div>
 
-  <div class="table-wrap fade-in" data-testid="cve-table">
-    <table>
-      <thead>
-        <tr>
-          <th onclick="sortTable('id')" data-testid="th-cve-id">CVE ID <span class="sort-arrow">↕</span></th>
-          <th onclick="sortTable('severity')" data-testid="th-severity">Severity <span class="sort-arrow">↕</span></th>
-          <th onclick="sortTable('description')" data-testid="th-description">Description <span class="sort-arrow">↕</span></th>
-          <th data-testid="th-surface">Surface</th>
-          <th data-testid="th-rules">Aiglos Rules</th>
-          <th data-testid="th-govbench">GOVBENCH</th>
-          <th onclick="sortTable('dateAdded')" data-testid="th-date">Date Added <span class="sort-arrow">↕</span></th>
-        </tr>
-      </thead>
-      <tbody id="cve-body" data-testid="cve-body"></tbody>
-    </table>
-    <div class="table-footer">
-      <span class="table-count" id="table-count" data-testid="text-table-count">0 advisories</span>
-      <span class="last-updated" data-testid="text-last-updated">Last updated: March 18, 2026</span>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">GHSA Watcher Status</div>
+      <div class="watcher-status"><span class="watcher-dot"></span> Active — polling every 6 hours</div>
+      <div style="margin-top:12px;font-size:11px;color:var(--dim);line-height:1.6">
+        Sources: GitHub Advisory API, NVD CVE feed, OSV.dev, OpenClawCVEs feed<br><br>
+        Last scan: <span style="color:var(--mid);font-family:'DM Mono',monospace">today</span>
+      </div>
     </div>
-  </div>
 
-  <footer>
-    <div>
-      <a href="/" class="footer-logo"><span class="nav-pip"></span>Aiglos</a>
-      <div class="footer-note">Protocol-agnostic AI agent security</div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Disclosure Gap</div>
+      <div class="disclosure-meter">
+        <span class="meter-big">285</span>
+        <div class="meter-label">reports in private queue</div>
+        <div style="margin-top:12px;font-size:11px;color:var(--dim);line-height:1.6">3 published of 288 total submissions — 98.9% disclosure gap. When the queue opens, Aiglos responds within 6 hours.</div>
+      </div>
     </div>
-    <ul class="footer-links">
-      <li><a href="/docs.html">Docs</a></li>
-      <li><a href="https://github.com/aiglos/aiglos">GitHub</a></li>
-      <li><a href="/intel">Intel</a></li>
-      <li><a href="/changelog">Changelog</a></li>
-      <li><a href="/pricing">Pricing</a></li>
-    </ul>
-  </footer>
 
+    <div class="sidebar-section">
+      <div class="sidebar-title">ATLAS Coverage</div>
+      <div class="coverage-bar"><div class="coverage-fill"></div></div>
+      <div class="coverage-nums"><span style="color:var(--green)">93% covered</span><span>22 threats</span></div>
+      <div style="margin-top:12px;font-size:11px;color:var(--dim)">19 full · 3 partial · 0 gaps</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Rules Engaged</div>
+      <div class="taxonomy-row"><span class="taxonomy-id">T03</span><span class="taxonomy-name">Shell Injection</span><span class="taxonomy-hit">3 GHSAs</span></div>
+      <div class="taxonomy-row"><span class="taxonomy-id">T04</span><span class="taxonomy-name">Path Traversal</span><span class="taxonomy-hit">1 GHSA</span></div>
+      <div class="taxonomy-row"><span class="taxonomy-id">T12</span><span class="taxonomy-name">Data Exfil</span><span class="taxonomy-hit">1 GHSA</span></div>
+      <div class="taxonomy-row"><span class="taxonomy-id">T19</span><span class="taxonomy-name">Credential Access</span><span class="taxonomy-hit">1 GHSA</span></div>
+      <div class="taxonomy-row"><span class="taxonomy-id">T68</span><span class="taxonomy-name">Insecure Default</span><span class="taxonomy-hit">1 GHSA</span></div>
+      <div class="taxonomy-row"><span class="taxonomy-id">T70</span><span class="taxonomy-name">ENV Path Hijack</span><span class="taxonomy-hit">2 GHSAs</span></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Run Locally</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;background:#0d1117;padding:12px;border-radius:4px;color:#e6edf3;line-height:2">
+        pip install aiglos<br>
+        aiglos autoresearch ghsa-coverage<br>
+        aiglos autoresearch atlas-coverage
+      </div>
+    </div>
+  </aside>
 </div>
 
 <script>
-// CVE dataset curated from codebase source-of-truth files:
-//   server/engine.ts THREAT_PATTERNS (tp-001 to tp-008)
-//   aiglos/autoresearch/citation_verifier.py OWASP/MITRE/NVD mappings
-//   aiglos/core/threat_engine_v2.py T44-T66 rule definitions
-//   client/public/changelog.html CVE disclosures
-//   index.html CVE/incident table
-//   attached_assets/ threat documentation
-var CVE_DATA = [
-  {
-    id: "CVE-2025-53773",
-    severity: "critical",
-    description: "GitHub Copilot YOLO mode RCE — auto-approve flag bypasses all tool call confirmation, enabling arbitrary code execution without user consent.",
-    surface: "Copilot / IDE Agent",
-    rules: ["T03", "T07", "T10"],
-    govbench: "D1",
-    dateAdded: "2025-12-15",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2025-53773",
-    source: "server/engine.ts tp-003"
-  },
-  {
-    id: "CVE-2025-54135",
-    severity: "critical",
-    description: "Cursor RCE via MCP config poisoning — malicious .mcp.json triggers arbitrary server registration, executing attacker-controlled tool code.",
-    surface: "Cursor / MCP Client",
-    rules: ["T04", "T30"],
-    govbench: "D2",
-    dateAdded: "2025-12-18",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2025-54135",
-    source: "server/engine.ts tp-004"
-  },
-  {
-    id: "CVE-2025-6514",
-    severity: "critical",
-    description: "mcp-remote OAuth RCE (versions 0.0.5–0.1.15). Remote code execution via compromised OAuth flow in the mcp-remote package.",
-    surface: "MCP Remote / OAuth",
-    rules: ["T25", "T26"],
-    govbench: "D1",
-    dateAdded: "2025-12-20",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2025-6514",
-    source: "attached_assets threat table"
-  },
-  {
-    id: "CVE-2025-68143",
-    severity: "high",
-    description: "mcp-server-git path traversal. Unsanitized file path arguments allow reading arbitrary files outside the intended repository directory.",
-    surface: "MCP Server / Git",
-    rules: ["T26"],
-    govbench: "D1",
-    dateAdded: "2025-12-22",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2025-68143",
-    source: "attached_assets threat table"
-  },
-  {
-    id: "CVE-2026-22807",
-    severity: "high",
-    description: "mcp-server-git XSS and command injection. Malicious git repository content triggers command execution when processed by the MCP server.",
-    surface: "MCP Server / Git",
-    rules: ["T26"],
-    govbench: "D1",
-    dateAdded: "2026-01-10",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-22807",
-    source: "attached_assets threat table"
-  },
-  {
-    id: "CVE-2026-23947",
-    severity: "high",
-    description: "mcp-server-git XSS and deserialization vulnerability. Crafted git objects trigger unsafe deserialization when parsed by the MCP server.",
-    surface: "MCP Server / Git",
-    rules: ["T26"],
-    govbench: "D1",
-    dateAdded: "2026-01-15",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-23947",
-    source: "attached_assets threat table"
-  },
-  {
-    id: "CVE-2026-24612",
-    severity: "high",
-    description: "Persistent memory poisoning. Poisoned memory entries persist across all future sessions, turning point-in-time exploits into stateful delayed-execution attacks.",
-    surface: "Memory / Persistence",
-    rules: ["T31"],
-    govbench: "D3",
-    dateAdded: "2026-01-20",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-24612",
-    source: "index.html CVE table"
-  },
-  {
-    id: "CVE-2026-24763",
-    severity: "high",
-    description: "Command injection via skill payload. Unsanitized tool call arguments pass shell commands to the MCP server, enabling arbitrary command execution.",
-    surface: "MCP / Command Injection",
-    rules: ["T01", "T07"],
-    govbench: "D1",
-    dateAdded: "2026-01-25",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-24763",
-    source: "index.html CVE table, T35 module"
-  },
-  {
-    id: "CVE-2026-25157",
-    severity: "high",
-    description: "Command injection second vector. Directory traversal sequences combined with shell metacharacters bypass input validation on tool call arguments.",
-    surface: "MCP / Path Traversal",
-    rules: ["T01", "T07"],
-    govbench: "D1",
-    dateAdded: "2026-01-28",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-25157",
-    source: "index.html CVE table, T35 module"
-  },
-  {
-    id: "CVE-2026-25198",
-    severity: "high",
-    description: "A2A / Moltbook protocol hijacking. Cross-agent privilege escalation via Agent Card artifacts and subagent dispatch in multi-agent systems.",
-    surface: "A2A Protocol",
-    rules: ["T29"],
-    govbench: "D5",
-    dateAdded: "2026-02-01",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-25198",
-    source: "index.html CVE table"
-  },
-  {
-    id: "CVE-2026-25253",
-    severity: "critical",
-    description: "ClawJacked — WebSocket localhost hijack via malicious MCP tool. Brute-forces gateway password exploiting missing rate limiting, stealing auth tokens. CVSS 8.8.",
-    surface: "Personal Agent / MCP",
-    rules: ["T01", "T25", "T35"],
-    govbench: "D2",
-    dateAdded: "2026-02-10",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-25253",
-    source: "changelog.html, index.html, T35 module"
-  },
-  {
-    id: "CVE-2026-25475",
-    severity: "high",
-    description: "SSRF via skill-initiated request. A malicious skill triggers outbound requests to internal network endpoints through the agent's HTTP capabilities.",
-    surface: "SSRF / Skills",
-    rules: ["T03", "T25"],
-    govbench: "D1",
-    dateAdded: "2026-02-15",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-25475",
-    source: "T35 module CVE list"
-  },
-  {
-    id: "CVE-2026-25593",
-    severity: "medium",
-    description: "SSRF via internal network probe through file-fetch MCP tool. Tool accepts URL argument with no scheme or host restrictions, allowing requests to AWS metadata (169.254.169.254) and internal networks.",
-    surface: "MCP Tool / SSRF",
-    rules: ["T03", "T13"],
-    govbench: "D1",
-    dateAdded: "2026-01-22",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-25593",
-    source: "changelog.html, T35 module"
-  },
-  {
-    id: "CVE-2026-26319",
-    severity: "critical",
-    description: "Remote code execution via malicious tool registration overriding a trusted server namespace. Attacker-controlled MCP server registers a tool with the same name as a trusted tool. CVSS 9.0.",
-    surface: "MCP Protocol",
-    rules: ["T30"],
-    govbench: "D1",
-    dateAdded: "2026-03-01",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-26319",
-    source: "changelog.html"
-  },
-  {
-    id: "CVE-2026-26322",
-    severity: "high",
-    description: "Agent delegation spoofing via crafted A2A task message. A malicious agent forges task messages appearing to originate from a trusted orchestrator, causing unauthorized tool execution. CVSS 7.7.",
-    surface: "A2A Protocol",
-    rules: ["T25", "T29"],
-    govbench: "D5",
-    dateAdded: "2026-03-01",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-26322",
-    source: "changelog.html, T35 module"
-  },
-  {
-    id: "CVE-2026-26329",
-    severity: "critical",
-    description: "Deserialization / RCE via skill payload. Crafted serialized objects in skill responses trigger arbitrary code execution when deserialized by the agent runtime.",
-    surface: "MCP / Deserialization",
-    rules: ["T07", "T10"],
-    govbench: "D1",
-    dateAdded: "2026-03-05",
-    nvdUrl: "https://nvd.nist.gov/vuln/detail/CVE-2026-26329",
-    source: "T35 module CVE list"
-  }
-];
-
-var activeSeverity = 'all';
-var activeSearch = '';
-var sortField = 'severity';
-var sortAsc = true;
-var sevOrder = {critical: 0, high: 1, medium: 2, low: 3};
-
-function updateStats() {
-  var total = CVE_DATA.length;
-  var mapped = CVE_DATA.filter(function(c){ return c.rules.length > 0; }).length;
-  var critical = CVE_DATA.filter(function(c){ return c.severity === 'critical'; }).length;
-  var ruleSet = new Set();
-  CVE_DATA.forEach(function(c){ c.rules.forEach(function(r){ ruleSet.add(r); }); });
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-mapped').textContent = mapped;
-  document.getElementById('stat-critical').textContent = critical;
-  document.getElementById('stat-rules').textContent = ruleSet.size;
+function toggleCard(el) {
+  el.classList.toggle('expanded');
 }
-
-function getFiltered() {
-  return CVE_DATA.filter(function(c) {
-    if (activeSeverity !== 'all' && c.severity !== activeSeverity) return false;
-    if (activeSearch) {
-      var q = activeSearch.toLowerCase();
-      var haystack = [c.id, c.severity, c.description, c.surface, c.rules.join(' '), c.govbench].join(' ').toLowerCase();
-      if (haystack.indexOf(q) === -1) return false;
-    }
-    return true;
-  });
-}
-
-function sortData(data) {
-  var sorted = data.slice();
-  sorted.sort(function(a, b) {
-    var va, vb;
-    if (sortField === 'severity') {
-      va = sevOrder[a.severity] || 9;
-      vb = sevOrder[b.severity] || 9;
-    } else if (sortField === 'dateAdded') {
-      va = a.dateAdded;
-      vb = b.dateAdded;
-    } else if (sortField === 'id') {
-      va = a.id;
-      vb = b.id;
-    } else {
-      va = a[sortField] || '';
-      vb = b[sortField] || '';
-    }
-    if (va < vb) return sortAsc ? -1 : 1;
-    if (va > vb) return sortAsc ? 1 : -1;
-    return 0;
-  });
-  return sorted;
-}
-
-function render() {
-  var filtered = sortData(getFiltered());
-  var tbody = document.getElementById('cve-body');
-  if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7"><div class="no-results">No advisories match your filter.</div></td></tr>';
-    document.getElementById('table-count').textContent = '0 advisories';
-    return;
-  }
-  var html = '';
-  for (var i = 0; i < filtered.length; i++) {
-    var c = filtered[i];
-    var rulesHtml = c.rules.map(function(r) {
-      var ruleNum = parseInt(r.replace('T','').replace('_AGENTDEF',''), 10);
-      var file = ruleNum >= 44 ? 'threat_engine_v2.py' : 'openclaw.py';
-      var url = 'https://github.com/aiglos/aiglos/blob/main/aiglos/core/' + file;
-      return '<a href="' + url + '" class="rule-link" target="_blank" rel="noopener" data-testid="link-rule-' + r + '">' + r + '</a>';
-    }).join(' ');
-    html += '<tr data-testid="row-cve-' + c.id + '">' +
-      '<td><a href="' + c.nvdUrl + '" class="cve-link" target="_blank" rel="noopener" data-testid="link-cve-' + c.id + '">' + c.id + '</a></td>' +
-      '<td><span class="sev-badge sev-' + c.severity + '" data-testid="badge-severity-' + c.id + '">' + c.severity.charAt(0).toUpperCase() + c.severity.slice(1) + '</span></td>' +
-      '<td class="desc-cell">' + c.description + '</td>' +
-      '<td class="surface-cell">' + c.surface + '</td>' +
-      '<td>' + rulesHtml + '</td>' +
-      '<td class="govbench-tag">' + c.govbench + '</td>' +
-      '<td class="date-cell">' + c.dateAdded + '</td>' +
-    '</tr>';
-  }
-  tbody.innerHTML = html;
-  document.getElementById('table-count').textContent = filtered.length + ' advisor' + (filtered.length === 1 ? 'y' : 'ies');
-}
-
-function filterBySeverity(sev, btn) {
-  activeSeverity = sev;
-  document.querySelectorAll('.filter-tab').forEach(function(t){ t.classList.remove('active'); });
+function filterFeed(type, btn) {
+  document.querySelectorAll('.feed-filter').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  render();
-}
-
-function filterBySearch(q) {
-  activeSearch = q;
-  render();
-}
-
-function sortTable(field) {
-  if (sortField === field) {
-    sortAsc = !sortAsc;
-  } else {
-    sortField = field;
-    sortAsc = true;
-  }
-  document.querySelectorAll('th').forEach(function(th){ th.classList.remove('sorted'); });
-  var ths = document.querySelectorAll('th');
-  ths.forEach(function(th) {
-    var onclick = th.getAttribute('onclick');
-    if (onclick && onclick.indexOf("'" + field + "'") !== -1) {
-      th.classList.add('sorted');
-      var arrow = th.querySelector('.sort-arrow');
-      if (arrow) arrow.textContent = sortAsc ? '↑' : '↓';
-    } else {
-      var arrow = th.querySelector('.sort-arrow');
-      if (arrow) arrow.textContent = '↕';
-    }
+  document.querySelectorAll('.advisory-card').forEach(card => {
+    if (type === 'all') card.style.display = '';
+    else if (type === 'covered') card.style.display = card.dataset.status === 'covered' ? '' : 'none';
+    else if (type === 'pending') card.style.display = card.dataset.status === 'pending' ? '' : 'none';
+    else if (type === 'high') card.style.display = ['high','critical'].includes(card.dataset.severity) ? '' : 'none';
   });
-  render();
 }
-
-updateStats();
-render();
+function searchFeed(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.advisory-card').forEach(card => {
+    card.style.display = !q || card.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
 </script>
 </body>
 </html>

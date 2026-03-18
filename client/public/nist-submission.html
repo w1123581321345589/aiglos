@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIST AI Agent Standards Submission -- Aiglos T01-T75 Taxonomy</title>
+<meta name="description" content="Aiglos comment submission to NIST AI Agent Standards Initiative. T01-T75 taxonomy as documented prior work.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090b;--bg2:#111116;--bg3:#18181e;
+  --ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);
+  --dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);
+  --hi:#fff;--blue:#2563eb;--ice:#60a5fa;
+  --paper:#fafaf9;--gold:#b8860b;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--hi);font-family:'Plus Jakarta Sans',sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(9,9,11,0.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--ln);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 48px;height:56px}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-name{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;
+  letter-spacing:0.04em;color:var(--hi)}
+.nav-links{display:flex;gap:28px;list-style:none}
+.nav-links a{font-size:13px;color:var(--dim);text-decoration:none;transition:color .15s}
+.nav-links a:hover{color:var(--hi)}
+.nav-cta{display:flex;gap:10px;align-items:center}
+.btn-ghost{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--dim);text-decoration:none;
+  padding:7px 14px;border:1px solid var(--ln2);border-radius:4px;transition:all .15s}
+.btn-ghost:hover{color:var(--hi);border-color:rgba(255,255,255,0.3)}
+.btn-primary{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;
+  text-transform:uppercase;background:var(--hi);color:var(--bg);
+  padding:7px 16px;border-radius:4px;text-decoration:none;transition:opacity .15s}
+.btn-primary:hover{opacity:0.85}
+
+.doc{max-width:780px;margin:0 auto;padding:100px 48px 80px}
+.doc-badge{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.25);
+  border-radius:100px;padding:5px 14px;margin-bottom:24px;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--ice)}
+.doc h1{font-size:clamp(28px,4vw,44px);font-weight:700;letter-spacing:-0.03em;
+  line-height:1.12;margin-bottom:8px}
+.doc .subtitle{font-size:16px;color:var(--mid);margin-bottom:40px;line-height:1.6}
+.doc .meta{font-size:13px;color:var(--dim);margin-bottom:40px;line-height:1.8;
+  border-left:2px solid var(--blue);padding-left:16px}
+
+.doc h2{font-size:22px;font-weight:600;letter-spacing:-0.02em;margin:48px 0 16px;
+  padding-top:16px;border-top:1px solid var(--ln)}
+.doc h2:first-of-type{border-top:none;margin-top:0}
+.doc p{font-size:15px;color:var(--mid);line-height:1.75;margin-bottom:16px}
+.doc strong{color:var(--hi);font-weight:600}
+.doc ul,.doc ol{margin:12px 0 20px 20px}
+.doc li{font-size:15px;color:var(--mid);line-height:1.75;margin-bottom:6px}
+
+table{width:100%;border-collapse:collapse;margin:20px 0 28px;font-size:13px}
+thead{background:var(--bg2)}
+th{text-align:left;padding:10px 14px;color:var(--dim);font-weight:500;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;
+  text-transform:uppercase;border-bottom:1px solid var(--ln2)}
+td{padding:10px 14px;border-bottom:1px solid var(--ln);color:var(--mid)}
+tr:hover td{color:var(--hi)}
+
+.highlight{background:var(--bg2);border:1px solid var(--ln2);border-radius:8px;
+  padding:20px 24px;margin:24px 0}
+.highlight p{margin-bottom:0}
+
+code{font-family:'DM Mono',monospace;font-size:13px;background:var(--bg2);
+  padding:2px 8px;border-radius:4px;color:var(--ice)}
+
+footer{border-top:1px solid var(--ln);padding:40px 48px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.footer-logo{font-family:'DM Mono',monospace;font-size:13px;color:var(--dim)}
+.footer-links{display:flex;gap:24px}
+.footer-links a{font-size:12px;color:var(--dim);text-decoration:none}
+.footer-links a:hover{color:var(--hi)}
+.footer-copy{font-size:12px;color:rgba(255,255,255,0.2)}
+
+@media(max-width:768px){
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  .doc{padding:80px 20px 60px}
+  footer{padding:32px 20px;flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/landing" class="nav-logo">
+    <span class="nav-name">aiglos</span>
+  </a>
+  <div class="nav-links">
+    <a href="/intel">Intel</a>
+    <a href="/compare/clawkeeper">Compare</a>
+    <a href="/docs">Docs</a>
+    <a href="/pricing">Pricing</a>
+    <a href="/govbench-paper">GOVBENCH</a>
+  </div>
+  <div class="nav-cta">
+    <a href="https://github.com/w1123581321345589/aiglos" class="btn-ghost">GitHub</a>
+    <a href="/landing" class="btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<div class="doc">
+
+<div class="doc-badge">NIST Comment Submission</div>
+
+<h1>T01-T75 Taxonomy as Prior Work</h1>
+<p class="subtitle">Comment submission to the NIST AI Agent Standards Initiative. Deadline: April 2, 2026.</p>
+
+<div class="meta">
+  <strong>Submission to:</strong> NIST AI Agent Standards Initiative Comment Period<br>
+  <strong>From:</strong> Will Rose, Founder, Aiglos (aiglos.dev)<br>
+  <strong>Date:</strong> March 2026<br>
+  <strong>Deadline:</strong> April 2, 2026
+</div>
+
+<h2>Summary</h2>
+<p>This comment submits the Aiglos T01-T75 threat taxonomy as documented prior work for the NIST AI Agent Standards Initiative. The taxonomy represents 18 months of empirical threat detection research across production AI agent deployments, validated against the MITRE ATLAS framework and the only published formal threat model for an AI agent platform at production scale.</p>
+<p>We request that NIST's resulting standard adopt the T01-T75 taxonomy as reference vocabulary for AI agent security threat classification, and that the GOVBENCH governance benchmark (published March 2026) be considered as a candidate framework for the governance evaluation dimension of any resulting standard.</p>
+
+<h2>1. The Taxonomy</h2>
+<p>The Aiglos T01-T75 taxonomy classifies <strong>75 distinct threat families</strong> across the three execution surfaces of production AI agents:</p>
+<ul>
+  <li><strong>MCP tool call surface</strong> -- threats specific to the Model Context Protocol tool call layer</li>
+  <li><strong>HTTP/API request surface</strong> -- threats in outbound network requests, SSRF, data exfiltration</li>
+  <li><strong>Subprocess execution surface</strong> -- shell injection, environment hijacking, privilege escalation</li>
+</ul>
+<p>Each rule in the taxonomy maps to:</p>
+<ol>
+  <li>A MITRE ATLAS technique ID</li>
+  <li>An OWASP ASI category (where applicable)</li>
+  <li>One or more documented CVEs or security advisories</li>
+  <li>A GOVBENCH dimension (where applicable)</li>
+</ol>
+<p>The full taxonomy is published at: <a href="https://github.com/w1123581321345589/aiglos" style="color:var(--ice)">github.com/aiglos/aiglos</a></p>
+
+<h2>2. Validation Against OpenClaw ATLAS Threat Model</h2>
+<p>The OpenClaw project (137,000 GitHub stars, adopted by NVIDIA as the reference AI agent platform) published a formal MITRE ATLAS threat model in February 2026 (v1.0-draft). This is currently the only published formal threat model for an AI agent platform at production scale.</p>
+
+<div class="highlight">
+  <p><strong>The Aiglos taxonomy achieves 93% coverage of this threat model.</strong></p>
+</div>
+
+<table>
+  <thead>
+    <tr><th>ATLAS Tactic</th><th>Threats</th><th>Aiglos Coverage</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Reconnaissance (AML.TA0002)</td><td>2</td><td>1 full, 1 partial</td></tr>
+    <tr><td>Initial Access (AML.TA0004)</td><td>3</td><td>3 full</td></tr>
+    <tr><td>Execution (AML.TA0005)</td><td>4</td><td>4 full</td></tr>
+    <tr><td>Persistence (AML.TA0006)</td><td>3</td><td>3 full</td></tr>
+    <tr><td>Defense Evasion (AML.TA0007)</td><td>2</td><td>1 full, 1 partial</td></tr>
+    <tr><td>Discovery (AML.TA0008)</td><td>2</td><td>2 full</td></tr>
+    <tr><td>Exfiltration (AML.TA0009/10)</td><td>3</td><td>3 full</td></tr>
+    <tr><td>Impact (AML.TA0011)</td><td>3</td><td>2 full, 1 partial</td></tr>
+    <tr style="font-weight:600"><td>Total</td><td>22</td><td>19 full, 3 partial, 0 gaps</td></tr>
+  </tbody>
+</table>
+
+<p>The three partial-coverage cases are architecturally honest: passive channel fingerprinting, adversarial ML evasion of pattern-based moderation, and semantically-appropriate-but-harmful content have no reliable behavioral signature at the tool call layer. This is an inherent limitation of the detection layer, not a gap in the taxonomy.</p>
+
+<h2>3. Validation Against Published CVEs</h2>
+<p>Three security advisories have been published for OpenClaw since the platform launched. All three are covered by existing Aiglos rules:</p>
+
+<table>
+  <thead>
+    <tr><th>Advisory</th><th>CVSS</th><th>Attack Class</th><th>Aiglos Rules</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>GHSA-g8p2-7wf7-98mq</td><td>8.8</td><td>Auth token exfiltration via gatewayUrl</td><td>T03, T12, T19, T68</td></tr>
+    <tr><td>GHSA-q284-4pvr-m585</td><td>8.6</td><td>OS command injection via path traversal</td><td>T03, T04, T70</td></tr>
+    <tr><td>GHSA-mc68-q9jw-2h3v</td><td>8.4</td><td>Command injection via PATH env variable</td><td>T03, T70</td></tr>
+  </tbody>
+</table>
+
+<div class="highlight">
+  <p><strong>Coverage: 3/3 published advisories. 100%. Rules existed before advisories were disclosed.</strong></p>
+</div>
+
+<h2>4. The GOVBENCH Governance Benchmark</h2>
+<p>In parallel with the threat taxonomy, Aiglos has developed <strong>GOVBENCH</strong> -- the first governance benchmark for AI agents. We submit GOVBENCH as a candidate framework for the governance evaluation dimension of NIST's AI agent security standard.</p>
+<p>GOVBENCH measures governance failure modes across five dimensions:</p>
+<ul>
+  <li><strong>D1: Campaign Detection (25%)</strong> -- Does the security layer detect multi-step attack sequences that look clean at the individual call level?</li>
+  <li><strong>D2: Agent Definition File Resistance (20%)</strong> -- Does the security layer detect writes to agent configuration files that silently reprogram future sessions?</li>
+  <li><strong>D3: Memory Belief Layer Integrity (20%)</strong> -- Does the security layer detect injection payloads written to persistent memory stores?</li>
+  <li><strong>D4: RL Feedback Loop Resistance (20%)</strong> -- Does the security layer detect attempts to train the agent toward blocked behavior through positive reward?</li>
+  <li><strong>D5: Multi-Agent Cascading Failure Resistance (15%)</strong> -- Does the security layer detect agent impersonation and identity spoofing?</li>
+</ul>
+<p>GOVBENCH produces an A-F grade. It is the only published governance benchmark that measures the behavioral security of AI agents rather than their code quality. SWE-bench and related benchmarks measure code generation quality. GOVBENCH measures governance failure resistance.</p>
+<p>CLI: <code>aiglos benchmark run</code></p>
+
+<h2>5. The Regulatory Urgency</h2>
+<p>Three jurisdictions have enacted AI agent security requirements with imminent deadlines:</p>
+<ul>
+  <li><strong>United States:</strong> NDAA Section 1513, signed December 2025. 80,000 defense contractors must demonstrate AI agent security controls. Congressional report due: June 2026.</li>
+  <li><strong>European Union:</strong> EU AI Act, effective August 2, 2026. Autonomous agents in healthcare, finance, and critical infrastructure classified as high-risk systems. Penalties: 7% of global annual revenue.</li>
+  <li><strong>China:</strong> Cybersecurity Law amended January 2026 with equivalent technical requirements.</li>
+</ul>
+<p>All three frameworks require the same underlying technical capability: a cryptographically signed audit record of every autonomous agent action, produced automatically at session close, and verifiable by a third-party assessor.</p>
+
+<h2>6. Specific Recommendations</h2>
+<p><strong>On threat vocabulary:</strong> Adopt the T01-T75 taxonomy as reference classification for AI agent security threats. This provides a stable, validated vocabulary for procurement specifications, compliance assessments, and vendor evaluations.</p>
+<p><strong>On governance benchmarking:</strong> Specify GOVBENCH's five dimensions (or an equivalent) as the minimum governance evaluation framework for AI agent deployments in regulated industries.</p>
+<p><strong>On the signed audit artifact:</strong> Specify minimum technical requirements: HMAC-SHA256 or stronger, including agent name, session ID, timestamp, tool call log with pre-execution verdicts, and session close signature.</p>
+<p><strong>On the detection layer:</strong> Specify that compliant implementations must cover all three execution surfaces (MCP tool calls, HTTP/API requests, subprocess execution).</p>
+<p><strong>On multi-step attack detection:</strong> Specify that compliant implementations must detect multi-step attack sequences (campaign detection) rather than only individual call inspection.</p>
+
+<h2>7. Supporting Materials</h2>
+<ul>
+  <li><strong>Full taxonomy with MITRE ATLAS mappings:</strong> <a href="https://github.com/w1123581321345589/aiglos" style="color:var(--ice)">github.com/aiglos/aiglos</a></li>
+  <li><strong>GOVBENCH benchmark source:</strong> <code>aiglos/benchmark/govbench.py</code></li>
+  <li><strong>OpenClaw ATLAS coverage report:</strong> <code>aiglos autoresearch atlas-coverage</code></li>
+  <li><strong>GHSA validation:</strong> <code>aiglos autoresearch ghsa-coverage</code></li>
+  <li><strong>GOVBENCH paper:</strong> <a href="/govbench-paper" style="color:var(--ice)">aiglos.dev/govbench-paper</a></li>
+</ul>
+
+<div style="margin-top:48px;padding-top:32px;border-top:1px solid var(--ln)">
+  <p style="font-size:14px;color:var(--dim);line-height:1.8">
+    Will Rose<br>
+    Founder, Aiglos<br>
+    will@aiglos.dev<br>
+    aiglos.dev<br>
+    Charleston, SC
+  </p>
+  <p style="font-size:12px;color:rgba(255,255,255,0.25);margin-top:16px;font-style:italic">
+    This comment is submitted in the public interest. Aiglos is an open-source project (MIT license, detection engine). The author holds a commercial interest in the Pro and Enterprise tiers of the product, which this comment discloses in the interest of transparency.
+  </p>
+</div>
+
+</div>
+
+<footer>
+  <div class="footer-logo">aiglos</div>
+  <div class="footer-links">
+    <a href="/landing">Home</a>
+    <a href="/intel">Intel</a>
+    <a href="/compare/clawkeeper">Compare</a>
+    <a href="/docs">Docs</a>
+    <a href="https://github.com/w1123581321345589/aiglos">GitHub</a>
+  </div>
+  <div class="footer-copy">&copy; 2026 Aiglos</div>
+</footer>
+
+</body>
+</html>

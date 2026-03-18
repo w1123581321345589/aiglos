@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial: GitHub Actions CI Integration — Aiglos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#09090b;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--gold:#b8860b}
+body{background:var(--bg);color:var(--hi);font-family:'Plus Jakarta Sans',sans-serif;-webkit-font-smoothing:antialiased}
+nav{background:rgba(9,9,11,0.9);border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;position:sticky;top:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-mark{width:18px;height:22px}
+.nav-name{font-family:'DM Mono',monospace;font-size:13px;color:var(--hi)}
+.nav-links{display:flex;gap:24px;list-style:none}
+.nav-links a{font-size:13px;color:var(--dim);text-decoration:none}
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 56px)}
+.sidebar{padding:32px 24px;border-right:1px solid var(--ln);position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+.sidebar-section{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;margin-top:24px}
+.sidebar-section:first-child{margin-top:0}
+.sidebar-links{list-style:none}
+.sidebar-links li{margin-bottom:4px}
+.sidebar-links a{font-size:13px;color:var(--dim);text-decoration:none;display:block;padding:4px 8px;border-radius:4px;transition:all .12s}
+.sidebar-links a:hover,.sidebar-links a.active{color:var(--hi);background:var(--bg2)}
+.sidebar-links a.active{color:var(--ice)}
+main{padding:56px 64px;max-width:800px}
+.breadcrumb{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);margin-bottom:24px}
+.breadcrumb a{color:var(--ice);text-decoration:none}
+.meta{display:flex;gap:16px;margin-bottom:32px;flex-wrap:wrap}
+.meta-badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;padding:4px 10px;border-radius:100px;background:var(--bg2);border:1px solid var(--ln2);color:var(--dim)}
+.meta-badge.beginner{color:var(--green);border-color:rgba(74,222,128,0.2);background:rgba(74,222,128,0.05)}
+h1{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-0.03em;line-height:1.1;margin-bottom:16px}
+.intro{font-size:16px;color:var(--mid);line-height:1.7;margin-bottom:40px}
+h2{font-size:20px;font-weight:600;letter-spacing:-0.02em;margin:40px 0 14px;padding-top:8px}
+h3{font-size:15px;font-weight:600;margin:24px 0 10px}
+p{font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:14px}
+p strong{color:var(--hi);font-weight:500}
+.code-block{background:#0d1117;border:1px solid var(--ln2);border-radius:6px;overflow:hidden;margin:16px 0 24px}
+.code-header{background:#161b22;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ln)}
+.code-lang{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+.code-copy{background:none;border:1px solid var(--ln);border-radius:3px;padding:3px 8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);cursor:pointer}
+.code-body{padding:20px;overflow-x:auto}
+.code-body pre{font-family:'DM Mono',monospace;font-size:13px;line-height:1.7;color:#e6edf3}
+.callout{background:var(--bg2);border-left:3px solid var(--ice);padding:16px 20px;border-radius:0 6px 6px 0;margin:20px 0;font-size:13px;color:var(--mid);line-height:1.65}
+.callout strong{color:var(--hi)}
+.step-list{list-style:none;margin:16px 0 24px}
+.step-list li{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--ln)}
+.step-list li:last-child{border-bottom:none}
+.step-num{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);flex-shrink:0;padding-top:1px}
+.step-content{font-size:14px;color:var(--mid);line-height:1.65}
+.step-content strong{color:var(--hi);display:block;margin-bottom:4px}
+.next-prev{display:flex;justify-content:space-between;margin-top:64px;padding-top:24px;border-top:1px solid var(--ln)}
+.next-prev a{font-size:13px;color:var(--ice);text-decoration:none;display:flex;align-items:center;gap:6px}
+@media(max-width:768px){.layout{grid-template-columns:1fr}.sidebar{display:none}main{padding:40px 24px}}
+.tok-kw{color:#ff7b72}.tok-str{color:#a5d6ff}.tok-fn{color:#d2a8ff}.tok-comment{color:#6e7681}.tok-param{color:#79c0ff}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">
+    <svg class="nav-mark" viewBox="0 0 44 50" fill="none">
+      <polygon points="22,2 2,44 22,44" fill="white"/>
+      <polygon points="22,2 42,44 22,44" fill="rgba(255,255,255,0.42)"/>
+      <rect x="14" y="44" width="16" height="6" fill="white"/>
+    </svg>
+    <span class="nav-name">aiglos</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/intel">Intel</a></li>
+    <li><a href="/docs">Docs</a></li>
+  </ul>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">Getting Started</div>
+    <ul class="sidebar-links">
+      <li><a href="/tutorials">All Tutorials</a></li>
+      <li><a href="/tutorials/install">Install Aiglos</a></li>
+      <li><a href="/tutorials/github-actions" class="active">GitHub Actions CI</a></li>
+    </ul>
+    <div class="sidebar-section">Hardening</div>
+    <ul class="sidebar-links">
+      <li><a href="/tutorials/openclaw-hardening">Harden OpenClaw</a></li>
+      <li><a href="/tutorials/lockdown-policy">Lockdown Policy</a></li>
+      <li><a href="/tutorials/scan-exposed">Scan Exposed Instances</a></li>
+    </ul>
+    <div class="sidebar-section">Advanced</div>
+    <ul class="sidebar-links">
+      <li><a href="/tutorials/govbench">Run GOVBENCH</a></li>
+      <li><a href="/tutorials/superpowers">Superpowers Integration</a></li>
+      <li><a href="/tutorials/atlas-coverage">ATLAS Coverage Report</a></li>
+    </ul>
+  </aside>
+
+  <main>
+    <div class="breadcrumb"><a href="/tutorials">Tutorials</a> / GitHub Actions CI Integration</div>
+    <div class="meta">
+      <span class="meta-badge beginner">Beginner</span>
+      <span class="meta-badge">12 min read</span>
+      <span class="meta-badge">GitHub Actions</span>
+    </div>
+    <h1>GitHub Actions CI Integration</h1>
+    <p class="intro">Add Aiglos to your CI pipeline in three lines. Every push gets an A-F security grade. Deploy gates fail when the grade drops below your threshold. This tutorial covers setup, configuration, and PR comment integration.</p>
+
+    <h2>What you'll build</h2>
+    <p>A GitHub Actions workflow that runs on every push and pull request, scans your OpenClaw agent configuration with Aiglos, and:</p>
+    <ul class="step-list">
+      <li><div class="step-num">01</div><div class="step-content"><strong>Posts a grade to PR comments</strong>A-F security grade with findings summary directly on the pull request.</div></li>
+      <li><div class="step-num">02</div><div class="step-content"><strong>Uploads SARIF to GitHub Security</strong>Findings appear in your repository's Security tab alongside CodeQL results.</div></li>
+      <li><div class="step-num">03</div><div class="step-content"><strong>Fails the deploy gate if grade drops below threshold</strong>Set your minimum acceptable grade. Pushes that degrade security can't merge.</div></li>
+    </ul>
+
+    <h2>Prerequisites</h2>
+    <p>A GitHub repository containing an OpenClaw agent project. The Aiglos GitHub Actions integration works with any repo — it doesn't require an existing Aiglos installation.</p>
+
+    <h2>Step 1: Add the workflow file</h2>
+    <p>Create <code style="font-family:'DM Mono',monospace;font-size:12px;background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:3px">.github/workflows/aiglos.yml</code> in your repository:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">YAML</span>
+        <button class="code-copy" onclick="this.textContent='Copied'">Copy</button>
+      </div>
+      <div class="code-body"><pre>name: Aiglos Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  aiglos-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write    # for SARIF upload
+      pull-requests: write      # for PR comments
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Aiglos Security Scan
+        uses: aiglos/aiglos/.github/actions/aiglos-scan@main
+        with:
+          grade-threshold: 'C'     # fail if grade drops below C
+          post-pr-comment: 'true'
+          upload-sarif: 'true'
+          policy: 'enterprise'</pre></div>
+    </div>
+
+    <div class="callout">
+      <strong>That's it for basic setup.</strong> This workflow runs on every push and PR, posts a grade comment, and uploads findings to the Security tab. The next steps cover configuration options.
+    </div>
+
+    <h2>Step 2: Configure the grade threshold</h2>
+    <p>The <code style="font-family:'DM Mono',monospace;font-size:12px;background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:3px">grade-threshold</code> input sets the minimum acceptable grade. The workflow fails if the scan returns a grade below this threshold.</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">YAML</span></div>
+      <div class="code-body"><pre>with:
+  grade-threshold: 'B'   # fail on C, D, or F
+  # Options: A, B, C, D, F
+  # Default: C</pre></div>
+    </div>
+
+    <p>For defense contractor deployments requiring NDAA §1513 compliance, set <code style="font-family:'DM Mono',monospace;font-size:12px;background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:3px">grade-threshold: 'B'</code>. For initial adoption, <code style="font-family:'DM Mono',monospace;font-size:12px;background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:3px">'C'</code> is a reasonable starting point that catches critical issues without blocking work on intermediate findings.</p>
+
+    <h2>Step 3: View results</h2>
+
+    <h3>In pull requests</h3>
+    <p>When <code style="font-family:'DM Mono',monospace;font-size:12px;background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:3px">post-pr-comment: 'true'</code>, Aiglos posts a comment on every PR with:</p>
+    <ul style="list-style:none;margin:0 0 16px;padding:0">
+      <li style="padding:6px 0;font-size:14px;color:var(--mid)">— Current grade (A-F)</li>
+      <li style="padding:6px 0;font-size:14px;color:var(--mid)">— Number of findings by severity</li>
+      <li style="padding:6px 0;font-size:14px;color:var(--mid)">— Top 3 critical findings with remediation</li>
+      <li style="padding:6px 0;font-size:14px;color:var(--mid)">— Grade change from last scan (↑ ↓ →)</li>
+    </ul>
+
+    <h3>In the Security tab</h3>
+    <p>When <code style="font-family:'DM Mono',monospace;font-size:12px;background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:3px">upload-sarif: 'true'</code>, findings appear in your repository's Security → Code scanning tab in standard SARIF format alongside any other code scanning tools you run.</p>
+
+    <h2>Step 4: Advanced configuration</h2>
+    <p>The full set of inputs:</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">YAML</span></div>
+      <div class="code-body"><pre>- name: Aiglos Security Scan
+  uses: aiglos/aiglos/.github/actions/aiglos-scan@main
+  with:
+    # Minimum grade before workflow fails
+    grade-threshold: 'C'
+
+    # Post grade summary to PR comments
+    post-pr-comment: 'true'
+
+    # Upload findings to GitHub Security tab (SARIF)
+    upload-sarif: 'true'
+
+    # Detection policy: permissive, enterprise, strict, federal, lockdown
+    policy: 'enterprise'
+
+    # Path to OpenClaw config file to audit
+    config-path: './openclaw.json'
+
+    # Run deep audit including Phase 3 config checks
+    deep: 'true'
+
+    # Aiglos API key for Pro features (federation intel, signed artifact)
+    aiglos-key: ${{ secrets.AIGLOS_KEY }}</pre></div>
+    </div>
+
+    <h2>Step 5: Add your API key (Pro)</h2>
+    <p>The free tier runs the full T01-T75 detection engine with no API key. Pro tier adds federation threat intelligence and signed session artifacts. To use Pro:</p>
+
+    <ol style="list-style:none;margin:0 0 24px">
+      <li style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--ln);font-size:14px;color:var(--mid)"><span style="font-family:'DM Mono',monospace;color:var(--gold)">1.</span> Get your API key at aiglos.dev/settings</li>
+      <li style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--ln);font-size:14px;color:var(--mid)"><span style="font-family:'DM Mono',monospace;color:var(--gold)">2.</span> Add it to your repository secrets as <code style="font-family:'DM Mono',monospace;font-size:12px">AIGLOS_KEY</code></li>
+      <li style="display:flex;gap:12px;padding:10px 0;font-size:14px;color:var(--mid)"><span style="font-family:'DM Mono',monospace;color:var(--gold)">3.</span> Add <code style="font-family:'DM Mono',monospace;font-size:12px">aiglos-key: ${{ secrets.AIGLOS_KEY }}</code> to the workflow inputs</li>
+    </ol>
+
+    <h2>The reusable action</h2>
+    <p>Aiglos also ships a reusable composite action for use in your own organization's workflows:</p>
+
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">YAML</span></div>
+      <div class="code-body"><pre><span class="tok-comment"># .github/workflows/deploy.yml</span>
+jobs:
+  security-gate:
+    steps:
+      - uses: aiglos/aiglos/.github/actions/aiglos-scan@main
+        id: aiglos
+        with:
+          grade-threshold: 'B'
+
+      <span class="tok-comment"># Access outputs in subsequent steps</span>
+      - name: Deploy
+        if: steps.aiglos.outputs.grade != 'F'
+        run: |
+          echo "Grade: ${{ steps.aiglos.outputs.grade }}"
+          echo "Score: ${{ steps.aiglos.outputs.score }}"
+          ./deploy.sh</pre></div>
+    </div>
+
+    <div class="next-prev">
+      <a href="/tutorials/install">← Install Aiglos</a>
+      <a href="/tutorials/openclaw-hardening">Harden OpenClaw →</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>
