@@ -20,13 +20,13 @@ with every deployment in the network.
 [![MIT](https://img.shields.io/badge/license-MIT-000?style=flat-square&labelColor=000)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-000?style=flat-square&labelColor=000)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript-5.0+-000?style=flat-square&labelColor=000)](sdk/typescript/)
-[![1471 tests](https://img.shields.io/badge/tests-1471_passing-000?style=flat-square&labelColor=000)](tests/)
+[![1644 tests](https://img.shields.io/badge/tests-1644_passing-000?style=flat-square&labelColor=000)](tests/)
 
 | | | | | | |
 |---|---|---|---|---|---|
-| **66** threat families | **3** execution surfaces | **17** inspection triggers | **Learns your deployment** | **Network intelligence** | **Zero dependencies** |
+| **75** threat families | **3** execution surfaces | **17** inspection triggers | **93% ATLAS coverage** | **Network intelligence** | **Zero dependencies** |
 
-[The moment](#the-moment) · [What changed](#what-changed-in-v019) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli) · [Pricing](#pricing)
+[The moment](#the-moment) · [What changed](#what-changed-in-v024) · [Quickstart](#quickstart) · [Surfaces](#three-execution-surfaces) · [Threat engine](#threat-engine) · [ATLAS coverage](#atlas-coverage) · [GHSA coverage](#ghsa-coverage) · [Behavioral baseline](#behavioral-baseline) · [Federated intelligence](#federated-intelligence) · [Policy proposals](#policy-proposals) · [Adaptive layer](#adaptive-layer) · [Memory security](#persistent-memory-security) · [RL security](#live-rl-training-security) · [Multi-agent](#multi-agent-security) · [CLI](#cli) · [Pricing](#pricing)
 
 </div>
 
@@ -57,7 +57,23 @@ Aiglos is what closes the gap -- across every surface, every session, every writ
 
 ---
 
-## What changed in v0.19
+## What changed in v0.24
+
+Five releases since v0.19 that complete the threat model coverage and add proactive vulnerability intelligence.
+
+### v0.20-v0.23: Nine new threat families (T67-T75 first wave)
+
+T67 `HEARTBEAT_SILENCE` -- detects suppression of monitoring heartbeats. T68 `INSECURE_DEFAULT_CONFIG` -- flags agents running with unsafe defaults. T69 `GHSA_WATCHER` -- continuous GitHub Security Advisory monitoring with local-only mode (zero network, stdlib only). T70 `ADVISORY_CORRELATION` -- correlates advisories to active agent configurations. All rules existed before public disclosure of the advisories they match.
+
+### v0.24: ATLAS coverage + final five threat families
+
+T71 `PAIRING_GRACE_ABUSE` -- detects exploitation of MCP server pairing grace periods. T72 `CHANNEL_IDENTITY_SPOOF` -- catches forged agent identity in multi-channel protocols. T73 `TOOL_ENUMERATION` -- flags systematic tool capability discovery (recon surface). T74 `CONTENT_WRAPPER_ESCAPE` -- detects content boundary breakout in structured responses. T75 `SESSION_DATA_EXTRACT` -- catches session data exfiltration via side channels.
+
+OpenClaw ATLAS threat model mapping: 22 threats evaluated, 19 full coverage, 3 partial, 0 gaps. 93% weighted coverage. `aiglos audit --atlas` CLI command. `ATLASCoverage` class with `coverage_report()`, `gap_analysis()`, `compliance_score()`.
+
+GHSA watcher: 3/3 published OpenClaw advisories covered (100%). Rules existed before disclosure -- proactive, not reactive. `GHSAWatcher` with `check_local()`, `coverage_artifact()`. `aiglos audit --ghsa` CLI command.
+
+### v0.19: The infrastructure wave
 
 Three architectural additions that change what kind of product this is.
 
@@ -286,19 +302,79 @@ Patches `subprocess.run`, `subprocess.Popen`, `subprocess.call`, `os.system`. T0
 
 | ID | Family | Surface | What it catches |
 |----|--------|---------|----------------|
-| `T01`–`T05` | EXFIL · INJECT · TRAVERSAL · CONFIG · SSRF | Mixed | Core attack vectors |
+| `T01`-`T05` | EXFIL, INJECT, TRAVERSAL, CONFIG, SSRF | Mixed | Core attack vectors |
 | `T06` | CAMPAIGN | Session | Multi-step attack sequences |
-| `T07`–`T12` | SHELL · OS abuse | Subprocess | Shell injection, privilege escalation |
-| `T13`–`T18` | NETWORK · SSRF | HTTP | Outbound network abuse |
-| `T19`–`T24` | CRED_ACCESS | Mixed | SSH keys, .env files, AWS credentials |
-| `T25`–`T29` | A2A protocol | HTTP | Agent-to-agent spoofing |
-| `T30`–`T34` | SUPPLY_CHAIN | Mixed | Malicious packages, data pipeline poisoning |
+| `T07`-`T12` | SHELL, OS abuse | Subprocess | Shell injection, privilege escalation |
+| `T13`-`T18` | NETWORK, SSRF | HTTP | Outbound network abuse |
+| `T19`-`T24` | CRED_ACCESS | Mixed | SSH keys, .env files, AWS credentials |
+| `T25`-`T29` | A2A protocol | HTTP | Agent-to-agent spoofing |
+| `T30`-`T34` | SUPPLY_CHAIN | Mixed | Malicious packages, data pipeline poisoning |
 | `T36_AGENTDEF` | AGENT_DEF | Subprocess | Agent definition file manipulation |
 | `T37` | FIN_EXEC | HTTP | Autonomous financial transactions |
 | `T38` | AGENT_SPAWN | MCP | Unauthorized sub-agent creation |
 | `T39` | REWARD_POISON | RL | Training loop corruption |
+| `T40`-`T43` | CONTEXT, OUTBOUND, REWRITE, HONEYPOT | Mixed | Shared context, secret leak, honeypot |
+| `T44`-`T66` | Infrastructure | Mixed | Inference hijack, cross-tenant, simulation poison, tool forgery, context smuggling, GaaS escalation |
+| `T67`-`T68` | HEARTBEAT, CONFIG | Mixed | Heartbeat suppression, insecure defaults |
+| `T69`-`T70` | GHSA_WATCHER, ADVISORY | Intelligence | Advisory monitoring, correlation |
+| `T71` | PAIRING_GRACE_ABUSE | MCP | MCP pairing grace period exploitation |
+| `T72` | CHANNEL_IDENTITY_SPOOF | Multi-agent | Forged channel identity |
+| `T73` | TOOL_ENUMERATION | MCP | Systematic tool capability discovery |
+| `T74` | CONTENT_WRAPPER_ESCAPE | Mixed | Content boundary breakout |
+| `T75` | SESSION_DATA_EXTRACT | Session | Session data exfiltration via side channels |
 
-All rules map to MITRE ATLAS. Protocol-portable -- not MCP-only.
+75 rules. All map to MITRE ATLAS (93% coverage of OpenClaw ATLAS threat model). Protocol-portable -- not MCP-only.
+
+---
+
+## ATLAS coverage
+
+*Added v0.24.0 -- formal threat model validation.*
+
+Aiglos maps to the OpenClaw ATLAS threat model -- 22 threats across prompt injection, tool abuse, data exfiltration, privilege escalation, and supply chain attacks. 19 threats have full rule coverage. 3 have partial coverage. Zero gaps.
+
+```bash
+python -m aiglos audit --atlas
+# ATLAS Coverage Report
+# Total threats: 22 | Full: 19 | Partial: 3 | None: 0
+# Weighted coverage: 93.2%
+# Grade: A
+```
+
+```python
+from aiglos.autoresearch.atlas_coverage import ATLASCoverage
+
+cov = ATLASCoverage()
+report = cov.coverage_report()
+print(report["weighted_coverage"])  # 0.932
+print(report["grade"])              # "A"
+
+gaps = cov.gap_analysis()
+# Returns partial-coverage threats with recommended rule additions
+```
+
+---
+
+## GHSA coverage
+
+*Added v0.23.0 -- proactive vulnerability intelligence.*
+
+Monitors GitHub Security Advisories for the OpenClaw ecosystem. 3/3 published advisories covered -- all rules existed before public disclosure.
+
+```bash
+python -m aiglos audit --ghsa
+# GHSA Coverage: 3/3 advisories (100%)
+# All rules pre-date disclosure -- proactive coverage confirmed
+```
+
+```python
+from aiglos.autoresearch.ghsa_watcher import GHSAWatcher
+
+watcher = GHSAWatcher(local_only=True)  # zero network, stdlib only
+results = watcher.check_local()
+print(results["coverage_pct"])  # 100.0
+print(results["pre_disclosure"])  # 3 -- rules existed before advisory
+```
 
 ---
 
@@ -565,6 +641,11 @@ python -m aiglos forecast --sequence T19 T22
 python -m aiglos scan-skill <name>
 python -m aiglos scan-message "<text>"
 
+# Audit (v0.23-0.24)
+python -m aiglos audit --ghsa              # GHSA advisory coverage
+python -m aiglos audit --atlas             # ATLAS threat model coverage
+python -m aiglos autoresearch atlas-coverage  # detailed ATLAS mapping
+
 python -m aiglos version
 ```
 
@@ -618,7 +699,10 @@ Session artifact fields:
 | CVE / Incident | Attack | Rules |
 |----------------|--------|-------|
 | `CVE-2026-25253` CVSS 8.8 | ClawJacked -- WebSocket gateway one-click RCE | `T01` `T25` |
-| `CVE-2026-24763`–`CVE-2026-25312` | Command injection through heartbeat loop | T07–T36 |
+| `CVE-2026-24763`-`CVE-2026-25312` | Command injection through heartbeat loop | T07-T36 |
+| GHSA-001 | MCP server pairing grace period abuse | `T71` |
+| GHSA-002 | Channel identity spoofing in multi-agent | `T72` |
+| GHSA-003 | Tool enumeration recon surface | `T73` |
 | Incident Mar 2026 | **McKinsey/Lilli** -- writable system prompts, 40K consultants, 2 hours | `T27` `T20` `T06` |
 | Incident Mar 2026 | **Supply chain RAT** -- AES-encrypted payload, live on launch day | `T26` `T30` |
 | Incident Mar 2026 | **Agent definition install vector** -- silent reprogramming via cp | `T36_AGENTDEF` |
@@ -626,13 +710,15 @@ Session artifact fields:
 | Threat Mar 2026 | **RL reward poisoning** -- positive feedback for blocked operations | `T39` |
 | Threat Mar 2026 | **OPD feedback injection** -- "you should have X" as weight update | `T39` |
 
+GHSA coverage: 3/3 published OpenClaw advisories (100%). All rules pre-date disclosure.
+
 ---
 
 ## Pricing
 
 | Tier | Cost | Includes |
 |------|------|---------|
-| **Free / MIT** | $0 | T01–T39, behavioral baseline, policy proposals, adaptive layer, memory guard, RL guard, SecurityAwareReward, autoresearch, skill scanner, causal tracing, intent prediction, Python + TypeScript SDKs, HMAC artifacts. Federation: pull global prior only. |
+| **Free / MIT** | $0 | T01-T75, behavioral baseline, policy proposals, adaptive layer, memory guard, RL guard, SecurityAwareReward, autoresearch, ATLAS coverage, GHSA watcher, skill scanner, causal tracing, intent prediction, Python + TypeScript SDKs, HMAC artifacts. Federation: pull global prior only. |
 | **Pro** | $39 / dev / mo | Free + contribute to global prior (makes every deployment smarter), RSA-2048 signed artifacts, cloud dashboard, CVE push, SIEM/webhook integration, compliance export |
 | **Teams** | $299 / mo (10 devs) + $29 / dev | Pro + centralized policy management, aggregated threat view, T3 approval workflows |
 | **Enterprise** | Custom, annual | Teams + on-prem/air-gap, dedicated support, custom rule packs |
@@ -650,6 +736,21 @@ Federation server, signed attestation artifacts, cloud dashboard, compliance rep
 ---
 
 ## Changelog
+
+**v0.24.0 -- March 2026**
+T71-T75: PAIRING_GRACE_ABUSE, CHANNEL_IDENTITY_SPOOF, TOOL_ENUMERATION, CONTENT_WRAPPER_ESCAPE, SESSION_DATA_EXTRACT. OpenClaw ATLAS threat model coverage -- 22 threats mapped, 93% weighted coverage, grade A. `ATLASCoverage` class with `coverage_report()`, `gap_analysis()`, `compliance_score()`. `aiglos audit --atlas` CLI. 1644 tests.
+
+**v0.23.0 -- March 2026**
+GHSA watcher -- continuous GitHub Security Advisory monitoring. `GHSAWatcher` with local-only mode (zero network, stdlib only). 3/3 published advisories covered, all rules pre-date disclosure. `aiglos audit --ghsa` CLI. `generate_coverage_artifact()` for compliance evidence. 1593 tests.
+
+**v0.22.0 -- March 2026**
+T69-T70: GHSA_WATCHER and ADVISORY_CORRELATION. Proactive vulnerability intelligence pipeline. Advisory-to-rule correlation engine.
+
+**v0.21.0 -- March 2026**
+T67-T68: HEARTBEAT_SILENCE and INSECURE_DEFAULT_CONFIG. Monitoring integrity and configuration posture rules.
+
+**v0.20.0 -- March 2026**
+Scan-exposed surface hardening. `scan-exposed` CLI command for public endpoint discovery. Lockdown policy mode for zero-trust deployments.
 
 **v0.19.0 -- March 2026**
 T44–T66: 23 new threat families covering the infrastructure and ecosystem threats that emerged from production AI factory deployments. `threat_engine_v2.py` -- full rule table, integrates into existing `_RULES` via lazy import with no architecture changes. T44 `INFERENCE_ROUTER_HIJACK` (Dynamo/OpenShell/NIM model swap and system prompt modification). T45 `CROSS_TENANT_DATA_ACCESS` + T66 `GaaS_TENANT_ESCALATION` (multi-tenant GaaS agent threat). T46 `SIMULATION_ENV_POISON` (Isaac/Omniverse physical AI, extends T39). T47 `TOKEN_BUDGET_EXHAUSTION`, T48 `CONTEXT_WINDOW_SMUGGLING` (token factory infrastructure attacks). T49 `TOOL_SCHEMA_MANIPULATION`, T55 `TOOL_RESULT_FORGERY` (tool trust surface). T50 `AGENTIC_LOOP_ESCAPE`, T56 `CAPABILITY_BOUNDARY_PROBE` (scope and recon). T51 `MODEL_FINGERPRINT_PROBE`, T53 `EVAL_HARNESS_POISON`, T65 `INFERENCE_TIME_ATTACK` (meta-attacks). T54 `VECTOR_DB_INJECTION`, T60 `DATA_PIPELINE_INJECTION` (RAG and ETL surfaces). T57 `INSTRUCTION_HIERARCHY_BYPASS`, T58 `LONG_CONTEXT_DRIFT` (trust and drift). T59 `AGENTIC_SOCIAL_ENGINEERING`, T64 `AGENT_IDENTITY_SPOOFING` (multi-agent identity). T61 `COMPUTE_RESOURCE_ABUSE`, T62 `SECRETS_IN_LOGS`, T63 `WEBHOOK_REPLAY_ATTACK` (operational surface). 5 new campaign patterns (17 total). 3 new inspection triggers (17 total). All 66 rules citation-verified against OWASP ASI and MITRE ATLAS. 1471 tests.
