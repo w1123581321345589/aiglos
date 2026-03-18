@@ -646,6 +646,67 @@ def match_T66(name: str, args: Dict[str, Any]) -> bool:
     return bool(_T66_ESCALATE.search(s) or "cross_tenant_key" in s or "tenant_key_confusion" in s)
 
 
+# ── T67: Heartbeat Silence ────────────────────────────────────────────────────
+_T67_SILENCE = re.compile(
+    r'(?:heartbeat[_\s]*(?:stop|kill|disable|silence|suppress)|'
+    r'kill[_\s]*(?:gateway|cron|heartbeat|scheduler)|'
+    r'disable[_\s]*(?:heartbeat|monitoring|cron|scheduler)|'
+    r'stop[_\s]*(?:gateway|cron|monitoring))',
+    re.IGNORECASE
+)
+
+def match_T67(name: str, args: Dict[str, Any]) -> bool:
+    """T67 HEARTBEAT_SILENCE -- explicit heartbeat/cron suppression attempt."""
+    s = _args_str(args)
+    n = _tool_lower(name)
+    return bool(
+        _T67_SILENCE.search(s) or
+        _T67_SILENCE.search(n) or
+        "heartbeat_interval" in s or
+        "disable_cron" in s or
+        "kill_scheduler" in s or
+        "stop_monitoring" in s
+    )
+
+
+# ── T68: Insecure Default Config ──────────────────────────────────────────────
+_T68_ALLOW_REMOTE = re.compile(
+    r'allow[_\s]*remote[_\s]*[=:][_\s]*(?:true|yes|1|on)',
+    re.IGNORECASE
+)
+_T68_CONFIG_WRITE = re.compile(
+    r'(?:gateway|openclaw|clawdbot)[_\s]*(?:config|settings?|conf)',
+    re.IGNORECASE
+)
+_T68_NO_AUTH = re.compile(
+    r"(?:auth(?:entication)?[_\s:]*(?:disabled?|false|none|off)|"
+    r"no[_\s]*auth(?:entication)?|"
+    r"allow[_\s]*all[_\s]*(?:origins?|connections?|hosts?)|"
+    r"(?:enable[_\s]*)?auth(?:entication)?\s*[:=]\s*(?:false|0|no|off|disabled?)|"
+    r"require[_\s]*auth(?:entication)?\s*[:=]\s*(?:false|0|no|off))",
+    re.IGNORECASE
+)
+
+def match_T68(name: str, args: Dict[str, Any]) -> bool:
+    """T68 INSECURE_DEFAULT_CONFIG -- allow_remote=true with no auth/allowlist."""
+    s = _args_str(args)
+    content = _content(args)
+    combined = s + " " + content
+
+    if not _T68_ALLOW_REMOTE.search(combined):
+        return False
+
+    if _T68_NO_AUTH.search(combined):
+        return True
+
+    auth_keywords = ("api_key", "apikey", "token", "password", "auth",
+                     "secret", "allowlist", "allow_list", "whitelist", "credential")
+    if not any(kw in combined for kw in auth_keywords):
+        return True
+
+    return False
+
+
 # ── Rule table for import into openclaw._RULES ───────────────────────────────
 
 RULES_T44_T66: List[Dict] = [
@@ -718,4 +779,10 @@ RULES_T44_T66: List[Dict] = [
     {"id": "T66", "name": "GaaS_TENANT_ESCALATION",
      "desc": "GaaS agent acquiring cross-tenant privileges via API key confusion",
      "score": 0.92, "critical": True, "match": match_T66},
+    {"id": "T67", "name": "HEARTBEAT_SILENCE",
+     "desc": "Explicit heartbeat, cron, or gateway suppression -- the quietest failure mode",
+     "score": 0.88, "critical": True, "match": match_T67},
+    {"id": "T68", "name": "INSECURE_DEFAULT_CONFIG",
+     "desc": "allow_remote=true with no auth -- root cause of 40,000+ exposed instances",
+     "score": 0.95, "critical": True, "match": match_T68},
 ]
