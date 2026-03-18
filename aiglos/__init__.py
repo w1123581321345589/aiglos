@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.22.0"  # canonical version for this release
+    __version__ = "0.23.0"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -164,6 +164,18 @@ from aiglos.autoresearch.verified_rule_engine import (  # noqa: F401
 from aiglos.autoresearch.compliance_report import (  # noqa: F401
     ComplianceReportGenerator,
     ComplianceReport,
+)
+from aiglos.autoresearch.ghsa_watcher import (  # noqa: F401
+    GHSAWatcher,
+    AdvisoryMatch,
+    KNOWN_ADVISORIES,
+    TAXONOMY_KEYWORDS,
+    seed_known_advisories,
+)
+from aiglos.autoresearch.ghsa_coverage import (  # noqa: F401
+    generate_coverage_artifact,
+    CoverageArtifact,
+    CoverageEntry,
 )
 
 from aiglos.core.federation import (   # noqa: F401
@@ -792,4 +804,13 @@ __all__ = [
     "VerifiedRunResult",
     "ComplianceReportGenerator",
     "ComplianceReport",
+    # v0.23.0
+    "GHSAWatcher",
+    "AdvisoryMatch",
+    "KNOWN_ADVISORIES",
+    "TAXONOMY_KEYWORDS",
+    "seed_known_advisories",
+    "generate_coverage_artifact",
+    "CoverageArtifact",
+    "CoverageEntry",
 ]
