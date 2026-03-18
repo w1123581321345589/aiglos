@@ -114,8 +114,13 @@ export async function registerRoutes(
   ]);
   const publicRoot = new URL("../client/public", import.meta.url).pathname;
 
+  app.get("/", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
   app.get("/supernova-plan", (_req, res) => res.redirect(301, "/landing"));
-  app.get("/tutorial-github-actions", (_req, res) => res.redirect(301, "/"));
+  app.get("/tutorial-github-actions", (_req, res) => res.redirect(301, "/landing"));
+  app.get("/atlas", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  app.get("/ghsa", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  app.get("/superpowers", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  app.get("/benchmark", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
 
   app.get("/:page", (req, res, next) => {
     if (staticPages.has(req.params.page)) {
