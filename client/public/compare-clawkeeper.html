@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#09090b;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--red:#f87171}
+:root{--bg:#000000;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--red:#f87171}
 body{background:var(--bg);color:var(--hi);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
 nav{background:rgba(9,9,11,0.9);border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;position:sticky;top:0;z-index:100}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
@@ -122,7 +122,7 @@ footer a{color:var(--ice);text-decoration:none}
     <h2>Using both together</h2>
     <p style="font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:20px">Aiglos ingests ClawKeeper badge data from the Skills Hub and incorporates it into the SkillReputationGraph. A skill flagged as Critical by ClawKeeper automatically elevates Aiglos's detection sensitivity for agents using that skill.</p>
     <p style="font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:16px">Run a unified audit combining both:</p>
-    <div style="background:#0d1117;border-radius:6px;padding:20px 24px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#e6edf3;margin-bottom:20px">
+    <div style="background:#000000;border-radius:6px;padding:20px 24px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#e6edf3;margin-bottom:20px">
       <span style="color:#6e7681"># ClawKeeper host audit</span><br>
       clawkeeper audit --json &gt; host-audit.json<br><br>
       <span style="color:#6e7681"># Aiglos runtime + clawkeeper merge</span><br>
