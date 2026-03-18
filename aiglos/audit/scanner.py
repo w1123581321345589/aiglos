@@ -441,6 +441,40 @@ class AuditScanner:
                     remediation="Add a network.allowlist to your OpenClaw config.",
                 ))
 
+            # T68: Check allow_remote -- root cause of 40,000+ exposed instances
+            gateway = config.get("gateway", config)
+            allow_remote = gateway.get("allow_remote", False)
+            auth_configured = bool(
+                gateway.get("api_key") or gateway.get("token") or
+                gateway.get("auth") or gateway.get("password") or
+                config.get("auth") or config.get("authentication")
+            )
+            if allow_remote and not auth_configured:
+                self._add(CheckResult(
+                    "P3-04", 3,
+                    "allow_remote=true with no authentication (T68)",
+                    "CRITICAL",
+                    "Gateway is exposed to the internet with no authentication. "
+                    "This is the root cause of 40,000+ exposed OpenClaw instances "
+                    "documented in the February 2026 SecurityScorecard report.",
+                    remediation=(
+                        "Set allow_remote=false or add authentication. "
+                        "Run: aiglos audit --deep to verify fix."
+                    ),
+                    evidence="T68 INSECURE_DEFAULT_CONFIG",
+                ))
+            elif allow_remote:
+                self._add(CheckResult(
+                    "P3-04", 3, "allow_remote=true with authentication configured",
+                    "WARN",
+                    "Gateway is exposed to the internet. Confirm this is intentional "
+                    "and that authentication is properly enforced.",
+                    remediation="Consider setting allow_remote=false if remote access is not required.",
+                ))
+            else:
+                self._add(CheckResult("P3-04", 3, "allow_remote=false (safe default)", "PASS",
+                                      "Gateway not exposed to remote connections."))
+
         if not config_found:
             self._add(CheckResult("P3-00", 3, "No OpenClaw config file found", "INFO",
                                   "OpenClaw configuration file not found.",
