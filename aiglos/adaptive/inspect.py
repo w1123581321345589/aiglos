@@ -1009,11 +1009,11 @@ class InspectionEngine:
             log.debug("[InspectionEngine] context_drift check error: %s", e)
 
         try:
-            drift = self.graph.conn.execute("""
-                SELECT COUNT(*) as c FROM events
-                WHERE rule_id = 'T69'
-                  AND timestamp > ?
-            """, (self._session_window(),)).fetchone()
+            with self._graph._conn() as conn:
+                drift = conn.execute("""
+                    SELECT COUNT(*) as c FROM block_patterns
+                    WHERE rule_id = 'T69' AND occurred_at >= ?
+                """, (self._session_window(),)).fetchone()
             if drift and drift["c"] >= 1:
                 triggers.append(InspectionTrigger(
                     trigger_type  = "PLAN_DRIFT_DETECTED",
