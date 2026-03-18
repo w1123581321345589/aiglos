@@ -1,13 +1,13 @@
 """
 tests/test_ghsa_and_t70.py
 ============================
-Aiglos v0.23.0 -- T69 PLAN_DRIFT + T70 ENV_PATH_HIJACK + GHSA Watcher
+Aiglos v0.24.0 -- T69 PLAN_DRIFT + T70 ENV_PATH_HIJACK + GHSA Watcher
 
 Tests for:
   Build 1 -- T70 ENV_PATH_HIJACK (GHSA-mc68-q9jw-2h3v proof case)
   Build 2 -- GHSAWatcher (advisory seeding, matching, pending rule generation)
   Build 3 -- generate_coverage_artifact (3/3 advisory coverage)
-  Build 4 -- Module API v0.23.0
+  Build 4 -- Module API v0.24.0
 """
 
 import os, sys, json, tempfile, pathlib
@@ -281,12 +281,12 @@ class TestCoverageArtifact:
 
 
 # =============================================================================
-# Build 4 -- Module API v0.23.0
+# Build 4 -- Module API v0.24.0
 # =============================================================================
 
 class TestV0230ModuleAPI:
     def test_version(self):
-        assert aiglos.__version__ == "0.23.0"
+        assert aiglos.__version__ == "0.24.0"
 
     def test_ghsa_watcher_exported(self):
         assert "GHSAWatcher" in aiglos.__all__
@@ -296,11 +296,11 @@ class TestV0230ModuleAPI:
         assert "generate_coverage_artifact" in aiglos.__all__
         assert hasattr(aiglos, "generate_coverage_artifact")
 
-    def test_27_rules_in_v2(self):
-        assert len(RULES_T44_T66) == 27
+    def test_32_rules_in_v2(self):
+        assert len(RULES_T44_T66) == 32
 
-    def test_t70_is_last_rule(self):
-        assert RULES_T44_T66[-1]["id"] == "T70"
+    def test_t75_is_last_rule(self):
+        assert RULES_T44_T66[-1]["id"] == "T75"
 
     def test_all_exports_importable(self):
         missing = [e for e in aiglos.__all__ if not hasattr(aiglos, e)]
