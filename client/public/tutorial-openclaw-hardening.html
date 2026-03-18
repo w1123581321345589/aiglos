@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial: Harden OpenClaw — Aiglos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#09090b;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--red:#f87171;--amber:#fbbf24;--gold:#b8860b}
+body{background:var(--bg);color:var(--hi);font-family:'Plus Jakarta Sans',sans-serif;-webkit-font-smoothing:antialiased}
+nav{background:rgba(9,9,11,0.9);border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;position:sticky;top:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-mark{width:18px;height:22px}
+.nav-name{font-family:'DM Mono',monospace;font-size:13px;color:var(--hi)}
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 56px)}
+.sidebar{padding:32px 24px;border-right:1px solid var(--ln);position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
+.sidebar-section{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;margin-top:24px}
+.sidebar-section:first-child{margin-top:0}
+.sidebar-links{list-style:none}
+.sidebar-links a{font-size:13px;color:var(--dim);text-decoration:none;display:block;padding:4px 8px;border-radius:4px;transition:all .12s}
+.sidebar-links a:hover,.sidebar-links a.active{color:var(--hi);background:var(--bg2)}
+.sidebar-links a.active{color:var(--ice)}
+main{padding:56px 64px;max-width:800px}
+.breadcrumb{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);margin-bottom:24px}
+.breadcrumb a{color:var(--ice);text-decoration:none}
+.meta{display:flex;gap:12px;margin-bottom:32px;flex-wrap:wrap}
+.meta-badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;padding:4px 10px;border-radius:100px;background:var(--bg2);border:1px solid var(--ln2);color:var(--dim)}
+.meta-badge.intermediate{color:var(--amber);border-color:rgba(251,191,36,0.2);background:rgba(251,191,36,0.05)}
+h1{font-size:36px;font-weight:700;letter-spacing:-0.03em;line-height:1.1;margin-bottom:16px}
+.intro{font-size:16px;color:var(--mid);line-height:1.7;margin-bottom:36px}
+h2{font-size:19px;font-weight:600;letter-spacing:-0.02em;margin:36px 0 12px}
+h3{font-size:14px;font-weight:600;margin:20px 0 8px;color:var(--ice);font-family:'DM Mono',monospace;letter-spacing:0.04em;text-transform:uppercase;font-size:10px}
+p{font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:12px}
+p strong{color:var(--hi);font-weight:500}
+.code-block{background:#0d1117;border:1px solid var(--ln2);border-radius:6px;overflow:hidden;margin:14px 0 20px}
+.code-header{background:#161b22;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ln)}
+.code-lang{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+.code-body{padding:20px;overflow-x:auto}
+.code-body pre{font-family:'DM Mono',monospace;font-size:13px;line-height:1.7;color:#e6edf3}
+.check-table{width:100%;border-collapse:collapse;font-size:13px;margin:16px 0 24px}
+.check-table th{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim);padding:8px 12px;text-align:left;border-bottom:1px solid var(--ln2)}
+.check-table td{padding:10px 12px;border-bottom:1px solid var(--ln);color:var(--mid);font-size:12px;vertical-align:top}
+.check-table td:first-child{font-family:'DM Mono',monospace;color:var(--ice)}
+.pass{color:var(--green)}.fail{color:var(--red)}.warn{color:var(--amber)}
+.callout{background:var(--bg2);border-left:3px solid var(--gold);padding:14px 18px;border-radius:0 6px 6px 0;margin:16px 0;font-size:13px;color:var(--mid);line-height:1.65}
+.callout strong{color:var(--hi)}
+.next-prev{display:flex;justify-content:space-between;margin-top:56px;padding-top:20px;border-top:1px solid var(--ln)}
+.next-prev a{font-size:13px;color:var(--ice);text-decoration:none}
+@media(max-width:768px){.layout{grid-template-columns:1fr}.sidebar{display:none}main{padding:36px 20px}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">
+    <svg class="nav-mark" viewBox="0 0 44 50" fill="none">
+      <polygon points="22,2 2,44 22,44" fill="white"/>
+      <polygon points="22,2 42,44 22,44" fill="rgba(255,255,255,0.42)"/>
+      <rect x="14" y="44" width="16" height="6" fill="white"/>
+    </svg>
+    <span class="nav-name">aiglos</span>
+  </a>
+</nav>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">Getting Started</div>
+    <ul class="sidebar-links">
+      <li><a href="/tutorials">All Tutorials</a></li>
+      <li><a href="/tutorials/github-actions">GitHub Actions CI</a></li>
+    </ul>
+    <div class="sidebar-section">Hardening</div>
+    <ul class="sidebar-links">
+      <li><a href="/tutorials/openclaw-hardening" class="active">Harden OpenClaw</a></li>
+      <li><a href="/tutorials/lockdown-policy">Lockdown Policy</a></li>
+      <li><a href="/tutorials/scan-exposed">Scan Exposed Instances</a></li>
+    </ul>
+    <div class="sidebar-section">Advanced</div>
+    <ul class="sidebar-links">
+      <li><a href="/tutorials/govbench">Run GOVBENCH</a></li>
+      <li><a href="/tutorials/superpowers">Superpowers Integration</a></li>
+    </ul>
+  </aside>
+  <main>
+    <div class="breadcrumb"><a href="/tutorials">Tutorials</a> / Harden OpenClaw with Aiglos</div>
+    <div class="meta">
+      <span class="meta-badge intermediate">Intermediate</span>
+      <span class="meta-badge">20 min</span>
+      <span class="meta-badge">OpenClaw · Security</span>
+    </div>
+    <h1>Harden OpenClaw with Aiglos</h1>
+    <p class="intro">The <code style="font-family:'DM Mono',monospace;font-size:13px">aiglos audit --hardening-check</code> command compares your running OpenClaw configuration against the official hardened baseline from docs.openclaw.ai. This tutorial walks through every check, what it means, and how to fix it.</p>
+
+    <h2>Run the audit</h2>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Shell</span></div>
+      <div class="code-body"><pre># Point to your OpenClaw config
+aiglos audit --hardening-check --config ./openclaw.json
+
+# Deep mode includes Phase 3 CVE checks
+aiglos audit --hardening-check --deep
+
+# JSON output for CI
+aiglos audit --hardening-check --format json</pre></div>
+    </div>
+
+    <h2>Understanding the output</h2>
+    <p>The audit runs 12 checks across four phases. Each check produces PASS, WARN, or FAIL.</p>
+    <table class="check-table">
+      <thead><tr><th>Check ID</th><th>What it tests</th><th>Severity if failed</th></tr></thead>
+      <tbody>
+        <tr><td>HC-01</td><td>gateway.mode is "local" or gateway protected by Tailscale</td><td class="fail">CRITICAL</td></tr>
+        <tr><td>HC-02</td><td>gateway.auth.mode is not "none"</td><td class="fail">CRITICAL</td></tr>
+        <tr><td>HC-03</td><td>gateway.bind is "loopback" or equivalent</td><td class="fail">CRITICAL</td></tr>
+        <tr><td>HC-04</td><td>tools.exec.security is "deny" or "ask"</td><td class="fail">HIGH</td></tr>
+        <tr><td>HC-05</td><td>tools.elevated.enabled is false</td><td class="warn">HIGH</td></tr>
+        <tr><td>HC-06</td><td>session.dmScope is "per-channel-peer"</td><td class="warn">MEDIUM</td></tr>
+        <tr><td>HC-07</td><td>channels.*.dmPolicy is "pairing" or allowlist</td><td class="warn">MEDIUM</td></tr>
+        <tr><td>HC-08</td><td>tools.deny includes "sessions_spawn" and "sessions_send"</td><td class="warn">MEDIUM</td></tr>
+        <tr><td>HC-09</td><td>File permissions on ~/.openclaw are 0700 or stricter</td><td class="warn">MEDIUM</td></tr>
+        <tr><td>HC-10</td><td>No credentials stored in plaintext config</td><td class="fail">CRITICAL</td></tr>
+        <tr><td>HC-11</td><td>Node.js version ≥ 22.12.0 (CVE-2025-59466, CVE-2026-21636)</td><td class="fail">HIGH</td></tr>
+        <tr><td>HC-12</td><td>mDNS/Bonjour discovery disabled</td><td class="warn">LOW</td></tr>
+      </tbody>
+    </table>
+
+    <h2>The hardened baseline config</h2>
+    <p>Copy this directly into your <code style="font-family:'DM Mono',monospace;font-size:12px">openclaw.json</code>. It passes all 12 hardening checks:</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">JSON — openclaw.json</span></div>
+      <div class="code-body"><pre>{
+  "gateway": {
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {
+      "mode": "token",
+      "token": "REPLACE_WITH_32_RANDOM_BYTES"
+    }
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "tools": {
+    "profile": "messaging",
+    "deny": [
+      "group:automation",
+      "group:runtime",
+      "group:fs",
+      "sessions_spawn",
+      "sessions_send"
+    ],
+    "fs": { "workspaceOnly": true },
+    "exec": { "security": "deny", "ask": "always" },
+    "elevated": { "enabled": false }
+  },
+  "channels": {
+    "whatsapp": {
+      "dmPolicy": "pairing",
+      "groups": { "*": { "requireMention": true } }
+    }
+  }
+}</pre></div>
+    </div>
+
+    <div class="callout">
+      <strong>After applying the hardened config:</strong> run <code style="font-family:'DM Mono',monospace;font-size:12px">aiglos baseline reset</code> to suppress behavioral anomaly alerts for the next 20 sessions while your agents re-establish their baseline under the new policy.
+    </div>
+
+    <h2>After hardening: run a baseline reset</h2>
+    <p>The hardened config changes what tools agents can access. This will initially trigger behavioral anomaly alerts — the agent's observed behavior no longer matches its pre-hardening baseline. Run a baseline reset to tell Aiglos "the next 20 sessions are the new normal":</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Shell</span></div>
+      <div class="code-body"><pre>aiglos baseline reset
+# Suppressing anomaly signals for next 20 sessions
+# New baseline will be established by session 20
+
+aiglos baseline status
+# Hardening mode: active (17 sessions remaining)</pre></div>
+    </div>
+
+    <h2>Integrating with ClawKeeper</h2>
+    <p>If you're running ClawKeeper alongside Aiglos, pass its JSON output to unify the reports:</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">Shell</span></div>
+      <div class="code-body"><pre>clawkeeper audit --json > host-audit.json
+aiglos audit --hardening-check --clawkeeper host-audit.json</pre></div>
+    </div>
+
+    <div class="next-prev">
+      <a href="/tutorials/github-actions">← GitHub Actions CI</a>
+      <a href="/tutorials/lockdown-policy">Lockdown Policy →</a>
+    </div>
+  </main>
+</div>
+</body>
+</html>
