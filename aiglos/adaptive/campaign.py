@@ -17,22 +17,15 @@ is a reconnaissance sweep even though no single call is catastrophic.
 
 Campaign-mode analysis catches this by looking at sequences, not atoms.
 
-Six campaign patterns:
+19 campaign patterns (v0.24.0):
 
-  RECON_SWEEP          -- sequential read of credential and config files
-                         in a single session without any build/test activity
-  CREDENTIAL_ACCUMULATE -- multiple distinct credential access events in
-                         one session (T19 fires 3+ times on different paths)
-  EXFIL_SETUP          -- internal reconnaissance followed by outbound
-                         network setup in same session (T19/T08 → T23/T12)
-  PERSISTENCE_CHAIN    -- writes to startup paths after privilege check
-                         (T10 → T11 in same session)
-  LATERAL_PREP         -- credential harvest + network scan + SSH spawn
-                         pattern (T19 → T12 in same session)
-  AGENTDEF_CHAIN       -- agent def read followed by agent def write in
-                         same session (T36_AGENTDEF READ → WRITE, suggests
-                         the agent read its own definition before modifying it,
-                         the exact pattern in the McKinsey/Lilli attack)
+  RECON_SWEEP, CREDENTIAL_ACCUMULATE, EXFIL_SETUP, PERSISTENCE_CHAIN,
+  LATERAL_PREP, AGENTDEF_CHAIN, MEMORY_PERSISTENCE_CHAIN,
+  REWARD_MANIPULATION, REPEATED_INJECTION_ATTEMPT,
+  EXTERNAL_INSTRUCTION_CHANNEL, SKILL_CHAIN, SANDBOX_ESCAPE_ATTEMPT,
+  GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN,
+  MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN,
+  SANDBOX_CONFIRMED_ESCAPE, SUPERPOWERS_PLAN_HIJACK
 
 Each CampaignResult carries:
   - pattern_id: string identifier
@@ -349,6 +342,24 @@ _CAMPAIGN_PATTERNS = [
         ],
         "min_events":  3,
         "confidence":  0.91,
+        "surfaces":    None,
+        "amplifiers":  {},
+    },
+    {
+        "name":        "SUPERPOWERS_PLAN_HIJACK",
+        "description": (
+            "Plan drift followed by data exfiltration -- the highest-confidence "
+            "campaign signature in the system. A Superpowers session where the "
+            "agent deviates from its approved plan (T69 PLAN_DRIFT) and then "
+            "immediately performs credential access or data exfiltration "
+            "confirms the plan was hijacked by injected instructions."
+        ),
+        "sequence":    [
+            {"T69"},                      # plan drift detected
+            {"T19", "T12", "T22", "T37"}, # exfil / credential / financial action
+        ],
+        "min_events":  2,
+        "confidence":  0.97,
         "surfaces":    None,
         "amplifiers":  {},
     },

@@ -4,7 +4,7 @@
 Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provides real-time monitoring, event logging, trust management, policy configuration, CMMC compliance tracking, autonomous threat scanning, and full administrative capabilities for AI agents operating through MCP (Model Context Protocol) proxies.
 
 ## Python Package (aiglos/ v0.24.0)
-The `aiglos/` directory contains the Python security runtime package covering threat families T01-T75 (75 total). 1,644 tests passing.
+The `aiglos/` directory contains the Python security runtime package covering threat families T01-T75 (75 total). 1,665 tests passing.
 
 ### Package Structure
 - `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.24.0. Exports ATLASCoverage, GHSAWatcher.
@@ -26,7 +26,8 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/integrations/override.py` -- OverrideManager (6-char codes, 120s expiry, 3 attempts)
 - `aiglos/adaptive/source_reputation.py` -- SourceReputationGraph (cross-session source tracking, 4 risk levels)
 - `aiglos/adaptive/observation.py` -- ObservationGraph with source_records, honeypot_events, override_challenges, baseline_events tables
-- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (18 patterns including SANDBOX_CONFIRMED_ESCAPE, GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN)
+- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (19 patterns including SANDBOX_CONFIRMED_ESCAPE, GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN, SUPERPOWERS_PLAN_HIJACK)
+- `aiglos/integrations/superpowers.py` -- SuperpowersSession, mark_as_superpowers_session, phase management, file/host scope checking, drift recording
 - `aiglos/adaptive/permission_recommender.py` -- PermissionRecommender, PermissionRecommendation (minimum viable allowlist from observation graph)
 - `aiglos/adaptive/skill_reputation.py` -- SkillReputationGraph (ClawKeeper badge data, sync_security_feed)
 - `aiglos/benchmark/govbench.py` -- GovBench, GovBenchResult (5-dimension governance benchmark: campaign detection, agentdef resistance, memory belief, RL exploitation, outbound leakage)
@@ -43,8 +44,8 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `.github/actions/aiglos-scan/action.yml` -- Reusable GitHub Action for Aiglos security audit
 - `.github/workflows/aiglos-scan.yml` -- CI workflow (push/PR/nightly scan, deep mode, grade gating)
 
-### Test Suites (1644 tests)
-23 test files covering all modules and integrations. Includes `tests/test_atlas_and_t75.py` (51 tests for v0.24.0 ATLAS coverage and T71-T75).
+### Test Suites (1665 tests)
+23 test files covering all modules and integrations. Includes `tests/test_atlas_and_t75.py` (72 tests for v0.24.0 ATLAS coverage, T71-T75, Superpowers, GHSA aliases).
 
 ### Class Name Map (important for imports)
 - `ContextWriteResult` (NOT ContextGuardResult)
