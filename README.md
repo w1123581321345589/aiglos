@@ -20,7 +20,7 @@
 [![MIT](https://img.shields.io/badge/license-MIT-000?style=for-the-badge&labelColor=000)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-000?style=for-the-badge&labelColor=000)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript_SDK-000?style=for-the-badge&labelColor=000)](sdk/typescript/)
-[![Zero deps](https://img.shields.io/badge/zero_dependencies-000?style=for-the-badge&labelColor=000&color=00d4aa)](setup.py)
+[![Zero deps](https://img.shields.io/badge/zero_dependencies-000?style=for-the-badge&labelColor=000&color=00d4aa)](aiglos/__init__.py)
 
 <br>
 
@@ -49,8 +49,8 @@ import aiglos                      # every agent action below this line is
 # .github/workflows/security.yml
 - uses: w1123581321345589/aiglos/.github/actions/aiglos-scan@main
   with:
-    mode: deep
-    min-grade: B
+    deep: 'true'
+    fail_below_grade: 'B'
 ```
 
 Every pull request. Every push. Every nightly scan. Block merges below your grade threshold.
@@ -590,8 +590,8 @@ aiglos version
 
 | Tier | Cost | Includes |
 |------|------|---------|
-| Free / MIT | $0 | T01-T75, behavioral baseline, policy proposals, GOVBENCH, Superpowers integration, ATLAS coverage, GHSA watcher, adaptive layer, memory/RL guard, causal tracing, intent prediction, Python + TypeScript SDKs, HMAC artifacts. Federation: pull only. |
-| Pro | $49/dev/mo | Free + federation contribution, RSA-2048 signed artifacts, CVE push alerts, SIEM integration, NDAA and EU AI Act compliance export |
+| Free / MIT | $0 | T01-T75, behavioral baseline, policy proposals, GOVBENCH, Superpowers integration, ATLAS coverage, GHSA watcher, adaptive layer, memory/RL guard, causal tracing, intent prediction, Python + TypeScript SDKs, HMAC session artifacts. Federation: pull only. |
+| Pro | $49/dev/mo | Free + federation contribution, RSA-2048 attestation signatures (audit-grade), CVE push alerts, SIEM integration, NDAA and EU AI Act compliance export |
 | Teams | $299/mo (10 devs) + $29/dev | Pro + centralized policy management, aggregated threat view |
 | Enterprise | Custom, annual | Teams + on-prem/air-gap, dedicated support, C3PAO-ready packages |
 
@@ -626,7 +626,7 @@ The free tier is complete. GOVBENCH, Superpowers, ATLAS coverage, GHSA watcher, 
 
 Detection engine, behavioral baseline, policy proposals, adaptive layer, GOVBENCH, Superpowers integration, ATLAS coverage, GHSA watcher, memory/RL security, causal tracing, intent prediction, autoresearch, TypeScript SDK, CLI: **MIT**.
 
-Federation server, signed attestation artifacts, compliance reports, air-gap container, C3PAO packages: **Proprietary**.
+Federation server, RSA-2048 attestation signatures, compliance reports, air-gap container, C3PAO packages: **Proprietary**.
 
 ---
 
@@ -637,7 +637,7 @@ git clone https://github.com/w1123581321345589/aiglos
 cd aiglos && pip install -e ".[dev]" && pytest tests/
 ```
 
-New threat: [CONTRIBUTING.md](CONTRIBUTING.md) - CVE report: [SECURITY.md](SECURITY.md) - ATLAS mapping: [aiglos/autoresearch/atlas_coverage.py](aiglos/autoresearch/atlas_coverage.py)
+New threat: [CONTRIBUTING.md](CONTRIBUTING.md) - CVE report: [security@aiglos.dev](mailto:security@aiglos.dev) - ATLAS mapping: [aiglos/autoresearch/atlas_coverage.py](aiglos/autoresearch/atlas_coverage.py)
 
 ---
 
