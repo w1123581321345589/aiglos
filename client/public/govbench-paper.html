@@ -9,32 +9,32 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--ink:#0d0d0d;--mid:#4a4a4a;--dim:#888;--rule:#e2e0db;--paper:#faf9f7;--cream:#f4f1eb;--gold:#b8860b;--blue:#1e40af;--white:#fff}
-body{background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;max-width:760px;margin:0 auto;padding:64px 48px 120px}
+body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased;max-width:760px;margin:0 auto;padding:64px 48px 120px}
 .paper-header{text-align:center;padding-bottom:40px;margin-bottom:40px;border-bottom:2px solid var(--ink)}
-.paper-kicker{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:20px}
+.paper-kicker{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:20px}
 h1{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,5vw,52px);font-weight:400;line-height:1.1;letter-spacing:-0.02em;margin-bottom:20px}
-.paper-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:0.08em;line-height:2}
+.paper-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:0.08em;line-height:2}
 .abstract{background:var(--cream);padding:28px 32px;border-radius:2px;margin:40px 0}
-.abstract-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.abstract-title{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
 .abstract p{font-size:15px;line-height:1.75;color:var(--mid)}
 h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;margin:48px 0 16px;letter-spacing:-0.01em}
 h3{font-size:16px;font-weight:500;margin:32px 0 12px;color:var(--ink)}
 p{font-size:15.5px;line-height:1.78;color:#2a2a2a;margin-bottom:18px;font-weight:300}
 p strong{font-weight:500;color:var(--ink)}
 table{width:100%;border-collapse:collapse;font-size:13px;margin:28px 0}
-thead th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);padding:10px 14px;text-align:left;border-bottom:2px solid var(--rule)}
+thead th{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);padding:10px 14px;text-align:left;border-bottom:2px solid var(--rule)}
 thead th:first-child{padding-left:0}
 tbody td{padding:12px 14px;border-bottom:1px solid var(--rule);color:var(--mid);line-height:1.5;font-size:13px}
 tbody td:first-child{padding-left:0;font-weight:500;color:var(--ink)}
-.cite{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);vertical-align:super;margin-left:2px}
+.cite{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);vertical-align:super;margin-left:2px}
 .callout{border-left:2px solid var(--gold);padding:20px 28px;background:var(--cream);margin:28px 0;border-radius:0 2px 2px 0}
 .callout p{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;line-height:1.5;color:var(--ink);font-style:italic;margin:0}
 .dim-card{border:1px solid var(--rule);border-radius:2px;padding:24px;margin:16px 0;background:var(--white)}
-.dim-id{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;display:block}
+.dim-id{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;display:block}
 .dim-title{font-size:15px;font-weight:500;margin-bottom:6px}
-.dim-weight{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);float:right}
+.dim-weight{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);float:right}
 .dim-body{font-size:13px;color:var(--mid);line-height:1.65}
-.formula{background:#0d0d0d;color:#e8f4ff;padding:20px 24px;border-radius:2px;font-family:'DM Mono',monospace;font-size:13px;line-height:1.75;margin:20px 0;overflow-x:auto}
+.formula{background:#0d0d0d;color:#e8f4ff;padding:20px 24px;border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.75;margin:20px 0;overflow-x:auto}
 .refs{margin-top:48px;padding-top:24px;border-top:1px solid var(--rule)}
 .refs h2{font-size:20px}
 .ref-item{font-size:13px;color:var(--mid);line-height:1.7;margin-bottom:8px;padding-left:20px;text-indent:-20px}
@@ -81,7 +81,7 @@ hr{border:none;border-top:1px solid var(--rule);margin:40px 0}
 <div class="dim-card">
   <span class="dim-id">D1 · Campaign Detection</span><span class="dim-weight">Weight: 25%</span>
   <div class="dim-title">Multi-step attack sequence detection</div>
-  <div class="dim-body">Does the security layer detect attack sequences that look clean at the individual call level? The defining challenge: a <code style="font-family:'DM Mono',monospace;font-size:11px">git log</code> call is harmless. A <code style="font-family:'DM Mono',monospace;font-size:11px">cat .env</code> call is suspicious. A session that sequences both, then POSTs to an external server, is a credential exfiltration campaign. Each call looks clean. The sequence is the attack.</div>
+  <div class="dim-body">Does the security layer detect attack sequences that look clean at the individual call level? The defining challenge: a <code style="font-family:'JetBrains Mono',monospace;font-size:11px">git log</code> call is harmless. A <code style="font-family:'JetBrains Mono',monospace;font-size:11px">cat .env</code> call is suspicious. A session that sequences both, then POSTs to an external server, is a credential exfiltration campaign. Each call looks clean. The sequence is the attack.</div>
 </div>
 
 <div class="dim-card">

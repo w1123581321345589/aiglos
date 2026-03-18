@@ -5,18 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tutorial: Lockdown Policy — Aiglos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#09090b;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--amber:#fbbf24;--gold:#b8860b}
-body{background:var(--bg);color:var(--hi);font-family:'Plus Jakarta Sans',sans-serif;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--hi);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
 nav{background:rgba(9,9,11,0.9);border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;position:sticky;top:0;z-index:100}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .nav-mark{width:18px;height:22px}
-.nav-name{font-family:'DM Mono',monospace;font-size:13px;color:var(--hi)}
+.nav-name{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--hi)}
 .layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 56px)}
 .sidebar{padding:32px 24px;border-right:1px solid var(--ln);position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
-.sidebar-section{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;margin-top:24px}
+.sidebar-section{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;margin-top:24px}
 .sidebar-section:first-child{margin-top:0}
 .sidebar-links{list-style:none}
 .sidebar-links a{font-size:13px;color:var(--dim);text-decoration:none;display:block;padding:4px 8px;border-radius:4px;transition:all .12s}
@@ -24,13 +24,13 @@ nav{background:rgba(9,9,11,0.9);border-bottom:1px solid var(--ln);display:flex;a
 .sidebar-links a.active{color:var(--ice);background:var(--bg2)}
 main{padding:56px 64px;max-width:800px}
 .tut-tabs{display:flex;gap:0;border-bottom:1px solid var(--ln);margin-bottom:40px}
-.tut-tab{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;padding:10px 20px;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.tut-tab{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.08em;padding:10px 20px;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
 .tut-tab.active{color:var(--ice);border-bottom-color:var(--ice)}
 .tut-content{display:none}.tut-content.active{display:block}
-.breadcrumb{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);margin-bottom:24px}
+.breadcrumb{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-bottom:24px}
 .breadcrumb a{color:var(--ice);text-decoration:none}
 .meta{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}
-.meta-badge{font-family:'DM Mono',monospace;font-size:10px;padding:4px 10px;border-radius:100px;background:var(--bg2);border:1px solid var(--ln2);color:var(--dim)}
+.meta-badge{font-family:'JetBrains Mono',monospace;font-size:10px;padding:4px 10px;border-radius:100px;background:var(--bg2);border:1px solid var(--ln2);color:var(--dim)}
 .meta-badge.intermediate{color:var(--amber);border-color:rgba(251,191,36,0.2);background:rgba(251,191,36,0.05)}
 .meta-badge.advanced{color:#f472b6;border-color:rgba(244,114,182,0.2);background:rgba(244,114,182,0.05)}
 h1{font-size:34px;font-weight:700;letter-spacing:-0.03em;line-height:1.1;margin-bottom:14px}
@@ -40,14 +40,14 @@ p{font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:12px}
 p strong{color:var(--hi);font-weight:500}
 .code-block{background:#0d1117;border:1px solid var(--ln2);border-radius:6px;overflow:hidden;margin:12px 0 20px}
 .code-header{background:#161b22;padding:8px 16px;border-bottom:1px solid var(--ln)}
-.code-lang{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+.code-lang{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
 .code-body{padding:18px;overflow-x:auto}
-.code-body pre{font-family:'DM Mono',monospace;font-size:13px;line-height:1.7;color:#e6edf3}
+.code-body pre{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:#e6edf3}
 .callout{background:var(--bg2);border-left:3px solid var(--gold);padding:14px 18px;border-radius:0 6px 6px 0;margin:14px 0;font-size:13px;color:var(--mid);line-height:1.65}
 .callout strong{color:var(--hi)}
 .grade-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--ln);border:1px solid var(--ln);border-radius:6px;overflow:hidden;margin:16px 0 24px}
 .grade-cell{background:var(--bg2);padding:16px;text-align:center}
-.grade-letter{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;display:block}
+.grade-letter{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:500;display:block}
 .grade-range{font-size:11px;color:var(--dim);margin-top:4px}
 .ga{color:var(--green)}.gb{color:var(--ice)}.gc{color:var(--amber)}.gd{color:#fb923c}.gf{color:#f87171}
 .next-prev{display:flex;justify-content:space-between;margin-top:48px;padding-top:20px;border-top:1px solid var(--ln)}
@@ -227,8 +227,8 @@ False positive rate: 0/20 clean scenarios triggered</pre></div>
 
       <h2>Improving your score</h2>
       <p><strong>D1 Campaign Detection:</strong> Enable federation intelligence (Pro) for pre-warmed campaign signatures from collective deployment data.</p>
-      <p><strong>D4 RL Feedback Resistance:</strong> Enable the reward signal monitor with <code style="font-family:'DM Mono',monospace;font-size:12px">aiglos attach --monitor-rewards</code>.</p>
-      <p><strong>D2/D3:</strong> Enable the strict agentdef and memory monitors with <code style="font-family:'DM Mono',monospace;font-size:12px">policy="strict"</code> or higher.</p>
+      <p><strong>D4 RL Feedback Resistance:</strong> Enable the reward signal monitor with <code style="font-family:'JetBrains Mono',monospace;font-size:12px">aiglos attach --monitor-rewards</code>.</p>
+      <p><strong>D2/D3:</strong> Enable the strict agentdef and memory monitors with <code style="font-family:'JetBrains Mono',monospace;font-size:12px">policy="strict"</code> or higher.</p>
 
       <div class="next-prev">
         <a href="#" onclick="showTab('lockdown',document.querySelector('.tut-tab:first-child'));return false">← Lockdown Policy</a>
@@ -244,7 +244,7 @@ False positive rate: 0/20 clean scenarios triggered</pre></div>
         <span class="meta-badge">Security Audit</span>
       </div>
       <h1>Scan Exposed Instances</h1>
-      <p class="intro"><code style="font-family:'DM Mono',monospace;font-size:13px">aiglos scan-exposed</code> probes an OpenClaw gateway for the attack surface documented in GHSA-g8p2-7wf7-98mq and CVE-2026-25253 — the vulnerability that left 40,214 instances exposed. Run it against your own deployment or any gateway you're authorized to test.</p>
+      <p class="intro"><code style="font-family:'JetBrains Mono',monospace;font-size:13px">aiglos scan-exposed</code> probes an OpenClaw gateway for the attack surface documented in GHSA-g8p2-7wf7-98mq and CVE-2026-25253 — the vulnerability that left 40,214 instances exposed. Run it against your own deployment or any gateway you're authorized to test.</p>
 
       <div class="callout">
         <strong>Only run against gateways you own or are authorized to test.</strong> This command makes active HTTP/WebSocket requests to the target.
@@ -317,7 +317,7 @@ jobs:
       </div>
 
       <h2>The 40,214 number</h2>
-      <p>SecurityScorecard published in February 2026 that 40,214 OpenClaw gateway instances were exposed to the public internet with no authentication — the default allow_remote=true configuration. CVE-2026-25253 was the mechanism. T68 INSECURE_DEFAULT_CONFIG catches it at the config layer. <code style="font-family:'DM Mono',monospace;font-size:12px">aiglos scan-exposed</code> confirms it at the network layer.</p>
+      <p>SecurityScorecard published in February 2026 that 40,214 OpenClaw gateway instances were exposed to the public internet with no authentication — the default allow_remote=true configuration. CVE-2026-25253 was the mechanism. T68 INSECURE_DEFAULT_CONFIG catches it at the config layer. <code style="font-family:'JetBrains Mono',monospace;font-size:12px">aiglos scan-exposed</code> confirms it at the network layer.</p>
 
       <div class="next-prev">
         <a href="#" onclick="showTab('govbench',document.querySelector('.tut-tab:nth-child(2)'));return false">← GOVBENCH</a>
