@@ -584,7 +584,7 @@ class TestRepeatedInjectionAttempt:
             "SANDBOX_CONFIRMED_ESCAPE",
         }
         assert expected.issubset(names)
-        assert len(names) == 18
+        assert len(names) == 19
 
 
 # =============================================================================
@@ -607,5 +607,5 @@ class TestV080ModuleAPI:
         # Should have substantial coverage
         assert len(_INJECTION_PHRASES) >= 40
 
-    def test_eighteen_campaign_patterns(self):
-        assert len(_CAMPAIGN_PATTERNS) == 18
+    def test_nineteen_campaign_patterns(self):
+        assert len(_CAMPAIGN_PATTERNS) == 19
