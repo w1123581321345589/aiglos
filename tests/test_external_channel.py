@@ -137,7 +137,7 @@ class TestExternalInstructionChannel:
             rec = results[0].recommendation.lower()
             assert any(w in rec for w in ["tip", "user message", "productivity", "disguised"])
 
-    def test_seventeen_patterns_total(self):
+    def test_nineteen_patterns_total(self):
         names = {p["name"] for p in _CAMPAIGN_PATTERNS}
         expected = {
             "RECON_SWEEP", "CREDENTIAL_ACCUMULATE", "EXFIL_SETUP",
@@ -148,7 +148,7 @@ class TestExternalInstructionChannel:
             "SANDBOX_CONFIRMED_ESCAPE",
             "GAAS_TAKEOVER", "INFERENCE_HIJACK_CHAIN",
             "RAG_POISON_CHAIN", "MULTI_AGENT_IMPERSONATION",
-            "CAPABILITY_EXPLOIT_CHAIN",
+            "CAPABILITY_EXPLOIT_CHAIN", "SUPERPOWERS_PLAN_HIJACK",
         }
         assert expected == names
 
@@ -307,9 +307,9 @@ class TestV070ModuleAPI:
     def test_version_is_070(self):
         assert aiglos.__version__ == "0.25.1"
 
-    def test_eleven_campaign_patterns(self):
+    def test_nineteen_campaign_patterns(self):
         names = {p["name"] for p in _CAMPAIGN_PATTERNS}
         assert "EXTERNAL_INSTRUCTION_CHANNEL" in names
         assert "SKILL_CHAIN" in names
         assert "SANDBOX_ESCAPE_ATTEMPT" in names
-        assert len(names) == 18
+        assert len(names) == 19
