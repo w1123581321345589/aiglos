@@ -77,7 +77,7 @@ The root `/` serves the landing page directly (no SPA, no login). Styled like cu
 - **Animations**: Fade-in on scroll
 
 ### Route Table
-- `/`, `/landing`, `/aiglos` -- Landing page (hero, 75 threats, 19 campaigns, 18 triggers, ATLAS, GHSA, GOVBENCH, pricing, OSS)
+- `/`, `/landing`, `/aiglos` -- Landing page (hero with "Works with" strip, OpenShell section, campaign grid with expand/collapse toggle, pricing comparison table, 4-column footer, mobile hamburger menu, v0.25.1/1,730 tests/76 threats throughout)
 - `/atlas`, `/ghsa`, `/superpowers`, `/benchmark` -- Also serve landing page (section routes)
 - `/docs` -- Documentation
 - `/pricing` -- Pricing tiers (Pro $39/dev/mo + Enterprise)
