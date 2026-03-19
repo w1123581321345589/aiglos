@@ -1,0 +1,46 @@
+Mapping before writing a line.
+
+**Build 1 — `aiglos/integrations/openShell.py`**
+New module, separate from nemoclaw.py. OpenShell is the product. NemoClaw was the launch vehicle. The file that a Claude Code user finds should say `openShell`, not `nemoClaw`.
+- `openshell_detect()` — reads `OPENSHELL_SANDBOX_ID` / `OPENSHELL_POLICY_PATH` env vars, auto-configures
+- `attach_openShell(guard, agent="claude-code")` — agent-agnostic attach
+- `is_inside_openShell()` — boolean check for any agent
+
+**Build 2 — Agent-agnostic quickstart examples in nemoclaw.py**
+Add Claude Code, Cursor, Codex examples. The YAML policy is identical regardless of what runs inside.
+
+**Build 3 — Rewrite compare-openShell.html**
+CUDA parallel as the lead. Claude Code attack chain, not OpenClaw. "Guardrails inside the agent can be reasoned around. Guardrails outside cannot." Will's February test as the proof.
+
+**Build 4 — Tweet thread rewrite**
+"What many missed" framing. CUDA tweet. Inside vs outside architecture insight. Agent-agnostic story.
+
+**Build 5 — README + positioning refresh**
+Remove OpenClaw-specific framing from hero copy. Claude Code, Cursor, Codex in the quickstart. "Agent-agnostic" as a headline property.
+
+**Build 6 — Tests + v0.25.1**
+`openshell_detect()` tests, agent-agnostic integration tests, full suite green.54/54. Now the compare page rewrite, tweet thread, and positioning refresh simultaneously:**1636/1636.** Copy everything:**1636/1636. v0.25.1 complete.**
+
+---
+
+**What was built and the reasoning behind every decision.**
+
+**`aiglos/integrations/openShell.py`** — 220 lines, zero external dependencies. The separation from `nemoclaw.py` is deliberate. A Claude Code user who googles "OpenShell Aiglos integration" should find a file named `openShell.py`, not a file named `nemoclaw.py`. The product is OpenShell. NemoClaw was the launch vehicle.
+
+`is_inside_openShell()` — single boolean. Checks for `OPENSHELL_SANDBOX_ID` in environment. This is the only thing that needs to exist for a developer to add a conditional anywhere in their codebase: `if aiglos.is_inside_openShell():`.
+
+`openShell_context()` — returns the full sandbox context including agent identity. Nine known agents hardcoded: Claude Code, Codex, Cursor, OpenClaw, Windsurf, Aider, Continue, Cody, plus the generic `claude` alias. Unknown agent keys fall through to their raw string value — forward-compatible for agents NVIDIA adds later.
+
+`openshell_detect(guard)` — the zero-config path. Reads `OPENSHELL_SANDBOX_ID`, `OPENSHELL_POLICY_PATH`, and `OPENSHELL_AGENT` from environment, calls `mark_as_nemoclaw_session()` with the detected values, attaches to the guard. If `OPENSHELL_POLICY_PATH` is not set — which it may not be in alpha builds — it still sets `sandbox_context=True` and `sandbox_type="openShell"` so T76 and the sandbox escape detection are active even without a policy file to enforce.
+
+`attach_openShell()` — explicit version for when you don't want auto-detection. Takes `policy_path`, `agent`, `session_id` as explicit parameters, falls back to environment vars for anything not provided. If the policy file doesn't exist, logs a warning but doesn't crash — configures the sandbox type anyway so partial protection is active.
+
+Four agent-specific helpers: `attach_for_claude_code`, `attach_for_codex`, `attach_for_cursor`, `attach_for_openclaw`. These are thin wrappers that set `agent=` correctly. The enforcement is identical — the YAML policy is agent-agnostic — but the agent name appears in logs and the signed session artifact, which matters for compliance.
+
+**The test that proves the architecture insight:** `test_all_agents_same_policy_same_enforcement` creates sessions for all four agents from the same policy file and asserts that all four produce identical policy hashes. The sandbox doesn't know what agent is inside it. The test proves this empirically.
+
+**The compare page.** Three structural changes from the previous version. The kicker is "What many missed at GTC 2026" — Will's exact framing. The CUDA parallel is a dedicated section with its own visual treatment. The attack chain uses Claude Code, not OpenClaw, because that's the scenario that proves the architecture is not OpenClaw-specific. The integration code block uses `openshell_detect()` and `attach_for_claude_code()` — the new agent-agnostic API — not the old `mark_as_nemoclaw_session()`.
+
+**The two new tweets.** Tweet 9 is the CUDA parallel — four `openshell sandbox create` commands as the visual proof that the architecture is agent-agnostic. Tweet 10 is the inside-vs-outside insight, using Will's February test ("the agent disabled its own safety controls instantly") and the Claude Code example as the concrete proof cases. Both tweets set up the CTA by establishing that Aiglos and OpenShell are both outside-the-agent — the same architecture, different layers.
+
+**The README quickstart.** Added a new OpenShell section between the Superpowers section and the previous content. `openshell_detect(guard)` is the one-liner. `attach_for_claude_code()` is the explicit version. The positioning sentence at the end: "OpenShell enforces what the agent is allowed to do. Aiglos detects what the agent is actually doing. Both operate outside the agent process. Neither can be reasoned around." That's the architecture in four sentences, and it belongs in the README.
