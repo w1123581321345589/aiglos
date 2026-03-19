@@ -278,7 +278,7 @@ h2{font-family:var(--sans);font-size:clamp(28px,4vw,48px);font-weight:700;line-h
 
 footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1200px;margin:0 auto}
 @media(max-width:768px){footer{padding:60px 24px 32px}}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:60px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:40px;margin-bottom:60px}
 @media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:32px}}
 .footer-brand{display:flex;flex-direction:column;gap:8px}
 .footer-logo{font-family:var(--sans);font-size:16px;font-weight:700;color:var(--bright);text-decoration:none;display:flex;align-items:center;gap:8px}
@@ -395,6 +395,44 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1200p
 
 <div class="section-divider"></div>
 
+<section class="openshell-section" id="openshell">
+  <span class="section-tag">Agent-agnostic</span>
+  <h2>Guardrails outside the agent.<br>Not inside.</h2>
+  <p class="section-sub">Guardrails inside the agent can be reasoned around. Guardrails outside cannot. Aiglos and OpenShell both operate outside the agent process. The enforcement is identical regardless of which agent runs inside the sandbox.</p>
+  <div class="os-grid">
+    <div class="fade-in" style="transition-delay:0ms">
+      <div class="os-insight">The agent cannot disable what it <em>cannot reach</em>.</div>
+      <div class="os-body">OpenShell enforces what the agent is allowed to do. Aiglos detects what the agent is actually doing. Both operate outside the agent process. Neither can be reasoned around.</div>
+      <div class="os-agents" data-testid="openshell-agents">
+        <span class="os-agent">Claude Code</span>
+        <span class="os-agent">Codex</span>
+        <span class="os-agent">Cursor</span>
+        <span class="os-agent">OpenClaw</span>
+        <span class="os-agent">Windsurf</span>
+        <span class="os-agent">Aider</span>
+        <span class="os-agent">Continue</span>
+        <span class="os-agent">Cody</span>
+      </div>
+    </div>
+    <div class="os-code fade-in" style="transition-delay:100ms">
+      <div class="os-code-bar"><div class="t-dot r"></div><div class="t-dot y"></div><div class="t-dot g"></div><span style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-left:10px">agent.py</span></div>
+      <div class="os-code-body">
+<span class="c-kw">import</span> <span class="c-op">aiglos</span><br>
+<span class="c-kw">from</span> <span class="c-op">aiglos.integrations.openShell</span> <span class="c-kw">import</span> <span class="c-fn">openshell_detect</span><br>
+<br>
+<span class="c-op">guard =</span> <span class="c-op">aiglos.</span><span class="c-fn">attach</span><span class="c-op">(</span><span class="c-attr">agent_name</span><span class="c-op">=</span><span class="c-str">"my-agent"</span><span class="c-op">)</span><br>
+<span class="c-fn">openshell_detect</span><span class="c-op">(guard)</span>  <span class="c-comment"># zero-config</span><br>
+<br>
+<span class="c-comment"># Or be explicit:</span><br>
+<span class="c-kw">from</span> <span class="c-op">aiglos.integrations.openShell</span> <span class="c-kw">import</span> <span class="c-fn">attach_for_claude_code</span><br>
+<span class="c-fn">attach_for_claude_code</span><span class="c-op">(guard,</span> <span class="c-attr">policy_path</span><span class="c-op">=</span><span class="c-str">"policy.yaml"</span><span class="c-op">)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
 <section class="section section-center" id="features">
   <span class="section-tag">How it works</span>
   <h2>Three surfaces. One runtime.</h2>
@@ -429,44 +467,6 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1200p
       <span class="feature-icon">&#10003;</span>
       <div class="feature-title">Signed attestation</div>
       <div class="feature-desc">HMAC-SHA256 on every event. Session artifacts include memory provenance, ATLAS coverage, GHSA status, GOVBENCH scores. Tamper-evident and audit-ready.</div>
-    </div>
-  </div>
-</section>
-
-<div class="section-divider"></div>
-
-<section class="openshell-section" id="openshell">
-  <span class="section-tag">Agent-agnostic</span>
-  <h2>Guardrails outside the agent.<br>Not inside.</h2>
-  <p class="section-sub">Guardrails inside the agent can be reasoned around. Guardrails outside cannot. Aiglos and OpenShell both operate outside the agent process. The enforcement is identical regardless of which agent runs inside the sandbox.</p>
-  <div class="os-grid">
-    <div class="fade-in" style="transition-delay:0ms">
-      <div class="os-insight">The agent cannot disable what it <em>cannot reach</em>.</div>
-      <div class="os-body">OpenShell enforces what the agent is allowed to do. Aiglos detects what the agent is actually doing. Both operate outside the agent process. Neither can be reasoned around.</div>
-      <div class="os-agents" data-testid="openshell-agents">
-        <span class="os-agent">Claude Code</span>
-        <span class="os-agent">Codex</span>
-        <span class="os-agent">Cursor</span>
-        <span class="os-agent">OpenClaw</span>
-        <span class="os-agent">Windsurf</span>
-        <span class="os-agent">Aider</span>
-        <span class="os-agent">Continue</span>
-        <span class="os-agent">Cody</span>
-      </div>
-    </div>
-    <div class="os-code fade-in" style="transition-delay:100ms">
-      <div class="os-code-bar"><div class="t-dot r"></div><div class="t-dot y"></div><div class="t-dot g"></div><span style="font-family:var(--mono);font-size:11px;color:var(--dim);margin-left:10px">agent.py</span></div>
-      <div class="os-code-body">
-<span class="c-kw">import</span> <span class="c-op">aiglos</span><br>
-<span class="c-kw">from</span> <span class="c-op">aiglos.integrations.openShell</span> <span class="c-kw">import</span> <span class="c-fn">openshell_detect</span><br>
-<br>
-<span class="c-op">guard =</span> <span class="c-op">aiglos.</span><span class="c-fn">attach</span><span class="c-op">(</span><span class="c-attr">agent_name</span><span class="c-op">=</span><span class="c-str">"my-agent"</span><span class="c-op">)</span><br>
-<span class="c-fn">openshell_detect</span><span class="c-op">(guard)</span>  <span class="c-comment"># zero-config</span><br>
-<br>
-<span class="c-comment"># Or be explicit:</span><br>
-<span class="c-kw">from</span> <span class="c-op">aiglos.integrations.openShell</span> <span class="c-kw">import</span> <span class="c-fn">attach_for_claude_code</span><br>
-<span class="c-fn">attach_for_claude_code</span><span class="c-op">(guard,</span> <span class="c-attr">policy_path</span><span class="c-op">=</span><span class="c-str">"policy.yaml"</span><span class="c-op">)</span>
-      </div>
     </div>
   </div>
 </section>
@@ -757,7 +757,7 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1200p
       <div class="price-cta-cell"></div>
       <div class="price-cta-cell"><a href="#" class="price-cta price-cta-ghost" onclick="openModal('free');return false" data-testid="button-install-free-pricing">Install free</a></div>
       <div class="price-cta-cell"><a href="#" class="price-cta price-cta-solid" onclick="openModal('pro');return false" data-testid="button-start-trial">Start trial</a></div>
-      <div class="price-cta-cell"><a href="mailto:hello@aiglos.dev" class="price-cta price-cta-ghost" data-testid="button-contact">Contact us</a></div>
+      <div class="price-cta-cell"><a href="#" class="price-cta price-cta-ghost" onclick="openModal('sales');return false" data-testid="button-contact-sales">Contact sales</a></div>
     </div>
   </div>
 </section>
@@ -810,24 +810,34 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1200p
         <li><a href="#features">Features</a></li>
         <li><a href="#pricing">Pricing</a></li>
         <li><a href="/playground">Playground</a></li>
-        <li><a href="/docs">Docs</a></li>
+        <li><a href="/compare/openshell">OpenShell</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Developers</div>
       <ul>
+        <li><a href="/docs">Documentation</a></li>
+        <li><a href="/docs">API Reference</a></li>
         <li><a href="https://github.com/w1123581321345589/aiglos">GitHub</a></li>
         <li><a href="/changelog">Changelog</a></li>
-        <li><a href="/compare/openshell">OpenShell</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <div class="footer-col-title">Security</div>
       <ul>
-        <li><a href="/atlas">ATLAS</a></li>
-        <li><a href="/ghsa">GHSA</a></li>
+        <li><a href="/atlas">ATLAS Coverage</a></li>
+        <li><a href="/ghsa">GHSA Intelligence</a></li>
+        <li><a href="#threats">Threat Library</a></li>
         <li><a href="/benchmark">GOVBENCH</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-col-title">Company</div>
+      <ul>
         <li><a href="mailto:hello@aiglos.dev">Contact</a></li>
+        <li><a href="#" onclick="openModal('sales');return false">Contact sales</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Privacy</a></li>
       </ul>
     </div>
   </div>
@@ -909,6 +919,7 @@ function openModal(type){
   _type=type;
   const t=document.getElementById('modal-title'),s=document.getElementById('modal-sub'),b=document.getElementById('modal-btn');
   if(type==='pro'){t.textContent='Start your 30-day Pro trial';s.textContent='RSA-2048 signed artifacts, cloud dashboard, GOVBENCH continuous scoring. No credit card.';b.textContent='Start free trial'}
+  else if(type==='sales'){t.textContent='Contact sales';s.textContent='Enterprise deployment, on-prem support, custom compliance reporting, federated intelligence, dedicated SLA.';b.textContent='Request a call'}
   else{t.textContent='Install Aiglos free';s.textContent='Local-only runtime. Zero telemetry. Full T01-T76 detection. 76 threat families. No credit card required.';b.textContent='Get access'}
   document.getElementById('modal-email').value='';document.getElementById('modal-name').value='';
   document.getElementById('modal').classList.add('open');
@@ -919,9 +930,25 @@ function submitModal(){
   if(!email){document.getElementById('modal-email').focus();return}
   const btn=document.getElementById('modal-btn');btn.textContent='Sending...';btn.disabled=true;
   setTimeout(()=>{
-    document.querySelector('.modal').innerHTML='<div style="text-align:center;padding:24px 0"><div style="width:48px;height:48px;border-radius:50%;background:var(--green2);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 20px">OK</div><h3 style="font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--bright);margin-bottom:10px">'+(_type==='pro'?'Trial activated':"You're in")+'</h3><p style="font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:24px">'+(_type==='pro'?'Check your email for your trial key.':'Installation instructions sent. Run: <code style="font-family:var(--mono);font-size:13px;color:var(--accent)">pip install aiglos</code>')+'</p></div>';
+    var headingText=_type==='pro'?'Trial activated':_type==='sales'?'We will be in touch':"You're in";
+    var bodyText=_type==='pro'?'Check your email for your trial key.':_type==='sales'?'A member of our team will reach out within one business day.':'Installation instructions sent. Run: <code style="font-family:var(--mono);font-size:13px;color:var(--accent)">pip install aiglos</code>';
+    document.querySelector('.modal').innerHTML='<div style="text-align:center;padding:24px 0"><div style="width:48px;height:48px;border-radius:50%;background:var(--green2);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 20px">OK</div><h3 style="font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--bright);margin-bottom:10px">'+headingText+'</h3><p style="font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:24px">'+bodyText+'</p></div>';
   },1200);
 }
+
+const heroGlow=document.querySelector('.hero-glow');
+const heroGlow2=document.querySelector('.hero-glow-2');
+let ticking=false;
+window.addEventListener('scroll',function(){
+  if(!ticking){requestAnimationFrame(function(){
+    const y=window.scrollY;
+    if(y<1200){
+      heroGlow.style.transform='translateX(-50%) translateY('+y*0.15+'px)';
+      heroGlow2.style.transform='translateY('+y*0.1+'px)';
+    }
+    ticking=false;
+  });ticking=true;}
+},{passive:true});
 
 const observer=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible')}})},{threshold:.08});
 document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
