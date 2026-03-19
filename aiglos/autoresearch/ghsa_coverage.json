@@ -1,0 +1,54 @@
+{
+  "generated_at": 1773931074.9424748,
+  "total": 3,
+  "covered": 3,
+  "partial": 0,
+  "gaps": 0,
+  "advisories": {
+    "GHSA-g8p2-7wf7-98mq": {
+      "ghsa_id": "GHSA-g8p2-7wf7-98mq",
+      "cve_id": "CVE-2026-25253",
+      "title": "1-Click RCE via Authentication Token Exfiltration from gatewayUrl",
+      "severity": "HIGH",
+      "cvss": 8.8,
+      "description": "OpenClaw UI auto-trusts gateway URLs and opens an authenticated WebSocket with no user interaction required. Authentication tokens are handed over to an attacker-controlled gateway, enabling 1-click RCE.",
+      "matched_rules": [
+        "T03",
+        "T12",
+        "T19",
+        "T68"
+      ],
+      "coverage": "COVERED",
+      "coverage_note": "T68 INSECURE_DEFAULT_CONFIG fires when allow_remote=true appears without authentication. The gatewayUrl auto-trust is the default config failure T68 was built to catch. AuditScanner Phase 3 flags this as CRITICAL."
+    },
+    "GHSA-q284-4pvr-m585": {
+      "ghsa_id": "GHSA-q284-4pvr-m585",
+      "cve_id": null,
+      "title": "OS Command Injection via Project Root Path in sshNodeCommand",
+      "severity": "HIGH",
+      "cvss": null,
+      "description": "Path traversal in the SSH command execution path leads to arbitrary command injection. Reported by Armin Ronacher (mitsuhiko), creator of Flask and Jinja2.",
+      "matched_rules": [
+        "T03",
+        "T04",
+        "T70"
+      ],
+      "coverage": "COVERED",
+      "coverage_note": "T03 SHELL_INJECTION catches the command injection class. T04 PATH_TRAVERSAL catches the traversal entry vector. T70 ENV_PATH_HIJACK covers the PATH manipulation angle. Together they cover the full attack chain documented in this advisory."
+    },
+    "GHSA-mc68-q9jw-2h3v": {
+      "ghsa_id": "GHSA-mc68-q9jw-2h3v",
+      "cve_id": null,
+      "title": "Command Injection in Clawdbot Docker Execution via PATH Environment Variable",
+      "severity": "HIGH",
+      "cvss": 8.5,
+      "description": "Manipulated PATH environment variable in Docker execution context redirects execution to an attacker-controlled binary. No shell metacharacters required -- invisible to standard shell injection detection.",
+      "matched_rules": [
+        "T03",
+        "T70"
+      ],
+      "coverage": "COVERED",
+      "coverage_note": "T70 ENV_PATH_HIJACK was built specifically in response to this advisory. Fires on PATH, LD_PRELOAD, PYTHONPATH, NODE_PATH modification in execution contexts -- the exact attack class GHSA-mc68-q9jw-2h3v documents. This is the gap T03 SHELL_INJECTION could not close because there are no metacharacters in this attack pattern."
+    }
+  }
+}
