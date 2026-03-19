@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aiglos + OpenShell — Sandbox vs Behavioral Layer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#000000;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#00d4aa;--green:#4ade80;--red:#f87171;--amber:#fbbf24;--gold:#b8860b}
+body{background:var(--bg);color:var(--hi);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
+nav{background:rgba(0,0,0,0.9);border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-mark{width:18px;height:22px}
+.nav-name{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--hi)}
+.nav-links{display:flex;gap:24px;list-style:none}
+.nav-links a{font-size:13px;color:var(--dim);text-decoration:none;transition:color 0.2s}
+.nav-links a:hover{color:var(--hi)}
+main{max-width:960px;margin:0 auto;padding:80px 48px}
+.breadcrumb{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-bottom:32px}
+.breadcrumb a{color:var(--ice);text-decoration:none}
+.kicker{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--ice);margin-bottom:12px}
+h1{font-size:clamp(32px,5vw,52px);font-weight:700;letter-spacing:-0.03em;line-height:1.1;margin-bottom:20px}
+.subtitle{font-size:17px;color:var(--mid);line-height:1.65;max-width:600px;margin-bottom:40px}
+.nvidia-callout{background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;padding:24px 28px;margin-bottom:40px}
+.nvidia-quote{font-size:15px;font-style:italic;color:var(--mid);line-height:1.7;margin-bottom:10px}
+.nvidia-attr{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ice)}
+.alpha-note{display:inline-flex;align-items:center;gap:6px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:4px;padding:4px 12px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--amber);margin-bottom:28px}
+.section{margin-bottom:52px}
+.section h2{font-size:21px;font-weight:700;letter-spacing:-0.02em;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--ln)}
+.section p{font-size:14px;color:var(--mid);line-height:1.75;margin-bottom:14px}
+.section p strong{color:var(--hi);font-weight:500}
+.insight-box{background:var(--bg2);border:1px solid var(--ln2);border-radius:8px;padding:28px;margin:24px 0}
+.insight-title{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
+.insight-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:0}
+.insight-col{background:var(--bg);border:1px solid var(--ln);border-radius:6px;padding:18px}
+.insight-col-title{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.08em;color:var(--ice);margin-bottom:10px}
+.insight-col-body{font-size:13px;color:var(--mid);line-height:1.65}
+.cuda-box{background:linear-gradient(135deg,rgba(0,212,170,0.06),rgba(0,212,170,0.02));border:1px solid rgba(0,212,170,0.18);border-radius:8px;padding:28px;margin:24px 0}
+.cuda-title{font-size:13px;font-weight:600;color:var(--hi);margin-bottom:10px}
+.cuda-body{font-size:14px;color:var(--mid);line-height:1.7}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:16px 0 24px}
+thead th{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);padding:10px 14px;text-align:left;border-bottom:2px solid var(--ln2)}
+thead th:first-child{padding-left:0}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--ln);color:var(--mid);vertical-align:top}
+tbody td:first-child{padding-left:0;font-weight:500;color:var(--hi)}
+.yes{color:var(--green);font-weight:600}.no{color:var(--red)}.partial{color:var(--amber)}
+.highlight-row td{background:rgba(0,212,170,0.06)}
+.highlight-row td:first-child{color:var(--ice);font-family:'JetBrains Mono',monospace;font-size:12px}
+.callout{background:var(--bg2);border-left:3px solid var(--ice);padding:16px 20px;border-radius:0 6px 6px 0;margin:16px 0;font-size:13px;color:var(--mid);line-height:1.65}
+.callout strong{color:var(--hi)}
+.external-quote{background:var(--bg2);border:1px solid var(--ln);border-radius:6px;padding:20px 24px;margin:16px 0}
+.quote-text{font-size:14px;font-style:italic;color:var(--mid);line-height:1.65;margin-bottom:8px}
+.quote-source{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}
+.attack-chain{background:var(--bg2);border:1px solid var(--ln);border-radius:6px;padding:24px;margin:16px 0}
+.chain-title{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--amber);margin-bottom:14px}
+.chain-step{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--ln)}
+.chain-step:last-of-type{border-bottom:none}
+.chain-n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);flex-shrink:0;padding-top:2px}
+.chain-txt{font-size:13px;color:var(--mid);line-height:1.55}
+.chain-verdict{margin-top:12px;padding-top:12px;border-top:1px solid var(--ln);font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.75}
+.code-block{background:#0d1117;border:1px solid var(--ln2);border-radius:6px;padding:20px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:13px;color:#e6edf3;line-height:1.7;margin:14px 0 20px}
+.agent-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0 20px}
+.agent-chip{background:var(--bg2);border:1px solid var(--ln);border-radius:6px;padding:12px 14px;text-align:center}
+.agent-name{font-size:13px;font-weight:500;margin-bottom:4px}
+.agent-cmd{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim)}
+footer{border-top:1px solid var(--ln);padding:32px 48px;display:flex;justify-content:space-between;font-size:12px;color:var(--dim)}
+footer a{color:var(--ice);text-decoration:none}
+@media(max-width:768px){nav{padding:0 20px}main{padding:48px 20px}.insight-row{grid-template-columns:1fr}.agent-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-logo">
+    <svg class="nav-mark" viewBox="0 0 44 50" fill="none">
+      <polygon points="22,2 2,44 22,44" fill="white"/>
+      <polygon points="22,2 42,44 22,44" fill="rgba(255,255,255,0.42)"/>
+      <rect x="14" y="44" width="16" height="6" fill="white"/>
+    </svg>
+    <span class="nav-name">aiglos</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/intel">Intel</a></li>
+    <li><a href="/compare/clawkeeper">vs ClawKeeper</a></li>
+    <li><a href="/docs">Docs</a></li>
+  </ul>
+</nav>
+
+<main>
+  <div class="breadcrumb"><a href="/compare">Compare</a> / Aiglos + OpenShell</div>
+  <div class="kicker">What many missed at GTC 2026</div>
+
+  <h1>OpenShell works with<br>Claude Code. Codex. Cursor.<br>Every agent.</h1>
+  <p class="subtitle">Jensen attached the announcement to OpenClaw because OpenClaw has 200K stars. But the architecture — and the enterprise partnerships — tell a different story. OpenShell is agent security infrastructure.</p>
+
+  <div class="nvidia-callout">
+    <p class="nvidia-quote">"Every software company in the world needs to have a Claw strategy. We need it. We all have a Linux strategy. We all needed to have an HTTP HTML strategy. We all needed to have a Kubernetes strategy. OpenClaw is that."</p>
+    <div class="nvidia-attr">Jensen Huang, GTC 2026 keynote — March 17, 2026</div>
+  </div>
+
+  <div class="alpha-note">⚠ OpenShell is alpha — March 19, 2026</div>
+
+  <div class="section">
+    <h2>The architecture insight everyone missed</h2>
+    <p>Every AI agent has guardrails. The question is where they live.</p>
+    <div class="insight-box">
+      <div class="insight-title">Inside vs Outside</div>
+      <div class="insight-row">
+        <div class="insight-col">
+          <div class="insight-col-title">Guardrails inside the agent</div>
+          <div class="insight-col-body">Can be reasoned around. Can be rewritten. Earlier this year, Claude Code's internal tool definitions silently overrode operator guardrails — the agent self-approved a 383-line commit. OpenClaw's config files were rewritten by the agent in under a minute in February testing. The guardrail is inside the thing it's supposed to constrain.</div>
+        </div>
+        <div class="insight-col">
+          <div class="insight-col-title">Guardrails outside the agent</div>
+          <div class="insight-col-body">Cannot be reasoned around. The agent doesn't know what it can't reach. OpenShell runs at the kernel level. The YAML policy is not a file the agent can modify — it's an OS-level constraint the agent is unaware of. This is the architectural shift. The agent is inside the sandbox. The sandbox doesn't know or care which agent is inside.</div>
+        </div>
+      </div>
+    </div>
+    <p><strong>OpenShell is agent-agnostic by design.</strong> The sandbox wraps the agent process. The YAML policy governs network access, filesystem scope, and tool permissions. Which agent is running inside is irrelevant to the enforcement.</p>
+    <div class="code-block"><span style="color:#6e7681"># All four commands use the same YAML policy</span>
+<span style="color:#6e7681"># Same isolation. Same enforcement. Different agent inside.</span>
+openshell sandbox create <span style="color:#a5d6ff">-- claude</span>     <span style="color:#6e7681"># Claude Code</span>
+openshell sandbox create <span style="color:#a5d6ff">-- codex</span>      <span style="color:#6e7681"># OpenAI Codex</span>
+openshell sandbox create <span style="color:#a5d6ff">-- cursor</span>     <span style="color:#6e7681"># Cursor</span>
+openshell sandbox create <span style="color:#a5d6ff">-- openclaw</span>  <span style="color:#6e7681"># OpenClaw</span></div>
+  </div>
+
+  <div class="section">
+    <h2>The CUDA parallel</h2>
+    <div class="cuda-box">
+      <div class="cuda-title">NVIDIA launched CUDA for gaming because that's where the GPUs were.<br>They launched OpenShell for OpenClaw because that's where the hype is.<br>The architecture is always for the whole category.</div>
+      <div class="cuda-body" style="margin-top:16px">CUDA became general-purpose GPU compute. Linux became enterprise infrastructure. Kubernetes became cloud orchestration. The pattern is consistent: launch with the use case that has distribution, become the infrastructure for the category.<br><br>OpenShell launched with an OpenClaw story. The enterprise partnerships — Cisco AI Defense, CrowdStrike, Microsoft Security — are not OpenClaw partnerships. They're AI agent security infrastructure partnerships. The product roadmap is not "better OpenClaw security." It's "security layer for every agent in enterprise."</div>
+    </div>
+    <p>The Kari Briski quote from GTC press briefings: "OpenShell provides the missing infrastructure layer beneath claws to give them the access they need to be productive, while enforcing policy-based security, network and privacy guardrails." She didn't say OpenClaw agents. She said claws. Every agent is a claw.</p>
+  </div>
+
+  <div class="section">
+    <h2>Which agents OpenShell wraps</h2>
+    <div class="agent-grid">
+      <div class="agent-chip">
+        <div class="agent-name">Claude Code</div>
+        <div class="agent-cmd">-- claude</div>
+      </div>
+      <div class="agent-chip">
+        <div class="agent-name">Codex</div>
+        <div class="agent-cmd">-- codex</div>
+      </div>
+      <div class="agent-chip">
+        <div class="agent-name">Cursor</div>
+        <div class="agent-cmd">-- cursor</div>
+      </div>
+      <div class="agent-chip">
+        <div class="agent-name">OpenClaw</div>
+        <div class="agent-cmd">-- openclaw</div>
+      </div>
+    </div>
+    <p>OpenShell is hardware-agnostic too. It runs on any platform — GeForce RTX, DGX Station, DGX Spark, or any x86 server. NVIDIA hardware gets performance optimization via NIM microservices, but the sandbox isolation is not NVIDIA-dependent.</p>
+  </div>
+
+  <div class="section">
+    <h2>What OpenShell does vs what Aiglos does</h2>
+    <table>
+      <thead><tr><th>Capability</th><th>Aiglos</th><th>OpenShell</th></tr></thead>
+      <tbody>
+        <tr><td>Enforcement position</td><td class="yes">Outside the agent process</td><td class="yes">Outside the agent process (kernel)</td></tr>
+        <tr><td>What it answers</td><td class="yes">"What is the agent actually doing?"</td><td class="yes">"What is the agent allowed to do?"</td></tr>
+        <tr><td>Agent-agnostic</td><td class="yes">Works with any agent</td><td class="yes">Works with any agent</td></tr>
+        <tr><td>Campaign detection</td><td class="yes">20 multi-step attack patterns</td><td class="no">Not applicable</td></tr>
+        <tr><td>Behavioral baseline</td><td class="yes">Per-agent statistical fingerprint</td><td class="no">Not applicable</td></tr>
+        <tr><td>Policy bypass detection</td><td class="yes">T76 fires if agent writes to policy files</td><td class="partial">YAML enforced at deploy</td></tr>
+        <tr><td>Signed compliance artifact</td><td class="yes">HMAC-SHA256 / RSA-2048 per session</td><td class="no">Not produced</td></tr>
+        <tr><td>NDAA §1513 evidence</td><td class="yes">Signed session artifact is the requirement</td><td class="no">Not applicable</td></tr>
+        <tr><td>GOVBENCH scoring</td><td class="yes">A-F governance grade</td><td class="no">Not available</td></tr>
+        <tr><td>Kernel sandbox</td><td class="partial">sandbox_context=True detection layer</td><td class="yes">Full kernel-level isolation</td></tr>
+        <tr><td>Network policy</td><td class="partial">Reads OpenShell YAML, enforces via T69</td><td class="yes">YAML hot-swap without redeploy</td></tr>
+        <tr><td>Privacy routing</td><td class="no">Not applicable</td><td class="yes">PII scrubbing before cloud inference</td></tr>
+        <tr class="highlight-row"><td>OpenShell + Aiglos</td><td class="yes">attach_openShell(guard)</td><td class="yes">Full policy imported to behavioral layer</td></tr>
+      </tbody>
+    </table>
+    <div class="external-quote">
+      <p class="quote-text">"The missing piece is not tooling. It is control. Real developers building agentic systems want observability, policy enforcement, rollback, and audit trails."</p>
+      <div class="quote-source">Zahra Timsah, CEO i-GENTIC AI — Computerworld, March 2026</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>The attack OpenShell permits that Aiglos catches</h2>
+    <p>OpenShell enforces the policy you declared. It cannot detect behavioral sequences that are individually within the declared policy but collectively an attack.</p>
+    <div class="attack-chain">
+      <div class="chain-title">Claude Code — credential exfiltration within declared policy</div>
+      <div class="chain-step"><div class="chain-n">1</div><div class="chain-txt">Claude Code fetches a web page. <strong>The page contains indirect prompt injection.</strong> OpenShell: permitted (web_fetch is in the YAML). Aiglos T05 fires.</div></div>
+      <div class="chain-step"><div class="chain-n">2</div><div class="chain-txt">Claude Code reads <code style="font-family:'JetBrains Mono',monospace;font-size:11px">~/.aws/credentials</code>. The YAML allows filesystem access to the home directory. <strong>OpenShell: permitted.</strong> Aiglos T19 CREDENTIAL_ACCESS fires.</div></div>
+      <div class="chain-step"><div class="chain-n">3</div><div class="chain-txt">Claude Code sends a request to <code style="font-family:'JetBrains Mono',monospace;font-size:11px">api.openai.com</code> — in the YAML allowed hosts — with credentials in the body. <strong>OpenShell: permitted.</strong> Aiglos T12 DATA_EXFIL fires. Campaign: CREDENTIAL_ACCUMULATE.</div></div>
+      <div class="chain-verdict">
+        <span style="color:var(--amber)">OpenShell: all three calls within declared policy — nothing to block</span><br>
+        <span style="color:var(--green)">Aiglos: T05 + T19 + T12 sequence — CREDENTIAL_ACCUMULATE campaign blocked</span>
+      </div>
+    </div>
+    <div class="callout"><strong>The architectural point:</strong> A sandbox enforces the rules you wrote. Aiglos detects the behavior you didn't anticipate — even when each individual call is within the declared policy. Two orthogonal guarantees. Neither replaces the other.</div>
+  </div>
+
+  <div class="section">
+    <h2>Zero-config integration with any agent</h2>
+    <p>When OpenShell launches an agent, it sets environment variables. Aiglos detects them automatically. Zero code changes required for any agent.</p>
+    <div class="code-block"><span style="color:#6e7681"># OpenShell sets these before launching the agent:</span>
+<span style="color:#6e7681"># OPENSHELL_SANDBOX_ID, OPENSHELL_POLICY_PATH, OPENSHELL_AGENT</span>
+
+<span style="color:#ff7b72">import</span> aiglos
+<span style="color:#ff7b72">from</span> aiglos.integrations.openShell <span style="color:#ff7b72">import</span> openshell_detect
+
+guard = aiglos.<span style="color:#d2a8ff">OpenClawGuard</span>(agent_name=<span style="color:#a5d6ff">"my-agent"</span>)
+session = openshell_detect(guard=guard)  <span style="color:#6e7681"># auto-reads env vars</span>
+
+<span style="color:#6e7681"># If inside OpenShell: policy loaded, T69/T76 active, sandbox_type="openShell"</span>
+<span style="color:#6e7681"># If not inside OpenShell: returns None, detection still active on all surfaces</span>
+
+<span style="color:#6e7681"># Or agent-specific:</span>
+<span style="color:#ff7b72">from</span> aiglos.integrations.openShell <span style="color:#ff7b72">import</span> attach_for_claude_code
+attach_for_claude_code(guard, policy_path=<span style="color:#a5d6ff">"~/.nemoclaw/policy.yaml"</span>)</div>
+    <p>The OpenShell YAML policy becomes Aiglos's enforcement boundary. Allowed hosts from the YAML are the T69 scope. Any network call outside that scope fires T69 PLAN_DRIFT. Any write to the policy files fires T76 NEMOCLAW_POLICY_BYPASS — the agent rewriting its own sandbox policy, regardless of which agent it is.</p>
+  </div>
+</main>
+
+<footer>
+  <span>aiglos.dev · Compare</span>
+  <span><a href="/compare/clawkeeper">Aiglos vs ClawKeeper →</a></span>
+  <span>© 2026 Aiglos</span>
+</footer>
+</body>
+</html>
