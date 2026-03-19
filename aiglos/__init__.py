@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.24.0"  # canonical version for this release
+    __version__ = "0.25.1"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -119,6 +119,23 @@ from aiglos.adaptive.skill_reputation import (  # noqa: F401
 from aiglos.integrations.sandbox_policy import (  # noqa: F401
     SandboxPolicy,
     SandboxCheckResult,
+)
+
+from aiglos.integrations.nemoclaw import (  # noqa: F401
+    NeMoClawSession,
+    mark_as_nemoclaw_session,
+)
+
+from aiglos.integrations.openShell import (  # noqa: F401
+    is_inside_openShell,
+    openShell_context,
+    openshell_detect,
+    attach_openShell,
+    attach_for_claude_code,
+    attach_for_codex,
+    attach_for_cursor,
+    attach_for_openclaw,
+    KNOWN_AGENTS as OPENSHELL_KNOWN_AGENTS,
 )
 
 from aiglos.adaptive.source_reputation import (  # noqa: F401
@@ -807,6 +824,17 @@ __all__ = [
     "ComplianceReport",
     # v0.24.0 -- T71-T75 (ATLAS threat model), ATLASCoverage
     "ATLASCoverage",
+    # v0.25.1 -- OpenShell agent-agnostic integration
+    "NeMoClawSession",
+    "mark_as_nemoclaw_session",
+    "is_inside_openShell",
+    "openShell_context",
+    "openshell_detect",
+    "attach_openShell",
+    "attach_for_claude_code",
+    "attach_for_codex",
+    "attach_for_cursor",
+    "attach_for_openclaw",
     # v0.23.0
     "GHSAWatcher",
     "AdvisoryMatch",

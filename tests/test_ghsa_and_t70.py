@@ -286,7 +286,7 @@ class TestCoverageArtifact:
 
 class TestV0230ModuleAPI:
     def test_version(self):
-        assert aiglos.__version__ == "0.24.0"
+        assert aiglos.__version__ == "0.25.1"
 
     def test_ghsa_watcher_exported(self):
         assert "GHSAWatcher" in aiglos.__all__

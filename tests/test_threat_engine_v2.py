@@ -399,7 +399,7 @@ class TestT68:
 # ── Module API ───────────────────────────────────────────────────────────────
 class TestV0190ModuleAPI:
     def test_version_is_0220(self):
-        assert aiglos.__version__ == "0.24.0"
+        assert aiglos.__version__ == "0.25.1"
     def test_rules_t44_t66_in_all(self):
         assert "RULES_T44_T66" in aiglos.__all__
     def test_all_exports_importable(self):

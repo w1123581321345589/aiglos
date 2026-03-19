@@ -699,6 +699,10 @@ class OpenClawGuard:
         """Return the full human-authorized permission grant log."""
         return list(self._tool_grants)
 
+    def nemoclaw_session(self):
+        """Return the attached NeMoClaw/OpenShell session, if any."""
+        return getattr(self, "_nemoclaw_session", None)
+
     def on_heartbeat(self) -> None:
         """
         Call this at the start of each HEARTBEAT.md wake cycle.
