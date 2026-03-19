@@ -535,9 +535,9 @@ class TestV0200ModuleAPI:
         assert "sandbox_context" in sig.parameters
         assert "allow_tools" in sig.parameters
 
-    def test_18_campaign_patterns(self):
+    def test_19_campaign_patterns(self):
         from aiglos.adaptive.campaign import _CAMPAIGN_PATTERNS
-        assert len(_CAMPAIGN_PATTERNS) == 18
+        assert len(_CAMPAIGN_PATTERNS) == 19
 
     def test_govbench_importable(self):
         bench = aiglos.GovBench()
