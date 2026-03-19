@@ -111,6 +111,7 @@ export async function registerRoutes(
     "demo", "changelog", "pricing", "coding-agents",
     "intel", "skills", "govbench-paper", "nist-submission",
     "tutorial-openclaw-hardening", "tutorial-advanced",
+    "playground",
   ]);
   const publicRoot = new URL("../client/public", import.meta.url).pathname;
 

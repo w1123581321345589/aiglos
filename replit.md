@@ -90,6 +90,7 @@ The root `/` serves the landing page directly (no SPA, no login). Styled like cu
 - `/skills` -- Skills overview
 - `/govbench-paper` -- GOVBENCH governance benchmark paper
 - `/nist-submission` -- NIST AI agent standards submission
+- `/playground` -- Interactive threat playground (5 attack scenarios, live event stream, GOVBENCH grading)
 - `/compare/clawkeeper`, `/compare/openshell` -- Competitive comparisons
 - `/tutorial-openclaw-hardening` -- OpenClaw hardening tutorial
 - `/tutorial-advanced` -- Advanced topics
