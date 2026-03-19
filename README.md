@@ -15,8 +15,8 @@
 
 <br>
 
-[![v0.24.0](https://img.shields.io/badge/v0.24.0-000?style=for-the-badge&labelColor=000&color=00d4aa)](https://github.com/w1123581321345589/aiglos/releases)
-[![1,665 tests](https://img.shields.io/badge/1,665_tests_passing-000?style=for-the-badge&labelColor=000&color=00d4aa)](tests/)
+[![v0.25.1](https://img.shields.io/badge/v0.25.1-000?style=for-the-badge&labelColor=000&color=00d4aa)](https://github.com/w1123581321345589/aiglos/releases)
+[![1,730 tests](https://img.shields.io/badge/1,730_tests_passing-000?style=for-the-badge&labelColor=000&color=00d4aa)](tests/)
 [![MIT](https://img.shields.io/badge/license-MIT-000?style=for-the-badge&labelColor=000)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-000?style=for-the-badge&labelColor=000)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript_SDK-000?style=for-the-badge&labelColor=000)](sdk/typescript/)
@@ -35,9 +35,9 @@ import aiglos                      # every agent action below this line is
 
 <br>
 
-| 75 threat families | 3 execution surfaces | 19 campaign patterns | 18 inspection triggers | Learns your deployment | Network intelligence | Zero dependencies |
+| 76 threat families | 3 execution surfaces | 19 campaign patterns | 18 inspection triggers | Learns your deployment | Network intelligence | Zero dependencies |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| T01-T75 | MCP + HTTP + subprocess | Multi-step attack chains | Adaptive runtime triggers | Behavioral baseline | Federated threat sharing | stdlib only |
+| T01-T76 | MCP + HTTP + subprocess | Multi-step attack chains | Adaptive runtime triggers | Behavioral baseline | Federated threat sharing | stdlib only |
 
 </div>
 
@@ -86,7 +86,7 @@ WAFs protect HTTP endpoints. Aiglos protects the agent.
                     │   ┌─────────────────────────────────────┐   │
                     │   │          AIGLOS RUNTIME              │   │
                     │   │                                      │   │
-  MCP Server ◄─────┼───┤  Surface 1: MCP tool calls      T01-T75 │
+  MCP Server ◄─────┼───┤  Surface 1: MCP tool calls      T01-T76 │
                     │   │  Every tool call inspected before    │   │
                     │   │  execution. Memory writes routed     │   │
                     │   │  to T31 semantic scoring.            │   │
@@ -236,6 +236,7 @@ session.set_phase("commit")
   LangChain       CrewAI        AutoGen       LlamaIndex
   n8n             Haystack      Semantic Kernel
   Claude Code     Cursor        Windsurf      Cline
+  OpenClaw        Codex         OpenShell     NeMoClaw
   Any MCP-compatible agent framework
 ```
 
@@ -261,7 +262,7 @@ These were new attack categories. Machine-speed, fully autonomous, invisible to 
 
 ## Threat engine
 
-75 threat families across three execution surfaces. All rules map to MITRE ATLAS.
+76 threat families across three execution surfaces. All rules map to MITRE ATLAS.
 
 | ID | Family | What it catches |
 |----|--------|----------------|
@@ -294,6 +295,7 @@ These were new attack categories. Machine-speed, fully autonomous, invisible to 
 | T73 | TOOL_ENUMERATION | Capability recon via tools.list |
 | T74 | CONTENT_WRAPPER_ESCAPE | XML wrapper termination, CDATA injection |
 | T75 | SESSION_DATA_EXTRACT | sessions.list/preview, chat.history lateral extraction |
+| T76 | NEMOCLAW_POLICY_BYPASS | Agent rewriting its own OpenShell/NeMoClaw sandbox policy files |
 
 ---
 
@@ -308,6 +310,53 @@ These were new attack categories. Machine-speed, fully autonomous, invisible to 
 **SUPERPOWERS_PLAN_HIJACK** campaign pattern (confidence 0.97): plan drift followed by data exfiltration. The highest-confidence campaign signature in the system.
 
 > Superpowers tells your agent how to build. Aiglos tells you whether what it built was compromised while building it.
+
+---
+
+## OpenShell integration
+
+[OpenShell](https://github.com/nvidia/openshell) is NVIDIA's agent sandbox, announced at GTC 2026. It enforces kernel-level isolation via YAML policy: filesystem scope, network access, tool permissions. OpenShell answers "what is the agent allowed to do?" Aiglos answers "what is the agent actually doing?" Two orthogonal guarantees.
+
+**Zero-config detection.** When OpenShell launches an agent, it sets environment variables (`OPENSHELL_SANDBOX_ID`, `OPENSHELL_POLICY_PATH`, `OPENSHELL_AGENT`). Aiglos detects them automatically.
+
+```python
+import aiglos
+from aiglos.integrations.openShell import openshell_detect
+
+guard = aiglos.OpenClawGuard(agent_name="my-agent")
+session = openshell_detect(guard=guard)  # auto-reads env vars
+
+# If inside OpenShell: policy loaded, T69/T76 active, sandbox_type="openShell"
+# If not inside OpenShell: returns None, detection still active on all surfaces
+```
+
+**Agent-specific helpers.** Works with any agent OpenShell wraps:
+
+```python
+from aiglos.integrations.openShell import (
+    attach_for_claude_code,
+    attach_for_codex,
+    attach_for_cursor,
+    attach_for_openclaw,
+)
+attach_for_claude_code(guard, policy_path="~/.nemoclaw/policy.yaml")
+```
+
+**T69 + T76 enforcement.** The OpenShell YAML policy becomes Aiglos's enforcement boundary. Allowed hosts from the YAML are the T69 scope -- any network call outside fires T69 PLAN_DRIFT. Any write to the policy files fires T76 NEMOCLAW_POLICY_BYPASS.
+
+**NeMoClaw session support.** Full YAML policy parsing via `NeMoClawSession`:
+
+```python
+from aiglos.integrations.nemoclaw import NeMoClawSession
+
+session = NeMoClawSession(policy_path="policy.yaml")
+session.check_host_scope("api.openai.com")    # True if in allowed_hosts
+session.check_file_scope("/home/user/src/")   # True if in workspace
+session.record_event("tool_call", {"tool": "web_fetch"})
+artifact = session.artifact_data()            # policy_hash, events, scope
+```
+
+> OpenShell enforces the rules you wrote. Aiglos detects the behavior you didn't anticipate -- even when each individual call is within the declared policy.
 
 ---
 
@@ -590,16 +639,18 @@ aiglos version
 
 | Tier | Cost | Includes |
 |------|------|---------|
-| Free / MIT | $0 | T01-T75, behavioral baseline, policy proposals, GOVBENCH, Superpowers integration, ATLAS coverage, GHSA watcher, adaptive layer, memory/RL guard, causal tracing, intent prediction, Python + TypeScript SDKs, HMAC session artifacts. Federation: pull only. |
+| Free / MIT | $0 | T01-T76, behavioral baseline, policy proposals, GOVBENCH, Superpowers integration, OpenShell integration, ATLAS coverage, GHSA watcher, adaptive layer, memory/RL guard, causal tracing, intent prediction, Python + TypeScript SDKs, HMAC session artifacts. Federation: pull only. |
 | Pro | $49/dev/mo | Free + federation contribution, RSA-2048 attestation signatures (audit-grade), CVE push alerts, SIEM integration, NDAA and EU AI Act compliance export |
 | Teams | $299/mo (10 devs) + $29/dev | Pro + centralized policy management, aggregated threat view |
 | Enterprise | Custom, annual | Teams + on-prem/air-gap, dedicated support, C3PAO-ready packages |
 
-The free tier is complete. GOVBENCH, Superpowers, ATLAS coverage, GHSA watcher, and T01-T75 all run locally with no network dependency.
+The free tier is complete. GOVBENCH, Superpowers, OpenShell, ATLAS coverage, GHSA watcher, and T01-T76 all run locally with no network dependency.
 
 ---
 
 ## Changelog
+
+**v0.25.1 -- March 2026** - 1,730 tests - OpenShell agent-agnostic integration. T76 NEMOCLAW_POLICY_BYPASS. NeMoClawSession (YAML policy loader, scope checking, event recording). openShell.py: is_inside_openShell, openshell_detect, attach_openShell, attach_for_claude_code/codex/cursor/openclaw. OpenClawGuard.nemoclaw_session(). Zero-config env var detection (OPENSHELL_SANDBOX_ID, OPENSHELL_POLICY_PATH, OPENSHELL_AGENT).
 
 **v0.24.0 -- March 2026** - 1,665 tests - T71-T75 from ATLAS review. T75 SESSION_DATA_EXTRACT (ATLAS T-DISC-002). atlas_coverage.py: 22 threats, 19 full, 3 partial, 0 gaps, 93%. GHSA watcher automation. aiglos scan-exposed. GOVBENCH. Superpowers integration. 19 campaign patterns. 18 inspection triggers.
 
@@ -624,7 +675,7 @@ The free tier is complete. GOVBENCH, Superpowers, ATLAS coverage, GHSA watcher, 
 
 ## Open source vs. proprietary
 
-Detection engine, behavioral baseline, policy proposals, adaptive layer, GOVBENCH, Superpowers integration, ATLAS coverage, GHSA watcher, memory/RL security, causal tracing, intent prediction, autoresearch, TypeScript SDK, CLI: **MIT**.
+Detection engine, behavioral baseline, policy proposals, adaptive layer, GOVBENCH, Superpowers integration, OpenShell integration, ATLAS coverage, GHSA watcher, memory/RL security, causal tracing, intent prediction, autoresearch, TypeScript SDK, CLI: **MIT**.
 
 Federation server, RSA-2048 attestation signatures, compliance reports, air-gap container, C3PAO packages: **Proprietary**.
 
