@@ -510,7 +510,7 @@ class TestGovBenchRun:
 
 class TestV0200ModuleAPI:
     def test_version(self):
-        assert aiglos.__version__ == "0.24.0"
+        assert aiglos.__version__ == "0.25.1"
 
     def test_govbench_exported(self):
         assert "GovBench" in aiglos.__all__
