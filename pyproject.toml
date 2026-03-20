@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aiglos"
-version = "0.25.1"
+version = "0.25.2"
 description = "AI agent security across every surface — T01-T42 threat detection, causal attribution, predictive intent modeling"
 readme = "README.md"
 license = {text = "MIT"}
