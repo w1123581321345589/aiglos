@@ -1,7 +1,7 @@
 """
 aiglos/core/threat_engine_v2.py
 =================================
-T44-T66 threat rule library -- second-generation threat families.
+T44-T66 threat rule library — second-generation threat families.
 
 T01-T43 covered the original OpenClaw attack surface:
   credential access, prompt injection, shell injection, supply chain,
@@ -47,7 +47,7 @@ OWASP and MITRE mappings (for citation_verifier.py):
   T65 → MITRE AML.T0057 (LLM Data Extraction)
   T66 → OWASP ASI-03 (Identity/Privilege Abuse)
 """
-
+from __future__ import annotations
 
 import re
 from typing import Any, Dict, List, Optional, Tuple
@@ -263,7 +263,7 @@ def match_T49(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T50: Agentic Loop Escape ──────────────────────────────────────────────────
-# Agent breaking out of declared workflow scope -- executing steps,
+# Agent breaking out of declared workflow scope — executing steps,
 # accessing systems, or spawning tasks not in the declared loop definition.
 
 _T50_SCOPE_ESCAPE = re.compile(
@@ -292,7 +292,7 @@ def match_T50(name: str, args: Dict[str, Any]) -> bool:
 
 # ── T51: Model Fingerprint Probe ─────────────────────────────────────────────
 # Systematic prompting to extract model identity, version, training data,
-# or system prompt -- reconnaissance for follow-on attacks.
+# or system prompt — reconnaissance for follow-on attacks.
 
 _T51_PROBE = re.compile(
     r'(?:what[_\s]*(?:model|version|are\s+you)|'
@@ -410,7 +410,7 @@ def match_T55(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T56: Capability Boundary Probe ───────────────────────────────────────────
-# Systematic reconnaissance of what the agent can do -- probing tool limits,
+# Systematic reconnaissance of what the agent can do — probing tool limits,
 # scope boundaries, and capability edges before exploitation.
 
 _T56_PROBE = re.compile(
@@ -429,7 +429,7 @@ def match_T56(name: str, args: Dict[str, Any]) -> bool:
 
 # ── T57: Instruction Hierarchy Bypass ────────────────────────────────────────
 # Exploiting the trust hierarchy between system prompt, user prompt,
-# and tool output -- using one layer to override another.
+# and tool output — using one layer to override another.
 
 _T57_HIERARCHY = re.compile(
     r'(?:system[_\s]*(?:prompt|instruction)[_\s]*(?:says?|told|instructed)\s+you|'
@@ -532,7 +532,7 @@ def match_T61(name: str, args: Dict[str, Any]) -> bool:
 
 # ── T62: Secrets in Logs ─────────────────────────────────────────────────────
 # Sensitive data leaking into log, trace, or observability outputs.
-# Complements T41 (outbound secrets) -- catches log-destination leakage
+# Complements T41 (outbound secrets) — catches log-destination leakage
 # specifically: logging API keys, tokens, or PII to log aggregators.
 
 _T62_LOG_TOOLS = re.compile(
@@ -647,6 +647,9 @@ def match_T66(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T67: Heartbeat Silence ────────────────────────────────────────────────────
+# Absence of expected heartbeat events when baseline says they should be present.
+# Detects gateway kill / cron death — the quietest failure mode.
+
 _T67_SILENCE = re.compile(
     r'(?:heartbeat[_\s]*(?:stop|kill|disable|silence|suppress)|'
     r'kill[_\s]*(?:gateway|cron|heartbeat|scheduler)|'
@@ -656,7 +659,7 @@ _T67_SILENCE = re.compile(
 )
 
 def match_T67(name: str, args: Dict[str, Any]) -> bool:
-    """T67 HEARTBEAT_SILENCE -- explicit heartbeat/cron suppression attempt."""
+    """T67 HEARTBEAT_SILENCE — explicit heartbeat/cron suppression attempt."""
     s = _args_str(args)
     n = _tool_lower(name)
     return bool(
@@ -670,6 +673,11 @@ def match_T67(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T68: Insecure Default Config ──────────────────────────────────────────────
+# Fires when agent runtime is configured with allow_remote=true and no auth,
+# no allowlist, and no network restriction — root cause of 40,214 exposed instances.
+# Detected both as a static audit check (Phase 3) and as a runtime rule
+# when an agent writes or modifies gateway configuration.
+
 _T68_ALLOW_REMOTE = re.compile(
     r'allow[_\s]*remote[_\s]*[=:][_\s]*(?:true|yes|1|on)',
     re.IGNORECASE
@@ -688,17 +696,20 @@ _T68_NO_AUTH = re.compile(
 )
 
 def match_T68(name: str, args: Dict[str, Any]) -> bool:
-    """T68 INSECURE_DEFAULT_CONFIG -- allow_remote=true with no auth/allowlist."""
+    """T68 INSECURE_DEFAULT_CONFIG — allow_remote=true with no auth/allowlist."""
     s = _args_str(args)
     content = _content(args)
     combined = s + " " + content
 
+    # Must contain allow_remote signal
     if not _T68_ALLOW_REMOTE.search(combined):
         return False
 
+    # Fire when allow_remote=true is paired with disabled auth
     if _T68_NO_AUTH.search(combined):
         return True
 
+    # Fire when allow_remote=true appears with no auth keywords at all
     auth_keywords = ("api_key", "apikey", "token", "password", "auth",
                      "secret", "allowlist", "allow_list", "whitelist", "credential")
     if not any(kw in combined for kw in auth_keywords):
@@ -707,68 +718,14 @@ def match_T68(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
-# ── T69: Plan Drift ───────────────────────────────────────────────────────────
-_SUPERPOWERS_PLAN: dict = {}
-
-
-def register_superpowers_plan(
-    session_id: str,
-    allowed_files: list,
-    allowed_hosts: list,
-    task_names: list,
-) -> None:
-    _SUPERPOWERS_PLAN[session_id] = {
-        "allowed_files":  [str(f).lower() for f in allowed_files],
-        "allowed_hosts":  [str(h).lower() for h in allowed_hosts],
-        "task_names":     task_names,
-    }
-
-
-def clear_superpowers_plan(session_id: str) -> None:
-    _SUPERPOWERS_PLAN.pop(session_id, None)
-
-
-def match_T69(name: str, args: Dict[str, Any]) -> bool:
-    """
-    T69 PLAN_DRIFT -- agent behavior deviates from the approved Superpowers plan.
-    Silent if no plan is registered. Fires if:
-      - Filesystem access to a file not in any allowed_files pattern
-      - HTTP/network call to a host not in allowed_hosts
-    """
-    if not _SUPERPOWERS_PLAN:
-        return False
-
-    plan = next(iter(_SUPERPOWERS_PLAN.values()))
-    allowed_files = plan.get("allowed_files", [])
-    allowed_hosts = plan.get("allowed_hosts", [])
-
-    if not allowed_files and not allowed_hosts:
-        return False
-
-    n = _tool_lower(name)
-    s = _args_str(args)
-
-    if allowed_files and any(
-        kw in n for kw in ("read", "write", "edit", "delete", "open", "create")
-    ):
-        path = str(args.get("path", args.get("file", args.get("filename", "")))).lower()
-        if path and not any(
-            path.startswith(af) or af in path
-            for af in allowed_files + [".git", "tmp", "test", "spec", "__pycache__"]
-        ):
-            return True
-
-    if allowed_hosts and any(
-        kw in n for kw in ("http", "fetch", "request", "get", "post", "put")
-    ):
-        url = str(args.get("url", args.get("endpoint", args.get("host", "")))).lower()
-        if url and not any(h in url for h in allowed_hosts + ["localhost", "127.0.0.1"]):
-            return True
-
-    return False
-
-
 # ── T70: Environment Path Hijack ──────────────────────────────────────────────
+# Empirically validated by GHSA-mc68-q9jw-2h3v.
+# Attack vector: modify PATH/LD_PRELOAD/PYTHONPATH so that subsequent calls to
+# legitimate binaries execute the attacker's version instead. The agent calls
+# "python" believing it runs /usr/bin/python; it runs ~/.local/evil/python.
+# Particularly dangerous in Docker/container contexts where env var inheritance
+# crosses trust boundaries.
+
 _T70_HIJACK_VARS = frozenset({
     "path", "ld_preload", "ld_library_path", "pythonpath",
     "node_path", "gem_path", "gopath", "cargo_home",
@@ -787,9 +744,151 @@ _T70_SUSPICIOUS_PATH = re.compile(
     re.IGNORECASE
 )
 
+
+def match_T70(name: str, args: Dict[str, Any]) -> bool:
+    """
+    T70 ENV_PATH_HIJACK — execution-critical env var modification.
+    Fires when:
+      1. Tool call sets PATH/LD_PRELOAD/etc to a path containing suspicious
+         directories (/tmp, ~/.local, relative paths)
+      2. Tool call passes env dict with hijackable vars to shell/exec commands
+      3. Content contains env var assignment with suspicious value
+    """
+    n = _tool_lower(name)
+    s = _args_str(args)
+    c = _content(args)
+    combined = s + " " + c
+
+    # Direct env var set with suspicious value
+    for m in _T70_HIJACK_RE.finditer(combined):
+        assignment = m.group(0)
+        if _T70_SUSPICIOUS_PATH.search(assignment):
+            return True
+
+    # env dict passed to exec/shell tools
+    env = args.get("env", args.get("environment", args.get("environ", {})))
+    if isinstance(env, dict):
+        for key, val in env.items():
+            if key.upper() in {v.upper() for v in _T70_HIJACK_VARS}:
+                val_str = str(val).lower()
+                if _T70_SUSPICIOUS_PATH.search(val_str):
+                    return True
+
+    # Shell command constructing suspicious PATH inline
+    if any(kw in n for kw in ("shell", "exec", "bash", "run", "subprocess")):
+        cmd = str(args.get("command", args.get("cmd", ""))).lower()
+        if _T70_HIJACK_RE.search(cmd) and _T70_SUSPICIOUS_PATH.search(cmd):
+            return True
+
+    return False
+
+
+# ── T69: Plan Drift ───────────────────────────────────────────────────────────
+# Fires when an agent equipped with a Superpowers implementation plan executes
+# tool calls outside the declared plan scope. The plan is the policy. Deviation
+# from the approved plan — touching files not in the task list, making network
+# calls the plan didn't specify, spawning subagents outside declared tasks —
+# is the clearest possible signal: the human approved X, the agent is doing Y.
+#
+# This rule requires the Superpowers integration to register a plan:
+#   session = SuperpowersSession.from_plan(plan_text, tasks)
+#   aiglos.attach_superpowers(session)
+#
+# Without a registered plan, T69 is silent. The absence of a plan is not
+# anomalous — it simply means Superpowers isn't installed.
+
+# Module-level plan registry — set by attach_superpowers()
+_SUPERPOWERS_PLAN: dict = {}   # {session_id: {tasks, files, network_hosts}}
+
+
+def register_superpowers_plan(
+    session_id: str,
+    allowed_files: list,
+    allowed_hosts: list,
+    task_names: list,
+) -> None:
+    """Register an approved Superpowers plan for T69 drift detection."""
+    _SUPERPOWERS_PLAN[session_id] = {
+        "allowed_files":  [str(f).lower() for f in allowed_files],
+        "allowed_hosts":  [str(h).lower() for h in allowed_hosts],
+        "task_names":     task_names,
+    }
+
+
+def clear_superpowers_plan(session_id: str) -> None:
+    """Clear plan on session close."""
+    _SUPERPOWERS_PLAN.pop(session_id, None)
+
+
+def match_T69(name: str, args: Dict[str, Any]) -> bool:
+    """
+    T69 PLAN_DRIFT — agent behavior deviates from the approved Superpowers plan.
+    Silent if no plan is registered. Fires if:
+      - Filesystem access to a file not in any allowed_files pattern
+      - HTTP/network call to a host not in allowed_hosts
+    """
+    if not _SUPERPOWERS_PLAN:
+        return False   # no plan registered — silent
+
+    # Use first registered plan (single-session model)
+    plan = next(iter(_SUPERPOWERS_PLAN.values()))
+    allowed_files = plan.get("allowed_files", [])
+    allowed_hosts = plan.get("allowed_hosts", [])
+
+    # If plan has no restrictions, drift detection is inactive
+    if not allowed_files and not allowed_hosts:
+        return False
+
+    n = _tool_lower(name)
+    s = _args_str(args)
+
+    # Filesystem drift: file access to something not in the plan
+    if allowed_files and any(
+        kw in n for kw in ("read", "write", "edit", "delete", "open", "create")
+    ):
+        path = str(args.get("path", args.get("file", args.get("filename", "")))).lower()
+        if path and not any(
+            path.startswith(af) or af in path
+            for af in allowed_files + [".git", "tmp", "test", "spec", "__pycache__"]
+        ):
+            return True
+
+    # Network drift: HTTP call to host not in the plan
+    if allowed_hosts and any(
+        kw in n for kw in ("http", "fetch", "request", "get", "post", "put")
+    ):
+        url = str(args.get("url", args.get("endpoint", args.get("host", "")))).lower()
+        if url and not any(h in url for h in allowed_hosts + ["localhost", "127.0.0.1"]):
+            return True
+
+    return False
+
+
+# ── T70: Env Path Hijack ──────────────────────────────────────────────────────
+# Proven by GHSA-mc68-q9jw-2h3v (Jan 2026): Command injection in Clawdbot Docker
+# via PATH environment variable manipulation. No shell metacharacters. The attack
+# works by setting PATH=/malicious/bin:/usr/bin so that `python` or `node` resolves
+# to an attacker-controlled binary before the real one.
+#
+# T03 SHELL_INJECTION watches for metacharacters: ; && || ` $() etc.
+# T70 watches for the env var writes that make those metacharacters unnecessary.
+#
+# Dangerous env vars:
+#   PATH         — controls which binaries execute
+#   LD_PRELOAD   — injects shared library before all others (Linux)
+#   LD_LIBRARY_PATH — redirects shared library resolution (Linux)
+#   PYTHONPATH   — controls Python module search order
+#   NODE_PATH    — controls Node.js module resolution
+#   RUBYLIB      — Ruby equivalent
+#   PERL5LIB     — Perl equivalent
+#   GOPATH       — Go workspace path manipulation
+#
+# The rule fires when these vars are set in any tool call that involves
+# process execution, environment configuration, or container setup.
+
 _T70_DANGEROUS_ENV_VARS = re.compile(
-    r'(?:PATH|LD_PRELOAD|LD_LIBRARY_PATH|PYTHONPATH|NODE_PATH|'
-    r'RUBYLIB|PERL5LIB|GOPATH|DYLD_LIBRARY_PATH|DYLD_INSERT_LIBRARIES)',
+    r'(?:PATH|LD_PRELOAD|LD_LIBRARY_PATH|PYTHONPATH|NODE_PATH|'
+    r'RUBYLIB|PERL5LIB|GOPATH|DYLD_LIBRARY_PATH|DYLD_INSERT_LIBRARIES)',
     re.IGNORECASE
 )
 
@@ -801,13 +900,15 @@ _T70_SUSPICIOUS_VALUE = re.compile(
 
 def match_T70(name: str, args: Dict[str, Any]) -> bool:
     """
-    T70 ENV_PATH_HIJACK -- dangerous env var modification in execution context.
+    T70 ENV_PATH_HIJACK — dangerous env var modification in execution context.
     Catches the attack class documented in GHSA-mc68-q9jw-2h3v.
     Three independent detection tiers; any one firing returns True.
     """
     n = _tool_lower(name)
-    s = _args_str(args)
+    s = _args_str(args)   # lowercased representation
 
+    # Tier 1: string contains env var assignment + suspicious path
+    # e.g. "PATH=/tmp/evil:$PATH node server.js"
     env_assign = re.search(
         r"(?:path|ld_preload|ld_library_path|pythonpath|node_path|"
         r"rubylib|perl5lib|gopath|dyld_library_path)\s*[=:]",
@@ -816,12 +917,15 @@ def match_T70(name: str, args: Dict[str, Any]) -> bool:
     if env_assign and _T70_SUSPICIOUS_VALUE.search(s):
         return True
 
+    # Tier 2: env var assignment in exec-family tool, any value
+    # Even a "clean" PATH override in an exec context warrants inspection
     if env_assign and any(
         kw in n for kw in ("shell", "exec", "bash", "run", "spawn", "docker",
                             "subprocess", "popen", "system")
     ):
         return True
 
+    # Tier 3: structured env dict with dangerous key + suspicious value
     for key_name in ("env", "environment", "envs", "environ"):
         env = args.get(key_name)
         if not isinstance(env, dict):
@@ -835,8 +939,10 @@ def match_T70(name: str, args: Dict[str, Any]) -> bool:
             ):
                 continue
             val = str(env[key]).lower()
+            # Suspicious path value = always fire
             if _T70_SUSPICIOUS_VALUE.search(val):
                 return True
+            # PATH override in exec context = fire even with clean value
             if key_lower == "path" and any(
                 kw in n for kw in ("exec", "run", "spawn", "docker", "shell")
             ):
@@ -845,7 +951,7 @@ def match_T70(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
-# ── T71: Pairing Grace Abuse ────────────────────────────────────────────────
+# ── T71: Pairing Grace Abuse ──────────────────────────────────────────────────
 # OpenClaw device pairing has a 30-second grace period where a new device
 # can pair without full authentication. This window is exploitable via race
 # condition. T71 fires on pairing-related tool calls with suspicious timing
@@ -860,10 +966,11 @@ _T71_PAIRING = re.compile(
 )
 
 def match_T71(name: str, args: Dict[str, Any]) -> bool:
-    """T71 PAIRING_GRACE_ABUSE -- suspicious pairing activity pattern."""
+    """T71 PAIRING_GRACE_ABUSE — suspicious pairing activity pattern."""
     n = _tool_lower(name)
     s = _args_str(args)
     if bool(_T71_PAIRING.search(n) or _T71_PAIRING.search(s)):
+        # Only flag if also combined with fast/repeated pattern indicators
         return any(
             kw in s for kw in (
                 "force", "override", "bypass", "retry", "attempt",
@@ -873,7 +980,7 @@ def match_T71(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
-# ── T72: Channel Identity Spoof ─────────────────────────────────────────────
+# ── T72: Channel Identity Spoof ────────────────────────────────────────────────
 # AllowFrom validation in OpenClaw uses sender identity from channel metadata.
 # A spoofed phone number (WhatsApp), Telegram user ID, or Discord snowflake
 # can pass the AllowFrom check if the validation doesn't verify at the
@@ -890,17 +997,19 @@ _T72_SPOOF = re.compile(
 )
 
 def match_T72(name: str, args: Dict[str, Any]) -> bool:
-    """T72 CHANNEL_IDENTITY_SPOOF -- AllowFrom spoofing or channel probing."""
+    """T72 CHANNEL_IDENTITY_SPOOF — AllowFrom spoofing or channel probing."""
     n = _tool_lower(name)
     s = _args_str(args)
     return bool(_T72_SPOOF.search(n) or _T72_SPOOF.search(s))
 
 
-# ── T73: Tool Enumeration ───────────────────────────────────────────────────
+# ── T73: Tool Enumeration ──────────────────────────────────────────────────────
 # An agent probing its own tool list is classic pre-exploitation recon.
 # The signature: many distinct tool calls, minimal or empty arguments,
 # rapid succession, no meaningful output. Like a port scan but for capabilities.
-# T73 fires when an individual tool call is part of a clear enumeration pattern.
+# T73 fires when an individual tool call is part of a clear enumeration pattern:
+# tool name contains "list", "enumerate", "help", "capabilities", or the call
+# passes empty/probe arguments to a tool to test its existence.
 
 _T73_ENUM = re.compile(
     r'(?:tools?[_\s]*(?:list|enumerate|available|help|get|all)|'
@@ -913,51 +1022,171 @@ _T73_ENUM = re.compile(
 )
 
 def match_T73(name: str, args: Dict[str, Any]) -> bool:
-    """T73 TOOL_ENUMERATION -- capability reconnaissance via tool probing."""
+    """T73 TOOL_ENUMERATION — capability reconnaissance via tool probing."""
     n = _tool_lower(name)
     s = _args_str(args)
+    # Direct enumeration call
     if bool(_T73_ENUM.search(n)):
         return True
+    # Tool call with suspiciously empty/probe args (empty dict, or just {"test": true})
     if args == {} or args == {"test": True} or args == {"probe": True}:
         return True
+    # MCP list_tools / list_resources is always enumeration
     if any(kw in n for kw in ("list_tools", "list_resources", "list_prompts")):
         return True
     return False
 
 
-# ── T74: Content Wrapper Escape ─────────────────────────────────────────────
+# ── T74: Content Wrapper Escape ────────────────────────────────────────────────
 # OpenClaw wraps fetched external content in XML tags to prevent direct
 # injection into the agent context. T74 fires when content contains patterns
 # designed to break out of that wrapping: XML tag terminators that would
 # close the wrapper, CDATA sequences, entity injection, or encoding tricks.
 
 _T74_WRAPPER_ESCAPE = re.compile(
-    r'(?:<!\[CDATA\[|'
-    r'\]\]>|'
+    r'(?:<!\[CDATA\[|'           # CDATA section open
+    r'\]\]>|'                     # CDATA section close
     r'</(?:external|fetched|url|content|data|result|response|document)\s*>|'
-    r'<!--.*?inject|'
-    r'&(?:#x[0-9a-f]+|#[0-9]+);.*(?:ignore|disregard|forget)|'
-    r'\u003c|\u003e|'
-    r'%3C|%3E|'
-    r'.*?</|'
+    r'<!--.*?inject|'             # HTML comment injection
+    r'&(?:#x[0-9a-f]+|#[0-9]+);.*(?:ignore|disregard|forget)|'  # entity encoding tricks
+    r'\u003c|\u003e|'          # unicode escape for < >
+    r'%3C|%3E|'                  # URL encoding for < >
+    r'.*?</|'                 # null byte before tag close
     r'(?:ignore|disregard|forget)\s+(?:above|previous|prior|all)\s+(?:instruction|content|context))',
     re.IGNORECASE | re.DOTALL
 )
 
 def match_T74(name: str, args: Dict[str, Any]) -> bool:
-    """T74 CONTENT_WRAPPER_ESCAPE -- XML wrapper escape in fetched content."""
+    """T74 CONTENT_WRAPPER_ESCAPE — XML wrapper escape in fetched content."""
+    # Only fires for content-fetching tool calls
     n = _tool_lower(name)
     if not any(kw in n for kw in (
         "fetch", "get", "read", "load", "retrieve", "browse",
         "web", "http", "url", "download", "email", "message"
     )):
         return False
+    # Check content/response for wrapper escape patterns
     content = _content(args)
     s = _args_str(args)
     return bool(_T74_WRAPPER_ESCAPE.search(content) or _T74_WRAPPER_ESCAPE.search(s))
 
 
-# ── T75: Session Data Extraction ────────────────────────────────────────────
+# ── T77: Overnight Job Injection ──────────────────────────────────────────────
+# Power users run scheduled overnight jobs (log reviews, CRM syncs, security
+# scans). This is normal and expected — T67 establishes the heartbeat baseline.
+# The attack: inject a malicious job definition into the schedule that runs
+# at 3am when no one is watching.
+#
+# T77 fires on:
+#   - Writes to crontab files, cron.d directories, systemd timer units
+#   - Scheduler API calls with suspicious job content (exfil, spawn patterns)
+#   - Job definition writes that contain injection-pattern keywords
+#   - Schedule modifications containing base64, curl | bash, or exfil patterns
+#
+# NOT fired on: reading cron files, listing scheduled jobs, legitimate
+# batch job submission with clean content.
+
+_T77_CRON_PATHS = re.compile(
+    r"(?:crontab|cron[._]|/etc/cron|[.]cron|cron[.]d/|"
+    r"systemd/.*[.]timer|launchd.*[.]plist|taskschd|"
+    r"celery.*beat|apscheduler|schedule.*[.]ya?ml)",
+    re.IGNORECASE
+)
+
+_T77_SUSPICIOUS_JOB_CONTENT = re.compile(
+    r"(?:curl\s+.*\|.*(?:sh|bash)|"
+    r"wget\s+.*-O-.*\||"
+    r"base64\s+-d|"
+    r"eval\s*\$|"
+    r"rm\s+-rf\s+/|"
+    r"exfil|"
+    r"reverse.shell|"
+    r"/dev/tcp/|"
+    r"nc\s+-e|"
+    r"python.*-c.*import|"
+    r"chmod.*\+x.*&&)",
+    re.IGNORECASE
+)
+
+
+def match_T77(name: str, args: Dict[str, Any]) -> bool:
+    """T77 OVERNIGHT_JOB_INJECTION — malicious write to scheduled job definitions."""
+    n = _tool_lower(name)
+    s = _args_str(args)
+
+    # Only fire on write/create/edit operations
+    if not any(kw in n for kw in (
+        "write", "create", "edit", "append", "put", "post", "patch",
+        "register", "add", "schedule", "cron"
+    )):
+        return False
+
+    # Path matches a cron/scheduler location
+    path = str(args.get("path", args.get("file", ""))).lower()
+    if path and _T77_CRON_PATHS.search(path):
+        # If the content is also suspicious, high confidence
+        content = str(args.get("content", args.get("data", args.get("body", "")))).lower()
+        if content and _T77_SUSPICIOUS_JOB_CONTENT.search(content):
+            return True
+        # Cron path write without suspicious content — lower bar, still flag
+        # because writing to crontab is unusual outside of setup workflows
+        return True
+
+    # Content itself matches suspicious job patterns (regardless of path)
+    content = str(args.get("content", args.get("data", args.get("job", "")))).lower()
+    if content and _T77_SUSPICIOUS_JOB_CONTENT.search(content):
+        # Only fire if also touching a scheduler-adjacent tool
+        if any(kw in n for kw in ("cron", "schedule", "task", "job", "timer")):
+            return True
+
+    return False
+
+
+# ── T76: NemoClaw Policy Bypass ───────────────────────────────────────────────
+# Fires when an agent writes to NemoClaw OpenShell policy files.
+# The policy file IS the governance boundary. Rewriting it at runtime
+# means the agent is rewriting its own rules — the clearest possible
+# sign of governance escape.
+
+_T76_NEMOCLAW = re.compile(
+    r"(?:[.]nemoclaw|[.]jensenclaw|nemoclaw-blueprint|nemoclaw)/|"
+    r"openShell[.]ya?ml|nemoclaw.*[.]ya?ml|guardrails.*[.]ya?ml",
+    re.IGNORECASE,
+)
+
+
+def match_T76(name: str, args: Dict[str, Any]) -> bool:
+    """T76 NEMOCLAW_POLICY_BYPASS — runtime write to NemoClaw policy files."""
+    n = _tool_lower(name)
+    s = _args_str(args)
+
+    # Only fire on write/edit/delete operations, not reads
+    if not any(kw in n for kw in (
+        "write", "edit", "delete", "remove", "create", "save", "put", "patch"
+    )):
+        return False
+
+    # Check tool name
+    if _T76_NEMOCLAW.search(n):
+        return True
+
+    # Check arguments (file path or content)
+    if _T76_NEMOCLAW.search(s):
+        return True
+
+    # Specific dangerous patterns in args
+    lower_s = s.lower()
+    if any(kw in lower_s for kw in (
+        "nemoclaw", "openShell", ".jensenclaw", "guardrails.yaml",
+        "openshell.yaml", "openshell.yml"
+    )):
+        if any(kw in n for kw in ("write", "edit", "delete", "create")):
+            return True
+
+    return False
+
+
+# ── T75: Session Data Extraction ──────────────────────────────────────────────
 # ATLAS T-DISC-002. An agent accessing sessions.list / sessions.preview /
 # chat.history is touching data that crosses session boundaries. The OpenClaw
 # threat model documents this explicitly: sessionKey is routing, not auth.
@@ -975,12 +1204,15 @@ _T75_SESSION = re.compile(
 
 
 def match_T75(name: str, args: Dict[str, Any]) -> bool:
-    """T75 SESSION_DATA_EXTRACT -- lateral session data collection."""
+    """T75 SESSION_DATA_EXTRACT — lateral session data collection."""
     n = _tool_lower(name)
     s = _args_str(args)
     if bool(_T75_SESSION.search(n)):
         return True
+    # Tool call with suspicious cross-session parameters
     if bool(_T75_SESSION.search(s)):
+        # Filter out legitimate single-session lookups
+        # (a specific session_id without list/all/export context is normal)
         if any(kw in s for kw in ("all", "list", "enumerate", "export", "dump", "bulk")):
             return True
     return False
@@ -1059,17 +1291,17 @@ RULES_T44_T66: List[Dict] = [
      "desc": "GaaS agent acquiring cross-tenant privileges via API key confusion",
      "score": 0.92, "critical": True, "match": match_T66},
     {"id": "T67", "name": "HEARTBEAT_SILENCE",
-     "desc": "Explicit heartbeat, cron, or gateway suppression -- the quietest failure mode",
+     "desc": "Explicit heartbeat, cron, or gateway suppression — the quietest failure mode",
      "score": 0.88, "critical": True, "match": match_T67},
     {"id": "T68", "name": "INSECURE_DEFAULT_CONFIG",
-     "desc": "allow_remote=true with no auth -- root cause of 40,000+ exposed instances",
+     "desc": "allow_remote=true with no auth — root cause of 40,000+ exposed instances",
      "score": 0.95, "critical": True, "match": match_T68},
     {"id": "T69", "name": "PLAN_DRIFT",
      "desc": (
          "Agent executing behavior that deviates from the approved Superpowers "
          "implementation plan. The human approved a specific plan; the agent is "
          "doing something different. Requires Superpowers integration. When present, "
-         "this is the highest-confidence detection signal available -- the deviation "
+         "this is the highest-confidence detection signal available — the deviation "
          "is measured against explicit human approval, not statistical baseline."
      ),
      "score": 0.95, "critical": True, "match": match_T69},
@@ -1079,13 +1311,13 @@ RULES_T44_T66: List[Dict] = [
          "in an execution context. Proven attack class: GHSA-mc68-q9jw-2h3v documented "
          "command injection in Clawdbot Docker via PATH manipulation, redirecting execution "
          "to a malicious binary without any shell metacharacter. Invisible to T03 "
-         "SHELL_INJECTION because there are no metacharacters -- just a clean env var write "
+         "SHELL_INJECTION because there are no metacharacters — just a clean env var write "
          "that changes what 'python' or 'node' resolves to."
      ),
      "score": 0.88, "critical": True, "match": match_T70},
     {"id": "T71", "name": "PAIRING_GRACE_ABUSE",
      "desc": (
-         "Exploitation of the 30-second device pairing grace period -- "
+         "Exploitation of the 30-second device pairing grace period — "
          "OpenClaw ATLAS T-ACCESS-001. Race condition on pairing code "
          "interception. Fires on pairing tool calls with force/bypass/flood "
          "indicators inconsistent with legitimate device enrollment."
@@ -1093,31 +1325,53 @@ RULES_T44_T66: List[Dict] = [
      "score": 0.82, "critical": True, "match": match_T71},
     {"id": "T72", "name": "CHANNEL_IDENTITY_SPOOF",
      "desc": (
-         "AllowFrom sender identity spoofing or channel integration probing -- "
+         "AllowFrom sender identity spoofing or channel integration probing — "
          "OpenClaw ATLAS T-ACCESS-002 + T-RECON-002. Fires when message routing "
          "metadata contains identity override attempts or channel probing patterns."
      ),
      "score": 0.85, "critical": True, "match": match_T72},
     {"id": "T73", "name": "TOOL_ENUMERATION",
      "desc": (
-         "Agent systematically probing its own tool list -- OpenClaw ATLAS T-DISC-001. "
+         "Agent systematically probing its own tool list — OpenClaw ATLAS T-DISC-001. "
          "Classic pre-exploitation recon: empty/probe args across many distinct tools "
          "in rapid succession. mcp.list_tools and list_resources always fire."
      ),
      "score": 0.75, "critical": False, "match": match_T73},
     {"id": "T74", "name": "CONTENT_WRAPPER_ESCAPE",
      "desc": (
-         "Attempt to escape OpenClaw XML content wrapping -- "
+         "Attempt to escape OpenClaw XML content wrapping — "
          "OpenClaw ATLAS T-EVADE-001 + T-EVADE-002. "
          "CDATA sequences, tag terminators, or encoding tricks designed to "
          "break fetched content out of its wrapper and inject into agent context."
      ),
      "score": 0.86, "critical": True, "match": match_T74},
+    {"id": "T77", "name": "OVERNIGHT_JOB_INJECTION",
+     "desc": (
+         "Write or modification of scheduled job definitions (cron, scheduler, "
+         "task files) in patterns consistent with malicious persistence. Power users "
+         "run legitimate overnight jobs (Tip 6 pattern) — but an adversary can inject "
+         "into those job slots. Fires on: cron file writes containing suspicious "
+         "content, scheduler API calls with unusual job definitions, or writes to job "
+         "config paths outside business hours. T67 HEARTBEAT_SILENCE catches "
+         "suppression of jobs; T77 catches injection into the job schedule itself."
+     ),
+     "score": 0.87, "critical": True, "match": match_T77},
+    {"id": "T76", "name": "NEMOCLAW_POLICY_BYPASS",
+     "desc": (
+         "Agent attempting to modify, overwrite, or delete NemoClaw OpenShell "
+         "policy files at runtime. The NemoClaw YAML policy is the enforcement "
+         "boundary that governs what the agent is allowed to do. An agent that "
+         "rewrites its own policy has escaped governance entirely. "
+         "NVIDIA NemoClaw policy paths: .nemoclaw/, .jensenclaw/, openShell.yaml. "
+         "Score 0.95 — the only score higher is T43 HONEYPOT_ACCESS (1.0) because "
+         "this is explicit policy destruction, not just policy violation."
+     ),
+     "score": 0.95, "critical": True, "match": match_T76},
     {"id": "T75", "name": "SESSION_DATA_EXTRACT",
      "desc": (
          "Lateral session data collection via sessions.list, sessions.preview, "
          "or chat.history. ATLAS T-DISC-002. OpenClaw sessionKey is routing "
-         "not auth -- any gateway-authenticated caller can enumerate session "
+         "not auth — any gateway-authenticated caller can enumerate session "
          "metadata. Bulk or rapid-succession session enumeration signals "
          "lateral data collection across session boundaries."
      ),
