@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.25.1"  # canonical version for this release
+    __version__ = "0.25.2"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -98,6 +98,11 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     is_memory_tool,
 )
 from aiglos.core.threat_engine_v2 import RULES_T44_T66  # noqa: F401
+from aiglos.integrations.subagent_registry import (  # noqa: F401
+    SubagentRegistry,
+    DeclaredSubagent,
+    SpawnCheckResult,
+)
 from aiglos.autoresearch.atlas_coverage import ATLASCoverage  # noqa: F401
 from aiglos.adaptive.permission_recommender import (   # noqa: F401
     PermissionRecommender,
@@ -824,6 +829,10 @@ __all__ = [
     "ComplianceReport",
     # v0.24.0 -- T71-T75 (ATLAS threat model), ATLASCoverage
     "ATLASCoverage",
+    # v0.25.2 -- SubagentRegistry
+    "SubagentRegistry",
+    "DeclaredSubagent",
+    "SpawnCheckResult",
     # v0.25.1 -- OpenShell agent-agnostic integration
     "NeMoClawSession",
     "mark_as_nemoclaw_session",

@@ -15,8 +15,8 @@
 
 <br>
 
-[![v0.25.1](https://img.shields.io/badge/v0.25.1-000?style=for-the-badge&labelColor=000&color=00d4aa)](https://github.com/w1123581321345589/aiglos/releases)
-[![1,730 tests](https://img.shields.io/badge/1,730_tests_passing-000?style=for-the-badge&labelColor=000&color=00d4aa)](tests/)
+[![v0.25.2](https://img.shields.io/badge/v0.25.2-000?style=for-the-badge&labelColor=000&color=00d4aa)](https://github.com/w1123581321345589/aiglos/releases)
+[![1,784 tests](https://img.shields.io/badge/1,784_tests_passing-000?style=for-the-badge&labelColor=000&color=00d4aa)](tests/)
 [![MIT](https://img.shields.io/badge/license-MIT-000?style=for-the-badge&labelColor=000)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-000?style=for-the-badge&labelColor=000)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/typescript_SDK-000?style=for-the-badge&labelColor=000)](sdk/typescript/)
@@ -649,6 +649,8 @@ The free tier is complete. GOVBENCH, Superpowers, OpenShell, ATLAS coverage, GHS
 ---
 
 ## Changelog
+
+**v0.25.2 -- March 2026** - 1,784 tests - Sub-agent declaration for multi-agent power user setups. guard.declare_subagent(name, tools, scope_files, scope_hosts, model) -- declare expected sub-agents before running. Declared spawns within declared scope: T38 score drops to 0.0. Declared spawns outside scope: T38 elevated to 0.90. Undeclared spawns: T38 at normal 0.78. Chaining syntax for multi-agent configuration. T77 OVERNIGHT_JOB_INJECTION (score 0.87, critical) -- fires on writes to crontab, cron.d, systemd timers, or scheduler APIs with suspicious content (curl pipe, base64 decode, wget pipe). SubagentRegistry, DeclaredSubagent, SpawnCheckResult exported.
 
 **v0.25.1 -- March 2026** - 1,730 tests - OpenShell agent-agnostic integration. T76 NEMOCLAW_POLICY_BYPASS. NeMoClawSession (YAML policy loader, scope checking, event recording). openShell.py: is_inside_openShell, openshell_detect, attach_openShell, attach_for_claude_code/codex/cursor/openclaw. OpenClawGuard.nemoclaw_session(). Zero-config env var detection (OPENSHELL_SANDBOX_ID, OPENSHELL_POLICY_PATH, OPENSHELL_AGENT).
 

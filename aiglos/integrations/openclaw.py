@@ -1393,6 +1393,34 @@ class OpenClawGuard:
             return None
         return self._causal_tracer.attribute()
 
+    def declare_subagent(
+        self,
+        name: str,
+        tools: list[str] | None = None,
+        scope_files: list[str] | None = None,
+        scope_hosts: list[str] | None = None,
+        model: str | None = None,
+    ) -> "OpenClawGuard":
+        from aiglos.integrations.subagent_registry import SubagentRegistry
+        if not hasattr(self, "_subagent_registry") or self._subagent_registry is None:
+            self._subagent_registry = SubagentRegistry()
+        self._subagent_registry.declare(
+            name=name,
+            tools=tools,
+            scope_files=scope_files,
+            scope_hosts=scope_hosts,
+            model=model,
+        )
+        return self
+
+    def declared_subagents(self) -> list:
+        if not hasattr(self, "_subagent_registry") or self._subagent_registry is None:
+            return []
+        return self._subagent_registry.all()
+
+    def subagent_registry(self):
+        return getattr(self, "_subagent_registry", None)
+
     def spawn_sub_guard(self, sub_agent_name: str) -> "OpenClawGuard":
         """
         Create a child guard for a sub-agent (Ada, Prism, etc.).

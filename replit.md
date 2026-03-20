@@ -3,13 +3,14 @@
 ## Overview
 Aiglos is an AI agent security runtime (Python package) with a premium landing site. The Python package (`aiglos/`) provides runtime security for AI agents with zero required dependencies (stdlib only). The web application serves the marketing/documentation site at `/` styled after cursor.com.
 
-## Python Package (aiglos/ v0.25.1)
-The `aiglos/` directory contains the Python security runtime package covering threat families T01-T76 (76 total). 1,730 tests passing.
+## Python Package (aiglos/ v0.25.2)
+The `aiglos/` directory contains the Python security runtime package covering threat families T01-T77 (77 total). 1,784 tests passing.
 
 ### Package Structure
-- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.25.1. Exports ATLASCoverage, GHSAWatcher, OpenShell functions, NeMoClawSession.
-- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T76), lockdown policy, sandbox_context, allow_tool/tool_grants, nemoclaw_session()
-- `aiglos/core/threat_engine_v2.py` -- T44-T75 threat rule library (32 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS wave)
+- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.25.2. Exports ATLASCoverage, GHSAWatcher, OpenShell functions, NeMoClawSession, SubagentRegistry, DeclaredSubagent, SpawnCheckResult.
+- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T77), lockdown policy, sandbox_context, allow_tool/tool_grants, nemoclaw_session(), declare_subagent(), declared_subagents(), subagent_registry()
+- `aiglos/integrations/subagent_registry.py` -- SubagentRegistry (declare, check_spawn, scope enforcement), DeclaredSubagent (allows_tool, allows_file, allows_host), SpawnCheckResult (DECLARED_IN_SCOPE/DECLARED_OUT_OF_SCOPE/UNDECLARED)
+- `aiglos/core/threat_engine_v2.py` -- T44-T77 threat rule library (34 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS wave + T76 NemoClaw + T77 OVERNIGHT_JOB_INJECTION)
 - `aiglos/core/behavioral_baseline.py` -- AgentBaseline, BaselineScore, set_hardening_mode, is_suppressed
 - `aiglos/autoresearch/atlas_coverage.py` -- ATLASCoverage, ATLAS_THREAT_MAP (22 threats, 93% coverage), coverage_report(), gap_analysis(), compliance_score()
 - `aiglos/autoresearch/ghsa_watcher.py` -- GHSAWatcher, KNOWN_ADVISORIES (3/3 covered), local_only param, check_local(), coverage_artifact()
@@ -47,8 +48,8 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `.github/actions/aiglos-scan/action.yml` -- Reusable GitHub Action for Aiglos security audit
 - `.github/workflows/aiglos-scan.yml` -- CI workflow (push/PR/nightly scan, deep mode, grade gating)
 
-### Test Suites (1,730 tests)
-26 test files covering all modules and integrations. Includes `tests/test_atlas_and_t75.py` (72 tests for ATLAS coverage, T71-T75, Superpowers, GHSA aliases) and `tests/test_openShell.py` (65 tests for OpenShell/NeMoClaw integration).
+### Test Suites (1,784 tests)
+27 test files covering all modules and integrations. Includes `tests/test_subagent_and_t77.py` (54 tests for SubagentRegistry, T77), `tests/test_atlas_and_t75.py` (72 tests for ATLAS coverage, T71-T75, Superpowers, GHSA aliases), and `tests/test_openShell.py` (65 tests for OpenShell/NeMoClaw integration).
 
 ### Class Name Map (important for imports)
 - `ContextWriteResult` (NOT ContextGuardResult)
