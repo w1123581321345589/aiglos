@@ -26,6 +26,7 @@
 
 ```
 pip install aiglos                 # zero dependencies. stdlib only.
+npm install aiglos                 # TypeScript / Node.js
 ```
 
 ```python
@@ -35,9 +36,9 @@ import aiglos                      # every agent action below this line is
 
 <br>
 
-| 76 threat families | 3 execution surfaces | 19 campaign patterns | 18 inspection triggers | Learns your deployment | Network intelligence | Zero dependencies |
+| 77 threat families | 3 execution surfaces | 19 campaign patterns | 18 inspection triggers | Learns your deployment | Network intelligence | Zero dependencies |
 |:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| T01-T76 | MCP + HTTP + subprocess | Multi-step attack chains | Adaptive runtime triggers | Behavioral baseline | Federated threat sharing | stdlib only |
+| T01-T77 | MCP + HTTP + subprocess | Multi-step attack chains | Adaptive runtime triggers | Behavioral baseline | Federated threat sharing | stdlib only |
 
 </div>
 
@@ -86,7 +87,7 @@ WAFs protect HTTP endpoints. Aiglos protects the agent.
                     │   ┌─────────────────────────────────────┐   │
                     │   │          AIGLOS RUNTIME              │   │
                     │   │                                      │   │
-  MCP Server ◄─────┼───┤  Surface 1: MCP tool calls      T01-T76 │
+  MCP Server ◄─────┼───┤  Surface 1: MCP tool calls      T01-T77 │
                     │   │  Every tool call inspected before    │   │
                     │   │  execution. Memory writes routed     │   │
                     │   │  to T31 semantic scoring.            │   │
@@ -203,6 +204,30 @@ guard.allow_tool("web.search", reason="Research task")
 # Every grant is logged with timestamp, reason, and operator identity
 ```
 
+### Multi-agent -- declare_subagent()
+
+Power users building multi-agent systems fire T38 AGENT_SPAWN on every legitimate spawn. Declare expected sub-agents once and T38 is suppressed for clean declared calls:
+
+```python
+from aiglos.integrations.openclaw import OpenClawGuard
+
+guard = OpenClawGuard(agent_name="main-agent", policy="enterprise")
+
+# Declared sub-agents within scope: T38 does not fire
+# Undeclared spawns: T38 fires at normal threshold (0.78)
+# Declared sub-agents outside declared scope: T38 elevated (0.90)
+(guard
+    .declare_subagent("coding-agent",
+        tools=["filesystem", "shell.execute"],
+        scope_files=["src/", "tests/"])
+    .declare_subagent("calendar-agent",
+        tools=["calendar.read", "calendar.write"],
+        scope_hosts=["calendar.google.com"])
+    .declare_subagent("crm-agent",
+        scope_hosts=["api.hubspot.com"])
+)
+```
+
 ### Superpowers integration
 
 ```python
@@ -262,7 +287,7 @@ These were new attack categories. Machine-speed, fully autonomous, invisible to 
 
 ## Threat engine
 
-76 threat families across three execution surfaces. All rules map to MITRE ATLAS.
+77 threat families across three execution surfaces. All rules map to MITRE ATLAS.
 
 | ID | Family | What it catches |
 |----|--------|----------------|
@@ -296,6 +321,7 @@ These were new attack categories. Machine-speed, fully autonomous, invisible to 
 | T74 | CONTENT_WRAPPER_ESCAPE | XML wrapper termination, CDATA injection |
 | T75 | SESSION_DATA_EXTRACT | sessions.list/preview, chat.history lateral extraction |
 | T76 | NEMOCLAW_POLICY_BYPASS | Agent rewriting its own OpenShell/NeMoClaw sandbox policy files |
+| T77 | OVERNIGHT_JOB_INJECTION | Malicious writes to crontab, cron.d, systemd timers |
 
 ---
 
@@ -435,7 +461,7 @@ Total advisories tracked:  3  |  Covered: 3 (100%)  |  Gaps: 0
 
 3/3 published OpenClaw GHSAs covered by rules that existed before the advisories were disclosed.
 
-The GHSA watcher polls GitHub Advisory Database, NVD, and OSV.dev on a 6-hour cadence. When new advisories publish, it auto-matches against T01-T75 and generates pending rule proposals for gaps. The 285 advisories in the private queue become automatic rule coverage the moment they publish.
+The GHSA watcher polls GitHub Advisory Database, NVD, and OSV.dev on a 6-hour cadence. When new advisories publish, it auto-matches against T01-T77 and generates pending rule proposals for gaps. The 285 advisories in the private queue become automatic rule coverage the moment they publish.
 
 ```bash
 aiglos autoresearch watch-ghsa           # start watcher daemon
@@ -639,12 +665,12 @@ aiglos version
 
 | Tier | Cost | Includes |
 |------|------|---------|
-| Free / MIT | $0 | T01-T76, behavioral baseline, policy proposals, GOVBENCH, Superpowers integration, OpenShell integration, ATLAS coverage, GHSA watcher, adaptive layer, memory/RL guard, causal tracing, intent prediction, Python + TypeScript SDKs, HMAC session artifacts. Federation: pull only. |
+| Free / MIT | $0 | T01-T77, behavioral baseline, policy proposals, GOVBENCH, Superpowers integration, OpenShell integration, ATLAS coverage, GHSA watcher, adaptive layer, memory/RL guard, causal tracing, intent prediction, Python + TypeScript SDKs, HMAC session artifacts. Federation: pull only. |
 | Pro | $49/dev/mo | Free + federation contribution, RSA-2048 attestation signatures (audit-grade), CVE push alerts, SIEM integration, NDAA and EU AI Act compliance export |
 | Teams | $299/mo (10 devs) + $29/dev | Pro + centralized policy management, aggregated threat view |
 | Enterprise | Custom, annual | Teams + on-prem/air-gap, dedicated support, C3PAO-ready packages |
 
-The free tier is complete. GOVBENCH, Superpowers, OpenShell, ATLAS coverage, GHSA watcher, and T01-T76 all run locally with no network dependency.
+The free tier is complete. GOVBENCH, Superpowers, OpenShell, ATLAS coverage, GHSA watcher, and T01-T77 all run locally with no network dependency.
 
 ---
 
