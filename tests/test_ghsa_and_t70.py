@@ -286,7 +286,7 @@ class TestCoverageArtifact:
 
 class TestV0230ModuleAPI:
     def test_version(self):
-        assert aiglos.__version__ == "0.25.1"
+        assert aiglos.__version__ == "0.25.2"
 
     def test_ghsa_watcher_exported(self):
         assert "GHSAWatcher" in aiglos.__all__
@@ -297,10 +297,11 @@ class TestV0230ModuleAPI:
         assert hasattr(aiglos, "generate_coverage_artifact")
 
     def test_32_rules_in_v2(self):
-        assert len(RULES_T44_T66) == 32
+        assert len(RULES_T44_T66) == 34
 
-    def test_t75_is_last_rule(self):
-        assert RULES_T44_T66[-1]["id"] == "T75"
+    def test_t75_present(self):
+        ids = [r["id"] for r in RULES_T44_T66]
+        assert "T75" in ids
 
     def test_all_exports_importable(self):
         missing = [e for e in aiglos.__all__ if not hasattr(aiglos, e)]
