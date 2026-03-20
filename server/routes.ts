@@ -123,6 +123,13 @@ export async function registerRoutes(
   app.get("/superpowers", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
   app.get("/benchmark", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
 
+  app.get("/tutorials", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  app.get("/tutorials/power-user", (_req, res) => res.sendFile("tutorials/power-user.html", { root: publicRoot }));
+  app.get("/tutorials/github-actions", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  app.get("/tutorials/openclaw-hardening", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  app.get("/tutorials/lockdown-policy", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  app.get("/tutorials/superpowers", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+
   app.get("/:page", (req, res, next) => {
     if (staticPages.has(req.params.page)) {
       return res.sendFile(`${req.params.page}.html`, { root: publicRoot });
