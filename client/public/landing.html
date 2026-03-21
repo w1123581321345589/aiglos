@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aiglos - AI Agent Security Runtime</title>
-<meta name="description" content="Protocol-agnostic AI agent security runtime. 77 threat families, 19 campaign patterns, ATLAS coverage mapping, GHSA intelligence. One import, zero dependencies.">
-<meta property="og:title" content="Aiglos - AI Agent Security Runtime">
-<meta property="og:description" content="Every surface. Every session. Every belief. 77 threat families across MCP, HTTP, and subprocess. Zero dependencies.">
+<meta name="description" content="OpenClaw is the new computer. Aiglos is the security layer. 77 threat families, signed compliance artifacts, GOVBENCH governance benchmark. One import, zero dependencies.">
+<meta property="og:title" content="Aiglos - The Security Layer for AI Agents">
+<meta property="og:description" content="OpenClaw is the new computer. This is the security layer. 77 threat families. Signed compliance artifacts. Under 1ms per call. MIT license.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -202,6 +202,16 @@ h2{font-family:var(--sans);font-size:clamp(28px,4vw,48px);font-weight:700;line-h
 .threats-footer{display:flex;align-items:center;justify-content:center;padding:20px 0;margin-top:20px}
 .threats-count{font-size:13px;color:var(--muted)}
 
+.narrative{max-width:720px;margin:0 auto;padding:140px 24px}
+@media(min-width:768px){.narrative{padding:180px 48px}}
+.narrative-body{font-size:17px;color:var(--muted);line-height:1.85;margin-bottom:32px;font-weight:400}
+.narrative-body:last-child{margin-bottom:0}
+.narrative-body strong{color:var(--bright);font-weight:600}
+.narrative-body em{font-style:normal;color:var(--accent)}
+.narrative-install{font-family:var(--mono);font-size:15px;color:var(--bright);background:var(--faint);padding:12px 24px;border-radius:10px;border:1px solid var(--border2);display:inline-block;margin-top:8px;cursor:pointer;transition:all .2s}
+.narrative-install:hover{border-color:var(--border3);background:var(--card)}
+.narrative-quote{font-size:20px;font-weight:600;color:var(--bright);line-height:1.5;letter-spacing:-.01em;border-left:3px solid var(--accent);padding-left:24px;margin-bottom:32px}
+
 .code-section{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;margin-top:48px}
 @media(max-width:900px){.code-section{grid-template-columns:1fr}}
 .code-explain{padding:8px 0}
@@ -350,8 +360,8 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1200p
       <span class="hero-badge-dot"></span>
       v0.25.2 &middot; 77 threat families &middot; 1,784 tests passing
     </div>
-    <h1 data-testid="text-hero-heading">The security runtime<br>for <span class="gradient">AI agents</span></h1>
-    <p class="hero-sub" data-testid="text-hero-sub">Every tool call inspected. Every belief validated. Every session signed. One import, zero dependencies, pure Python stdlib.</p>
+    <h1 data-testid="text-hero-heading">OpenClaw is the new computer.<br><span class="gradient">This is the security layer.</span></h1>
+    <p class="hero-sub" data-testid="text-hero-sub">Jensen Huang called it "the most popular open source project in the history of humanity." The new computer needs a security layer. We're shipping it in week three.</p>
     <div class="hero-actions">
       <a href="#" class="btn-primary" onclick="openModal('free');return false" data-testid="button-install-free">Get started free</a>
       <a href="/docs" class="btn-secondary" data-testid="link-docs-hero">Documentation</a>
@@ -360,8 +370,8 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1200p
       <code onclick="copyInstall()" id="copy-cmd" data-testid="button-copy-install">pip install aiglos</code>
     </div>
     <div class="hero-stats">
-      <div class="hero-stat"><span class="hero-stat-n" data-testid="text-test-count">1,730</span><span class="hero-stat-l">Tests passing</span></div>
-      <div class="hero-stat"><span class="hero-stat-n" data-testid="text-threat-count">76</span><span class="hero-stat-l">Threat families</span></div>
+      <div class="hero-stat"><span class="hero-stat-n" data-testid="text-test-count">1,784</span><span class="hero-stat-l">Tests passing</span></div>
+      <div class="hero-stat"><span class="hero-stat-n" data-testid="text-threat-count">77</span><span class="hero-stat-l">Threat families</span></div>
       <div class="hero-stat"><span class="hero-stat-n" data-testid="text-trigger-count">18</span><span class="hero-stat-l">Inspection triggers</span></div>
       <div class="hero-stat"><span class="hero-stat-n" data-testid="text-campaign-count">19</span><span class="hero-stat-l">Campaign patterns</span></div>
       <div class="hero-stat"><span class="hero-stat-n" data-testid="text-atlas-coverage">93%</span><span class="hero-stat-l">ATLAS coverage</span></div>
@@ -371,6 +381,7 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1200p
       <span class="works-with-item">Claude Code</span>
       <span class="works-with-item">Cursor</span>
       <span class="works-with-item">Codex</span>
+      <span class="works-with-item">OpenClaw</span>
       <span class="works-with-item">Windsurf</span>
       <span class="works-with-item">Aider</span>
       <span class="works-with-item">Continue</span>
@@ -391,6 +402,25 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1200p
       <div class="t-cursor"></div>
     </div>
   </div>
+</section>
+
+<div class="section-divider"></div>
+
+<section class="narrative fade-in" id="why-now" data-testid="section-why-now">
+  <p class="narrative-body">The PC era took 10 years to figure out computer security. Norton launched in 1990, nine years after IBM shipped the PC. The category-defining breach came first.</p>
+  <p class="narrative-body"><strong>We're not waiting.</strong></p>
+  <p class="narrative-body">Aiglos is the behavioral security layer for every AI agent -- Claude Code, Cursor, Codex, OpenClaw. One import. 77 threat families. Signed compliance artifacts. The GOVBENCH governance benchmark, defined before any standard body required one.</p>
+  <p class="narrative-body">The platform is in <em>week three</em>. The breach hasn't happened yet. The window is open.</p>
+  <div class="narrative-install" onclick="copyInstall()" data-testid="button-install-narrative">pip install aiglos</div>
+</section>
+
+<div class="section-divider"></div>
+
+<section class="narrative fade-in" id="solo-founder" data-testid="section-solo-founder">
+  <div class="narrative-quote" data-testid="text-solo-quote">"A solo founder with OpenClaw can now build what used to take a 50-person team."</div>
+  <p class="narrative-body">That sentence means something nobody has said out loud:</p>
+  <p class="narrative-body">Your agent has access to your email, code, CRM, calendar, AWS credentials, Stripe account -- everything you've built. It runs overnight. A malicious MCP skill or a prompt injection at 3am, and there's no incident response team. There's just you, waking up to a drained account or a poisoned codebase.</p>
+  <p class="narrative-body"><strong>Aiglos closes the gap.</strong> Under 1ms per call. MIT license.</p>
 </section>
 
 <div class="section-divider"></div>
