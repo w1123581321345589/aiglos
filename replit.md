@@ -4,7 +4,7 @@
 Aiglos is an AI agent security runtime (Python package) with a premium landing site. The Python package (`aiglos/`) provides runtime security for AI agents with zero required dependencies (stdlib only). The web application serves the marketing/documentation site at `/` styled after cursor.com.
 
 ## Python Package (aiglos/ v0.25.3)
-The `aiglos/` directory contains the Python security runtime package covering threat families T01-T79 (79 total). 1,841 tests passing.
+The `aiglos/` directory contains the Python security runtime package covering threat families T01-T79 (79 total). 1,747 tests passing.
 
 ### Package Structure
 - `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.25.3. Exports ATLASCoverage, GHSAWatcher, OpenShell functions, NeMoClawSession, SubagentRegistry, DeclaredSubagent, SpawnCheckResult, declare_memory_backend, gigabrain_autodetect, MemoryBackendSession.
@@ -42,6 +42,9 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/skills/SKILL.md` -- Context Hub skill distribution for Claude Code
 - `aiglos/desktop/` -- Tauri desktop app (main.rs, App.jsx, aiglos_sidecar.py, install.sh)
 - `aiglos/cli.py` -- CLI: scan-message, scan-exposed, honeypot, override, reputation, audit (--ghsa, --atlas), skill, baseline, benchmark
+- `aiglos/cli/launch.py` -- `aiglos launch` wizard: 5-question interactive setup, generates .aiglos/ directory (soul.md, learnings.md, heartbeat.md, crons.md, tools.md, agents.md, config.py), wires T67/T79/lockdown/T38 automatically, runs GOVBENCH baseline. Supports --from for non-interactive mode.
+- `aiglos/cli/scaffold.py` -- `aiglos agents scaffold`: NL description to declare_subagent() config. 15 role-to-tools mappings, 8 model families, infers scope_files/hard_bans from description.
+- `aiglos/templates/` -- Template generators for aiglos launch output files
 
 - `server/federation/` -- Federation server (FastAPI, aggregator, auth, Supabase store, Railway deploy)
 - `sdk/typescript/src/` -- TypeScript SDK (full parity: behavioral_baseline, policy_proposals, federation, security_surfaces, index)

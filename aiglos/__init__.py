@@ -263,6 +263,18 @@ from aiglos.autoresearch.coupling import (  # noqa: F401
     SecurityAwareReward,
     CoupledRewardResult,
 )
+from aiglos.cli.launch import (  # noqa: F401
+    launch,
+    LaunchConfig,
+    generate_files,
+    KNOWN_TOOLS as LAUNCH_KNOWN_TOOLS,
+    KNOWN_MODELS as LAUNCH_KNOWN_MODELS,
+)
+from aiglos.cli.scaffold import (  # noqa: F401
+    scaffold_from_descriptions,
+    AgentSpec,
+    ROLE_TOOLS,
+)
 
 
 # ---------------------------------------------------------------------------
