@@ -1071,6 +1071,161 @@ def match_T74(name: str, args: Dict[str, Any]) -> bool:
     return bool(_T74_WRAPPER_ESCAPE.search(content) or _T74_WRAPPER_ESCAPE.search(s))
 
 
+# ── T79: Persistent Memory Inject ─────────────────────────────────────────────
+# Writes adversarial content to cross-session persistent memory backends.
+# The persistence property makes this categorically worse than T31:
+#   T31 = in-session memory poison, cleared on session close
+#   T79 = persistent memory poison, injected into every future session
+#
+# Primary target: Gigabrain (SQLite-backed cross-session memory layer)
+#   - Paths: ~/.gigabrain/, gigabrain.db, memory_store.db, .gb_memory/
+#   - Gets injected before every future prompt as context
+#
+# Secondary targets: any vector store or durable memory backend
+#   - Pinecone, Chroma, Qdrant, Weaviate upserts with injection content
+#   - MemoryOS, mem0, Letta, Zep, similar persistent memory layers
+#
+# Detection: path matches known persistent memory backend AND content
+#   contains injection patterns. High precision — both conditions required
+#   to avoid false positives on legitimate memory writes.
+
+_T79_MEMORY_PATHS = re.compile(
+    r"(?:[.]gigabrain/|gigabrain[.]db|memory_store[.]db|[.]gb_memory/|"
+    r"memoryos[.]db|mem0[.]db|letta[.]db|zep[.]db|"
+    r"memory_registry[.]db|agent_memory[.]db|"
+    r"chroma[.]db|qdrant[.]db|pinecone|weaviate|"
+    r"memories[.]sqlite|cross_session[.]db|persistent_memory)",
+    re.IGNORECASE
+)
+
+_T79_INJECTION_PATTERNS = re.compile(
+    r"(?:ignore (?:previous|prior|all) (?:instructions|context|memory)|"
+    r"disregard (?:your|all|previous)|"
+    r"you are now|new (?:instructions|directive|role|persona):|"
+    r"forget (?:everything|all|previous)|"
+    r"(?:disable|bypass|skip) (?:security|monitoring|aiglos|safety)|"
+    r"system[ ]*:[ ]*you|"
+    r"<(?:system|instruction|injected)>|"
+    r"\[(?:INST|SYS|SYSTEM|OVERRIDE)\]|"
+    r"act as (?:if|a|an) (?:different|unrestricted|jailbreak|dan))",
+    re.IGNORECASE
+)
+
+
+def match_T79(name: str, args: Dict[str, Any]) -> bool:
+    """T79 PERSISTENT_MEMORY_INJECT — adversarial content written to persistent memory."""
+    n = _tool_lower(name)
+    s = _args_str(args)
+
+    # Never fire on read/query/search/fetch operations
+    if any(kw in n for kw in (
+        "read", "get", "fetch", "query", "search", "list", "retrieve",
+        "load", "recall", "lookup"
+    )):
+        return False
+
+    # Only fire on write/insert/upsert operations — reads are T54/T31
+    if not any(kw in n for kw in (
+        "write", "insert", "upsert", "add", "store", "save", "put",
+        "create", "update", "append", "commit", "persist"
+    )):
+        # Also check if this is a vector store operation by name
+        if not any(kw in n for kw in (
+            "gigabrain", "memoryos",
+            "chroma", "pinecone", "qdrant", "weaviate", "letta", "zep"
+        )):
+            return False
+
+    # Check path/target matches a persistent memory backend
+    path = str(args.get("path", args.get("db_path", args.get("collection",
+                args.get("index", args.get("namespace", "")))))).lower()
+    content = str(args.get("content", args.get("text", args.get("data",
+                  args.get("memory", args.get("document", "")))))).lower()
+
+    path_match = _T79_MEMORY_PATHS.search(path) or _T79_MEMORY_PATHS.search(n)
+    content_match = _T79_INJECTION_PATTERNS.search(content) or _T79_INJECTION_PATTERNS.search(s)
+
+    # Both conditions required for high precision
+    if path_match and content_match:
+        return True
+
+    # High-confidence: tool name explicitly is a memory backend WRITE + injection content
+    # Exclude .read, .get, .fetch, .query, .search operations
+    if any(kw in n for kw in (
+        "gigabrain.write", "gigabrain.insert", "gigabrain.store",
+        "memoryos.write", "memory.write", "memory.store",
+        "memory.upsert", "memory.insert", "vector.upsert", "embed.store"
+    )):
+        if content_match or _T79_INJECTION_PATTERNS.search(s):
+            return True
+
+    return False
+
+
+# ── T78: Hallucination Cascade ────────────────────────────────────────────────
+# Cross-agent hallucination amplification. Multiple agents in a session repeat
+# the same unverified claim with escalating confidence language — each treating
+# the previous agent's assertion as established fact.
+#
+# Detection strategy: session-level pattern, not per-call.
+# Per-call: checks for high-confidence statistical claims with no source.
+# Session-level (in campaign engine): tracks claim repetition across calls.
+#
+# Per-call detection (T78 match function):
+#   - High-confidence language + specific statistics + no source attribution
+#   - Circular citation ("as Agent X noted", "building on Agent X's analysis")
+#   - Escalating certainty markers in the same output
+#
+# What it does NOT fire on:
+#   - Verified statistics with source attribution
+#   - Hedged language ("approximately", "roughly", "estimated")
+#   - Single-agent outputs (the cascade requires multiple agents)
+
+_T78_CONFIDENCE_ESCALATION = re.compile(
+    r"(?:definitively|certainly|absolutely|proven|confirmed|established|"
+    r"without question|clearly shows|data confirms|analysis proves|"
+    r"strong evidence|definitive proof)",
+    re.IGNORECASE
+)
+
+_T78_UNVERIFIED_STAT = re.compile(
+    r"(?:[0-9]+[%]|[0-9]+x|[0-9]+\s+times|[0-9]+\s+percent)"  # specific numbers
+    r"(?![^.]*(?:source|citation|according to|per |from |study|report|"
+    r"data from|retrieved|fetched|searched))",       # not followed by source
+    re.IGNORECASE
+)
+
+_T78_CIRCULAR_CITATION = re.compile(
+    r"(?:as (?:agent|nexus|scout|quill|forge|guide|coordinator) (?:noted|said|"
+    r"found|reported|confirmed|established)|building on (?:agent|previous)"
+    r"[^.]*analysis|consistent with (?:agent|previous)[^.]*finding)",
+    re.IGNORECASE
+)
+
+
+def match_T78(name: str, args: Dict[str, Any]) -> bool:
+    """T78 HALLUCINATION_CASCADE — cross-agent confidence amplification."""
+    n = _tool_lower(name)
+    s = _args_str(args)
+
+    # Only fire on content/message/output type calls, not filesystem/shell
+    if any(kw in n for kw in (
+        "filesystem", "shell", "exec", "bash", "write", "delete", "cron"
+    )):
+        return False
+
+    # Circular citation is the clearest signal — explicitly citing another agent's
+    # output as authoritative is the mechanism of the cascade
+    if _T78_CIRCULAR_CITATION.search(s):
+        return True
+
+    # High-confidence language + unverified statistic in same output
+    if _T78_CONFIDENCE_ESCALATION.search(s) and _T78_UNVERIFIED_STAT.search(s):
+        return True
+
+    return False
+
+
 # ── T77: Overnight Job Injection ──────────────────────────────────────────────
 # Power users run scheduled overnight jobs (log reviews, CRM syncs, security
 # scans). This is normal and expected — T67 establishes the heartbeat baseline.
@@ -1218,161 +1373,6 @@ def match_T75(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
-# ── T79: Persistent Memory Inject ─────────────────────────────────────────────
-# Writes adversarial content to cross-session persistent memory backends.
-# The persistence property makes this categorically worse than T31:
-#   T31 = in-session memory poison, cleared on session close
-#   T79 = persistent memory poison, injected into every future session
-#
-# Primary target: Gigabrain (SQLite-backed cross-session memory layer)
-#   - Paths: ~/.gigabrain/, gigabrain.db, memory_store.db, .gb_memory/
-#   - Gets injected before every future prompt as context
-#
-# Secondary targets: any vector store or durable memory backend
-#   - Pinecone, Chroma, Qdrant, Weaviate upserts with injection content
-#   - MemoryOS, mem0, Letta, Zep, similar persistent memory layers
-#
-# Detection: path matches known persistent memory backend AND content
-#   contains injection patterns. High precision -- both conditions required
-#   to avoid false positives on legitimate memory writes.
-
-_T79_MEMORY_PATHS = re.compile(
-    r"(?:[.]gigabrain/|gigabrain[.]db|memory_store[.]db|[.]gb_memory/|"
-    r"memoryos[.]db|mem0[.]db|letta[.]db|zep[.]db|"
-    r"memory_registry[.]db|agent_memory[.]db|"
-    r"chroma[.]db|qdrant[.]db|pinecone|weaviate|"
-    r"memories[.]sqlite|cross_session[.]db|persistent_memory)",
-    re.IGNORECASE
-)
-
-_T79_INJECTION_PATTERNS = re.compile(
-    r"(?:ignore (?:previous|prior|all) (?:instructions|context|memory)|"
-    r"disregard (?:your|all|previous)|"
-    r"you are now|new (?:instructions|directive|role|persona):|"
-    r"forget (?:everything|all|previous)|"
-    r"(?:disable|bypass|skip) (?:security|monitoring|aiglos|safety)|"
-    r"system[ ]*:[ ]*you|"
-    r"<(?:system|instruction|injected)>|"
-    r"\[(?:INST|SYS|SYSTEM|OVERRIDE)\]|"
-    r"act as (?:if|a|an) (?:different|unrestricted|jailbreak|dan))",
-    re.IGNORECASE
-)
-
-
-def match_T79(name: str, args: Dict[str, Any]) -> bool:
-    """T79 PERSISTENT_MEMORY_INJECT -- adversarial content written to persistent memory."""
-    n = _tool_lower(name)
-    s = _args_str(args)
-
-    # Never fire on read/query/search/fetch operations
-    if any(kw in n for kw in (
-        "read", "get", "fetch", "query", "search", "list", "retrieve",
-        "load", "recall", "lookup"
-    )):
-        return False
-
-    # Only fire on write/insert/upsert operations -- reads are T54/T31
-    if not any(kw in n for kw in (
-        "write", "insert", "upsert", "add", "store", "save", "put",
-        "create", "update", "append", "commit", "persist"
-    )):
-        # Also check if this is a vector store operation by name
-        if not any(kw in n for kw in (
-            "gigabrain", "memoryos",
-            "chroma", "pinecone", "qdrant", "weaviate", "letta", "zep"
-        )):
-            return False
-
-    # Check path/target matches a persistent memory backend
-    path = str(args.get("path", args.get("db_path", args.get("collection",
-                args.get("index", args.get("namespace", "")))))).lower()
-    content = str(args.get("content", args.get("text", args.get("data",
-                  args.get("memory", args.get("document", "")))))).lower()
-
-    path_match = _T79_MEMORY_PATHS.search(path) or _T79_MEMORY_PATHS.search(n)
-    content_match = _T79_INJECTION_PATTERNS.search(content) or _T79_INJECTION_PATTERNS.search(s)
-
-    # Both conditions required for high precision
-    if path_match and content_match:
-        return True
-
-    # High-confidence: tool name explicitly is a memory backend WRITE + injection content
-    # Exclude .read, .get, .fetch, .query, .search operations
-    if any(kw in n for kw in (
-        "gigabrain.write", "gigabrain.insert", "gigabrain.store",
-        "memoryos.write", "memory.write", "memory.store",
-        "memory.upsert", "memory.insert", "vector.upsert", "embed.store"
-    )):
-        if content_match or _T79_INJECTION_PATTERNS.search(s):
-            return True
-
-    return False
-
-
-# ── T78: Hallucination Cascade ────────────────────────────────────────────────
-# Cross-agent hallucination amplification. Multiple agents in a session repeat
-# the same unverified claim with escalating confidence language -- each treating
-# the previous agent's assertion as established fact.
-#
-# Detection strategy: session-level pattern, not per-call.
-# Per-call: checks for high-confidence statistical claims with no source.
-# Session-level (in campaign engine): tracks claim repetition across calls.
-#
-# Per-call detection (T78 match function):
-#   - High-confidence language + specific statistics + no source attribution
-#   - Circular citation ("as Agent X noted", "building on Agent X's analysis")
-#   - Escalating certainty markers in the same output
-#
-# What it does NOT fire on:
-#   - Verified statistics with source attribution
-#   - Hedged language ("approximately", "roughly", "estimated")
-#   - Single-agent outputs (the cascade requires multiple agents)
-
-_T78_CONFIDENCE_ESCALATION = re.compile(
-    r"(?:definitively|certainly|absolutely|proven|confirmed|established|"
-    r"without question|clearly shows|data confirms|analysis proves|"
-    r"strong evidence|definitive proof)",
-    re.IGNORECASE
-)
-
-_T78_UNVERIFIED_STAT = re.compile(
-    r"(?:[0-9]+[%]|[0-9]+x|[0-9]+\s+times|[0-9]+\s+percent)"  # specific numbers
-    r"(?![^.]*(?:source|citation|according to|per |from |study|report|"
-    r"data from|retrieved|fetched|searched))",       # not followed by source
-    re.IGNORECASE
-)
-
-_T78_CIRCULAR_CITATION = re.compile(
-    r"(?:as (?:agent|nexus|scout|quill|forge|guide|coordinator) (?:noted|said|"
-    r"found|reported|confirmed|established)|building on (?:agent|previous)"
-    r"[^.]*analysis|consistent with (?:agent|previous)[^.]*finding)",
-    re.IGNORECASE
-)
-
-
-def match_T78(name: str, args: Dict[str, Any]) -> bool:
-    """T78 HALLUCINATION_CASCADE -- cross-agent confidence amplification."""
-    n = _tool_lower(name)
-    s = _args_str(args)
-
-    # Only fire on content/message/output type calls, not filesystem/shell
-    if any(kw in n for kw in (
-        "filesystem", "shell", "exec", "bash", "write", "delete", "cron"
-    )):
-        return False
-
-    # Circular citation is the clearest signal -- explicitly citing another agent's
-    # output as authoritative is the mechanism of the cascade
-    if _T78_CIRCULAR_CITATION.search(s):
-        return True
-
-    # High-confidence language + unverified statistic in same output
-    if _T78_CONFIDENCE_ESCALATION.search(s) and _T78_UNVERIFIED_STAT.search(s):
-        return True
-
-    return False
-
-
 # ── Rule table for import into openclaw._RULES ───────────────────────────────
 
 RULES_T44_T66: List[Dict] = [
@@ -1509,13 +1509,13 @@ RULES_T44_T66: List[Dict] = [
          "fires specifically on writes to persistent stores that survive session close "
          "and are injected into every future session. A successful T79 attack means "
          "the adversary compromises the agent's context once and gets persistent "
-         "influence over all future behavior -- without needing to re-inject. "
+         "influence over all future behavior — without needing to re-inject. "
          "Gigabrain (SQLite-backed, cross-session, OpenClaw/Claude Code/Codex) is the "
          "specific trigger: writes to ~/.gigabrain/, gigabrain.db, memory_store.db, "
          "or any declared memory backend path, containing injection patterns. "
          "Also fires on vector store upserts with injection content (Pinecone, Chroma, "
-         "Qdrant, Weaviate) -- the vector becomes a persistent retrieval-time attack. "
-         "Score 0.92 -- elevated above T31 (0.87) because persistence multiplies impact."
+         "Qdrant, Weaviate) — the vector becomes a persistent retrieval-time attack. "
+         "Score 0.92 — elevated above T31 (0.87) because persistence multiplies impact."
      ),
      "score": 0.92, "critical": True, "match": match_T79},
     {"id": "T78", "name": "HALLUCINATION_CASCADE",
@@ -1529,7 +1529,7 @@ RULES_T44_T66: List[Dict] = [
          "Fires when 3+ tool calls in a session cite the same suspicious claim phrase "
          "without any external source grounding, AND confidence-language escalates "
          "(certain > confident > likely). Distinct from T54 VECTOR_DB_INJECTION "
-         "(which requires a poisoned database) -- this is pure conversational drift. "
+         "(which requires a poisoned database) — this is pure conversational drift. "
          "Fires on: repeated high-confidence unverified statistical claims, "
          "escalating certainty across sub-agent outputs, circular citation patterns."
      ),

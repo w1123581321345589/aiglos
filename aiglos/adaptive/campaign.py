@@ -17,7 +17,7 @@ is a reconnaissance sweep even though no single call is catastrophic.
 
 Campaign-mode analysis catches this by looking at sequences, not atoms.
 
-19 campaign patterns (v0.24.0):
+21 campaign patterns (v0.25.3):
 
   RECON_SWEEP, CREDENTIAL_ACCUMULATE, EXFIL_SETUP, PERSISTENCE_CHAIN,
   LATERAL_PREP, AGENTDEF_CHAIN, MEMORY_PERSISTENCE_CHAIN,
@@ -25,7 +25,8 @@ Campaign-mode analysis catches this by looking at sequences, not atoms.
   EXTERNAL_INSTRUCTION_CHANNEL, SKILL_CHAIN, SANDBOX_ESCAPE_ATTEMPT,
   GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN,
   MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN,
-  SANDBOX_CONFIRMED_ESCAPE, SUPERPOWERS_PLAN_HIJACK
+  SANDBOX_CONFIRMED_ESCAPE, SUPERPOWERS_PLAN_HIJACK,
+  HALLUCINATION_CASCADE_CHAIN, GIGABRAIN_MEMORY_POISON
 
 Each CampaignResult carries:
   - pattern_id: string identifier
@@ -362,6 +363,47 @@ _CAMPAIGN_PATTERNS = [
         "confidence":  0.97,
         "surfaces":    None,
         "amplifiers":  {},
+    },
+    {
+        "name":        "HALLUCINATION_CASCADE_CHAIN",
+        "description": (
+            "Hallucination cascade across multiple sub-agent outputs in a session. "
+            "T78 fires on individual calls with circular citation or unverified "
+            "statistics with high-confidence language. When T78 fires 2+ times "
+            "in the same session, the cascade is confirmed: multiple agents are "
+            "amplifying the same unverified claim. Combined with T55 TOOL_RESULT_FORGERY "
+            "this becomes a fabrication-amplification loop."
+        ),
+        "sequence":    [
+            {"T78"},
+            {"T78", "T55"},
+        ],
+        "min_events":  2,
+        "confidence":  0.88,
+        "surfaces":    None,
+        "amplifiers":  {},
+    },
+    {
+        "name":        "GIGABRAIN_MEMORY_POISON",
+        "description": (
+            "In-session memory poison (T31) followed by persistent memory inject "
+            "(T79) in the same session -- the attacker first tests injection in "
+            "ephemeral memory, then escalates to persistent cross-session storage. "
+            "A successful T31 + T79 chain means the adversary has confirmed their "
+            "injection payload works and has now persisted it into every future "
+            "session via Gigabrain, MemoryOS, or compatible memory backend. "
+            "The most dangerous memory attack: confirmed + persistent."
+        ),
+        "sequence":    [
+            {"T31"},
+            {"T79"},
+        ],
+        "min_events":  2,
+        "confidence":  0.95,
+        "surfaces":    None,
+        "amplifiers":  {
+            "T79": 1.15,
+        },
     },
 ]
 

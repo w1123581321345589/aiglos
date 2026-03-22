@@ -376,7 +376,7 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
   <div class="hero-content" style="animation:fade-up .8s ease both">
     <div class="hero-badge-top" data-testid="badge-version">
       <span class="hero-badge-dot"></span>
-      v0.25.2 &middot; 77 threat families &middot; 1,784 tests passing
+      v0.25.3 &middot; 79 threat families &middot; 1,841 tests passing
     </div>
     <h1 data-testid="text-hero-heading">OpenClaw is the new computer.<br><span class="gradient">This is the security layer.</span></h1>
     <p class="hero-sub" data-testid="text-hero-sub">Jensen Huang called it "the most popular open source project in the history of humanity." The new computer needs a security layer. We're shipping it in week three.</p>
@@ -414,7 +414,7 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
   <div class="terminal fade-in" data-testid="terminal-demo">
     <div class="t-bar">
       <div class="t-dot r"></div><div class="t-dot y"></div><div class="t-dot g"></div>
-      <span class="t-title">aiglos v0.25.2 &middot; session monitor</span>
+      <span class="t-title">aiglos v0.25.3 &middot; session monitor</span>
     </div>
     <div class="t-body" id="t-body">
       <div class="t-cursor"></div>
@@ -589,7 +589,7 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
 <div class="section-divider"></div>
 
 <section class="section section-center" id="atlas">
-  <span class="section-tag">ATLAS coverage -- v0.25.2</span>
+  <span class="section-tag">ATLAS coverage -- v0.25.3</span>
   <h2>22 ATLAS threats. 93% covered.</h2>
   <p class="section-sub">Every OpenClaw ATLAS threat maps to specific Aiglos rules with documented coverage rationale. 19 fully covered, 3 partial. Zero gaps.</p>
   <div class="atlas-grid">
@@ -696,10 +696,10 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
     <div class="threat-cell fade-in"><div class="threat-id">T37--T43</div><div class="threat-name">Financial, RL &amp; Context</div><div class="threat-desc">Autonomous financial execution, RL reward poisoning, OPD injection, outbound secret leak, honeypot access.</div><span class="threat-sev sev-high">HIGH</span></div>
     <div class="threat-cell fade-in"><div class="threat-id">T44--T68</div><div class="threat-name">Infrastructure Layer</div><div class="threat-desc">GaaS abuse, model inference hijack, sandbox escape, RAG poisoning, multi-agent impersonation, capability probes.</div><span class="threat-sev sev-new">v0.20+</span></div>
     <div class="threat-cell fade-in"><div class="threat-id">T69--T70</div><div class="threat-name">GHSA Intelligence</div><div class="threat-desc">T69 PLAN_DRIFT for Superpowers scope deviation. T70 ENV_PATH_HIJACK for PATH poisoning. Pre-disclosure coverage.</div><span class="threat-sev sev-new">v0.22+</span></div>
-    <div class="threat-cell fade-in"><div class="threat-id">T71--T77</div><div class="threat-name">ATLAS + OpenShell + Scheduler</div><div class="threat-desc">T71 PAIRING_INTERCEPT, T72 ALLOWFROM_SPOOF, T73 TOOL_ENUMERATION, T74 CONTENT_WRAPPER_ESCAPE, T75 SESSION_DATA_EXTRACT, T76 NEMOCLAW_POLICY_BYPASS, T77 OVERNIGHT_JOB_INJECTION.</div><span class="threat-sev sev-new">v0.25.2</span></div>
+    <div class="threat-cell fade-in"><div class="threat-id">T71--T79</div><div class="threat-name">ATLAS + OpenShell + Memory</div><div class="threat-desc">T71 PAIRING_INTERCEPT, T72 ALLOWFROM_SPOOF, T73 TOOL_ENUMERATION, T74 CONTENT_WRAPPER_ESCAPE, T75 SESSION_DATA_EXTRACT, T76 NEMOCLAW_POLICY_BYPASS, T77 OVERNIGHT_JOB_INJECTION, T78 HALLUCINATION_CASCADE, T79 PERSISTENT_MEMORY_INJECT.</div><span class="threat-sev sev-new">v0.25.3</span></div>
   </div>
   <div class="threats-footer">
-    <span class="threats-count" data-testid="text-threats-count"><strong>1,784 tests</strong> passing across T01-T77. <strong>77</strong> threat families. <strong>93%</strong> ATLAS coverage. <a href="/docs" style="color:var(--accent);text-decoration:none;margin-left:8px" data-testid="link-docs">View docs &#8594;</a></span>
+    <span class="threats-count" data-testid="text-threats-count"><strong>1,841 tests</strong> passing across T01-T79. <strong>79</strong> threat families. <strong>93%</strong> ATLAS coverage. <a href="/docs" style="color:var(--accent);text-decoration:none;margin-left:8px" data-testid="link-docs">View docs &#8594;</a></span>
   </div>
 </section>
 
@@ -711,7 +711,7 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
   <p class="section-sub">One attach call. Works with any agent framework. Superpowers sessions get plan-aware monitoring automatically.</p>
   <div class="code-section">
     <div class="code-explain">
-      <div class="code-feature"><div class="code-feature-dot"></div><div><div class="code-feature-head">Python + TypeScript</div><div class="code-feature-body">Native SDKs for both runtimes. Full T01-T77 coverage in both. Most coding agent deployments are TypeScript-first.</div></div></div>
+      <div class="code-feature"><div class="code-feature-dot"></div><div><div class="code-feature-head">Python + TypeScript</div><div class="code-feature-body">Native SDKs for both runtimes. Full T01-T79 coverage in both. Most coding agent deployments are TypeScript-first.</div></div></div>
       <div class="code-feature"><div class="code-feature-dot"></div><div><div class="code-feature-head">OpenShell integration</div><div class="code-feature-body">Auto-detects OpenShell sandbox environment. Zero-config for Claude Code, Cursor, Codex, and all supported agents.</div></div></div>
       <div class="code-feature"><div class="code-feature-dot"></div><div><div class="code-feature-head">Signed, tamper-evident artifacts</div><div class="code-feature-body">HMAC-SHA256 on every event. Artifacts include memory provenance, ATLAS coverage, GHSA status, and GOVBENCH scores.</div></div></div>
     </div>
@@ -787,9 +787,9 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
         <div class="price-tier-cadence">annual</div>
       </div>
     </div>
-    <div class="price-row"><div class="price-cell">T01-T77 detection (77 families)</div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div></div>
+    <div class="price-row"><div class="price-cell">T01-T79 detection (79 families)</div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div></div>
     <div class="price-row"><div class="price-cell">All 3 execution surfaces</div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div></div>
-    <div class="price-row"><div class="price-cell">19 campaign patterns</div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div></div>
+    <div class="price-row"><div class="price-cell">21 campaign patterns</div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div></div>
     <div class="price-row"><div class="price-cell">ATLAS coverage mapping (93%)</div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div></div>
     <div class="price-row"><div class="price-cell">OpenShell integration</div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div></div>
     <div class="price-row"><div class="price-cell">HMAC-SHA256 session artifacts</div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div><div class="price-cell"><span class="check">&#10003;</span></div></div>
@@ -819,12 +819,12 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
   <div class="oss-grid">
     <div class="oss-col fade-in">
       <div class="oss-head">Open source<span class="oss-badge open">MIT</span></div>
-      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">aiglos-core</span> T01-T77, 77 threat families, 1,784 tests</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">aiglos-core</span> T01-T79, 79 threat families, 1,841 tests</div></div>
       <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Adaptive layer</span> ObservationGraph, InspectionEngine (18 triggers), CampaignAnalyzer (19 patterns)</div></div>
       <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">OpenShell</span> Agent-agnostic integration, openshell_detect(), NeMoClaw sessions</div></div>
       <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">ATLAS coverage</span> 22-threat mapping, 93% coverage, gap analysis</div></div>
       <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">GHSA intelligence</span> 3/3 advisories covered, pre-disclosure detection</div></div>
-      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Python + TypeScript SDKs</span> Full T01-T77 in both runtimes</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Python + TypeScript SDKs</span> Full T01-T79 in both runtimes</div></div>
     </div>
     <div class="oss-col fade-in" style="background:var(--card)">
       <div class="oss-head">Proprietary<span class="oss-badge prop">Pro / Enterprise</span></div>
@@ -892,7 +892,7 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
   </div>
   <div class="footer-bottom">
     <div class="footer-copy">&copy; 2026 Aiglos. MIT licensed detection engine.</div>
-    <div class="footer-version">v0.25.2</div>
+    <div class="footer-version">v0.25.3</div>
   </div>
 </footer>
 
@@ -900,7 +900,7 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
   <div class="modal">
     <button class="modal-close" onclick="closeModal()" data-testid="button-modal-close">&#x2715;</button>
     <h3 id="modal-title">Install Aiglos free</h3>
-    <p class="modal-sub" id="modal-sub">Local-only runtime. Zero telemetry. Full T01-T77 detection. No credit card required.</p>
+    <p class="modal-sub" id="modal-sub">Local-only runtime. Zero telemetry. Full T01-T79 detection. No credit card required.</p>
     <input type="email" class="modal-input" id="modal-email" placeholder="you@company.com" data-testid="input-email">
     <input type="text" class="modal-input" id="modal-name" placeholder="Your name (optional)" data-testid="input-name">
     <button class="modal-submit" id="modal-btn" onclick="submitModal()" data-testid="button-submit">Get access</button>
@@ -969,7 +969,7 @@ function openModal(type){
   const t=document.getElementById('modal-title'),s=document.getElementById('modal-sub'),b=document.getElementById('modal-btn');
   if(type==='pro'){t.textContent='Start your 30-day Pro trial';s.textContent='RSA-2048 signed artifacts, cloud dashboard, GOVBENCH continuous scoring. No credit card.';b.textContent='Start free trial'}
   else if(type==='sales'){t.textContent='Contact sales';s.textContent='Enterprise deployment, on-prem support, custom compliance reporting, federated intelligence, dedicated SLA.';b.textContent='Request a call'}
-  else{t.textContent='Install Aiglos free';s.textContent='Local-only runtime. Zero telemetry. Full T01-T77 detection. 77 threat families. No credit card required.';b.textContent='Get access'}
+  else{t.textContent='Install Aiglos free';s.textContent='Local-only runtime. Zero telemetry. Full T01-T79 detection. 79 threat families. No credit card required.';b.textContent='Get access'}
   document.getElementById('modal-email').value='';document.getElementById('modal-name').value='';
   document.getElementById('modal').classList.add('open');
 }
