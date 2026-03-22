@@ -385,13 +385,13 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
       <a href="/docs" class="btn-secondary" data-testid="link-docs-hero">Documentation</a>
     </div>
     <div class="install-strip" data-testid="text-install">
-      <code onclick="copyInstall()" id="copy-cmd" data-testid="button-copy-install">pip install aiglos</code>
+      <code onclick="copyInstall()" id="copy-cmd" data-testid="button-copy-install">pip install aiglos &amp;&amp; aiglos launch</code>
     </div>
     <div class="hero-stats">
-      <div class="hero-stat"><span class="hero-stat-n" data-testid="text-test-count">1,784</span><span class="hero-stat-l">Tests passing</span></div>
-      <div class="hero-stat"><span class="hero-stat-n" data-testid="text-threat-count">77</span><span class="hero-stat-l">Threat families</span></div>
+      <div class="hero-stat"><span class="hero-stat-n" data-testid="text-test-count">1,747</span><span class="hero-stat-l">Tests passing</span></div>
+      <div class="hero-stat"><span class="hero-stat-n" data-testid="text-threat-count">79</span><span class="hero-stat-l">Threat families</span></div>
       <div class="hero-stat"><span class="hero-stat-n" data-testid="text-trigger-count">18</span><span class="hero-stat-l">Inspection triggers</span></div>
-      <div class="hero-stat"><span class="hero-stat-n" data-testid="text-campaign-count">19</span><span class="hero-stat-l">Campaign patterns</span></div>
+      <div class="hero-stat"><span class="hero-stat-n" data-testid="text-campaign-count">21</span><span class="hero-stat-l">Campaign patterns</span></div>
       <div class="hero-stat"><span class="hero-stat-n" data-testid="text-atlas-coverage">93%</span><span class="hero-stat-l">ATLAS coverage</span></div>
     </div>
     <div class="works-with fade-in" data-testid="works-with">
@@ -427,9 +427,9 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
 <section class="narrative fade-in" id="why-now" data-testid="section-why-now">
   <p class="narrative-body">The PC era took 10 years to figure out computer security. Norton launched in 1990, nine years after IBM shipped the PC. The category-defining breach came first.</p>
   <p class="narrative-body"><strong>We're not waiting.</strong></p>
-  <p class="narrative-body">Aiglos is the behavioral security layer for every AI agent -- Claude Code, Cursor, Codex, OpenClaw. One import. 77 threat families. Signed compliance artifacts. The GOVBENCH governance benchmark, defined before any standard body required one.</p>
+  <p class="narrative-body">Aiglos is the behavioral security layer for every AI agent -- Claude Code, Cursor, Codex, OpenClaw. One import. 79 threat families. Signed compliance artifacts. The GOVBENCH governance benchmark, defined before any standard body required one.</p>
   <p class="narrative-body">The platform is in <em>week three</em>. The breach hasn't happened yet. The window is open.</p>
-  <div class="narrative-install" onclick="copyInstall()" data-testid="button-install-narrative">pip install aiglos</div>
+  <div class="narrative-install" onclick="copyInstall()" data-testid="button-install-narrative">pip install aiglos &amp;&amp; aiglos launch</div>
 </section>
 
 <div class="section-divider"></div>
@@ -950,7 +950,7 @@ function addLine(){
 for(let i=0;i<8;i++)addLine();
 setInterval(addLine,1000+Math.random()*400);
 
-function copyInstall(){navigator.clipboard.writeText('pip install aiglos').then(()=>{const b=document.getElementById('copy-cmd');b.textContent='Copied!';setTimeout(()=>{b.textContent='pip install aiglos'},2000)})}
+function copyInstall(){navigator.clipboard.writeText('pip install aiglos && aiglos launch').then(()=>{const b=document.getElementById('copy-cmd');b.textContent='Copied!';setTimeout(()=>{b.textContent='pip install aiglos && aiglos launch'},2000)})}
 
 function toggleCampaigns(){
   const el=document.getElementById('camp-more');
@@ -982,7 +982,7 @@ function submitModal(){
   const btn=document.getElementById('modal-btn');btn.textContent='Sending...';btn.disabled=true;
   setTimeout(()=>{
     var headingText=_type==='pro'?'Trial activated':_type==='sales'?'We will be in touch':"You're in";
-    var bodyText=_type==='pro'?'Check your email for your trial key.':_type==='sales'?'A member of our team will reach out within one business day.':'Installation instructions sent. Run: <code style="font-family:var(--mono);font-size:13px;color:var(--accent)">pip install aiglos</code>';
+    var bodyText=_type==='pro'?'Check your email for your trial key.':_type==='sales'?'A member of our team will reach out within one business day.':'Installation instructions sent. Run: <code style="font-family:var(--mono);font-size:13px;color:var(--accent)">pip install aiglos &amp;&amp; aiglos launch</code>';
     document.querySelector('.modal').innerHTML='<div style="text-align:center;padding:24px 0"><div style="width:48px;height:48px;border-radius:50%;background:var(--green2);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 20px">OK</div><h3 style="font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--bright);margin-bottom:10px">'+headingText+'</h3><p style="font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:24px">'+bodyText+'</p></div>';
   },1200);
 }
