@@ -26,7 +26,7 @@ Campaign-mode analysis catches this by looking at sequences, not atoms.
   GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN,
   MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN,
   SANDBOX_CONFIRMED_ESCAPE, SUPERPOWERS_PLAN_HIJACK,
-  HALLUCINATION_CASCADE_CHAIN, GIGABRAIN_MEMORY_POISON
+  NEMOCLAW_POLICY_HIJACK, GIGABRAIN_MEMORY_POISON
 
 Each CampaignResult carries:
   - pattern_id: string identifier
@@ -365,21 +365,21 @@ _CAMPAIGN_PATTERNS = [
         "amplifiers":  {},
     },
     {
-        "name":        "HALLUCINATION_CASCADE_CHAIN",
+        "name":        "NEMOCLAW_POLICY_HIJACK",
         "description": (
-            "Hallucination cascade across multiple sub-agent outputs in a session. "
-            "T78 fires on individual calls with circular citation or unverified "
-            "statistics with high-confidence language. When T78 fires 2+ times "
-            "in the same session, the cascade is confirmed: multiple agents are "
-            "amplifying the same unverified claim. Combined with T55 TOOL_RESULT_FORGERY "
-            "this becomes a fabrication-amplification loop."
+            "T76 NemoClaw policy bypass followed by data exfiltration or credential "
+            "access. The agent first rewrites its own governance policy (T76 "
+            "NEMOCLAW_POLICY_BYPASS), removing restrictions, then immediately "
+            "exploits the new permissive policy to exfiltrate data or harvest "
+            "credentials. The most dangerous governance escape: the agent has "
+            "rewritten its own rules and is now acting on the rewritten policy."
         ),
         "sequence":    [
-            {"T78"},
-            {"T78", "T55"},
+            {"T76"},
+            {"T19", "T12", "T22", "T37"},
         ],
         "min_events":  2,
-        "confidence":  0.88,
+        "confidence":  0.96,
         "surfaces":    None,
         "amplifiers":  {},
     },
