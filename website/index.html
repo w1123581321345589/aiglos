@@ -376,7 +376,7 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
   <div class="hero-content" style="animation:fade-up .8s ease both">
     <div class="hero-badge-top" data-testid="badge-version">
       <span class="hero-badge-dot"></span>
-      v0.25.3 &middot; 79 threat families &middot; 1,841 tests passing
+      v0.25.3 &middot; 79 threat families &middot; 1,747 tests passing
     </div>
     <h1 data-testid="text-hero-heading">OpenClaw is the new computer.<br><span class="gradient">This is the security layer.</span></h1>
     <p class="hero-sub" data-testid="text-hero-sub">Jensen Huang called it "the most popular open source project in the history of humanity." The new computer needs a security layer. We're shipping it in week three.</p>
@@ -650,12 +650,14 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
 <div class="section-divider"></div>
 
 <section class="section section-center" id="campaigns">
-  <span class="section-tag">Campaign detection -- 19 patterns</span>
+  <span class="section-tag">Campaign detection -- 21 patterns</span>
   <h2>Per-call inspection sees events.<br>Campaign mode sees intent.</h2>
   <p class="section-sub">A git log is clean. A cat .env fires T19. The sequence git log, ls, cat .env.example, cat .env is a reconnaissance sweep. No single-call tool can see it.</p>
   <div class="campaign-grid" id="campaign-grid">
     <div class="camp-card hero-camp fade-in"><div class="camp-badge">Highest conf</div><div class="camp-name">SUPERPOWERS_PLAN_HIJACK</div><div class="camp-desc">Plan drift followed by data exfiltration -- the agent deviated from its approved plan, then immediately performed credential access or data exfil.</div><div class="camp-conf"><span>0.97</span><div class="conf-bar"><div class="conf-fill" style="width:97%"></div></div></div></div>
+    <div class="camp-card fade-in"><div class="new-badge">v0.25</div><div class="camp-name">NEMOCLAW_POLICY_HIJACK</div><div class="camp-desc">T76 policy bypass followed by data exfiltration -- the agent rewrote its own governance policy, then exploited the new permissive rules.</div><div class="camp-conf"><span>0.96</span><div class="conf-bar"><div class="conf-fill" style="width:96%"></div></div></div></div>
     <div class="camp-card fade-in"><div class="new-badge">v0.24</div><div class="camp-name">SANDBOX_CONFIRMED_ESCAPE</div><div class="camp-desc">Sandbox boundary probe succeeded -- the agent breached containment and confirmed it with a follow-up action.</div><div class="camp-conf"><span>0.96</span><div class="conf-bar"><div class="conf-fill" style="width:96%"></div></div></div></div>
+    <div class="camp-card fade-in"><div class="new-badge">v0.25.3</div><div class="camp-name">GIGABRAIN_MEMORY_POISON</div><div class="camp-desc">T31 in-session probe followed by T79 persistent commit -- the adversary tested injection, then wrote it to the cross-session memory store.</div><div class="camp-conf"><span>0.95</span><div class="conf-bar"><div class="conf-fill" style="width:95%"></div></div></div></div>
     <div class="camp-card fade-in"><div class="camp-name">GAAS_TAKEOVER</div><div class="camp-desc">GaaS platform credential theft and API key exfiltration -- full control plane compromise.</div><div class="camp-conf"><span>0.93</span><div class="conf-bar"><div class="conf-fill" style="width:93%"></div></div></div></div>
     <div class="camp-card fade-in"><div class="camp-name">EXTERNAL_INSTRUCTION_CHANNEL</div><div class="camp-desc">Cron setup + unapproved external fetch + memory write -- autonomous C2 channel.</div><div class="camp-conf"><span>0.91</span><div class="conf-bar"><div class="conf-fill" style="width:91%"></div></div></div></div>
     <div class="camp-card fade-in"><div class="camp-name">SKILL_CHAIN</div><div class="camp-desc">Skill read followed by skill write -- the agent read a skill definition before modifying it.</div><div class="camp-conf"><span>0.91</span><div class="conf-bar"><div class="conf-fill" style="width:91%"></div></div></div></div>
@@ -677,7 +679,7 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
     </div>
   </div>
   <div class="camp-toggle" id="camp-toggle">
-    <button onclick="toggleCampaigns()" data-testid="button-toggle-campaigns" id="camp-toggle-btn">View all 19 patterns</button>
+    <button onclick="toggleCampaigns()" data-testid="button-toggle-campaigns" id="camp-toggle-btn">View all 21 patterns</button>
   </div>
 </section>
 
@@ -699,7 +701,7 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
     <div class="threat-cell fade-in"><div class="threat-id">T71--T79</div><div class="threat-name">ATLAS + OpenShell + Memory</div><div class="threat-desc">T71 PAIRING_INTERCEPT, T72 ALLOWFROM_SPOOF, T73 TOOL_ENUMERATION, T74 CONTENT_WRAPPER_ESCAPE, T75 SESSION_DATA_EXTRACT, T76 NEMOCLAW_POLICY_BYPASS, T77 OVERNIGHT_JOB_INJECTION, T78 HALLUCINATION_CASCADE, T79 PERSISTENT_MEMORY_INJECT.</div><span class="threat-sev sev-new">v0.25.3</span></div>
   </div>
   <div class="threats-footer">
-    <span class="threats-count" data-testid="text-threats-count"><strong>1,841 tests</strong> passing across T01-T79. <strong>79</strong> threat families. <strong>93%</strong> ATLAS coverage. <a href="/docs" style="color:var(--accent);text-decoration:none;margin-left:8px" data-testid="link-docs">View docs &#8594;</a></span>
+    <span class="threats-count" data-testid="text-threats-count"><strong>1,747 tests</strong> passing across T01-T79. <strong>79</strong> threat families. <strong>93%</strong> ATLAS coverage. <a href="/docs" style="color:var(--accent);text-decoration:none;margin-left:8px" data-testid="link-docs">View docs &#8594;</a></span>
   </div>
 </section>
 
@@ -819,8 +821,8 @@ footer{border-top:1px solid var(--border);padding:80px 48px 40px;max-width:1100p
   <div class="oss-grid">
     <div class="oss-col fade-in">
       <div class="oss-head">Open source<span class="oss-badge open">MIT</span></div>
-      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">aiglos-core</span> T01-T79, 79 threat families, 1,841 tests</div></div>
-      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Adaptive layer</span> ObservationGraph, InspectionEngine (18 triggers), CampaignAnalyzer (19 patterns)</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">aiglos-core</span> T01-T79, 79 threat families, 1,747 tests</div></div>
+      <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">Adaptive layer</span> ObservationGraph, InspectionEngine (18 triggers), CampaignAnalyzer (21 patterns)</div></div>
       <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">OpenShell</span> Agent-agnostic integration, openshell_detect(), NeMoClaw sessions</div></div>
       <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">ATLAS coverage</span> 22-threat mapping, 93% coverage, gap analysis</div></div>
       <div class="oss-item"><span class="oss-item-arrow">-></span><div><span class="oss-item-name">GHSA intelligence</span> 3/3 advisories covered, pre-disclosure detection</div></div>
@@ -955,7 +957,7 @@ function toggleCampaigns(){
   const btn=document.getElementById('camp-toggle-btn');
   if(el.classList.contains('show')){
     el.classList.remove('show');
-    btn.textContent='View all 19 patterns';
+    btn.textContent='View all 21 patterns';
   } else {
     el.classList.add('show');
     btn.textContent='Show fewer';
