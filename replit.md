@@ -27,7 +27,7 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/integrations/override.py` -- OverrideManager (6-char codes, 120s expiry, 3 attempts)
 - `aiglos/adaptive/source_reputation.py` -- SourceReputationGraph (cross-session source tracking, 4 risk levels)
 - `aiglos/adaptive/observation.py` -- ObservationGraph with source_records, honeypot_events, override_challenges, baseline_events tables
-- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (21 patterns including SANDBOX_CONFIRMED_ESCAPE, GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN, SUPERPOWERS_PLAN_HIJACK, HALLUCINATION_CASCADE_CHAIN, GIGABRAIN_MEMORY_POISON)
+- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (21 patterns including SANDBOX_CONFIRMED_ESCAPE, GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN, SUPERPOWERS_PLAN_HIJACK, NEMOCLAW_POLICY_HIJACK, GIGABRAIN_MEMORY_POISON)
 - `aiglos/integrations/gigabrain.py` -- Gigabrain/cross-session memory integration: declare_memory_backend, gigabrain_autodetect, MemoryBackendSession, is_registered_memory_path, GIGABRAIN_DEFAULT_PATHS, COMPATIBLE_BACKENDS
 - `aiglos/integrations/superpowers.py` -- SuperpowersSession, mark_as_superpowers_session, phase management, file/host scope checking, drift recording
 - `aiglos/integrations/openShell.py` -- OpenShell agent-agnostic integration: is_inside_openShell, openShell_context, openshell_detect, attach_openShell, attach_for_claude_code/codex/cursor/openclaw, KNOWN_AGENTS
