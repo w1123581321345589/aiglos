@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.25.2"  # canonical version for this release
+    __version__ = "0.25.3"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -102,6 +102,11 @@ from aiglos.integrations.subagent_registry import (  # noqa: F401
     SubagentRegistry,
     DeclaredSubagent,
     SpawnCheckResult,
+)
+from aiglos.integrations.gigabrain import (  # noqa: F401
+    declare_memory_backend,
+    gigabrain_autodetect,
+    MemoryBackendSession,
 )
 from aiglos.autoresearch.atlas_coverage import ATLASCoverage  # noqa: F401
 from aiglos.adaptive.permission_recommender import (   # noqa: F401
@@ -833,6 +838,10 @@ __all__ = [
     "SubagentRegistry",
     "DeclaredSubagent",
     "SpawnCheckResult",
+    # v0.25.3 -- Gigabrain integration, T78, T79
+    "declare_memory_backend",
+    "gigabrain_autodetect",
+    "MemoryBackendSession",
     # v0.25.1 -- OpenShell agent-agnostic integration
     "NeMoClawSession",
     "mark_as_nemoclaw_session",
