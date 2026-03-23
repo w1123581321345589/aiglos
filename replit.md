@@ -44,16 +44,17 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/cli.py` -- CLI: scan-message, scan-exposed, honeypot, override, reputation, audit (--ghsa, --atlas), skill, baseline, benchmark
 - `aiglos/cli/launch.py` -- `aiglos launch` wizard: 5-question interactive setup, generates .aiglos/ directory (soul.md, learnings.md, heartbeat.md, crons.md, tools.md, agents.md, config.py), wires T67/T79/lockdown/T38 automatically, runs GOVBENCH baseline. Supports --from for non-interactive mode.
 - `aiglos/cli/scaffold.py` -- `aiglos agents scaffold`: NL description to declare_subagent() config. 15 role-to-tools mappings, 8 model families, infers scope_files/hard_bans from description.
-- `aiglos/templates/` -- Template generators for aiglos launch output files
+- `aiglos/templates/` -- Reference templates for aiglos launch output (soul.md, learnings.md, heartbeat.md, crons.md, tools.md, agents.md, config.py, README.md)
 
 - `server/federation/` -- Federation server (FastAPI, aggregator, auth, Supabase store, Railway deploy)
 - `sdk/typescript/src/` -- TypeScript SDK (full parity: behavioral_baseline, policy_proposals, federation, security_surfaces, index)
 - `website/` -- Landing site source (index.html, plus subpages)
 - `.github/actions/aiglos-scan/action.yml` -- Reusable GitHub Action for Aiglos security audit
 - `.github/workflows/aiglos-scan.yml` -- CI workflow (push/PR/nightly scan, deep mode, grade gating)
+- `aiglos_complete_reference_v0253.md` -- Complete technical/strategic reference (679 lines, architecture, all 21 campaigns, GHSA with reporter, 10 differentiation points)
 
-### Test Suites (1,784 tests)
-27 test files covering all modules and integrations. Includes `tests/test_subagent_and_t77.py` (54 tests for SubagentRegistry, T77), `tests/test_atlas_and_t75.py` (72 tests for ATLAS coverage, T71-T75, Superpowers, GHSA aliases), and `tests/test_openShell.py` (65 tests for OpenShell/NeMoClaw integration).
+### Test Suites (1,747 tests)
+27+ test files covering all modules and integrations. Includes `tests/test_subagent_and_t77.py` (54 tests for SubagentRegistry, T77), `tests/test_atlas_and_t75.py` (72 tests for ATLAS coverage, T71-T75, Superpowers, GHSA aliases), `tests/test_openShell.py` (65 tests for OpenShell/NeMoClaw integration), and `tests/test_launch_and_scaffold.py` (38 tests for launch wizard and scaffold).
 
 ### Class Name Map (important for imports)
 - `ContextWriteResult` (NOT ContextGuardResult)
@@ -74,15 +75,15 @@ Pushed to `w1123581321345589/aiglos` on the `main` branch.
 The root `/` serves the landing page directly (no SPA, no login). Styled like cursor.com with a premium dark theme.
 
 ### Design Language
-- **Background**: Pure black (#000000)
-- **Fonts**: Inter (body) + JetBrains Mono (code/monospace)
-- **Accent**: Teal (#00d4aa)
-- **Text**: #ededed (primary), rgba(255,255,255,0.5) (muted)
-- **Navigation**: Glass-morphism backdrop with rgba(0,0,0,0.7)
-- **Animations**: Fade-in on scroll
+- **Background**: #09090b (near-black)
+- **Fonts**: Plus Jakarta Sans (body) + DM Mono (code/monospace)
+- **Accent**: Blue #2563eb / Ice #60a5fa
+- **Text**: #fff (primary), rgba(255,255,255,0.35) (dim), rgba(255,255,255,0.6) (mid)
+- **Navigation**: Glass-morphism backdrop with rgba(9,9,11,0.85), blur(12px)
+- **Animations**: Fade-up on load with staggered delays
 
 ### Route Table
-- `/`, `/landing`, `/aiglos` -- Landing page (hero with "Works with" strip, OpenShell section, campaign grid with expand/collapse toggle, pricing comparison table, 4-column footer, mobile hamburger menu, v0.25.1/1,730 tests/76 threats throughout)
+- `/`, `/landing`, `/aiglos` -- Landing page (hero with install badge, 233/247 breach window stat, code example, 6-feature grid, GHSA validation, competition comparison, ATLAS coverage, 3-tier pricing, v0.25.3/1,747 tests/79 threats throughout)
 - `/atlas`, `/ghsa`, `/superpowers`, `/benchmark` -- Also serve landing page (section routes)
 - `/docs` -- Documentation
 - `/pricing` -- Pricing tiers (Pro $39/dev/mo + Enterprise)
@@ -99,6 +100,7 @@ The root `/` serves the landing page directly (no SPA, no login). Styled like cu
 - `/compare/clawkeeper`, `/compare/openshell` -- Competitive comparisons
 - `/tutorial-openclaw-hardening` -- OpenClaw hardening tutorial
 - `/tutorial-advanced` -- Advanced topics
+- `/tutorial-launch` -- aiglos launch side-by-side comparison tutorial
 - `/supernova-plan` -- Redirects 301 to `/landing`
 - `/tutorial-github-actions` -- Redirects 301 to `/landing`
 
@@ -116,4 +118,4 @@ The root `/` serves the landing page directly (no SPA, no login). Styled like cu
 ## User Preferences
 - No em dashes in code/content files
 - Zero required dependencies, stdlib only for the Python package
-- All pages must use consistent dark theme (black bg, Inter font, teal accent)
+- All pages must use consistent dark theme (#09090b bg, Plus Jakarta Sans font, blue/ice accent)
