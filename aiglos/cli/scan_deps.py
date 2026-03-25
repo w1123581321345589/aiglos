@@ -94,6 +94,9 @@ TRANSITIVE_EXPOSURE: Dict[str, Dict] = {
     "langchain":  {"exposure": "litellm (optional)", "check_litellm": True},
     "langgraph":  {"exposure": "langchain dependency", "check_litellm": True},
     "crewai":     {"exposure": "litellm (optional)", "check_litellm": True},
+    # ByteRover: file-based Context Tree memory — T79 protects write path
+    # Not a litellm dependency, but flagged for T79 awareness
+    "@byterover/byterover": {"exposure": "OpenClaw plugin — T79/T67 apply", "check_litellm": False},
     "litellm-proxy": {"exposure": "litellm itself", "check_litellm": True},
 }
 
@@ -108,6 +111,21 @@ PERSISTENCE_INDICATORS = [
     ("~/.config/systemd/user/sysmon.service",   "LiteLLM malware systemd service"),
     ("~/.config/sysmon/",                       "LiteLLM sysmon directory"),
 ]
+
+# Risky install patterns — curl|sh bypasses package integrity verification
+RISKY_INSTALL_PATTERNS = {
+    "curl -fsSL https://byterover.dev/openclaw-setup.sh | sh": {
+        "description": (
+            "ByteRover uses curl|sh installation which bypasses package integrity "
+            "verification. The openclaw-setup.sh script executes with full shell access. "
+            "If byterover.dev is compromised (DNS hijack, repo takeover), this becomes "
+            "a supply chain delivery vehicle identical to LiteLLM 1.82.8. "
+            "Safer alternative: openclaw plugins install @byterover/byterover"
+        ),
+        "severity":     "MEDIUM",
+        "safer_alt":    "openclaw plugins install @byterover/byterover",
+    },
+}
 
 # The exfiltration endpoint — block at firewall level
 KNOWN_EXFIL_ENDPOINTS = [
