@@ -1,7 +1,7 @@
 """
 aiglos.adaptive.campaign
 =========================
-T06 GOAL_DRIFT -- campaign-mode session analysis.
+T06 GOAL_DRIFT — campaign-mode session analysis.
 
 This is the capability that Onyx is building from the top down (intent
 legibility via trained models). Aiglos builds it from the bottom up:
@@ -10,23 +10,29 @@ asks whether the sequence of events *across a session* forms a pattern
 that looks like reconnaissance or a coordinated attack, even when each
 individual event looks clean.
 
-The insight: a single `git log` is Tier 1 AUTONOMOUS -- auto-allowed.
+The insight: a single `git log` is Tier 1 AUTONOMOUS — auto-allowed.
 A single `cat ~/.aws/credentials` fires T19. But a session that does:
   git log → ls -la → cat package.json → cat .env.example → cat .env
 is a reconnaissance sweep even though no single call is catastrophic.
 
 Campaign-mode analysis catches this by looking at sequences, not atoms.
 
-21 campaign patterns (v0.25.3):
+Six campaign patterns:
 
-  RECON_SWEEP, CREDENTIAL_ACCUMULATE, EXFIL_SETUP, PERSISTENCE_CHAIN,
-  LATERAL_PREP, AGENTDEF_CHAIN, MEMORY_PERSISTENCE_CHAIN,
-  REWARD_MANIPULATION, REPEATED_INJECTION_ATTEMPT,
-  EXTERNAL_INSTRUCTION_CHANNEL, SKILL_CHAIN, SANDBOX_ESCAPE_ATTEMPT,
-  GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN,
-  MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN,
-  SANDBOX_CONFIRMED_ESCAPE, SUPERPOWERS_PLAN_HIJACK,
-  NEMOCLAW_POLICY_HIJACK, GIGABRAIN_MEMORY_POISON
+  RECON_SWEEP          — sequential read of credential and config files
+                         in a single session without any build/test activity
+  CREDENTIAL_ACCUMULATE — multiple distinct credential access events in
+                         one session (T19 fires 3+ times on different paths)
+  EXFIL_SETUP          — internal reconnaissance followed by outbound
+                         network setup in same session (T19/T08 → T23/T12)
+  PERSISTENCE_CHAIN    — writes to startup paths after privilege check
+                         (T10 → T11 in same session)
+  LATERAL_PREP         — credential harvest + network scan + SSH spawn
+                         pattern (T19 → T12 in same session)
+  AGENTDEF_CHAIN       — agent def read followed by agent def write in
+                         same session (T36_AGENTDEF READ → WRITE, suggests
+                         the agent read its own definition before modifying it,
+                         the exact pattern in the McKinsey/Lilli attack)
 
 Each CampaignResult carries:
   - pattern_id: string identifier
@@ -52,7 +58,7 @@ Usage:
     triggers = analyzer.to_triggers(results)
 """
 
-
+from __future__ import annotations
 
 import logging
 import time
@@ -67,7 +73,7 @@ log = logging.getLogger("aiglos.adaptive.campaign")
 # Each pattern is a dict:
 #   name:         string ID
 #   description:  human-readable
-#   sequence:     list of rule_id sets -- each element is a set of rules,
+#   sequence:     list of rule_id sets — each element is a set of rules,
 #                 at least one of which must fire, in order
 #   min_events:   minimum distinct events required
 #   confidence:   base confidence when fully matched
@@ -140,7 +146,7 @@ _CAMPAIGN_PATTERNS = [
     },
     {
         "name":        "AGENTDEF_CHAIN",
-        "description": "Agent def read followed by write -- McKinsey/Lilli pattern",
+        "description": "Agent def read followed by write — McKinsey/Lilli pattern",
         "sequence":    [
             {"T36_AGENTDEF"},  # agent def read or write access
             {"T36_AGENTDEF"},  # second T36 event in same session
@@ -154,13 +160,97 @@ _CAMPAIGN_PATTERNS = [
         },
     },
     {
+        "name":        "REPO_TAKEOVER_CHAIN",
+        "description": (
+            "Supply chain compromise followed by credential harvest and subsequent "
+            "supply chain republication. The full LiteLLM attack pattern (March 24, 2026): "
+            "T30 SUPPLY_CHAIN (poisoned package installed) → T81 PTH_FILE_INJECT "
+            "(persistence .pth file written) → T04 CRED_HARVEST (SSH keys, API tokens, "
+            "AWS/GCP/Azure creds collected) → T41 OUTBOUND_SECRET_LEAK (credentials "
+            "exfiltrated) → T30 again (attacker uses harvested GitHub/PyPI tokens to "
+            "publish new poisoned releases or close security issues). "
+            "The final T30 is the attacker becoming the maintainer — closing the "
+            "GitHub issue as 'not planned' using the stolen GitHub token. "
+            "Confidence 0.97 — T81 + T04 in the same session is near-certain "
+            "malicious intent. The final T30 confirms full repository takeover."
+        ),
+        "sequence":    [
+            {"T30", "T81"},              # supply chain install or .pth write
+            {"T04", "T19", "T41"},       # credential harvest + exfil
+            {"T30"},                     # attacker republishes using stolen tokens
+        ],
+        "min_events":  2,
+        "confidence":  0.97,
+        "surfaces":    None,
+        "amplifiers":  {"T81": 2.0, "T04": 1.5},  # .pth + cred harvest = near-certain
+    },
+    {
+        "name":        "GIGABRAIN_MEMORY_POISON",
+        "description": (
+            "Persistent memory injection sequence: T31 in-session memory test "
+            "followed by T79 persistent store commit. The adversary tests the "
+            "in-session injection path first (T31), then — if not caught — "
+            "commits the adversarial content to the persistent memory backend "
+            "via T79. Future sessions will receive the injected context "
+            "automatically from Gigabrain, MemoryOS, or similar tools. "
+            "Confidence 0.95: T31 + T79 in the same session is the two-step "
+            "attack pattern, not a coincidence."
+        ),
+        "sequence":    [
+            {"T31"},                # in-session memory probe
+            {"T79"},                # commit to persistent store
+        ],
+        "min_events":  2,
+        "confidence":  0.95,
+        "surfaces":    None,
+        "amplifiers":  {"T79": 1.5},  # persistence amplifies everything
+    },
+    {
+        "name":        "NEMOCLAW_POLICY_HIJACK",
+        "description": (
+            "NemoClaw policy bypass followed by insecure config or exfil attempt. "
+            "The agent modified its own NemoClaw OpenShell policy file (T76), then "
+            "immediately attempted to access an insecure configuration or exfiltrate "
+            "data. Policy modification is the setup; the subsequent action is the "
+            "payoff. Confidence 0.96 — T76 can only fire on write operations to "
+            "specific known policy paths, making false positive risk negligible."
+        ),
+        "sequence":    [
+            {"T76"},                     # policy file write — governance escape setup
+            {"T68", "T12", "T14", "T09"},# insecure config, data exfil, or SSRF
+        ],
+        "min_events":  2,
+        "confidence":  0.96,
+        "surfaces":    None,
+        "amplifiers":  {"T76": 1.4},     # policy bypass amplifies everything downstream
+    },
+    {
+        "name":        "SUPERPOWERS_PLAN_HIJACK",
+        "description": (
+            "Plan drift followed by data exfiltration or network exfil attempt. "
+            "The agent deviated from the approved Superpowers implementation plan "
+            "(T69) and then attempted to send data outbound. The plan drift is the "
+            "setup; the exfil is the payoff. This two-step sequence — deviation "
+            "from approved plan followed by outbound data — is the highest-confidence "
+            "campaign signature possible when Superpowers is installed."
+        ),
+        "sequence":    [
+            {"T69"},   # plan drift — agent outside approved scope
+            {"T12", "T14", "T37"},  # data exfil / outbound POST / SSRF
+        ],
+        "min_events":  2,
+        "confidence":  0.97,
+        "surfaces":    None,
+        "amplifiers":  {"T69": 1.3},  # plan drift amplifies all downstream events
+    },
+    {
         "name":        "SANDBOX_CONFIRMED_ESCAPE",
         "description": (
             "Tool call confirmed impossible in sandbox context followed by "
             "additional escape attempts. When sandbox_context=True, a single "
             "impossible call is already CRITICAL. A second attempt in the same "
             "session window confirms the agent is actively probing or has "
-            "partially escaped -- not a misconfiguration, a campaign."
+            "partially escaped — not a misconfiguration, a campaign."
         ),
         "sequence":    [
             {"T50"},   # agentic loop escape / sandbox escape confirmed
@@ -192,7 +282,7 @@ _CAMPAIGN_PATTERNS = [
     {
         "name":        "SKILL_CHAIN",
         "description": (
-            "Skill file write followed by instruction override -- "
+            "Skill file write followed by instruction override — "
             "Context Hub skill poisoning pattern. A write to a SKILL.md "
             "or ~/.claude/skills/ file immediately followed by a prompt "
             "injection event indicates the attacker poisoned the skill "
@@ -210,7 +300,7 @@ _CAMPAIGN_PATTERNS = [
     {
         "name":        "GAAS_TAKEOVER",
         "description": (
-            "GaaS tenant escalation followed by cross-tenant data access -- "
+            "GaaS tenant escalation followed by cross-tenant data access — "
             "the pattern of an agent that gains cross-tenant API key access "
             "and immediately begins harvesting data across tenant boundaries. "
             "T66 (tenant key confusion) → T45 (cross-tenant data access) → "
@@ -229,7 +319,7 @@ _CAMPAIGN_PATTERNS = [
     {
         "name":        "INFERENCE_HIJACK_CHAIN",
         "description": (
-            "Model fingerprint probe followed by inference router hijack -- "
+            "Model fingerprint probe followed by inference router hijack — "
             "attacker first learns what model is running (T51), then attempts "
             "to redirect inference to a different model or modify the system "
             "prompt (T44). Common in Dynamo/OpenShell enterprise deployments."
@@ -246,7 +336,7 @@ _CAMPAIGN_PATTERNS = [
     {
         "name":        "RAG_POISON_CHAIN",
         "description": (
-            "Vector database injection followed by tool result forgery -- "
+            "Vector database injection followed by tool result forgery — "
             "the attacker first poisons the RAG retrieval store (T54), then "
             "when the agent retrieves the poisoned document and begins acting "
             "on it, forges tool results to cover the operation (T55)."
@@ -263,7 +353,7 @@ _CAMPAIGN_PATTERNS = [
     {
         "name":        "MULTI_AGENT_IMPERSONATION",
         "description": (
-            "Agent identity spoofing followed by privilege escalation -- "
+            "Agent identity spoofing followed by privilege escalation — "
             "an agent claims to be a supervisor/admin agent (T64), then uses "
             "that claimed identity to attempt privilege escalation (T08) or "
             "cross-tenant access (T45)."
@@ -280,7 +370,7 @@ _CAMPAIGN_PATTERNS = [
     {
         "name":        "CAPABILITY_EXPLOIT_CHAIN",
         "description": (
-            "Capability boundary probe followed by targeted exploit -- "
+            "Capability boundary probe followed by targeted exploit — "
             "systematic reconnaissance (T56) immediately followed by one of "
             "the confirmed-capable attack vectors. The probe tells the attacker "
             "exactly which tools are available; the exploit uses them."
@@ -296,7 +386,7 @@ _CAMPAIGN_PATTERNS = [
     },
     {
         "name":        "MEMORY_PERSISTENCE_CHAIN",
-        "description": "High-risk memory write followed by anomalous action -- cross-session poison chain",
+        "description": "High-risk memory write followed by anomalous action — cross-session poison chain",
         "sequence":    [
             {"T31"},              # memory write (structured memory store/update)
             {"T19", "T37", "T23", "T07"},  # sensitive action following memory write
@@ -310,7 +400,7 @@ _CAMPAIGN_PATTERNS = [
     },
     {
         "name":        "REWARD_MANIPULATION",
-        "description": "Security-relevant operation followed by T39 reward signal -- RL poisoning attempt",
+        "description": "Security-relevant operation followed by T39 reward signal — RL poisoning attempt",
         "sequence":    [
             {"T19", "T37", "T36_AGENTDEF", "T_DEST", "T07", "T11"},  # blocked/warned op
             {"T39"},              # reward signal for that op (REWARD_POISON or OPD_INJECTION)
@@ -322,11 +412,11 @@ _CAMPAIGN_PATTERNS = [
     },
     {
         "name":        "REPEATED_INJECTION_ATTEMPT",
-        "description": "T27 INBOUND_INJECTION fires 3+ times on distinct tool sources -- systematic injection campaign",
+        "description": "T27 INBOUND_INJECTION fires 3+ times on distinct tool sources — systematic injection campaign",
         "sequence":    [
             {"T27"},   # first inbound injection
             {"T27"},   # second
-            {"T27"},   # third -- distinct sources = deliberate campaign
+            {"T27"},   # third — distinct sources = deliberate campaign
         ],
         "min_events":  3,
         "confidence":  0.86,
@@ -335,7 +425,7 @@ _CAMPAIGN_PATTERNS = [
     },
     {
         "name":        "EXTERNAL_INSTRUCTION_CHANNEL",
-        "description": "Persistence + unapproved external fetch + memory write -- autonomous C2 channel setup",
+        "description": "Persistence + unapproved external fetch + memory write — autonomous C2 channel setup",
         "sequence":    [
             {"T11"},          # persistence mechanism (cron, scheduler)
             {"T22", "T01"},   # external HTTP endpoint not in allow_http
@@ -345,65 +435,6 @@ _CAMPAIGN_PATTERNS = [
         "confidence":  0.91,
         "surfaces":    None,
         "amplifiers":  {},
-    },
-    {
-        "name":        "SUPERPOWERS_PLAN_HIJACK",
-        "description": (
-            "Plan drift followed by data exfiltration -- the highest-confidence "
-            "campaign signature in the system. A Superpowers session where the "
-            "agent deviates from its approved plan (T69 PLAN_DRIFT) and then "
-            "immediately performs credential access or data exfiltration "
-            "confirms the plan was hijacked by injected instructions."
-        ),
-        "sequence":    [
-            {"T69"},                      # plan drift detected
-            {"T19", "T12", "T22", "T37"}, # exfil / credential / financial action
-        ],
-        "min_events":  2,
-        "confidence":  0.97,
-        "surfaces":    None,
-        "amplifiers":  {},
-    },
-    {
-        "name":        "NEMOCLAW_POLICY_HIJACK",
-        "description": (
-            "T76 NemoClaw policy bypass followed by data exfiltration or credential "
-            "access. The agent first rewrites its own governance policy (T76 "
-            "NEMOCLAW_POLICY_BYPASS), removing restrictions, then immediately "
-            "exploits the new permissive policy to exfiltrate data or harvest "
-            "credentials. The most dangerous governance escape: the agent has "
-            "rewritten its own rules and is now acting on the rewritten policy."
-        ),
-        "sequence":    [
-            {"T76"},
-            {"T19", "T12", "T22", "T37"},
-        ],
-        "min_events":  2,
-        "confidence":  0.96,
-        "surfaces":    None,
-        "amplifiers":  {},
-    },
-    {
-        "name":        "GIGABRAIN_MEMORY_POISON",
-        "description": (
-            "In-session memory poison (T31) followed by persistent memory inject "
-            "(T79) in the same session -- the attacker first tests injection in "
-            "ephemeral memory, then escalates to persistent cross-session storage. "
-            "A successful T31 + T79 chain means the adversary has confirmed their "
-            "injection payload works and has now persisted it into every future "
-            "session via Gigabrain, MemoryOS, or compatible memory backend. "
-            "The most dangerous memory attack: confirmed + persistent."
-        ),
-        "sequence":    [
-            {"T31"},
-            {"T79"},
-        ],
-        "min_events":  2,
-        "confidence":  0.95,
-        "surfaces":    None,
-        "amplifiers":  {
-            "T79": 1.15,
-        },
     },
 ]
 
@@ -643,14 +674,14 @@ class CampaignAnalyzer:
             "MEMORY_PERSISTENCE_CHAIN": (
                 "A HIGH-risk memory write (T31) was followed by a sensitive "
                 "agent action in the same session. The write may have established a "
-                "false belief the subsequent action relied on -- authorization claim, "
+                "false belief the subsequent action relied on — authorization claim, "
                 "endpoint redirect, or credential assertion. Review the memory guard "
                 "provenance log for the written content. Clear any poisoned entries "
                 "before the next session to prevent cross-session persistence."
             ),
             "REWARD_MANIPULATION": (
                 "A security-relevant operation (blocked or warned by Aiglos) was "
-                "followed by a T39 reward signal in the same session -- indicating "
+                "followed by a T39 reward signal in the same session — indicating "
                 "an attempt to provide positive RL training feedback for an unsafe "
                 "operation. If running a live RL training loop, "
                 "the quarantined reward signal should not reach the training pipeline. "
@@ -658,7 +689,7 @@ class CampaignAnalyzer:
             ),
             "REPEATED_INJECTION_ATTEMPT": (
                 "T27 INBOUND_INJECTION fired 3+ times across distinct tool outputs "
-                "in this session. This is not noise -- it is a coordinated injection "
+                "in this session. This is not noise — it is a coordinated injection "
                 "campaign targeting the agent's context window through multiple sources. "
                 "Treat every tool output in this session as potentially compromised. "
                 "Review the injection_flagged section of the artifact for the full "
