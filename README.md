@@ -11,6 +11,9 @@
 ╚═╝  ╚═╝╚═╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚══════╝
 ```
 
+<br>
+<div align="center">
+
 **Know what your AI agents actually do.**
 
 <br>
