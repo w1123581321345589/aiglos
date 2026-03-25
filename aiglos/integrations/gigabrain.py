@@ -91,6 +91,8 @@ COMPATIBLE_BACKENDS = {
     "letta":      ["~/.letta/memory.db", "~/.letta/store.db"],
     "zep":        ["~/.zep/memory.db"],
     "chroma":     ["~/.chroma/chroma.db", "./chroma.db"],
+    "byterover":  ["~/byterover/", ".byterover/", "./byterover/",
+                   "~/.byterover/", "byterover/context_tree/"],
     "generic":    ["./memory.db", "./agent_memory.db", "./cross_session.db"],
 }
 
@@ -248,6 +250,70 @@ def gigabrain_autodetect(guard) -> Optional[MemoryBackendSession]:
         )
 
     return declare_memory_backend(guard, backend="gigabrain")
+
+
+BYTEROVER_DEFAULT_PATHS = [
+    "~/byterover/",
+    ".byterover/",
+    "./byterover/",
+    "~/.byterover/",
+    "byterover/context_tree/",
+]
+
+
+def byterover_autodetect(guard) -> Optional["MemoryBackendSession"]:
+    """
+    Auto-detect ByteRover and register it with T79 protection.
+
+    ByteRover is a file-based Context Tree memory plugin for OpenClaw
+    (30,000+ downloads in first week). Unlike Gigabrain (SQLite), ByteRover
+    writes structured markdown files to a Context Tree directory after every turn
+    and runs a daily 9am cron to mine architectural decisions.
+
+    T79 protects the Context Tree write path.
+    T67 monitors the daily cron cadence — fires if the 9am job runs at 3am.
+
+    Example:
+        from aiglos.integrations.gigabrain import byterover_autodetect
+        session = byterover_autodetect(guard)
+    """
+    found_paths = []
+    for p in BYTEROVER_DEFAULT_PATHS:
+        from pathlib import Path as _Path
+        expanded = _Path(p.rstrip("/")).expanduser()
+        if expanded.exists():
+            found_paths.append(str(expanded))
+
+    if found_paths:
+        log.info("[ByteRover] Auto-detected at: %s", ", ".join(found_paths))
+    else:
+        log.info(
+            "[ByteRover] No existing Context Tree found — "
+            "registering paths for pre-emptive T79 protection"
+        )
+
+    session = declare_memory_backend(guard, backend="byterover")
+
+    # Register expected daily cron with T67 monitoring
+    # ByteRover daily knowledge mining runs at 9:00 AM
+    if hasattr(guard, '_expected_crons'):
+        guard._expected_crons.append({
+            "name":     "byterover_daily_review",
+            "schedule": "0 9 * * *",
+            "expected_hour": 9,
+        })
+    else:
+        guard._expected_crons = [{
+            "name":     "byterover_daily_review",
+            "schedule": "0 9 * * *",
+            "expected_hour": 9,
+        }]
+
+    log.info(
+        "[ByteRover] Registered — T79 active on Context Tree writes, "
+        "T67 monitoring 9am daily cron"
+    )
+    return session
 
 
 def is_registered_memory_path(path: str) -> bool:
