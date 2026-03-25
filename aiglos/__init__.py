@@ -283,6 +283,17 @@ from aiglos.cli.scan_deps import (  # noqa: F401
     MALICIOUS_PTH_FILES,
     print_scan_report,
 )
+from aiglos.cli.validate_prompt import (  # noqa: F401
+    validate as validate_prompt,
+    ValidationResult as PromptValidationResult,
+    Finding as PromptFinding,
+    print_report as print_prompt_report,
+    run as run_prompt_validation,
+)
+from aiglos.integrations.gigabrain import (  # noqa: F401
+    byterover_autodetect,
+    BYTEROVER_DEFAULT_PATHS,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -868,6 +879,13 @@ __all__ = [
     "TRANSITIVE_EXPOSURE",
     "MALICIOUS_PTH_FILES",
     "print_scan_report",
+    "validate_prompt",
+    "PromptValidationResult",
+    "PromptFinding",
+    "print_prompt_report",
+    "run_prompt_validation",
+    "byterover_autodetect",
+    "BYTEROVER_DEFAULT_PATHS",
     # v0.25.1 -- OpenShell agent-agnostic integration
     "NeMoClawSession",
     "mark_as_nemoclaw_session",
