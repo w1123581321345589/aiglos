@@ -275,6 +275,14 @@ from aiglos.cli.scaffold import (  # noqa: F401
     AgentSpec,
     ROLE_TOOLS,
 )
+from aiglos.cli.scan_deps import (  # noqa: F401
+    scan as scan_deps,
+    ScanResult as ScanDepsResult,
+    COMPROMISED_PACKAGES,
+    TRANSITIVE_EXPOSURE,
+    MALICIOUS_PTH_FILES,
+    print_scan_report,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -850,10 +858,16 @@ __all__ = [
     "SubagentRegistry",
     "DeclaredSubagent",
     "SpawnCheckResult",
-    # v0.25.3 -- Gigabrain integration, T78, T79
+    # v0.25.3 -- Gigabrain integration, T78, T79, T80, T81, scan-deps
     "declare_memory_backend",
     "gigabrain_autodetect",
     "MemoryBackendSession",
+    "scan_deps",
+    "ScanDepsResult",
+    "COMPROMISED_PACKAGES",
+    "TRANSITIVE_EXPOSURE",
+    "MALICIOUS_PTH_FILES",
+    "print_scan_report",
     # v0.25.1 -- OpenShell agent-agnostic integration
     "NeMoClawSession",
     "mark_as_nemoclaw_session",

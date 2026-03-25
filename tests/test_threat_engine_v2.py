@@ -24,11 +24,11 @@ from aiglos.core.threat_engine_v2 import (
 
 class TestRuleTable:
     def test_23_rules_in_table(self):
-        assert len(RULES_T44_T66) == 36
+        assert len(RULES_T44_T66) == 38
 
     def test_all_ids_present(self):
         ids = {r["id"] for r in RULES_T44_T66}
-        for n in range(44, 80):
+        for n in range(44, 82):
             assert f"T{n}" in ids
 
     def test_all_rules_have_required_fields(self):
@@ -306,7 +306,7 @@ class TestNewCampaignPatterns:
         assert "CAPABILITY_EXPLOIT_CHAIN" in self._names()
     def test_19_total_patterns(self):
         from aiglos.adaptive.campaign import _CAMPAIGN_PATTERNS
-        assert len(_CAMPAIGN_PATTERNS) == 21
+        assert len(_CAMPAIGN_PATTERNS) == 22
     def test_superpowers_plan_hijack_exists(self):
         assert "SUPERPOWERS_PLAN_HIJACK" in self._names()
 

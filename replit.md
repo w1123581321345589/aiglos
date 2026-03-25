@@ -4,13 +4,14 @@
 Aiglos is an AI agent security runtime (Python package) with a premium landing site. The Python package (`aiglos/`) provides runtime security for AI agents with zero required dependencies (stdlib only). The web application serves the marketing/documentation site at `/` styled after cursor.com.
 
 ## Python Package (aiglos/ v0.25.3)
-The `aiglos/` directory contains the Python security runtime package covering threat families T01-T79 (79 total). 1,747 tests passing.
+The `aiglos/` directory contains the Python security runtime package covering threat families T01-T81 (81 total). 1,747+ tests passing.
 
 ### Package Structure
 - `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.25.3. Exports ATLASCoverage, GHSAWatcher, OpenShell functions, NeMoClawSession, SubagentRegistry, DeclaredSubagent, SpawnCheckResult, declare_memory_backend, gigabrain_autodetect, MemoryBackendSession.
 - `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T77), lockdown policy, sandbox_context, allow_tool/tool_grants, nemoclaw_session(), declare_subagent(), declared_subagents(), subagent_registry()
 - `aiglos/integrations/subagent_registry.py` -- SubagentRegistry (declare, check_spawn, scope enforcement), DeclaredSubagent (allows_tool, allows_file, allows_host), SpawnCheckResult (DECLARED_IN_SCOPE/DECLARED_OUT_OF_SCOPE/UNDECLARED)
-- `aiglos/core/threat_engine_v2.py` -- T44-T79 threat rule library (36 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS wave + T76 NemoClaw + T77 OVERNIGHT_JOB_INJECTION + T78 HALLUCINATION_CASCADE + T79 PERSISTENT_MEMORY_INJECT)
+- `aiglos/core/threat_engine_v2.py` -- T44-T81 threat rule library (38 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS wave + T76 NemoClaw + T77 OVERNIGHT_JOB_INJECTION + T78 HALLUCINATION_CASCADE + T79 PERSISTENT_MEMORY_INJECT + T80 UNCENSORED_MODEL_ROUTE + T81 PTH_FILE_INJECT)
+- `aiglos/cli/scan_deps.py` -- Dependency scanner for supply chain attacks (COMPROMISED_PACKAGES, MALICIOUS_PTH_FILES, TRANSITIVE_EXPOSURE, scan(), ScanResult, print_scan_report)
 - `aiglos/core/behavioral_baseline.py` -- AgentBaseline, BaselineScore, set_hardening_mode, is_suppressed
 - `aiglos/autoresearch/atlas_coverage.py` -- ATLASCoverage, ATLAS_THREAT_MAP (22 threats, 93% coverage), coverage_report(), gap_analysis(), compliance_score()
 - `aiglos/autoresearch/ghsa_watcher.py` -- GHSAWatcher, KNOWN_ADVISORIES (3/3 covered), local_only param, check_local(), coverage_artifact()
@@ -27,7 +28,7 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/integrations/override.py` -- OverrideManager (6-char codes, 120s expiry, 3 attempts)
 - `aiglos/adaptive/source_reputation.py` -- SourceReputationGraph (cross-session source tracking, 4 risk levels)
 - `aiglos/adaptive/observation.py` -- ObservationGraph with source_records, honeypot_events, override_challenges, baseline_events tables
-- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (21 patterns including SANDBOX_CONFIRMED_ESCAPE, GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN, SUPERPOWERS_PLAN_HIJACK, NEMOCLAW_POLICY_HIJACK, GIGABRAIN_MEMORY_POISON)
+- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (22 patterns including SANDBOX_CONFIRMED_ESCAPE, GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN, SUPERPOWERS_PLAN_HIJACK, NEMOCLAW_POLICY_HIJACK, GIGABRAIN_MEMORY_POISON, REPO_TAKEOVER_CHAIN)
 - `aiglos/integrations/gigabrain.py` -- Gigabrain/cross-session memory integration: declare_memory_backend, gigabrain_autodetect, MemoryBackendSession, is_registered_memory_path, GIGABRAIN_DEFAULT_PATHS, COMPATIBLE_BACKENDS
 - `aiglos/integrations/superpowers.py` -- SuperpowersSession, mark_as_superpowers_session, phase management, file/host scope checking, drift recording
 - `aiglos/integrations/openShell.py` -- OpenShell agent-agnostic integration: is_inside_openShell, openShell_context, openshell_detect, attach_openShell, attach_for_claude_code/codex/cursor/openclaw, KNOWN_AGENTS
@@ -51,10 +52,10 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `website/` -- Landing site source (index.html, plus subpages)
 - `.github/actions/aiglos-scan/action.yml` -- Reusable GitHub Action for Aiglos security audit
 - `.github/workflows/aiglos-scan.yml` -- CI workflow (push/PR/nightly scan, deep mode, grade gating)
-- `aiglos_complete_reference_v0253.md` -- Complete technical/strategic reference (679 lines, architecture, all 21 campaigns, GHSA with reporter, 10 differentiation points)
+- `aiglos_complete_reference_v0253.md` -- Complete technical/strategic reference (679 lines, architecture, all 22 campaigns, GHSA with reporter, 10 differentiation points)
 
 ### Test Suites (1,747 tests)
-27+ test files covering all modules and integrations. Includes `tests/test_subagent_and_t77.py` (54 tests for SubagentRegistry, T77), `tests/test_atlas_and_t75.py` (72 tests for ATLAS coverage, T71-T75, Superpowers, GHSA aliases), `tests/test_openShell.py` (65 tests for OpenShell/NeMoClaw integration), and `tests/test_launch_and_scaffold.py` (38 tests for launch wizard and scaffold).
+27+ test files covering all modules and integrations. Includes `tests/test_subagent_and_t77.py` (54 tests for SubagentRegistry, T77), `tests/test_atlas_and_t75.py` (72 tests for ATLAS coverage, T71-T75, Superpowers, GHSA aliases), `tests/test_openShell.py` (65 tests for OpenShell/NeMoClaw integration), `tests/test_launch_and_scaffold.py` (38 tests for launch wizard and scaffold), and `tests/test_t80_t81_scandeps.py` (43 tests for T80/T81 rules, REPO_TAKEOVER_CHAIN, scan_deps module).
 
 ### Class Name Map (important for imports)
 - `ContextWriteResult` (NOT ContextGuardResult)
@@ -83,7 +84,7 @@ The root `/` serves the landing page directly (no SPA, no login). Styled like cu
 - **Animations**: Fade-up on load with staggered delays
 
 ### Route Table
-- `/`, `/landing`, `/aiglos` -- Landing page (hero with install badge, 233/247 breach window stat, code example, 6-feature grid, GHSA validation, competition comparison, ATLAS coverage, 3-tier pricing, v0.25.3/1,747 tests/79 threats throughout)
+- `/`, `/landing`, `/aiglos` -- Landing page (hero with install badge, 233/247 breach window stat, code example, 6-feature grid, GHSA validation, competition comparison, ATLAS coverage, 3-tier pricing, v0.25.3/1,747 tests/81 threats throughout)
 - `/atlas`, `/ghsa`, `/superpowers`, `/benchmark` -- Also serve landing page (section routes)
 - `/docs` -- Documentation
 - `/pricing` -- Pricing tiers (Pro $39/dev/mo + Enterprise)
