@@ -1071,6 +1071,95 @@ def match_T74(name: str, args: Dict[str, Any]) -> bool:
     return bool(_T74_WRAPPER_ESCAPE.search(content) or _T74_WRAPPER_ESCAPE.search(s))
 
 
+# ── T82: Self-Improvement Hijack ──────────────────────────────────────────────
+# Adversarial content written to self-improvement infrastructure.
+# DGM-Hyperagents (Darwin Gödel Machine) architecture stores:
+#   - Agent archive: agents/, archive/, evolution/, checkpoints/
+#   - Evaluation results: eval_results.json, performance_log.json
+#   - Improvement procedures: improve.py, meta_agent.py, self_improve/
+#   - Performance tracking: improvement_history.json, metrics.json
+#
+# The attack is categorically worse than T36 AGENTDEF:
+#   T36 = poison one agent definition
+#   T82 = poison the process that generates ALL future agents
+#
+# Both conditions required for precision:
+#   1. Path matches self-improvement infrastructure
+#   2. Content contains injection patterns
+#
+# Legitimate self-improvement writes (clean eval results, performance metrics)
+# should NOT fire — the content condition prevents false positives.
+
+_T82_PIPELINE_PATHS = re.compile(
+    r"(?:(?:^|/)(?:agents?|archive|evolution|checkpoints?|self[_-]improve)/"
+    r"|eval[_-]?results?[.](json|jsonl|yaml|csv)"
+    r"|performance[_-]?log[.](json|jsonl|txt)"
+    r"|improvement[_-]?history[.](json|jsonl)"
+    r"|meta[_-]?agent[.]py"
+    r"|improve(?:ment)?[.]py"
+    r"|dgm[_-]?hyperagent"
+    r"|agent[_-]?archive[.](json|jsonl)"
+    r"|fitness[_-]?scores?[.](json|csv)"
+    r"|reward[_-]?design[.](json|py)"
+    r"|agent[_-]?pool[.](json|jsonl)"
+    r"|generation[_-]?log[.](json|jsonl))",
+    re.IGNORECASE
+)
+
+_T82_INJECTION_PATTERNS = re.compile(
+    r"(?:ignore (?:previous|prior|all) (?:instructions|context|evaluations?)|"
+    r"disregard (?:your|all|previous)|"
+    r"you are now|new (?:instructions|directive|objective|fitness|reward):|"
+    r"forget (?:everything|all|previous|prior)|"
+    r"(?:disable|bypass|skip) (?:security|monitoring|aiglos|safety|evaluation)|"
+    r"system(?:[ ]*):(?:[ ]*)you|"
+    r"<(?:system|instruction|injected|override)>|"
+    r"\[(?:INST|SYS|SYSTEM|OVERRIDE|INJECT)\]|"
+    r"act as (?:if|a|an) (?:different|unrestricted|jailbreak)|"
+    r"always (?:return|score|evaluate) (?:high|maximum|perfect|1\.0)|"
+    r"maximum (?:fitness|reward|score) (?:always|regardless)|"
+    r"report (?:success|pass|high.score) (?:regardless|always|unconditionally))",
+    re.IGNORECASE
+)
+
+
+def match_T82(name: str, args: Dict[str, Any]) -> bool:
+    """T82 SELF_IMPROVEMENT_HIJACK — adversarial write to self-improvement pipeline."""
+    n = _tool_lower(name)
+    s = _args_str(args)
+
+    # Only fire on write/create/update operations
+    if not any(kw in n for kw in (
+        "write", "create", "update", "save", "store", "put",
+        "append", "commit", "log", "record", "eval", "improve"
+    )):
+        return False
+
+    # Check path matches self-improvement infrastructure
+    path = str(args.get("path", args.get("file", args.get("filename",
+                args.get("dest", args.get("output", "")))))).lower()
+    content = str(args.get("content", args.get("data", args.get("text",
+                  args.get("result", args.get("evaluation", "")))))).lower()
+
+    path_match = _T82_PIPELINE_PATHS.search(path) or _T82_PIPELINE_PATHS.search(n)
+    content_match = (_T82_INJECTION_PATTERNS.search(content) or
+                     _T82_INJECTION_PATTERNS.search(s))
+
+    # Both conditions required for precision
+    if path_match and content_match:
+        return True
+
+    # High-confidence: tool explicitly targets improvement infrastructure
+    if any(kw in n for kw in (
+        "improvement.log", "eval.result", "agent.archive",
+        "dgm", "hyperagent", "meta_improve", "self_improve"
+    )):
+        if content_match:
+            return True
+
+    return False
+
+
 # ── T81: PTH File Inject ──────────────────────────────────────────────────────
 # The .pth persistence mechanism used in the LiteLLM 1.82.8 supply chain attack.
 # .pth files in site-packages execute on every Python startup — before user code,
@@ -1236,7 +1325,7 @@ _T79_MEMORY_PATHS = re.compile(
     r"memoryos[.]db|mem0[.]db|letta[.]db|zep[.]db|"
     r"memory_registry[.]db|agent_memory[.]db|"
     r"chroma[.]db|qdrant[.]db|pinecone|weaviate|"
-    r"memories[.]sqlite|cross_session[.]db|persistent_memory)",
+    r"memories[.]sqlite|cross_session[.]db|persistent_memory|byterover|context_tree)",
     re.IGNORECASE
 )
 
@@ -1642,6 +1731,33 @@ RULES_T44_T66: List[Dict] = [
          "break fetched content out of its wrapper and inject into agent context."
      ),
      "score": 0.86, "critical": True, "match": match_T74},
+    {"id": "T82", "name": "SELF_IMPROVEMENT_HIJACK",
+     "desc": (
+         "Write of adversarial content to self-improvement infrastructure: "
+         "agent archive directories, evaluation result files, performance tracking "
+         "databases, or improvement procedure files used by systems like "
+         "DGM-Hyperagents (Darwin Gödel Machine). "
+         "Unlike T36 AGENTDEF (writes to static agent definition files) and T79 "
+         "(writes to cross-session memory backends), T82 fires on writes to the "
+         "evolutionary infrastructure that GENERATES future agents. A successful "
+         "T82 injection propagates forward through all future generations — the "
+         "adversary does not need to attack each generated agent; they attack the "
+         "process that creates them. One poisoned turn, infinite forward propagation. "
+         "DGM-Hyperagents architecture: agent archive (agents/, archive/, evolution/), "
+         "evaluation results (eval_results.json, performance_log.json, "
+         "improvement_history.json), improvement procedures (improve.py, "
+         "meta_agent.py, self_improve/). "
+         "Also fires on: RL reward design archives, automated paper review result "
+         "stores, and any system where evaluation outputs feed back into agent "
+         "generation. "
+         "Score 0.96 — below T81 PTH_FILE_INJECT (0.98) and T43 HONEYPOT_ACCESS (1.0) "
+         "because there are legitimate self-improvement writes; both conditions "
+         "required: path matches self-improvement infrastructure AND content contains "
+         "adversarial injection patterns. "
+         "Source: Facebook Research DGM-Hyperagents paper (March 2026), "
+         "arxiv.org/abs/2603.19461."
+     ),
+     "score": 0.96, "critical": True, "match": match_T82},
     {"id": "T81", "name": "PTH_FILE_INJECT",
      "desc": (
          "Write of a Python .pth file to site-packages or any directory on PYTHONPATH. "
