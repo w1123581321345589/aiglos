@@ -728,7 +728,7 @@ export function Supernova() {
         <div className="sn-hero-content">
           <div className="sn-pill">
             <span className="sn-pill-badge">New</span>
-            v0.25.4 -- validate-prompt + ByteRover detection
+            v0.25.7 -- T82 Self-Improvement Hijack + DGM-Hyperagents
           </div>
 
           <h1>
@@ -737,7 +737,7 @@ export function Supernova() {
           </h1>
 
           <p className="sn-hero-sub">
-            One import. Zero dependencies. 81 threat rules that stop prompt injection,
+            One import. Zero dependencies. 82 threat rules that stop prompt injection,
             supply-chain hijacks, and memory poisoning before they reach production.
           </p>
 
@@ -753,11 +753,11 @@ export function Supernova() {
 
           <div className="sn-hero-stats">
             <div className="sn-stat">
-              <span className="sn-stat-n">81</span>
+              <span className="sn-stat-n">82</span>
               <span className="sn-stat-l">Threat rules</span>
             </div>
             <div className="sn-stat">
-              <span className="sn-stat-n">22</span>
+              <span className="sn-stat-n">23</span>
               <span className="sn-stat-l">Attack campaigns</span>
             </div>
             <div className="sn-stat">
@@ -797,8 +797,8 @@ export function Supernova() {
 aiglos.<span className="tk-fn">launch</span>(){'\n'}
 {'\n'}
 <span className="tk-cm"># That's it. Every outbound call is now</span>{'\n'}
-<span className="tk-cm"># validated against 81 threat rules,</span>{'\n'}
-<span className="tk-cm"># 22 known attack campaigns, and</span>{'\n'}
+<span className="tk-cm"># validated against 82 threat rules,</span>{'\n'}
+<span className="tk-cm"># 23 known attack campaigns, and</span>{'\n'}
 <span className="tk-cm"># real-time supply-chain analysis.</span>{'\n'}
 <span className="tk-cm"># Zero dependencies. stdlib only.</span>
             </pre>
@@ -834,7 +834,7 @@ aiglos.<span className="tk-fn">launch</span>(){'\n'}
 
       {/* BIG NUMBER */}
       <div className="sn-big-sec">
-        <div className="sn-big-n">81</div>
+        <div className="sn-big-n">82</div>
         <div className="sn-big-label">
           Detection rules. Each one maps to a <strong>real CVE, GHSA, or documented attack campaign</strong> from the last 18 months. Not theoretical. Not hypothetical.
         </div>
@@ -874,7 +874,7 @@ aiglos.<span className="tk-fn">launch</span>(){'\n'}
               <span className="sn-val-cvss">CVSS 9.8</span>
             </div>
             <span className="sn-val-title">tj-actions/changed-files REPO_TAKEOVER_CHAIN</span>
-            <span className="sn-val-rules">T80, T81</span>
+            <span className="sn-val-rules">T80, T81, T82</span>
           </div>
         </div>
       </section>
@@ -912,7 +912,7 @@ aiglos.<span className="tk-fn">launch</span>(){'\n'}
             { id: 'C19', title: 'NeMoClaw session escape', rules: 'T68-T71' },
             { id: 'C20', title: 'OpenShell sandbox breakout', rules: 'T72-T75' },
             { id: 'C21', title: 'Gigabrain session hijack', rules: 'T76-T79' },
-            { id: 'C22', title: 'REPO_TAKEOVER_CHAIN', rules: 'T80-T81' },
+            { id: 'C23', title: 'METACOGNITIVE_POISON_CHAIN', rules: 'T82' },
           ].map(c => (
             <div className="sn-card" key={c.id} style={{padding: '24px'}}>
               <span className="sn-atlas-id">{c.id}</span>
@@ -945,7 +945,7 @@ aiglos.<span className="tk-fn">launch</span>(){'\n'}
             </thead>
             <tbody>
               {[
-                ['Threat rules', '81', '12', '8', '4'],
+                ['Threat rules', '82', '12', '8', '4'],
                 ['Supply-chain scan', <span className="sn-check" key="a1">Yes</span>, <span className="sn-x" key="b1">No</span>, <span className="sn-x" key="c1">No</span>, <span className="sn-x" key="d1">No</span>],
                 ['Zero dependencies', <span className="sn-check" key="a2">Yes</span>, <span className="sn-x" key="b2">No</span>, <span className="sn-x" key="c2">No</span>, <span className="sn-x" key="d2">No</span>],
                 ['Prompt validation', <span className="sn-check" key="a3">Yes</span>, <span className="sn-x" key="b3">No</span>, <span className="sn-x" key="c3">No</span>, <span className="sn-x" key="d3">No</span>],
@@ -979,8 +979,8 @@ aiglos.<span className="tk-fn">launch</span>(){'\n'}
             <div className="sn-tier">Open source</div>
             <div className="sn-amount">$0</div>
             <ul className="sn-features">
-              <li>81 threat rules (T01-T81)</li>
-              <li>22 campaign detections</li>
+              <li>82 threat rules (T01-T82)</li>
+              <li>23 campaign detections</li>
               <li>HTTP + subprocess interception</li>
               <li>Prompt validation (validate-prompt)</li>
               <li>Supply-chain scanner (scan-deps)</li>
