@@ -316,6 +316,142 @@ def byterover_autodetect(guard) -> Optional["MemoryBackendSession"]:
     return session
 
 
+# DGM-Hyperagents pipeline path patterns (synced with T82)
+DGM_PIPELINE_PATHS = [
+    "./agents/",
+    "./archive/",
+    "./evolution/",
+    "./checkpoints/",
+    "./self_improve/",
+    "./eval_results.json",
+    "./performance_log.json",
+    "./improvement_history.json",
+    "./agent_archive.json",
+    "./fitness_scores.json",
+    "./reward_design.json",
+    "./generation_log.json",
+]
+
+
+def declare_self_improvement_pipeline(
+    guard,
+    archive_path:  Optional[str] = None,
+    eval_path:     Optional[str] = None,
+    pipeline_name: str           = "dgm-hyperagents",
+) -> "MemoryBackendSession":
+    """
+    Register a self-improvement pipeline with the Aiglos guard.
+
+    Registers DGM-Hyperagents style pipeline paths with the T82 enforcement
+    engine. Any write to these paths containing adversarial injection patterns
+    fires T82 SELF_IMPROVEMENT_HIJACK before it reaches the archive.
+
+    Unlike declare_memory_backend() (which protects cross-session memory stores),
+    this function protects the evolutionary infrastructure that GENERATES future
+    agents. A successful T82 injection propagates forward through all future
+    generations — one poisoned turn, infinite forward propagation.
+
+    guard:         OpenClawGuard instance to attach to.
+    archive_path:  Path to agent archive directory (default: ./agents/).
+    eval_path:     Path to evaluation results file (default: ./eval_results.json).
+    pipeline_name: Pipeline identifier for logging.
+
+    Returns a MemoryBackendSession with the registered paths.
+
+    Example:
+        # DGM-Hyperagents running on OpenClaw
+        from aiglos.integrations.gigabrain import declare_self_improvement_pipeline
+        session = declare_self_improvement_pipeline(
+            guard,
+            archive_path="./agents/archive/",
+            eval_path="./evals/results.json",
+        )
+
+        # Or zero-config — registers all known DGM-H paths
+        session = declare_self_improvement_pipeline(guard)
+    """
+    from pathlib import Path as _Path
+
+    paths = list(DGM_PIPELINE_PATHS)
+
+    if archive_path:
+        expanded = str(_Path(archive_path).expanduser())
+        if expanded not in paths:
+            paths.insert(0, expanded)
+
+    if eval_path:
+        expanded = str(_Path(eval_path).expanduser())
+        if expanded not in paths:
+            paths.insert(0, expanded)
+
+    # Expand all paths
+    expanded_paths = []
+    for p in paths:
+        try:
+            expanded_paths.append(str(_Path(p).expanduser()))
+        except Exception:
+            expanded_paths.append(p)
+
+    # Register with T79/T82 path registry
+    _REGISTERED_PATHS.update(expanded_paths)
+
+    # Track on guard
+    if not hasattr(guard, '_improvement_pipelines'):
+        guard._improvement_pipelines = []
+    guard._improvement_pipelines.append({
+        "pipeline": pipeline_name,
+        "paths":    expanded_paths,
+    })
+
+    session = MemoryBackendSession(
+        backend    = f"self-improvement/{pipeline_name}",
+        paths      = expanded_paths,
+        session_id = getattr(guard, 'session_id', ''),
+    )
+
+    log.info(
+        "[DGM-H] Registered self-improvement pipeline=%s paths=%d "
+        "T82 enforcement active",
+        pipeline_name, len(expanded_paths),
+    )
+    return session
+
+
+def dgm_hyperagents_autodetect(guard) -> Optional["MemoryBackendSession"]:
+    """
+    Auto-detect DGM-Hyperagents directory structure and register T82 protection.
+
+    Scans for known DGM-H paths (agents/, archive/, eval_results.json, etc.)
+    and registers them with the T82 enforcement engine. If a DGM-H style
+    directory structure is detected, logs a warning that self-improvement
+    pipeline protection is now active.
+
+    Example:
+        from aiglos.integrations.gigabrain import dgm_hyperagents_autodetect
+        session = dgm_hyperagents_autodetect(guard)
+    """
+    from pathlib import Path as _Path
+
+    found = []
+    for p in DGM_PIPELINE_PATHS:
+        expanded = _Path(p.rstrip("/")).expanduser()
+        if expanded.exists():
+            found.append(str(expanded))
+
+    if found:
+        log.info(
+            "[DGM-H] Auto-detected self-improvement pipeline at: %s",
+            ", ".join(found)
+        )
+    else:
+        log.info(
+            "[DGM-H] No existing pipeline found — "
+            "registering paths for pre-emptive T82 protection"
+        )
+
+    return declare_self_improvement_pipeline(guard)
+
+
 def is_registered_memory_path(path: str) -> bool:
     """
     Returns True if this path is a registered persistent memory backend path.
