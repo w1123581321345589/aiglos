@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.25.7"  # canonical version for this release
+    __version__ = "0.25.8"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -296,6 +296,8 @@ from aiglos.integrations.gigabrain import (  # noqa: F401
     dgm_hyperagents_autodetect,
     declare_self_improvement_pipeline,
     DGM_PIPELINE_PATHS,
+    declare_studio_pipeline,
+    STUDIO_ROLE_TOOLS,
 )
 from aiglos.core.threat_engine_v2 import match_T82  # noqa: F401
 

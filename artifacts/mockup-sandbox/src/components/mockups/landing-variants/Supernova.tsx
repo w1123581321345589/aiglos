@@ -728,7 +728,7 @@ export function Supernova() {
         <div className="sn-hero-content">
           <div className="sn-pill">
             <span className="sn-pill-badge">New</span>
-            v0.25.7 -- T82 Self-Improvement Hijack + DGM-Hyperagents
+            v0.25.8 -- Studio Pipelines + 17 Known Agents
           </div>
 
           <h1>
