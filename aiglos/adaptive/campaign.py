@@ -160,6 +160,35 @@ _CAMPAIGN_PATTERNS = [
         },
     },
     {
+        "name":        "METACOGNITIVE_POISON_CHAIN",
+        "description": (
+            "Self-improvement pipeline poison: adversarial content injected into "
+            "memory or persistent state (T31/T79), then the improvement procedure "
+            "reads that poisoned data when generating the next agent version (T82). "
+            "Based on DGM-Hyperagents architecture (Facebook Research, March 2026): "
+            "the meta-agent reads agent archive, evaluation results, and performance "
+            "history when generating improved agents. If any of those stores are "
+            "compromised, every future generation inherits the poison. "
+            "The adversary does not attack each generated agent — they attack the "
+            "process that creates them. One successful T31/T79 → T82 sequence means "
+            "persistent influence over all future agent generations with no further "
+            "effort. "
+            "Confidence 0.95: T31 or T79 followed by T82 in the same session is "
+            "the two-step attack. T82 alone could be a legitimate write; combined "
+            "with a prior memory injection it confirms pipeline poisoning intent. "
+            "T82 amplifier 2.0x: forward propagation to all future generations "
+            "multiplies impact beyond any single-session attack."
+        ),
+        "sequence":    [
+            {"T31", "T79"},         # in-session or persistent memory injection
+            {"T82"},                # improvement procedure reads poisoned data
+        ],
+        "min_events":  2,
+        "confidence":  0.95,
+        "surfaces":    None,
+        "amplifiers":  {"T82": 2.0},
+    },
+    {
         "name":        "REPO_TAKEOVER_CHAIN",
         "description": (
             "Supply chain compromise followed by credential harvest and subsequent "
