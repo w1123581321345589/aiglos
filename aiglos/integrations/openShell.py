@@ -1,7 +1,7 @@
 """
 aiglos/integrations/openShell.py
 ==================================
-Aiglos integration for NVIDIA OpenShell -- the agent-agnostic security sandbox
+Aiglos integration for NVIDIA OpenShell — the agent-agnostic security sandbox
 announced at GTC 2026.
 
 THE ARCHITECTURE INSIGHT
@@ -33,10 +33,10 @@ hype is. The architecture works for every agent. OpenClaw is the launch vehicle.
 
 AIGLOS POSITION
 ===============
-OpenShell answers: "What is this agent ALLOWED to do?" -- enforced outside the
+OpenShell answers: "What is this agent ALLOWED to do?" — enforced outside the
 agent's reasoning process at the kernel/network level.
 
-Aiglos answers: "What is this agent ACTUALLY doing?" -- also enforced outside
+Aiglos answers: "What is this agent ACTUALLY doing?" — also enforced outside
 the agent's reasoning process, at the behavioral sequence level.
 
 Two orthogonal guarantees. Neither can be reasoned around. Both are necessary.
@@ -46,10 +46,10 @@ AUTO-DETECTION
 ==============
 When an agent runs inside OpenShell, the sandbox sets environment variables:
 
-    OPENSHELL_SANDBOX_ID    -- unique sandbox instance ID
-    OPENSHELL_POLICY_PATH   -- path to the active policy YAML
-    OPENSHELL_AGENT         -- which agent is running inside
-    OPENSHELL_VERSION       -- OpenShell version
+    OPENSHELL_SANDBOX_ID    — unique sandbox instance ID
+    OPENSHELL_POLICY_PATH   — path to the active policy YAML
+    OPENSHELL_AGENT         — which agent is running inside
+    OPENSHELL_VERSION       — OpenShell version
 
 If these exist, Aiglos auto-configures. Zero code changes required.
 
@@ -82,11 +82,13 @@ from typing import Optional
 
 log = logging.getLogger("aiglos.openShell")
 
+# ── OpenShell environment variable names ─────────────────────────────────────
 ENV_SANDBOX_ID   = "OPENSHELL_SANDBOX_ID"
 ENV_POLICY_PATH  = "OPENSHELL_POLICY_PATH"
 ENV_AGENT        = "OPENSHELL_AGENT"
 ENV_VERSION      = "OPENSHELL_VERSION"
 
+# Known agent identifiers OpenShell sets in OPENSHELL_AGENT
 KNOWN_AGENTS = {
     "claude-code":  "Claude Code (Anthropic)",
     "claude":       "Claude Code (Anthropic)",
@@ -97,6 +99,14 @@ KNOWN_AGENTS = {
     "aider":        "Aider",
     "continue":     "Continue",
     "cody":         "Cody (Sourcegraph)",
+    "smolagents":   "smolagents (HuggingFace)",
+    "smol":         "smolagents (HuggingFace)",
+    "autogen":      "AutoGen (Microsoft)",
+    "langgraph":    "LangGraph (LangChain)",
+    "crewai":       "CrewAI",
+    "claude-code-game-studios": "Claude Code Game Studios (48-agent pipeline)",
+    "ccgs":           "Claude Code Game Studios",
+    "game-studio":    "Multi-agent game studio pipeline",
 }
 
 
@@ -109,7 +119,7 @@ def is_inside_openShell() -> bool:
 
     Example:
         if aiglos.is_inside_openShell():
-            print("Running inside OpenShell -- auto-configuring")
+            print("Running inside OpenShell — auto-configuring")
     """
     return bool(os.environ.get(ENV_SANDBOX_ID))
 
@@ -119,11 +129,11 @@ def openShell_context() -> Optional[dict]:
     Returns the OpenShell context if running inside a sandbox, else None.
 
     Return dict:
-        sandbox_id:   str -- OPENSHELL_SANDBOX_ID
-        policy_path:  str | None -- OPENSHELL_POLICY_PATH
-        agent:        str | None -- OPENSHELL_AGENT (e.g. "claude-code")
-        agent_name:   str -- human-readable agent name
-        version:      str | None -- OPENSHELL_VERSION
+        sandbox_id:   str — OPENSHELL_SANDBOX_ID
+        policy_path:  str | None — OPENSHELL_POLICY_PATH
+        agent:        str | None — OPENSHELL_AGENT (e.g. "claude-code")
+        agent_name:   str — human-readable agent name
+        version:      str | None — OPENSHELL_VERSION
 
     Example:
         ctx = aiglos.openShell_context()
@@ -165,14 +175,14 @@ def openshell_detect(guard=None) -> Optional[object]:
         guard = aiglos.OpenClawGuard(agent_name="my-agent")
         session = aiglos.openshell_detect(guard=guard)
         if session:
-            print("OpenShell detected -- behavioral layer active")
+            print("OpenShell detected — behavioral layer active")
     """
     ctx = openShell_context()
     if ctx is None:
         return None
 
     log.info(
-        "[OpenShell] Auto-detected -- sandbox=%s agent=%s version=%s",
+        "[OpenShell] Auto-detected — sandbox=%s agent=%s version=%s",
         ctx["sandbox_id"],
         ctx["agent_name"],
         ctx["version"] or "unknown",
@@ -181,10 +191,11 @@ def openshell_detect(guard=None) -> Optional[object]:
     policy_path = ctx["policy_path"]
     if not policy_path:
         log.warning(
-            "[OpenShell] OPENSHELL_POLICY_PATH not set -- "
+            "[OpenShell] OPENSHELL_POLICY_PATH not set — "
             "behavioral detection active without policy boundary enforcement. "
             "Set OPENSHELL_POLICY_PATH to enable T69/T76 scope enforcement."
         )
+        # Still configure sandbox_type even without a policy file
         if guard is not None:
             guard.sandbox_context = True
             guard.sandbox_type    = "openShell"
@@ -197,7 +208,7 @@ def openshell_detect(guard=None) -> Optional[object]:
         guard       = guard,
     )
     log.info(
-        "[OpenShell] Session configured -- agent=%s policy=%s",
+        "[OpenShell] Session configured — agent=%s policy=%s",
         ctx["agent_name"],
         policy_path,
     )
@@ -238,6 +249,7 @@ def attach_openShell(
         # Auto-detect everything from environment
         attach_openShell(guard)
     """
+    # Resolve from environment if not provided
     if policy_path is None:
         policy_path = (
             os.environ.get(ENV_POLICY_PATH) or
@@ -251,13 +263,17 @@ def attach_openShell(
     agent_name = KNOWN_AGENTS.get(agent, agent or "unknown agent")
 
     log.info(
-        "[OpenShell] Attaching -- agent=%s policy=%s session=%s",
+        "[OpenShell] Attaching — agent=%s policy=%s session=%s",
         agent_name,
         policy_path,
         session_id or "auto",
     )
 
-    if agent_name and agent_name != "unknown agent":
+    # Set agent_name on guard if the guard supports it
+    if hasattr(guard, "_agent_name") and guard._agent_name in ("my-agent", "agent"):
+        pass  # don't override an explicitly set name
+    elif agent_name and agent_name != "unknown agent":
+        # Store for logging context
         guard._openShell_agent = agent_name
 
     try:
@@ -270,15 +286,20 @@ def attach_openShell(
         return session
     except FileNotFoundError:
         log.warning(
-            "[OpenShell] Policy file not found: %s -- "
+            "[OpenShell] Policy file not found: %s — "
             "T76 policy bypass detection still active, "
             "T69 scope enforcement inactive (no policy boundary defined).",
             policy_path,
         )
+        # Still configure sandbox type
         guard.sandbox_context = True
         guard.sandbox_type    = "openShell"
         return None
 
+
+# ── Agent-specific quickstart helpers ────────────────────────────────────────
+# These are convenience wrappers that set sensible defaults per agent.
+# The underlying policy enforcement is identical — YAML is agent-agnostic.
 
 def attach_for_claude_code(guard, policy_path: Optional[str] = None) -> Optional[object]:
     """
