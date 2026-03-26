@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aiglos — Runtime Security for AI Agents</title>
-<meta name="description" content="The runtime security layer for AI agents. 81 threat families. One import. Under 1ms.">
+<meta name="description" content="The runtime security layer for AI agents. 82 threat families. One import. Under 1ms.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -258,7 +258,7 @@ footer{border-top:1px solid var(--ln);padding:40px 48px;
 <section class="hero">
   <div class="hero-badge">
     <span class="hero-badge-dot"></span>
-    v0.25.3 — 81 threat families — 1,747 tests passing
+    v0.25.7 — 82 threat families — 1,780 tests passing
   </div>
   <h1 class="fade-up">Runtime security for<br><span>AI agents.</span></h1>
   <p class="hero-sub fade-up delay-1">One import. Every tool call inspected before execution. Under 1ms. The security layer the OpenClaw ecosystem doesn't ship.</p>
@@ -325,12 +325,12 @@ aiglos.<span class="tok-fn">attach</span>(
   </div>
   <div class="feature-grid">
     <div class="feature-cell">
-      <div class="feature-title">81 Threat Families</div>
-      <div class="feature-body">T01-T81 covering MCP tool calls, HTTP/API requests, subprocess execution, session data extraction, content wrapper escapes, environment hijacking, .pth supply chain persistence, uncensored model routing, and every attack class in the OpenClaw ATLAS threat model.</div>
+      <div class="feature-title">82 Threat Families</div>
+      <div class="feature-body">T01-T82 covering MCP tool calls, HTTP/API requests, subprocess execution, session data extraction, content wrapper escapes, environment hijacking, .pth supply chain persistence, uncensored model routing, self-improvement pipeline hijacking, and every attack class in the OpenClaw ATLAS threat model.</div>
     </div>
     <div class="feature-cell">
       <div class="feature-title">Campaign Detection</div>
-      <div class="feature-body">22 multi-step attack patterns. A git log followed by a .env read followed by an outbound POST is a credential exfiltration campaign. Each call looks clean. The sequence is the attack. Aiglos sees sequences.</div>
+      <div class="feature-body">23 multi-step attack patterns. A git log followed by a .env read followed by an outbound POST is a credential exfiltration campaign. Each call looks clean. The sequence is the attack. Aiglos sees sequences.</div>
     </div>
     <div class="feature-cell">
       <div class="feature-title">Behavioral Baseline</div>
@@ -434,7 +434,7 @@ aiglos.<span class="tok-fn">attach</span>(
 <section class="section" style="border-top:1px solid var(--ln)">
   <div class="section-kicker">OpenClaw ATLAS Threat Model</div>
   <h2>93% coverage of the platform's<br>own documented threat model.</h2>
-  <p class="section-sub">OpenClaw published a formal MITRE ATLAS threat model in February 2026. 22 threats across 8 tactic categories. Aiglos covers 19 fully, 3 partially, 0 gaps.</p>
+  <p class="section-sub">OpenClaw published a formal MITRE ATLAS threat model in February 2026. 22 threats across 8 tactic categories. Aiglos covers 19 fully, 3 partially, 0 gaps. v0.25.7 adds T82 Self-Improvement Hijack for DGM-Hyperagents architectures.</p>
   <div class="atlas-grid">
     <div class="atlas-cell"><div>
       <span class="atlas-id">T-EXEC-001 · T-EXEC-002</span>
