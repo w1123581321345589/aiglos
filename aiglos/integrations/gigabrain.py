@@ -333,6 +333,144 @@ DGM_PIPELINE_PATHS = [
 ]
 
 
+# ── Studio role → default tools + hard bans ──────────────────────────────────
+# Maps common game studio / multi-agent studio roles to sensible tool scopes.
+# Based on Claude Code Game Studios hierarchy (48 agents, github.com/Donchitos).
+# Each role gets minimum necessary tool access — principle of least privilege.
+# Override any role with explicit declare_subagent() calls after declare_studio_pipeline().
+
+STUDIO_ROLE_TOOLS = {
+    # Creative direction
+    "art-director":       {"tools": ["filesystem.read"], "scope": ["assets/", "specs/"], "bans": ["deploy", "push_to_main"]},
+    "creative-director":  {"tools": ["filesystem.read", "filesystem.write"], "scope": ["specs/", "docs/"], "bans": ["deploy", "push_to_main"]},
+    "game-designer":      {"tools": ["filesystem.read", "filesystem.write"], "scope": ["design/", "docs/"], "bans": ["deploy"]},
+    "narrative-designer": {"tools": ["filesystem.read", "filesystem.write"], "scope": ["story/", "scripts/"], "bans": ["deploy", "push_to_main"]},
+
+    # Technical
+    "lead-programmer":    {"tools": ["filesystem", "shell.execute", "git.push"], "scope": ["src/"], "bans": ["push_to_main_without_review", "fabricate_data"]},
+    "engine-programmer":  {"tools": ["filesystem", "shell.execute"], "scope": ["src/engine/"], "bans": ["push_to_main", "deploy"]},
+    "gameplay-programmer":{"tools": ["filesystem", "shell.execute"], "scope": ["src/gameplay/"], "bans": ["push_to_main", "deploy"]},
+    "ai-programmer":      {"tools": ["filesystem", "shell.execute"], "scope": ["src/ai/"], "bans": ["push_to_main", "deploy"]},
+    "tools-programmer":   {"tools": ["filesystem", "shell.execute"], "scope": ["tools/", "src/tools/"], "bans": ["push_to_main"]},
+
+    # Art / assets
+    "level-designer":     {"tools": ["filesystem.read", "filesystem.write"], "scope": ["levels/", "assets/levels/"], "bans": ["deploy", "push_to_main"]},
+    "environment-artist": {"tools": ["filesystem.read", "filesystem.write"], "scope": ["assets/environment/"], "bans": ["deploy", "push_to_main"]},
+    "character-artist":   {"tools": ["filesystem.read", "filesystem.write"], "scope": ["assets/characters/"], "bans": ["deploy"]},
+    "ui-designer":        {"tools": ["filesystem.read", "filesystem.write"], "scope": ["assets/ui/", "src/ui/"], "bans": ["deploy", "push_to_main"]},
+    "vfx-artist":         {"tools": ["filesystem.read", "filesystem.write"], "scope": ["assets/vfx/"], "bans": ["deploy"]},
+
+    # Audio
+    "sound-designer":     {"tools": ["filesystem.read", "filesystem.write"], "scope": ["assets/audio/", "src/audio/"], "bans": ["deploy", "push_to_main"]},
+    "composer":           {"tools": ["filesystem.read", "filesystem.write"], "scope": ["assets/music/"], "bans": ["deploy"]},
+    "audio-programmer":   {"tools": ["filesystem", "shell.execute"], "scope": ["src/audio/"], "bans": ["push_to_main", "deploy"]},
+
+    # QA / production
+    "qa-lead":            {"tools": ["filesystem.read", "shell.execute"], "scope": ["tests/", "src/"], "bans": ["push_to_main", "deploy", "modify_tests_without_approval"]},
+    "qa-tester":          {"tools": ["filesystem.read", "shell.execute"], "scope": ["tests/"], "bans": ["push_to_main", "deploy", "filesystem.write"]},
+    "producer":           {"tools": ["filesystem.read", "filesystem.write"], "scope": ["docs/", "specs/", "roadmap/"], "bans": ["deploy", "push_to_main"]},
+    "project-manager":    {"tools": ["filesystem.read", "filesystem.write"], "scope": ["docs/", "roadmap/"], "bans": ["deploy", "push_to_main"]},
+
+    # Research / writing
+    "researcher":         {"tools": ["web_search", "filesystem.read"], "scope": ["research/"], "bans": ["deploy", "push_to_main", "filesystem.write"]},
+    "writer":             {"tools": ["filesystem.read", "filesystem.write"], "scope": ["story/", "scripts/", "docs/"], "bans": ["deploy", "push_to_main"]},
+    "localization":       {"tools": ["filesystem.read", "filesystem.write"], "scope": ["localization/"], "bans": ["deploy", "push_to_main"]},
+
+    # Default fallback for unlisted roles
+    "_default":           {"tools": ["filesystem.read"], "scope": [], "bans": ["deploy", "push_to_main", "fabricate_data"]},
+}
+
+
+def declare_studio_pipeline(
+    guard,
+    roles:         list   = None,
+    studio_name:   str    = "game-studio",
+    allow_deploys: list   = None,
+    coordinator_role: str = None,
+) -> list:
+    """
+    Register a multi-agent studio pipeline with the Aiglos guard.
+
+    Replaces 48 individual declare_subagent() calls with one call.
+    Based on Claude Code Game Studios hierarchy (github.com/Donchitos/Claude-Code-Game-Studios).
+
+    roles:         List of role names to register. Defaults to all STUDIO_ROLE_TOOLS.
+                   Use shortened names: "art-director", "qa-lead", "sound-designer".
+    studio_name:   Studio identifier prefix for agent names.
+    allow_deploys: List of roles permitted to deploy (overrides default hard ban).
+    coordinator_role: Role that acts as coordinator — gets slightly elevated trust
+                   but T36 still fires if it tries to modify other agents' configs.
+
+    Returns list of declared role names.
+
+    T38 AGENT_SPAWN behavior after calling this:
+      - Declared role + in-scope tool: score 0.0 (suppressed)
+      - Declared role + out-of-scope: score 0.90 (elevated)
+      - Undeclared spawn: score 0.78 (normal)
+
+    T78 HALLUCINATION_CASCADE note: 48-agent pipelines are high-risk for
+    cross-agent confidence amplification. The Art Director describes a vague
+    style → Level Designer adds confidence → Asset Creator treats as authoritative.
+    Aiglos T78 fires on this pattern across the session.
+
+    Example:
+        from aiglos.integrations.gigabrain import declare_studio_pipeline
+
+        # Register full studio (48 roles from STUDIO_ROLE_TOOLS)
+        declared = declare_studio_pipeline(guard, studio_name="my-studio")
+
+        # Register specific roles only
+        declared = declare_studio_pipeline(guard,
+            roles=["art-director", "level-designer", "qa-lead", "sound-designer"],
+            studio_name="indie-studio",
+        )
+
+        # With deployment gating
+        declared = declare_studio_pipeline(guard,
+            roles=["lead-programmer", "qa-lead", "producer"],
+            allow_deploys=["lead-programmer"],  # only lead-programmer can deploy
+        )
+    """
+    if roles is None:
+        roles = [r for r in STUDIO_ROLE_TOOLS if not r.startswith("_")]
+
+    allow_deploys = allow_deploys or []
+    declared = []
+
+    for role in roles:
+        role_def = STUDIO_ROLE_TOOLS.get(role.lower(), STUDIO_ROLE_TOOLS["_default"])
+        tools = list(role_def["tools"])
+        scope = list(role_def["scope"])
+        bans = list(role_def["bans"]) + ["fabricate_data", "unverified_claims"]
+
+        # Remove deploy ban for allowed deployers
+        if role in allow_deploys and "deploy" in bans:
+            bans.remove("deploy")
+
+        # Coordinator gets slightly more filesystem scope
+        if role == coordinator_role:
+            if "filesystem.read" in tools and "filesystem.write" not in tools:
+                tools.append("filesystem.write")
+            bans.append("modify_other_agent_configs")
+
+        agent_name = f"{studio_name}/{role}"
+
+        guard.declare_subagent(
+            agent_name,
+            tools       = tools,
+            scope_files = scope if scope else None,
+            hard_bans   = bans,
+        )
+        declared.append(agent_name)
+
+    log.info(
+        "[StudioPipeline] Registered %d roles for studio=%s T38 enforcement active",
+        len(declared), studio_name,
+    )
+
+    return declared
+
+
 def declare_self_improvement_pipeline(
     guard,
     archive_path:  Optional[str] = None,
