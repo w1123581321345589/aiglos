@@ -20,7 +20,7 @@ One import. 81 threat families. Signed compliance artifact on every session.
 
 |                      |                        |                          |                   |                                      |                    |
 |----------------------|------------------------|--------------------------|-------------------|--------------------------------------|--------------------|
-|**82** threat families|**23** campaign patterns|**18** inspection triggers|**15** known agents|**3/3** GHSAs caught before disclosure|**NDAA §1513 ready**|
+|**82** threat families|**23** campaign patterns|**18** inspection triggers|**17** known agents|**3/3** GHSAs caught before disclosure|**NDAA §1513 ready**|
 
 </div>
 
@@ -225,6 +225,41 @@ session = mark_as_superpowers_session(plan_path="./plan.md", guard=guard)
 **15 known agents:** Claude Code, Codex, Cursor, OpenClaw, Windsurf, Aider, Continue, Cody, smolagents, AutoGen, LangGraph, CrewAI, and aliases.
 
 -----
+
+## Multi-Agent Studio Pipelines
+
+48-agent pipelines (Claude Code Game Studios, DGM-Hyperagents, multi-agent orchestrators)
+have two specific Aiglos problems: **T38 false positives** from legitimate spawns
+and **T78 hallucination cascades** from cross-agent confidence amplification.
+
+`declare_studio_pipeline()` solves both:
+
+```python
+from aiglos.integrations.gigabrain import declare_studio_pipeline
+
+# Register all 48 studio roles — one call instead of 48 declare_subagent() calls
+declared = declare_studio_pipeline(guard, studio_name="my-studio")
+
+# Or specific roles with deployment gating
+declared = declare_studio_pipeline(guard,
+    roles      = ["art-director", "level-designer", "qa-lead", "sound-designer"],
+    studio_name = "indie-studio",
+    allow_deploys = ["lead-programmer"],  # only lead-programmer can deploy
+)
+# T38 AGENT_SPAWN: suppressed for declared roles in scope
+# T38 AGENT_SPAWN: elevated (0.90) for declared roles out of scope
+# T38 AGENT_SPAWN: 0.78 for undeclared spawns
+```
+
+`STUDIO_ROLE_TOOLS` — 25 pre-configured roles with minimum-necessary tool scopes:
+Art Director (filesystem.read on assets/), QA Lead (test runners, no deploy),
+Sound Designer (audio assets, no main branch), Level Designer (levels/ scope only).
+
+**T78 note for 48-agent pipelines:** Art Director describes a vague style →
+Level Designer adds confidence → Asset Creator treats as authoritative → QA Lead
+validates the now-confident wrong specification. T78 HALLUCINATION_CASCADE fires
+on cross-agent confidence amplification. One of the highest-risk patterns in
+production multi-agent systems.
 
 ## Persistent Memory Protection
 
@@ -465,18 +500,19 @@ aiglos daemon start / status / stop
 
 ## Build history
 
-|Version|Tests|Rules|Notes                                                                              |
-|-------|-----|-----|-----------------------------------------------------------------------------------|
-|v0.1.0 |335  |36   |Initial release                                                                    |
-|v0.19.0|1,300|66   |Campaign patterns, new threat families                                             |
-|v0.24.0|1,514|75   |GOVBENCH, ATLAS coverage, NemoClaw, T68-T75                                        |
-|v0.25.0|1,582|76   |T76, NemoClaw integration, OpenShell                                               |
-|v0.25.2|1,690|77   |declare_subagent(), AgentPhase, T77                                                |
-|v0.25.3|1,747|79   |T78/T79, Gigabrain, aiglos launch                                                  |
-|v0.25.4|1,791|80   |T80, smolagents, HF Spaces feed                                                    |
-|v0.25.5|1,791|81   |T81 PTH_FILE_INJECT, scan-deps, REPO_TAKEOVER_CHAIN                                |
-|v0.25.6|1,791|81   |ByteRover, validate-prompt, aiglos launch polish                                   |
-|v0.25.7|1,791|82   |T82 SELF_IMPROVEMENT_HIJACK, METACOGNITIVE_POISON_CHAIN, DGM-H pipeline integration|
+|Version|Tests|Rules|Notes                                                                                            |
+|-------|-----|-----|-------------------------------------------------------------------------------------------------|
+|v0.1.0 |335  |36   |Initial release                                                                                  |
+|v0.19.0|1,300|66   |Campaign patterns, new threat families                                                           |
+|v0.24.0|1,514|75   |GOVBENCH, ATLAS coverage, NemoClaw, T68-T75                                                      |
+|v0.25.0|1,582|76   |T76, NemoClaw integration, OpenShell                                                             |
+|v0.25.2|1,690|77   |declare_subagent(), AgentPhase, T77                                                              |
+|v0.25.3|1,747|79   |T78/T79, Gigabrain, aiglos launch                                                                |
+|v0.25.4|1,791|80   |T80, smolagents, HF Spaces feed                                                                  |
+|v0.25.5|1,791|81   |T81 PTH_FILE_INJECT, scan-deps, REPO_TAKEOVER_CHAIN                                              |
+|v0.25.6|1,791|81   |ByteRover, validate-prompt, aiglos launch polish                                                 |
+|v0.25.7|1,791|82   |T82 SELF_IMPROVEMENT_HIJACK, METACOGNITIVE_POISON_CHAIN, DGM-H pipeline integration              |
+|v0.25.8|1,791|82   |declare_studio_pipeline(), STUDIO_ROLE_TOOLS (25 roles), claude-code-game-studios in KNOWN_AGENTS|
 
 -----
 
