@@ -18,13 +18,13 @@ One import. 81 threat families. Signed compliance artifact on every session.
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-000?style=flat-square&labelColor=000)](https://python.org)
 [![1791 tests](https://img.shields.io/badge/tests-1791_passing-000?style=flat-square&labelColor=000)](tests/)
 
-| | | | | | |
-|---|---|---|---|---|---|
-| **81** threat families | **22** campaign patterns | **18** inspection triggers | **15** known agents | **3/3** GHSAs caught before disclosure | **NDAA §1513 ready** |
+|                      |                        |                          |                   |                                      |                    |
+|----------------------|------------------------|--------------------------|-------------------|--------------------------------------|--------------------|
+|**82** threat families|**23** campaign patterns|**18** inspection triggers|**15** known agents|**3/3** GHSAs caught before disclosure|**NDAA §1513 ready**|
 
 </div>
 
----
+-----
 
 ```
 pip install aiglos && aiglos launch
@@ -38,13 +38,13 @@ Or drop it into an existing agent:
 import aiglos  # every tool call below this line is inspected, attested, and learned from
 ```
 
----
+-----
 
 ## The category-defining breach just happened.
 
 On March 24, 2026, LiteLLM 1.82.8 shipped a `.pth` file — `litellm_init.pth` — that executed on every Python startup, collected every credential on the machine, and posted them to `models.litellm.cloud`. SSH keys. AWS, GCP, Azure credentials. Kubernetes configs. Every API key in every `.env` file. Database passwords. Shell history. Crypto wallets.
 
-97 million downloads per month. Transitive dependency for dspy, smolagents, LangChain, LangGraph, CrewAI. The GitHub repository is now under attacker control — the security issue was closed as "not planned" using the stolen maintainer token.
+97 million downloads per month. Transitive dependency for dspy, smolagents, LangChain, LangGraph, CrewAI. The GitHub repository is now under attacker control — the security issue was closed as “not planned” using the stolen maintainer token.
 
 Discovered because the attacker vibe-coded a bug. Without the bug it could have run for weeks.
 
@@ -54,7 +54,7 @@ Aiglos T81 `PTH_FILE_INJECT` catches this the moment `litellm_init.pth` lands in
 aiglos scan-deps    # are you affected right now?
 ```
 
----
+-----
 
 ## Two reasons to install this.
 
@@ -74,7 +74,7 @@ The signed session artifact would have shown every step with timestamps. The `.p
 
 **Reason 2: Default OpenClaw is useless without it.**
 
-`aiglos launch` solves the "default OpenClaw is useless" problem. Five questions, 30 seconds:
+`aiglos launch` solves the “default OpenClaw is useless” problem. Five questions, 30 seconds:
 
 ```
 1. What do you want to call your agent?  > scout
@@ -96,9 +96,9 @@ scout is ready. Run: openclaw start
 Security is already on.
 ```
 
-The tweet author who wrote "Default OpenClaw takes a weekend to configure" spent a weekend building what this does in 5 minutes.
+The tweet author who wrote “Default OpenClaw takes a weekend to configure” spent a weekend building what this does in 5 minutes.
 
----
+-----
 
 ## Live output
 
@@ -122,13 +122,13 @@ The tweet author who wrote "Default OpenClaw takes a weekend to configure" spent
   Artifact: HMAC signed — sha256:a05c5ac40...
 ```
 
----
+-----
 
 ## What Aiglos is
 
 Runtime security enforcement for every AI agent. One import intercepts every tool call before execution, classifies it against 81 threat families, and produces a signed audit artifact.
 
-**The architectural fact nobody says directly:** guardrails inside the agent can be reasoned around. Guardrails outside the agent cannot. Aiglos enforces outside the agent process — the same position as NVIDIA OpenShell. The agent cannot reason around a rule it doesn't know exists.
+**The architectural fact nobody says directly:** guardrails inside the agent can be reasoned around. Guardrails outside the agent cannot. Aiglos enforces outside the agent process — the same position as NVIDIA OpenShell. The agent cannot reason around a rule it doesn’t know exists.
 
 Three interception surfaces running simultaneously:
 
@@ -145,7 +145,7 @@ aiglos.attach(
 
 Under 1ms per call. Zero network dependency. No proxy. No sidecar. No port.
 
----
+-----
 
 ## 81 Threat Families
 
@@ -155,27 +155,30 @@ Mapped to MITRE ATLAS. Citation-verified. No rule enters production without a ci
 
 **T67-T81** — rules added in v0.20.0-v0.25.6:
 
-| Rule | Name | Score | What it catches |
-|------|------|-------|----------------|
-| T67 | HEARTBEAT_SILENCE | 0.88 | Unexpected suppression of scheduled jobs |
-| T68 | INSECURE_DEFAULT_CONFIG | 0.95 | Root cause of 40,214 exposed OpenClaw instances |
-| T69 | PLAN_DRIFT | 0.95 | Deviation from Superpowers-approved plan |
-| T70 | ENV_PATH_HIJACK | 0.88 | PATH/LD_PRELOAD modification at runtime |
-| T71 | PAIRING_GRACE_ABUSE | 0.87 | 30-second pairing window exploitation |
-| T72 | CHANNEL_IDENTITY_SPOOF | 0.89 | AllowFrom header spoofing |
-| T73 | TOOL_ENUMERATION | 0.75 | tools.list / empty-arg reconnaissance |
-| T74 | CONTENT_WRAPPER_ESCAPE | 0.84 | XML wrapper termination / CDATA injection |
-| T75 | SESSION_DATA_EXTRACT | 0.82 | sessions.list lateral extraction |
-| T76 | NEMOCLAW_POLICY_BYPASS | 0.95 | Agent writes to OpenShell policy files at runtime |
-| T77 | OVERNIGHT_JOB_INJECTION | 0.87 | Malicious writes to cron/scheduler config |
-| T78 | HALLUCINATION_CASCADE | 0.82 | Cross-agent confidence amplification |
-| T79 | PERSISTENT_MEMORY_INJECT | 0.92 | Adversarial content written to Gigabrain, ByteRover, Chroma, Pinecone, Qdrant, mem0, Letta, Zep — survives session close |
-| T80 | UNCENSORED_MODEL_ROUTE | 0.78 | Inference routed through uncensored/abliterated model |
-| T81 | PTH_FILE_INJECT | 0.98 | .pth file written to site-packages — the LiteLLM attack mechanism |
+|Rule|Name                    |Score|What it catches                                                                                                                                                                                                                                                                                                                                                                                                           |
+|----|------------------------|-----|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|T67 |HEARTBEAT_SILENCE       |0.88 |Unexpected suppression of scheduled jobs                                                                                                                                                                                                                                                                                                                                                                                  |
+|T68 |INSECURE_DEFAULT_CONFIG |0.95 |Root cause of 40,214 exposed OpenClaw instances                                                                                                                                                                                                                                                                                                                                                                           |
+|T69 |PLAN_DRIFT              |0.95 |Deviation from Superpowers-approved plan                                                                                                                                                                                                                                                                                                                                                                                  |
+|T70 |ENV_PATH_HIJACK         |0.88 |PATH/LD_PRELOAD modification at runtime                                                                                                                                                                                                                                                                                                                                                                                   |
+|T71 |PAIRING_GRACE_ABUSE     |0.87 |30-second pairing window exploitation                                                                                                                                                                                                                                                                                                                                                                                     |
+|T72 |CHANNEL_IDENTITY_SPOOF  |0.89 |AllowFrom header spoofing                                                                                                                                                                                                                                                                                                                                                                                                 |
+|T73 |TOOL_ENUMERATION        |0.75 |tools.list / empty-arg reconnaissance                                                                                                                                                                                                                                                                                                                                                                                     |
+|T74 |CONTENT_WRAPPER_ESCAPE  |0.84 |XML wrapper termination / CDATA injection                                                                                                                                                                                                                                                                                                                                                                                 |
+|T75 |SESSION_DATA_EXTRACT    |0.82 |sessions.list lateral extraction                                                                                                                                                                                                                                                                                                                                                                                          |
+|T76 |NEMOCLAW_POLICY_BYPASS  |0.95 |Agent writes to OpenShell policy files at runtime                                                                                                                                                                                                                                                                                                                                                                         |
+|T77 |OVERNIGHT_JOB_INJECTION |0.87 |Malicious writes to cron/scheduler config                                                                                                                                                                                                                                                                                                                                                                                 |
+|T78 |HALLUCINATION_CASCADE   |0.82 |Cross-agent confidence amplification                                                                                                                                                                                                                                                                                                                                                                                      |
+|T79 |PERSISTENT_MEMORY_INJECT|0.92 |Adversarial content written to Gigabrain, ByteRover, Chroma, Pinecone, Qdrant, mem0, Letta, Zep — survives session close                                                                                                                                                                                                                                                                                                  |
+|T80 |UNCENSORED_MODEL_ROUTE  |0.78 |Inference routed through uncensored/abliterated model                                                                                                                                                                                                                                                                                                                                                                     |
+|T81 |PTH_FILE_INJECT         |0.98 |.pth file written to site-packages — the LiteLLM attack mechanism                                                                                                                                                                                                                                                                                                                                                         |
+|T82 |SELF_IMPROVEMENT_HIJACK |0.96 |**Write to self-improvement pipeline infrastructure** — agent archives, evaluation results, performance logs, improvement procedures (DGM-Hyperagents architecture). Unlike T36 AGENTDEF (poisons one agent definition), T82 poisons the process that generates ALL future agents. One injection, infinite forward propagation through every subsequent generation. Source: Facebook Research DGM-Hyperagents, March 2026.|
 
 **T79 note:** distinct from T31 MEMORY_POISON. T31 fires on in-session writes, cleared on session close. T79 fires on writes to persistent backends that auto-inject into every future session. The adversary compromises memory once and gets permanent influence without re-injecting.
 
----
+**T82 note:** distinct from T36 AGENTDEF. T36 fires on writes to agent definition files (one agent poisoned). T82 fires on writes to evolutionary infrastructure that generates future agents. In DGM-Hyperagents, the meta-agent reads agent archives, evaluation results, and performance history when generating improved agents — if any of those stores are compromised, every future generation inherits the poison. The METACOGNITIVE_POISON_CHAIN campaign (T31/T79 → T82) is the two-step version: inject into memory, wait for the improvement procedure to read it and propagate it forward. T31 fires on in-session writes, cleared on session close. T79 fires on writes to persistent backends that auto-inject into every future session. The adversary compromises memory once and gets permanent influence without re-injecting.
+
+-----
 
 ## 22 Campaign Patterns
 
@@ -189,11 +192,13 @@ Key patterns:
 
 **NEMOCLAW_POLICY_HIJACK** (confidence 0.96) — T76 policy bypass followed by exfil. T76 amplifier 1.4x.
 
+**METACOGNITIVE_POISON_CHAIN** (confidence 0.95) — T31 or T79 memory injection followed by T82 write to self-improvement infrastructure. The adversary injects adversarial content into the agent’s memory or persistent store, then the improvement procedure reads that poisoned data when generating the next agent version. T82 amplifier 2.0x — forward propagation to all future generations multiplies impact beyond any single-session attack. Based on DGM-Hyperagents architecture (Facebook Research, March 2026).
+
 **SUPERPOWERS_PLAN_HIJACK** (confidence 0.97) — The highest-confidence campaign in the taxonomy. Approved plan deviation → exfil.
 
 Full list of 22 patterns in [`aiglos/adaptive/campaign.py`](aiglos/adaptive/campaign.py).
 
----
+-----
 
 ## Agent Integrations
 
@@ -219,7 +224,7 @@ session = mark_as_superpowers_session(plan_path="./plan.md", guard=guard)
 
 **15 known agents:** Claude Code, Codex, Cursor, OpenClaw, Windsurf, Aider, Continue, Cody, smolagents, AutoGen, LangGraph, CrewAI, and aliases.
 
----
+-----
 
 ## Persistent Memory Protection
 
@@ -242,7 +247,30 @@ declare_memory_backend(guard, backend="chroma", db_path="./chroma.db")
 
 8 backends: Gigabrain, ByteRover, MemoryOS, mem0, Letta, Zep, Chroma, Pinecone, Qdrant.
 
----
+-----
+
+## Self-Improvement Pipeline Protection
+
+DGM-Hyperagents (Darwin Gödel Machine, Facebook Research, March 2026) enables agents that modify both their task behavior and the process that generates future improvements. This creates the most sophisticated attack surface in agentic AI: poison the improvement pipeline once and every future agent generation inherits the compromise.
+
+```python
+# Zero-config: auto-detect DGM-H directory structure
+from aiglos.integrations.gigabrain import dgm_hyperagents_autodetect
+session = dgm_hyperagents_autodetect(guard)
+# T82 active on ./agents/, ./archive/, eval_results.json, improvement_history.json
+
+# Or explicit path registration
+from aiglos.integrations.gigabrain import declare_self_improvement_pipeline
+session = declare_self_improvement_pipeline(
+    guard,
+    archive_path = "./agents/archive/",
+    eval_path    = "./evals/results.json",
+)
+```
+
+T82 fires on writes to self-improvement infrastructure with adversarial content. Legitimate improvement writes (clean eval results, performance metrics) do not fire — both conditions required for precision.
+
+METACOGNITIVE_POISON_CHAIN campaign (confidence 0.95) detects the two-step attack: T31/T79 memory injection → T82 pipeline write. The adversary does not need to attack each generated agent. They attack the data the improvement process reads, and every future generation inherits the poison.
 
 ## Dependency Scanning
 
@@ -265,7 +293,7 @@ aiglos scan-deps
 
 Checks: compromised package versions, malicious `.pth` files in site-packages and uv cache, `~/.config/sysmon/` persistence, transitive exposure across dspy, smolagents, LangChain, LangGraph, CrewAI.
 
----
+-----
 
 ## Prompt / Skill File Validation
 
@@ -288,9 +316,9 @@ aiglos validate-prompt .aiglos/soul.md
 #   Shapiro benchmark: ~2,000 words. You're 1,153 words short.
 ```
 
-Based on the "Input Layer" framework: good prompts close off interpretation gaps, not just describe the target. Scores 8 dimensions.
+Based on the “Input Layer” framework: good prompts close off interpretation gaps, not just describe the target. Scores 8 dimensions.
 
----
+-----
 
 ## Compliance and Attestation
 
@@ -310,15 +338,15 @@ Every session close produces a cryptographically signed artifact:
 }
 ```
 
-| Standard | Deadline | Status |
-|----------|---------|--------|
-| NDAA §1513 FY2026 | June 16, 2026 | `attestation_ready: true` auto-generated per session. 80,000 defense contractors need this artifact. Nothing else produces it. |
-| CMMC Level 2 | Ongoing | C3PAO-formatted evidence package |
-| NIST SP 800-171 Rev 2 | Ongoing | 18 controls across AC, AU, IA, SC, SI |
-| EU AI Act | August 2026 | Pro tier and above |
-| SOC 2 Type II | Ongoing | CC6, CC7 coverage |
+|Standard             |Deadline     |Status                                                                                                                        |
+|---------------------|-------------|------------------------------------------------------------------------------------------------------------------------------|
+|NDAA §1513 FY2026    |June 16, 2026|`attestation_ready: true` auto-generated per session. 80,000 defense contractors need this artifact. Nothing else produces it.|
+|CMMC Level 2         |Ongoing      |C3PAO-formatted evidence package                                                                                              |
+|NIST SP 800-171 Rev 2|Ongoing      |18 controls across AC, AU, IA, SC, SI                                                                                         |
+|EU AI Act            |August 2026  |Pro tier and above                                                                                                            |
+|SOC 2 Type II        |Ongoing      |CC6, CC7 coverage                                                                                                             |
 
----
+-----
 
 ## Governance Benchmarking
 
@@ -334,7 +362,7 @@ aiglos benchmark run
 
 GOVBENCH — the first governance benchmark for AI agents. Published before any standard body required one. The company that defines the benchmark owns the compliance category.
 
----
+-----
 
 ## ATLAS Coverage
 
@@ -343,17 +371,17 @@ aiglos autoresearch atlas-coverage
 # 22 threats mapped · 19 full · 3 partial · 0 gaps — 93%
 ```
 
-OpenClaw's own MITRE ATLAS threat model: 22 threats. Aiglos covers 93%. The 3 partial cases are documented honestly — passive fingerprinting, adversarial ML evasion, and semantically-appropriate-but-harmful content have no reliable behavioral signature at the tool call layer.
+OpenClaw’s own MITRE ATLAS threat model: 22 threats. Aiglos covers 93%. The 3 partial cases are documented honestly — passive fingerprinting, adversarial ML evasion, and semantically-appropriate-but-harmful content have no reliable behavioral signature at the tool call layer.
 
 **3/3 published OpenClaw GHSAs caught by existing rules before advisory disclosure:**
 
-| GHSA | CVSS | Attack | Rules |
-|------|------|--------|-------|
-| GHSA-g8p2-7wf7-98mq | 8.8 | Auth token exfiltration | T03 T12 T19 T68 |
-| GHSA-q284-4pvr-m585 | 8.6 | OS command injection | T03 T04 T70 |
-| GHSA-mc68-q9jw-2h3v | 8.4 | Command injection via PATH | T03 T70 |
+|GHSA               |CVSS|Attack                    |Rules          |
+|-------------------|----|--------------------------|---------------|
+|GHSA-g8p2-7wf7-98mq|8.8 |Auth token exfiltration   |T03 T12 T19 T68|
+|GHSA-q284-4pvr-m585|8.6 |OS command injection      |T03 T04 T70    |
+|GHSA-mc68-q9jw-2h3v|8.4 |Command injection via PATH|T03 T70        |
 
----
+-----
 
 ## Sub-agent Declaration and Phase Gating
 
@@ -380,7 +408,7 @@ guard.unlock_phase(AgentPhase.P1, operator="will@aiglos.dev")  # observe only
 guard.unlock_phase(AgentPhase.P3, operator="will@aiglos.dev")  # content autonomy
 ```
 
----
+-----
 
 ## CLI Reference
 
@@ -422,34 +450,35 @@ aiglos openShell detect
 aiglos daemon start / status / stop
 ```
 
----
+-----
 
 ## Pricing
 
-| Tier | Price | What you get |
-|------|-------|-------------|
-| **Community** | $0 / MIT | Full T01-T81 detection, 3 surfaces, 22 campaign patterns, GOVBENCH, GHSA watcher, ATLAS coverage, all integrations (OpenShell, NemoClaw, Superpowers, Gigabrain, ByteRover, smolagents), declare_subagent(), AgentPhase, aiglos launch, scan-deps, validate-prompt, GitHub Actions CI |
-| **Pro** | $49/dev/mo | Community + federated intelligence, behavioral baseline, RSA-2048 artifacts, NDAA §1513 + EU AI Act compliance export, policy proposals, cloud dashboard |
-| **Teams** | $399/mo (15 devs) | Pro + centralized policy, aggregated threat view, Tier 3 approval workflows |
-| **Enterprise** | Custom, annual | Teams + private federation, air-gap deployment, C3PAO packages, dedicated engineering |
+|Tier          |Price            |What you get                                                                                                                                                                                                                                                                         |
+|--------------|-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|**Community** |$0 / MIT         |Full T01-T81 detection, 3 surfaces, 22 campaign patterns, GOVBENCH, GHSA watcher, ATLAS coverage, all integrations (OpenShell, NemoClaw, Superpowers, Gigabrain, ByteRover, smolagents), declare_subagent(), AgentPhase, aiglos launch, scan-deps, validate-prompt, GitHub Actions CI|
+|**Pro**       |$49/dev/mo       |Community + federated intelligence, behavioral baseline, RSA-2048 artifacts, NDAA §1513 + EU AI Act compliance export, policy proposals, cloud dashboard                                                                                                                             |
+|**Teams**     |$399/mo (15 devs)|Pro + centralized policy, aggregated threat view, Tier 3 approval workflows                                                                                                                                                                                                          |
+|**Enterprise**|Custom, annual   |Teams + private federation, air-gap deployment, C3PAO packages, dedicated engineering                                                                                                                                                                                                |
 
----
+-----
 
 ## Build history
 
-| Version | Tests | Rules | Notes |
-|---------|-------|-------|-------|
-| v0.1.0 | 335 | 36 | Initial release |
-| v0.19.0 | 1,300 | 66 | Campaign patterns, new threat families |
-| v0.24.0 | 1,514 | 75 | GOVBENCH, ATLAS coverage, NemoClaw, T68-T75 |
-| v0.25.0 | 1,582 | 76 | T76, NemoClaw integration, OpenShell |
-| v0.25.2 | 1,690 | 77 | declare_subagent(), AgentPhase, T77 |
-| v0.25.3 | 1,747 | 79 | T78/T79, Gigabrain, aiglos launch |
-| v0.25.4 | 1,791 | 80 | T80, smolagents, HF Spaces feed |
-| v0.25.5 | 1,791 | 81 | T81 PTH_FILE_INJECT, scan-deps, REPO_TAKEOVER_CHAIN |
-| v0.25.6 | 1,791 | 81 | ByteRover, validate-prompt, aiglos launch polish |
+|Version|Tests|Rules|Notes                                                                              |
+|-------|-----|-----|-----------------------------------------------------------------------------------|
+|v0.1.0 |335  |36   |Initial release                                                                    |
+|v0.19.0|1,300|66   |Campaign patterns, new threat families                                             |
+|v0.24.0|1,514|75   |GOVBENCH, ATLAS coverage, NemoClaw, T68-T75                                        |
+|v0.25.0|1,582|76   |T76, NemoClaw integration, OpenShell                                               |
+|v0.25.2|1,690|77   |declare_subagent(), AgentPhase, T77                                                |
+|v0.25.3|1,747|79   |T78/T79, Gigabrain, aiglos launch                                                  |
+|v0.25.4|1,791|80   |T80, smolagents, HF Spaces feed                                                    |
+|v0.25.5|1,791|81   |T81 PTH_FILE_INJECT, scan-deps, REPO_TAKEOVER_CHAIN                                |
+|v0.25.6|1,791|81   |ByteRover, validate-prompt, aiglos launch polish                                   |
+|v0.25.7|1,791|82   |T82 SELF_IMPROVEMENT_HIJACK, METACOGNITIVE_POISON_CHAIN, DGM-H pipeline integration|
 
----
+-----
 
 ## What makes this structurally different
 
@@ -459,23 +488,26 @@ aiglos daemon start / status / stop
 
 **3. 3/3 GHSAs caught before disclosure.** Empirical validation no competitor can replicate. The rules came first, every time.
 
-**4. Persistent memory protection.** T79 is the only rule specifically designed for cross-session memory backends. Gigabrain, ByteRover, Chroma, Pinecone, Qdrant — all protected. Adversarial content that survives session close and injects into every future session is completely unguarded elsewhere.
+**4. Self-improvement pipeline protection (T82).**
+DGM-Hyperagents is the most sophisticated agentic architecture published. It is also the most dangerous attack surface: one injection into the improvement pipeline propagates forward through every future agent generation. T82 SELF_IMPROVEMENT_HIJACK is the only rule specifically designed for this. `declare_self_improvement_pipeline()` registers the archive paths; T82 fires before the poison reaches the evolutionary infrastructure.
 
-**5. Supply chain depth.** T81 catches `.pth` file attacks at the persistence placement moment, before the first Python restart. `aiglos scan-deps` gives an immediate answer to "am I already compromised." REPO_TAKEOVER_CHAIN detects the full attacker-becomes-maintainer sequence.
+**5. Persistent memory protection.** T79 is the only rule specifically designed for cross-session memory backends. Gigabrain, ByteRover, Chroma, Pinecone, Qdrant — all protected. Adversarial content that survives session close and injects into every future session is completely unguarded elsewhere.
 
-**6. The only product that produces a compliance artifact at session close.** 80,000 defense contractors need it by June 2026. Nothing else auto-generates it.
+**6. Supply chain depth.** T81 catches `.pth` file attacks at the persistence placement moment, before the first Python restart. `aiglos scan-deps` gives an immediate answer to “am I already compromised.” REPO_TAKEOVER_CHAIN detects the full attacker-becomes-maintainer sequence.
 
-**7. aiglos launch is the second front door.** Security is the moat. The setup wizard is the growth vector.
+**7. The only product that produces a compliance artifact at session close.** 80,000 defense contractors need it by June 2026. Nothing else auto-generates it.
 
-**8. Detection that compounds.** Behavioral baselines, intent prediction, and federated intelligence improve with every session. A forked open-source version stays static. The moat grows.
+**8. aiglos launch is the second front door.** Security is the moat. The setup wizard is the growth vector.
 
----
+**9. Detection that compounds.** Behavioral baselines, intent prediction, and federated intelligence improve with every session. A forked open-source version stays static. The moat grows.
+
+-----
 
 IBM shipped the PC in 1981. Norton launched in 1990. Nine years for the security layer.
 
-We're shipping in week three.
+We’re shipping in week three.
 
----
+-----
 
 <div align="center">
 
