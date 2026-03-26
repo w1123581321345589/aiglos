@@ -211,6 +211,6 @@ class TestDGMIntegration:
         assert hasattr(aiglos, "declare_self_improvement_pipeline")
         assert hasattr(aiglos, "DGM_PIPELINE_PATHS")
 
-    def test_version_is_0257(self):
+    def test_version_is_0258(self):
         import aiglos
-        assert aiglos.__version__ == "0.25.7"
+        assert aiglos.__version__ == "0.25.8"
