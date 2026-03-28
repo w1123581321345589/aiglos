@@ -97,7 +97,7 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     inspect_memory_write,
     is_memory_tool,
 )
-from aiglos.core.threat_engine_v2 import RULES_T44_T66  # noqa: F401
+from aiglos.core.threat_engine_v2 import RULES_T44_T66, RULES  # noqa: F401
 from aiglos.integrations.subagent_registry import (  # noqa: F401
     SubagentRegistry,
     DeclaredSubagent,
@@ -832,6 +832,7 @@ __all__ = [
     "DimensionResult",
     # v0.19.0
     "RULES_T44_T66",
+    "RULES",
     # v0.18.0
     "AuditScanner",
     "AuditResult",

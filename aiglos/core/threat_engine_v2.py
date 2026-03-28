@@ -1863,3 +1863,5 @@ RULES_T44_T66: List[Dict] = [
      ),
      "score": 0.82, "critical": True, "match": match_T75},
 ]
+
+RULES = RULES_T44_T66

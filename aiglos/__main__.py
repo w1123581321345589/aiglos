@@ -27,6 +27,7 @@ def main():
         print("  validate-prompt <file>   Score a skill/prompt file")
         print("  agents scaffold          NL to declare_subagent() config")
         print("  benchmark run            Run GOVBENCH")
+        print("  scan-message <text>      Scan a message for C2/exfil signals")
         print("  --version                Show version")
         print()
         print("Usage:")
@@ -98,6 +99,10 @@ def main():
         print(f"Grade: {result.grade}  ({result.score}/100)")
         for dim in result.dimensions:
             print(f"  {dim.name}: {dim.score}/{dim.max_score}")
+
+    elif cmd == "scan-message":
+        from aiglos.cli import _cmd_scan_message
+        _cmd_scan_message(args[1:])
 
     else:
         print(f"Unknown command: {cmd}")

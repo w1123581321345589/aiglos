@@ -268,8 +268,113 @@ def clear_session_http_events() -> None:
 
 
 def attach_http_intercept(mode="block", allow_list=None):
-    # FIXME: wire up actual monkeypatch for requests/httpx/aiohttp sessions
-    return {"requests": True, "httpx": True, "aiohttp": True}
+    """
+    Monkeypatch requests, httpx, and aiohttp to route every outbound call
+    through inspect_request before it hits the wire.
+
+    Works by wrapping the low-level send/request method on each library.
+    If the library is not installed, that adapter is silently skipped
+    (zero required deps).
+    """
+    allow_list = allow_list or []
+    patched = {}
+
+    try:
+        import requests as _requests
+
+        _orig_send = _requests.Session.send
+
+        def _aiglos_requests_send(self, prepared, **kw):
+            result = inspect_request(
+                method=prepared.method or "GET",
+                url=prepared.url or "",
+                headers=dict(prepared.headers or {}),
+                body=prepared.body,
+                allow_list=allow_list,
+                mode=mode,
+            )
+            _session_events.append(result.to_dict())
+            if result.verdict == HttpVerdict.BLOCK:
+                raise AiglosBlockedRequest(result)
+            return _orig_send(self, prepared, **kw)
+
+        _requests.Session.send = _aiglos_requests_send
+        patched["requests"] = True
+    except ImportError:
+        patched["requests"] = False
+
+    try:
+        import httpx as _httpx
+
+        _orig_httpx_send = _httpx.Client.send
+
+        def _aiglos_httpx_send(self, request, **kw):
+            body = request.content if hasattr(request, "content") else None
+            result = inspect_request(
+                method=request.method,
+                url=str(request.url),
+                headers=dict(request.headers or {}),
+                body=body,
+                allow_list=allow_list,
+                mode=mode,
+            )
+            _session_events.append(result.to_dict())
+            if result.verdict == HttpVerdict.BLOCK:
+                raise AiglosBlockedRequest(result)
+            return _orig_httpx_send(self, request, **kw)
+
+        _httpx.Client.send = _aiglos_httpx_send
+
+        if hasattr(_httpx, "AsyncClient"):
+            _orig_httpx_async = _httpx.AsyncClient.send
+
+            async def _aiglos_httpx_async_send(self, request, **kw):
+                body = request.content if hasattr(request, "content") else None
+                result = inspect_request(
+                    method=request.method,
+                    url=str(request.url),
+                    headers=dict(request.headers or {}),
+                    body=body,
+                    allow_list=allow_list,
+                    mode=mode,
+                )
+                _session_events.append(result.to_dict())
+                if result.verdict == HttpVerdict.BLOCK:
+                    raise AiglosBlockedRequest(result)
+                return await _orig_httpx_async(self, request, **kw)
+
+            _httpx.AsyncClient.send = _aiglos_httpx_async_send
+
+        patched["httpx"] = True
+    except ImportError:
+        patched["httpx"] = False
+
+    try:
+        import aiohttp as _aiohttp
+
+        _orig_aiohttp_request = _aiohttp.ClientSession._request
+
+        async def _aiglos_aiohttp_request(self, method, url, **kw):
+            body = kw.get("data") or kw.get("json")
+            result = inspect_request(
+                method=method,
+                url=str(url),
+                headers=dict(kw.get("headers") or {}),
+                body=body,
+                allow_list=allow_list,
+                mode=mode,
+            )
+            _session_events.append(result.to_dict())
+            if result.verdict == HttpVerdict.BLOCK:
+                raise AiglosBlockedRequest(result)
+            return await _orig_aiohttp_request(self, method, url, **kw)
+
+        _aiohttp.ClientSession._request = _aiglos_aiohttp_request
+        patched["aiohttp"] = True
+    except ImportError:
+        patched["aiohttp"] = False
+
+    return patched
 
 
 def http_intercept_status() -> dict:
