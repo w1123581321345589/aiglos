@@ -149,6 +149,8 @@ class TestExternalInstructionChannel:
             "GAAS_TAKEOVER", "INFERENCE_HIJACK_CHAIN",
             "RAG_POISON_CHAIN", "MULTI_AGENT_IMPERSONATION",
             "CAPABILITY_EXPLOIT_CHAIN", "SUPERPOWERS_PLAN_HIJACK",
+            "GIGABRAIN_MEMORY_POISON", "NEMOCLAW_POLICY_HIJACK",
+            "REPO_TAKEOVER_CHAIN", "METACOGNITIVE_POISON_CHAIN",
         }
         assert expected == names
 
@@ -305,11 +307,11 @@ class TestScanMessage:
 class TestV070ModuleAPI:
 
     def test_version_is_070(self):
-        assert aiglos.__version__ == "0.25.2"
+        assert aiglos.__version__ == "0.25.8"
 
     def test_nineteen_campaign_patterns(self):
         names = {p["name"] for p in _CAMPAIGN_PATTERNS}
         assert "EXTERNAL_INSTRUCTION_CHANNEL" in names
         assert "SKILL_CHAIN" in names
         assert "SANDBOX_ESCAPE_ATTEMPT" in names
-        assert len(names) == 19
+        assert len(names) == 23
