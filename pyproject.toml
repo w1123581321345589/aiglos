@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aiglos"
-version = "0.25.2"
-description = "AI agent security across every surface — T01-T42 threat detection, causal attribution, predictive intent modeling"
+version = "0.25.8"
+description = "AI agent security runtime. 82 threat families, 23 campaign patterns, signed compliance artifacts. Zero dependencies."
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -59,9 +59,9 @@ dev = [
 [project.urls]
 Homepage       = "https://aiglos.io"
 Documentation  = "https://docs.aiglos.io"
-Repository     = "https://github.com/aiglos/aiglos"
-"Bug Tracker"  = "https://github.com/aiglos/aiglos/issues"
-Changelog      = "https://github.com/aiglos/aiglos/blob/main/CHANGELOG.md"
+Repository     = "https://github.com/w1123581321345589/aiglos"
+"Bug Tracker"  = "https://github.com/w1123581321345589/aiglos/issues"
+Changelog      = "https://github.com/w1123581321345589/aiglos/blob/main/CHANGELOG.md"
 
 [project.scripts]
 aiglos = "aiglos.__main__:main"
