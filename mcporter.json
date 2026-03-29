@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/steipete/mcporter/main/mcporter.schema.json",
+  "mcpServers": {
+    "aiglos": {
+      "description": "Aiglos AI agent runtime security -- threat detection, compliance attestation, and CI/CD gates for NDAA 1513 and CMMC environments",
+      "command": "python",
+      "args": ["aiglos_mcp_server.py"],
+      "env": {
+        "AIGLOS_LOG_LEVEL": "${AIGLOS_LOG_LEVEL:-WARNING}",
+        "AIGLOS_LICENSE_KEY": "${AIGLOS_LICENSE_KEY}",
+        "AIGLOS_POLICY": "${AIGLOS_POLICY:-default}"
+      },
+      "lifecycle": "ephemeral"
+    }
+  }
+}
