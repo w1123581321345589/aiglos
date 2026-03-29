@@ -177,7 +177,15 @@ _CAMPAIGN_PATTERNS = [
             "the two-step attack. T82 alone could be a legitimate write; combined "
             "with a prior memory injection it confirms pipeline poisoning intent. "
             "T82 amplifier 2.0x: forward propagation to all future generations "
-            "multiplies impact beyond any single-session attack."
+            "multiplies impact beyond any single-session attack. "
+            "Architecture sources: "
+            "(1) DGM-Hyperagents (Facebook Research, March 2026) — evolutionary agent "
+            "pipelines where archive + eval results feed future generations. "
+            "(2) The AI Scientist (Sakana AI, Nature 2026) — Automated Reviewer "
+            "judgments feed back into paper generation. The scaling law of science "
+            "(better foundation models → more convincing outputs) means a T82 "
+            "injection into reviewer criteria becomes harder to detect over time, "
+            "not easier — the attack scales with the underlying model capability."
         ),
         "sequence":    [
             {"T31", "T79"},         # in-session or persistent memory injection

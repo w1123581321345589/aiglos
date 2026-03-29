@@ -245,3 +245,47 @@ class ContextDirectoryGuard:
             "total_writes": self._write_count,
             "blocked_writes": self._block_count,
         }
+
+
+@dataclass
+class ContextGuardResult:
+    """Result of a context guard check."""
+    allowed: bool
+    reason: str = ""
+    injection_score: float = 0.0
+    path: str = ""
+    tool: str = ""
+
+
+@dataclass
+class ContextWriteResult:
+    """Result of a context write scan."""
+    verdict: str = "ALLOW"
+    rule_id: str = "none"
+    rule_name: str = "none"
+    reason: str = ""
+    path: str = ""
+    content_preview: str = ""
+    content_hash: str = ""
+    semantic_score: float = 0.0
+    semantic_risk: str = "LOW"
+    signals_found: List[str] = field(default_factory=list)
+    session_id: str = ""
+    tool_name: str = ""
+    timestamp: float = 0.0
+    surface: str = "mcp"
+
+    def to_dict(self) -> Dict:
+        return {
+            "verdict": self.verdict,
+            "rule_id": self.rule_id,
+            "rule_name": self.rule_name,
+            "reason": self.reason,
+            "path": self.path,
+            "semantic_score": self.semantic_score,
+            "semantic_risk": self.semantic_risk,
+            "session_id": self.session_id,
+            "tool_name": self.tool_name,
+            "timestamp": self.timestamp,
+            "surface": self.surface,
+        }

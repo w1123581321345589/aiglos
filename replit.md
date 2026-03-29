@@ -3,8 +3,8 @@
 ## Overview
 Aiglos is an AI agent security runtime (Python package) with a premium landing site. The Python package (`aiglos/`) provides runtime security for AI agents with zero required dependencies (stdlib only). The web application serves the marketing/documentation site at `/` styled after cursor.com.
 
-## Python Package (aiglos/ v0.25.3)
-The `aiglos/` directory contains the Python security runtime package covering threat families T01-T81 (81 total). 1,747+ tests passing.
+## Python Package (aiglos/ v0.25.11)
+The `aiglos/` directory contains the Python security runtime package covering threat families T01-T82 (82 total). 39 rules in engine, 23 campaign patterns, 17 known agents. 2,016+ tests passing.
 
 ### Package Structure
 - `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.25.3. Exports ATLASCoverage, GHSAWatcher, OpenShell functions, NeMoClawSession, SubagentRegistry, DeclaredSubagent, SpawnCheckResult, declare_memory_backend, gigabrain_autodetect, MemoryBackendSession.

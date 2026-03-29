@@ -138,3 +138,17 @@ def mark_as_superpowers_session(
         guard.attach_superpowers(session)
 
     return session
+
+
+class SuperpowersPhase:
+    """Phase constants for Superpowers sessions."""
+    PLANNING = "planning"
+    EXECUTING = "executing"
+    REVIEWING = "reviewing"
+    COMPLETED = "completed"
+
+    ALL = [PLANNING, EXECUTING, REVIEWING, COMPLETED]
+
+    @classmethod
+    def is_valid(cls, phase: str) -> bool:
+        return phase in cls.ALL

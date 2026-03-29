@@ -4,7 +4,7 @@ aiglos_openclaw
 Runtime security middleware for OpenClaw agents.
 
 Wraps any OpenClaw MCP tool call pipeline with Aiglos T01–T66 threat detection,
-signed attestation, and policy enforcement -- in a single import.
+signed attestation, and policy enforcement — in a single import.
 
 INSTALLATION
 ------------
@@ -88,7 +88,7 @@ T36  Memory poisoning (writes to SOUL.md, MEMORY.md, agent index files)
 Full T01–T39 library: https://github.com/aiglos/aiglos-cves
 """
 
-
+from __future__ import annotations
 
 import hashlib
 import json
@@ -100,6 +100,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
+from aiglos.integrations.agent_phase import AgentPhase
 from pathlib import Path
 from typing import Any, Optional
 
@@ -143,7 +144,7 @@ _OPENCLAW_RULES: list[dict] = [
             )
         ),
     },
-    # T36: Memory poisoning -- writes to agent memory index with injection payloads
+    # T36: Memory poisoning — writes to agent memory index with injection payloads
     {
         "id": "T36",
         "name": "MEMORY_POISON",
@@ -238,7 +239,7 @@ _OPENCLAW_RULES: list[dict] = [
             for p in ("/etc/", "/usr/", "/bin/", "/sbin/", "/root/", "/var/spool/cron")
         ),
     },
-    # T13: SSRF -- metadata endpoint or private range
+    # T13: SSRF — metadata endpoint or private range
     {
         "id": "T13",
         "name": "SSRF",
@@ -296,7 +297,7 @@ _OPENCLAW_RULES: list[dict] = [
             for kw in ("cron/", "heartbeat.md", "schedule.yaml", "schedule.json", ".hermes/cron")
         ),
     },
-    # T30: Supply chain -- force-install without scan
+    # T30: Supply chain — force-install without scan
     {
         "id": "T30",
         "name": "SUPPLY_CHAIN",
@@ -314,9 +315,14 @@ _OPENCLAW_RULES: list[dict] = [
         "desc": "Unexpected cross-agent coordination or mass-distribution trigger",
         "score": 0.72,
         "match": lambda name, args: (
-            name in ("postiz.schedule", "distribution.push", "api.call")
-            and re.search(r"(all|every|fleet|broadcast)", str(args), re.IGNORECASE)
-            is not None
+            name in (
+                "postiz.schedule", "distribution.push", "api.call",
+                "messages_send", "messages_create",   # OpenClaw MCP (steipete, March 2026)
+            )
+            and re.search(
+                r"(all|every|fleet|broadcast_all|broadcast|everyone)",
+                str(args), re.IGNORECASE
+            ) is not None
         ),
     },
     # T40: Shared context directory write with injection payload
@@ -332,7 +338,7 @@ _OPENCLAW_RULES: list[dict] = [
             .is_shared_context_write(name, args)
         ),
     },
-    # T41: Outbound secret leakage -- only fires on write/send/post operations
+    # T41: Outbound secret leakage — only fires on write/send/post operations
     # Inbound reads (filesystem.read_file etc) are covered by T19/T22.
     # T41 fires when args passed to a SEND/POST/WRITE operation contain
     # actual API key values (not just path names).
@@ -347,10 +353,26 @@ _OPENCLAW_RULES: list[dict] = [
                 "send", "post", "publish", "transmit", "upload",
                 "notify", "message", "email", "webhook", "slack",
                 "discord", "telegram", "write", "append",
+                "messages_send",     # OpenClaw MCP (steipete, March 2026)
+                "messages_create",
             ))
-            and __import__("aiglos.integrations.outbound_guard",
+            and (
+                # Path 1: actual secret value detected (regex on key patterns)
+                __import__("aiglos.integrations.outbound_guard",
                            fromlist=["contains_secret"])
-               .contains_secret(str(args))
+                   .contains_secret(str(args))
+                or
+                # Path 2: credential keyword name in content (MCP-aware)
+                # Catches short/test values that don't match the value regex
+                any(kw in str(args).lower() for kw in (
+                    "aws_secret_access_key", "aws_access_key_id",
+                    "private_key", "id_rsa", "id_ed25519",
+                    "api_secret", "client_secret", "access_token",
+                    "refresh_token", "bearer_token",
+                    "database_password", "db_password",
+                    "kubernetes_token", "kube_token",
+                ))
+            )
         ),
     },
     # T42: Agent self-modifying instructions via autogrowth/feedback loop
@@ -570,32 +592,99 @@ class SessionArtifact:
 
 # ─── Main guard class ─────────────────────────────────────────────────────────
 
-def _is_impossible_in_sandbox(tool_name: str, args: dict) -> bool:
+# ── Sandbox constraint tables ─────────────────────────────────────────────────
+# Each sandbox type has a different set of physically impossible operations.
+# The more constrained the environment, the more precisely Aiglos can detect escape.
+
+_SANDBOX_CONSTRAINTS = {
+    "openclaw": {
+        # Standard OpenClaw non-main sandbox: no network, no files outside workdir, no env
+        "impossible_tools":   {"shell", "exec", "bash", "terminal", "subprocess"},
+        "impossible_env":     True,
+        "network_blocked":    True,      # all external network blocked
+        "filesystem_bounded": True,      # only workdir accessible
+    },
+    "firecracker": {
+        # Firecracker microVM (KiloClaw, AWS Lambda): complete VM isolation
+        # /etc, /usr, /bin all read-only from base image — no writes possible
+        "impossible_tools":   {"shell", "exec", "bash", "terminal", "subprocess",
+                               "systemctl", "launchctl", "crontab"},
+        "impossible_env":     True,      # env vars only from VM launch config
+        "network_blocked":    True,      # network policy-controlled at hypervisor
+        "filesystem_bounded": True,      # VM image root is immutable
+        "system_paths_readonly": True,   # /etc, /usr, /bin, /sbin read-only
+    },
+    "docker": {
+        # Docker container: depends on run flags but assume hardened defaults
+        "impossible_tools":   {"shell", "exec", "bash"},
+        "impossible_env":     False,     # env vars typically passed via -e flags
+        "network_blocked":    False,     # depends on --network flag
+        "filesystem_bounded": True,      # only mounted volumes accessible
+    },
+    "openShell": {
+        # NVIDIA NemoClaw OpenShell runtime: kernel-level sandboxing,
+        # YAML-defined network policy, workspace-bounded filesystem.
+        # Policy files in .nemoclaw/ are read-only from agent perspective.
+        # Writes to policy files are T76 NEMOCLAW_POLICY_BYPASS, score=1.0.
+        "impossible_tools":   {"systemctl", "launchctl", "crontab", "mount", "umount"},
+        "impossible_env":     False,     # env vars allowed per YAML policy
+        "network_blocked":    False,     # YAML policy governs — Aiglos enforces
+        "filesystem_bounded": True,      # workspace-bounded per YAML policy
+        "policy_files_readonly": True,   # .nemoclaw/ policy files are immutable
+    },
+}
+
+_SANDBOX_DEFAULT = _SANDBOX_CONSTRAINTS["openclaw"]
+
+
+def _is_impossible_in_sandbox(
+    tool_name: str,
+    args: dict,
+    sandbox_type: str = "openclaw"
+) -> bool:
     """
-    Returns True if a tool call is physically impossible in a correctly
-    configured non-main OpenClaw sandbox. When sandbox_context=True and
-    this returns True, it means the sandbox is misconfigured or the agent
-    achieved escape -- either way CRITICAL.
+    Returns True if a tool call is physically impossible in the specified sandbox type.
+    When sandbox_context=True and this returns True, the sandbox is misconfigured
+    or the agent achieved escape — either way CRITICAL at score=1.0.
+
+    sandbox_type: "openclaw" | "firecracker" | "docker"
     """
+    constraints = _SANDBOX_CONSTRAINTS.get(sandbox_type, _SANDBOX_DEFAULT)
     n = tool_name.lower()
     s = str(args).lower()
-    # Filesystem writes outside /tmp should be impossible
-    if any(kw in n for kw in ("write", "delete", "remove", "append")):
-        import re as _re
+
+    # Shell execution — impossible in most sandbox types
+    if any(kw in n for kw in constraints.get("impossible_tools", set())):
+        return True
+
+    # Filesystem writes
+    if constraints.get("filesystem_bounded") and any(
+        kw in n for kw in ("write", "delete", "remove", "append")
+    ):
         path = str(args.get("path", args.get("file", ""))).lower()
         if path and not path.startswith(("/tmp", "./", "tmp/")):
             return True
-    # Network calls to non-localhost in sandbox
-    if any(kw in n for kw in ("http", "fetch", "request", "curl", "post", "put")):
+
+    # System path writes (firecracker: read-only image)
+    if constraints.get("system_paths_readonly") and any(
+        kw in n for kw in ("write", "delete", "modify", "patch")
+    ):
+        path = str(args.get("path", args.get("file", ""))).lower()
+        if any(path.startswith(p) for p in ("/etc/", "/usr/", "/bin/", "/sbin/", "/lib/")):
+            return True
+
+    # Network calls
+    if constraints.get("network_blocked") and any(
+        kw in n for kw in ("http", "fetch", "request", "curl", "post", "put", "get")
+    ):
         url = str(args.get("url", args.get("endpoint", ""))).lower()
         if url and "localhost" not in url and "127.0.0.1" not in url:
             return True
-    # Shell execution always impossible in strict sandbox
-    if any(kw in n for kw in ("shell", "exec", "bash", "terminal", "subprocess")):
+
+    # Env var access
+    if constraints.get("impossible_env") and ("env" in n or "environ" in n):
         return True
-    # Env var access impossible
-    if "env" in n or "environ" in n:
-        return True
+
     return False
 
 
@@ -628,6 +717,7 @@ class OpenClawGuard:
         sub_agents:       list[str] | None = None,
         verbose:          bool = False,
         sandbox_context:  bool = False,
+        sandbox_type:     str  = "openclaw",
         allow_tools:      list[str] | None = None,
     ) -> None:
         if policy not in POLICY_THRESHOLDS:
@@ -645,8 +735,14 @@ class OpenClawGuard:
         self.sub_agents      = sub_agents or []
         self.verbose         = verbose
         self.sandbox_context = sandbox_context
+        self.sandbox_type    = sandbox_type   # "openclaw" | "firecracker" | "docker"
         self._allow_tools:   set[str] = set(allow_tools or [])
         self._tool_grants:   list[dict] = []
+        self._superpowers_session = None     # set via attach_superpowers()
+        self._subagent_registry = None    # set via declare_subagent()
+        self._current_phase = 0           # set via unlock_phase()
+        self._phase_log = []              # full unlock audit log
+        self._phase_allowed_tools = set() # tools unlocked by phase
 
         self._started_at   = datetime.now(timezone.utc).isoformat()
         self._results:      list[GuardResult] = []
@@ -658,11 +754,11 @@ class OpenClawGuard:
             logging.basicConfig(level=logging.DEBUG)
 
         logger.info(
-            "Aiglos OpenClaw guard initialized -- agent=%s  policy=%s  session=%s",
+            "Aiglos OpenClaw guard initialized — agent=%s  policy=%s  session=%s",
             agent_name, policy, self.session_id,
         )
         self._log_line(
-            f"[AIGLOS] Runtime guard active -- {agent_name}  policy={policy}  "
+            f"[AIGLOS] Runtime guard active — {agent_name}  policy={policy}  "
             f"session={self.session_id}"
         )
 
@@ -699,9 +795,188 @@ class OpenClawGuard:
         """Return the full human-authorized permission grant log."""
         return list(self._tool_grants)
 
+    def attach_superpowers(self, session) -> None:
+        """
+        Attach a Superpowers session to this guard.
+
+        Enables:
+          - Phase-aware anomaly suppression (brainstorm/planning phases)
+          - TDD loop recognition as a known clean pattern
+          - T69 PLAN_DRIFT enforcement against the approved plan
+          - Subagent spawn whitelisting for declared Superpowers tasks
+
+        session: A SuperpowersSession instance from
+                 aiglos.integrations.superpowers.mark_as_superpowers_session()
+        """
+        self._superpowers_session = session
+        # Register subagents from task list as declared
+        task_agents = [f"sp-subagent-{i}" for i in range(len(session.tasks))]
+        self.sub_agents = list(set(self.sub_agents + task_agents))
+        logger.info(
+            "[Superpowers] Attached to guard — session=%s phase=%s tasks=%d",
+            session.session_id, session.phase.value, len(session.tasks),
+        )
+
+    def superpowers_session(self):
+        """Return the attached Superpowers session, or None."""
+        return getattr(self, "_superpowers_session", None)
+
+    def attach_nemoclaw(self, session) -> None:
+        """
+        Attach a NemoClaw OpenShell session to this guard.
+
+        Enables:
+          - NemoClaw YAML policy as enforcement boundary (T69/T76)
+          - sandbox_type="openShell" impossible-call detection at score=1.0
+          - T76 NEMOCLAW_POLICY_BYPASS fires on policy file writes
+          - NEMOCLAW_POLICY_HIJACK campaign pattern (confidence 0.96)
+
+        session: A NeMoClawSession from
+                 aiglos.integrations.nemoclaw.mark_as_nemoclaw_session()
+        """
+        self._nemoclaw_session = session
+        # Elevate sandbox context — NemoClaw means we're in OpenShell
+        self.sandbox_context = True
+        if self.sandbox_type not in ("firecracker", "docker"):
+            self.sandbox_type = "openShell"
+        logger.info(
+            "[NemoClaw] Attached to guard — session=%s policy_hash=%s sandbox=%s",
+            session.session_id,
+            session.policy.policy_hash,
+            self.sandbox_type,
+        )
+
     def nemoclaw_session(self):
-        """Return the attached NeMoClaw/OpenShell session, if any."""
+        """Return the attached NemoClaw session, or None."""
         return getattr(self, "_nemoclaw_session", None)
+
+    def declare_subagent(
+        self,
+        name:        str,
+        tools:       list | None = None,
+        scope_files: list | None = None,
+        scope_hosts: list | None = None,
+        model:       str | None = None,
+        hard_bans:   list | None = None,
+    ):
+        """
+        Declare an expected sub-agent spawn to suppress T38 false positives.
+
+        Power users running multi-agent systems have a mental model of which
+        sub-agents they expect. This call makes that model machine-readable.
+
+        Declared sub-agents within scope: T38 does not fire.
+        Declared sub-agents outside declared scope: T38 fires at 0.90.
+        Undeclared sub-agent spawns: T38 fires at 0.78 (normal threshold).
+
+        name:         Sub-agent identifier (case-insensitive).
+        tools:        Allowed tool names. Empty = all tools allowed.
+        scope_files:  Allowed filesystem prefixes. Empty = no restriction.
+        scope_hosts:  Allowed network hosts. Empty = no restriction.
+        model:        Model identifier (optional, for logging/artifacts).
+
+        Example:
+            guard.declare_subagent(
+                name="coding-agent",
+                tools=["filesystem", "shell.execute", "web_search"],
+                scope_files=["src/", "tests/"],
+            )
+            guard.declare_subagent(
+                name="calendar-agent",
+                tools=["calendar.read", "calendar.write"],
+                scope_hosts=["calendar.google.com"],
+            )
+        """
+        if not hasattr(self, '_subagent_registry') or self._subagent_registry is None:
+            from aiglos.integrations.subagent_registry import SubagentRegistry
+            self._subagent_registry = SubagentRegistry()
+        self._subagent_registry.declare(name, tools, scope_files, scope_hosts, model, hard_bans)
+        logger.info(
+            "[SubagentRegistry] Declared '%s' on guard agent=%s tools=%s",
+            name, self.agent_name, tools or "all",
+        )
+        return self
+
+    def declared_subagents(self) -> list:
+        """Return list of declared sub-agents for this guard."""
+        registry = getattr(self, '_subagent_registry', None)
+        if registry is None:
+            return []
+        return registry.all()
+
+    def subagent_registry(self):
+        """Return the SubagentRegistry for this guard, or None."""
+        return getattr(self, '_subagent_registry', None)
+
+    def unlock_phase(
+        self,
+        phase:    int,
+        operator: str = "system",
+        reason:   str = "",
+    ) -> "OpenClawGuard":
+        """
+        Unlock a delegation phase for this agent — logged in the signed artifact.
+
+        Based on the 5-phase progressive delegation model from the Vox AI company
+        case study. Each phase expands the agent's autonomous capability. Each
+        unlock is recorded with timestamp and operator identity.
+
+        Compliance answer: when an auditor asks "when did this agent get production
+        deployment access?", the signed artifact has the exact timestamp and
+        who authorized it.
+
+        phase:    AgentPhase.P1-P5 (int 1-5)
+        operator: Identity of the person authorizing this unlock.
+                  Use email or username. Logged in signed artifact.
+        reason:   Optional reason for the unlock.
+
+        Example:
+            guard.unlock_phase(AgentPhase.P2, operator="will@aiglos.dev")
+            # Three weeks later, after validation:
+            guard.unlock_phase(AgentPhase.P3, operator="will@aiglos.dev",
+                               reason="Content quality validated over 21 days")
+        """
+        import time as _time
+        if not hasattr(self, '_phase_log'):
+            self._phase_log = []
+        if not hasattr(self, '_current_phase'):
+            self._current_phase = 0
+
+        phase_name = AgentPhase.NAMES.get(phase, f"P{phase}")
+        entry = {
+            "phase":      phase,
+            "phase_name": phase_name,
+            "operator":   operator,
+            "reason":     reason,
+            "timestamp":  _time.time(),
+            "agent":      self.agent_name,
+        }
+        self._phase_log.append(entry)
+        self._current_phase = max(self._current_phase, phase)
+
+        # Expand auto-approve whitelist for this phase
+        new_tools = AgentPhase.TOOL_GATES.get(phase, set())
+        if new_tools:
+            existing = getattr(self, '_phase_allowed_tools', set())
+            self._phase_allowed_tools = existing | new_tools
+
+        logger.info(
+            "[Phase] Unlocked %s — agent=%s operator=%s reason=%s",
+            phase_name, self.agent_name, operator, reason or "none",
+        )
+        return self
+
+    def current_phase(self) -> int:
+        """Return the current delegation phase (0 = no phase set, 1-5 = phase level)."""
+        return getattr(self, '_current_phase', 0)
+
+    def phase_log(self) -> list:
+        """Return the full phase unlock log for this session."""
+        return getattr(self, '_phase_log', [])
+
+    def phase_allowed_tools(self) -> set:
+        """Return all tools auto-approved by the current phase level."""
+        return getattr(self, '_phase_allowed_tools', set())
 
     def on_heartbeat(self) -> None:
         """
@@ -710,7 +985,7 @@ class OpenClawGuard:
         """
         self._heartbeat_n += 1
         logger.info(
-            "Aiglos heartbeat #%d -- agent=%s  trust=%.2f",
+            "Aiglos heartbeat #%d — agent=%s  trust=%.2f",
             self._heartbeat_n, self.agent_name, self._trust_score,
         )
         self._log_line(f"[HEARTBEAT] cycle={self._heartbeat_n}  trust={self._trust_score:.2f}")
@@ -782,7 +1057,7 @@ class OpenClawGuard:
             logger.debug("[OpenClawGuard] Memory guard check skipped: %s", _br_err)
 
         # Run all rules
-        # T43: Honeypot detection -- fires before rule matching (no threshold, CRITICAL)
+        # T43: Honeypot detection — fires before rule matching (no threshold, CRITICAL)
         if hasattr(self, "_honeypot_mgr"):
             try:
                 hp_result = self._honeypot_mgr.check_tool_call(tool_name, args_dict)
@@ -794,8 +1069,8 @@ class OpenClawGuard:
                         threat_class = "T43",
                         threat_name  = "HONEYPOT_ACCESS",
                         reason       = (
-                            f"CRITICAL: Honeypot file accessed -- "
-                            f"'{hp_result.honeypot_name}' -- "
+                            f"CRITICAL: Honeypot file accessed — "
+                            f"'{hp_result.honeypot_name}' — "
                             f"credential harvesting intent confirmed"
                         ),
                         score        = 1.0,
@@ -813,7 +1088,7 @@ class OpenClawGuard:
             except Exception as _hp_e:
                 logger.debug("[OpenClawGuard] T43 honeypot check error: %s", _hp_e)
 
-        # Source reputation pre-check -- elevate scrutiny for known-bad sources
+        # Source reputation pre-check — elevate scrutiny for known-bad sources
         if hasattr(self, "_reputation_graph"):
             try:
                 # Extract source URL from args if present
@@ -852,7 +1127,7 @@ class OpenClawGuard:
             except Exception as _rep_e:
                 logger.debug("[OpenClawGuard] Reputation pre-check error: %s", _rep_e)
 
-        # ── Build 3: Lockdown policy -- deny unless in allowlist ──────────────────
+        # ── Build 3: Lockdown policy — deny unless in allowlist ──────────────────
         if self.policy == "lockdown" and self._allow_tools:
             if tool_name not in self._allow_tools:
                 _result = GuardResult(
@@ -889,9 +1164,12 @@ class OpenClawGuard:
             self._results.append(_result)
             return _result
 
-        # ── Build 3: sandbox_context -- impossible calls = confirmed escape ────
+        # ── Build 3: sandbox_context — impossible calls = confirmed escape ────
         if self.sandbox_context:
-            _sandbox_impossible = _is_impossible_in_sandbox(tool_name, args_dict)
+            _sandbox_impossible = _is_impossible_in_sandbox(
+                tool_name, args_dict,
+                sandbox_type=getattr(self, "sandbox_type", "openclaw")
+            )
             if _sandbox_impossible:
                 _result = GuardResult(
                     verdict      = "BLOCK",
@@ -911,6 +1189,18 @@ class OpenClawGuard:
                     tool_name, self.agent_name, self.session_id,
                 )
                 return _result
+
+        # ── Superpowers integration ───────────────────────────────────────────────
+        _sp = getattr(self, "_superpowers_session", None)
+        if _sp is not None:
+            # TDD loop: if this tool call is the expected next TDD step, mark clean
+            if _sp.is_tdd_clean_sequence(tool_name, args_dict):
+                logger.debug(
+                    "[Superpowers] TDD step %d recognized as clean — tool=%s",
+                    _sp._tdd_step - 1, tool_name,
+                )
+                # Still let rules run but note this is an expected TDD call
+                # T69 PLAN_DRIFT is still active — TDD files must be in-plan
 
         matched_rule: dict | None = None
         max_score = 0.0
@@ -1010,7 +1300,7 @@ class OpenClawGuard:
         Scan the output of a tool call for embedded injection payloads.
 
         Call this immediately after a tool call returns and before the
-        agent processes the result. Catches indirect prompt injection --
+        agent processes the result. Catches indirect prompt injection —
         adversarial instructions embedded in retrieved documents, API
         responses, search results, and memory reads.
 
@@ -1037,7 +1327,7 @@ class OpenClawGuard:
         )
         if result.injected:
             logger.warning(
-                "INBOUND INJECTION %s -- tool=%s risk=%s score=%.2f agent=%s",
+                "INBOUND INJECTION %s — tool=%s risk=%s score=%.2f agent=%s",
                 result.verdict, tool_name, result.risk, result.score, self.agent_name,
             )
 
@@ -1095,7 +1385,7 @@ class OpenClawGuard:
             self._baseline_engine = _engine
             self._baseline_graph  = _graph
             logger.debug(
-                "[OpenClawGuard] Behavioral baseline enabled -- agent=%s ready=%s",
+                "[OpenClawGuard] Behavioral baseline enabled — agent=%s ready=%s",
                 self.agent_name, _engine.is_ready,
             )
         except Exception as e:
@@ -1110,7 +1400,7 @@ class OpenClawGuard:
         Deploy honeypot files and enable T43 HONEYPOT_ACCESS detection.
 
         Any agent read of a honeypot file triggers immediate CRITICAL
-        lockdown with no scoring threshold -- the read itself is the
+        lockdown with no scoring threshold — the read itself is the
         evidence of credential harvesting intent.
 
         Custom names can be added for app-specific targets like
@@ -1127,7 +1417,7 @@ class OpenClawGuard:
             mgr.deploy(custom_names=custom_names)
             self._honeypot_mgr = mgr
             logger.info(
-                "[OpenClawGuard] Honeypot enabled: %d files deployed -- agent=%s",
+                "[OpenClawGuard] Honeypot enabled: %d files deployed — agent=%s",
                 len(mgr.active_honeypots()), self.agent_name,
             )
         except Exception as e:
@@ -1216,26 +1506,26 @@ class OpenClawGuard:
                 return "[Response suppressed: security policy]"
         """
         try:
-            from aiglos.integrations.outbound_guard import OutboundGuard
-            mode = "block" if self.policy in (
-                "strict", "federal", "lockdown"
-            ) else "warn"
-            og = OutboundGuard(
+            from aiglos.integrations.outbound_guard import OutboundSecretGuard
+            og = OutboundSecretGuard(
                 session_id = self._active_session_id or "",
-                mode       = mode,
+                agent_name = self.agent_name,
+                mode       = self.policy if self.policy in (
+                    "block", "enterprise", "strict", "federal"
+                ) else "block",
             )
-            result = og.before_send(destination or "outbound", content)
-            if result.verdict == "BLOCK":
+            result = og.scan_outbound(content, destination=destination)
+            if result.blocked:
                 logger.warning(
                     "[OpenClawGuard] T41 OUTBOUND_SECRET_LEAK BLOCK "
-                    "rule=%s dest=%s",
-                    result.rule_id, destination,
+                    "pattern=%s score=%.2f dest=%s",
+                    result.pattern, result.score, destination,
                 )
-            elif result.verdict == "WARN":
+            elif result.warned:
                 logger.warning(
                     "[OpenClawGuard] T41 OUTBOUND_SECRET_LEAK WARN "
-                    "rule=%s dest=%s",
-                    result.rule_id, destination,
+                    "pattern=%s score=%.2f dest=%s",
+                    result.pattern, result.score, destination,
                 )
             return result
         except Exception as e:
@@ -1269,7 +1559,7 @@ class OpenClawGuard:
             _graph = ObservationGraph()
             self._reputation_graph = SourceReputationGraph(graph=_graph)
             logger.debug(
-                "[OpenClawGuard] Source reputation enabled -- agent=%s",
+                "[OpenClawGuard] Source reputation enabled — agent=%s",
                 self.agent_name,
             )
         except Exception as e:
@@ -1312,12 +1602,12 @@ class OpenClawGuard:
                 if warmed:
                     logger.info(
                         "[OpenClawGuard] Intent predictor warm-started from "
-                        "global prior v%s -- agent=%s",
+                        "global prior v%s — agent=%s",
                         prior.prior_version, self.agent_name,
                     )
 
             logger.debug(
-                "[OpenClawGuard] Federation enabled -- agent=%s key=%s endpoint=%s",
+                "[OpenClawGuard] Federation enabled — agent=%s key=%s endpoint=%s",
                 self.agent_name,
                 "set" if client.has_key else "none",
                 client._endpoint,
@@ -1345,7 +1635,7 @@ class OpenClawGuard:
             _engine.expire_stale_proposals()
             self._proposal_engine = _engine
             logger.debug(
-                "[OpenClawGuard] Policy proposals enabled -- agent=%s",
+                "[OpenClawGuard] Policy proposals enabled — agent=%s",
                 self.agent_name,
             )
         except Exception as e:
@@ -1393,34 +1683,6 @@ class OpenClawGuard:
             return None
         return self._causal_tracer.attribute()
 
-    def declare_subagent(
-        self,
-        name: str,
-        tools: list[str] | None = None,
-        scope_files: list[str] | None = None,
-        scope_hosts: list[str] | None = None,
-        model: str | None = None,
-    ) -> "OpenClawGuard":
-        from aiglos.integrations.subagent_registry import SubagentRegistry
-        if not hasattr(self, "_subagent_registry") or self._subagent_registry is None:
-            self._subagent_registry = SubagentRegistry()
-        self._subagent_registry.declare(
-            name=name,
-            tools=tools,
-            scope_files=scope_files,
-            scope_hosts=scope_hosts,
-            model=model,
-        )
-        return self
-
-    def declared_subagents(self) -> list:
-        if not hasattr(self, "_subagent_registry") or self._subagent_registry is None:
-            return []
-        return self._subagent_registry.all()
-
-    def subagent_registry(self):
-        return getattr(self, "_subagent_registry", None)
-
     def spawn_sub_guard(self, sub_agent_name: str) -> "OpenClawGuard":
         """
         Create a child guard for a sub-agent (Ada, Prism, etc.).
@@ -1442,7 +1704,7 @@ class OpenClawGuard:
             self._child_guards: list["OpenClawGuard"] = []
         self._child_guards.append(child)
         logger.info(
-            "Sub-agent guard spawned -- parent=%s  child=%s",
+            "Sub-agent guard spawned — parent=%s  child=%s",
             self.agent_name, sub_agent_name,
         )
         return child
@@ -1534,7 +1796,7 @@ class OpenClawGuard:
                 )
                 if pushed:
                     logger.debug(
-                        "[OpenClawGuard] Federation contribution submitted -- agent=%s",
+                        "[OpenClawGuard] Federation contribution submitted — agent=%s",
                         self.agent_name,
                     )
             except Exception as e:
@@ -1576,7 +1838,7 @@ class OpenClawGuard:
         except Exception as _ctx_e:
             logger.debug("[OpenClawGuard] T40 context guard error: %s", _ctx_e)
 
-        # Behavioral baseline scoring -- scored at session close
+        # Behavioral baseline scoring — scored at session close
         if hasattr(self, "_baseline_engine"):
             try:
                 from aiglos.core.behavioral_baseline import SessionStats
@@ -1610,7 +1872,7 @@ class OpenClawGuard:
 
                 if bl_score.risk in ("MEDIUM", "HIGH"):
                     logger.warning(
-                        "[OpenClawGuard] BEHAVIORAL ANOMALY %s -- agent=%s "
+                        "[OpenClawGuard] BEHAVIORAL ANOMALY %s — agent=%s "
                         "composite=%.2f features=%s",
                         bl_score.risk, self.agent_name,
                         bl_score.composite, bl_score.anomalous_features,
@@ -1716,7 +1978,7 @@ def close() -> SessionArtifact | None:
 
 def _run_demo() -> None:
     """Callable demo for use in tests and python -m aiglos demo."""
-    print(f"\naiglos-openclaw v{__version__} -- OpenClaw runtime security middleware\n")
+    print(f"\naiglos-openclaw v{__version__} — OpenClaw runtime security middleware\n")
     print("Running demo scan against synthetic OpenClaw tool call sequence...\n")
 
     guard = OpenClawGuard(
@@ -1759,7 +2021,7 @@ def _run_demo() -> None:
 if __name__ == "__main__":
     import sys
 
-    print(f"aiglos-openclaw v{__version__} -- OpenClaw runtime security middleware")
+    print(f"aiglos-openclaw v{__version__} — OpenClaw runtime security middleware")
     print()
 
     if len(sys.argv) > 1 and sys.argv[1] == "demo":

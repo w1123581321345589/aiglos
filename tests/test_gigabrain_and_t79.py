@@ -363,7 +363,7 @@ class TestGigrabrainConstants:
 class TestV0253ModuleAPI:
 
     def test_version(self):
-        assert aiglos.__version__ == "0.25.8"
+        assert aiglos.__version__ == "0.25.11"
 
     def test_declare_memory_backend_exported(self):
         assert "declare_memory_backend" in aiglos.__all__

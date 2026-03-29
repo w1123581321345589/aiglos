@@ -140,6 +140,26 @@ class OutboundScanResult:
     timestamp: float = 0.0
     surface: str = "outbound"
 
+    @property
+    def blocked(self) -> bool:
+        return self.verdict == "BLOCK"
+
+    @property
+    def warned(self) -> bool:
+        return self.verdict == "WARN"
+
+    @property
+    def pattern(self) -> str:
+        if self.api_keys_found:
+            return self.api_keys_found[0]
+        if self.sensitive_paths_found:
+            return self.sensitive_paths_found[0]
+        return self.reason
+
+    @property
+    def score(self) -> float:
+        return self.semantic_score
+
     def to_dict(self) -> Dict:
         return {
             "verdict": self.verdict,
@@ -159,11 +179,16 @@ class OutboundScanResult:
 
 class OutboundGuard:
 
-    def __init__(self, session_id: str = "", mode: str = "block"):
+    def __init__(self, session_id: str = "", mode: str = "block", agent_name: str = ""):
         self.session_id = session_id
         self.mode = mode
+        self.agent_name = agent_name
         self._provenance: List[Dict] = []
         self._block_count = 0
+
+    def scan_outbound(self, content: str, destination: str = "") -> OutboundScanResult:
+        """Scan outbound content using destination as the tool_name context."""
+        return self.before_send(destination or "outbound", content)
 
     def before_send(self, tool_name: str, content: str) -> OutboundScanResult:
         if not _is_send_operation(tool_name):
@@ -186,7 +211,7 @@ class OutboundGuard:
             reasons.append(f"Compliance signals: {', '.join(sem_signals[:3])}")
 
         if api_keys or sensitive_paths or sem_signals:
-            verdict = "BLOCK" if self.mode == "block" else "WARN"
+            verdict = "BLOCK" if self.mode in ("block", "strict", "federal") else "WARN"
             rule_id = "T41"
             rule_name = "OUTBOUND_SECRET_LEAK"
             reason = "; ".join(reasons)
@@ -217,3 +242,6 @@ class OutboundGuard:
             "total_scans": len(self._provenance),
             "blocked": self._block_count,
         }
+
+
+OutboundSecretGuard = OutboundGuard

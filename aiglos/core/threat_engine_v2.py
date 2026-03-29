@@ -1754,8 +1754,14 @@ RULES_T44_T66: List[Dict] = [
          "because there are legitimate self-improvement writes; both conditions "
          "required: path matches self-improvement infrastructure AND content contains "
          "adversarial injection patterns. "
-         "Source: Facebook Research DGM-Hyperagents paper (March 2026), "
-         "arxiv.org/abs/2603.19461."
+         "Sources: "
+         "(1) Facebook Research DGM-Hyperagents (March 2026) — arxiv.org/abs/2603.19461. "
+         "(2) Sakana AI / The AI Scientist, published Nature 2026 — "
+         "arxiv.org/abs/2408.06292. The AI Scientist's Automated Reviewer is a "
+         "high-risk T82 surface: its judgments feed back into the pipeline. "
+         "Combined with the Nature paper's scaling law of science (better models → "
+         "more convincing outputs), a single T82 injection into reviewer criteria "
+         "produces increasingly convincing misinformation at scale."
      ),
      "score": 0.96, "critical": True, "match": match_T82},
     {"id": "T81", "name": "PTH_FILE_INJECT",
@@ -1863,5 +1869,3 @@ RULES_T44_T66: List[Dict] = [
      ),
      "score": 0.82, "critical": True, "match": match_T75},
 ]
-
-RULES = RULES_T44_T66

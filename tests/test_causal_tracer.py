@@ -507,7 +507,7 @@ class TestCausalInjectionConfirmedTrigger:
 class TestV090ModuleAPI:
 
     def test_version_is_090(self):
-        assert aiglos.__version__ == "0.25.8"
+        assert aiglos.__version__ == "0.25.11"
 
     def test_exports_causal_tracer_types(self):
         assert hasattr(aiglos, "CausalTracer")

@@ -471,6 +471,156 @@ def declare_studio_pipeline(
     return declared
 
 
+# ── AI Scientist path patterns (Sakana AI, Nature 2026) ──────────────────────
+# The AI Scientist architecture (arxiv.org/abs/2408.06292, published Nature 2026):
+#   - Idea generation log:   ideas/
+#   - Experiment results:    experiment_results/, results/
+#   - Generated papers:      logs/generated_papers_*/
+#   - Automated Reviewer:    review_results/, reviewer_outputs/
+#   - Scaling artifacts:     scaling_results/, model_outputs/
+#
+# The Automated Reviewer is the critical path: its evaluation criteria feed back
+# into the pipeline. If the reviewer's scoring is poisoned, every subsequent
+# paper scores highly regardless of quality/accuracy — and better foundation
+# models make the misinformation more convincing (the scaling law of poisoned science).
+# T82 fires on adversarial writes to reviewer_results/ and review_criteria/.
+
+AI_SCIENTIST_PATHS = [
+    "./ideas/",
+    "./experiment_results/",
+    "./results/",
+    "./logs/generated_papers_",
+    "./review_results/",
+    "./reviewer_outputs/",
+    "./review_criteria/",
+    "./scaling_results/",
+    "./model_outputs/",
+    "./aider.benchmark.jsonl",
+    "./run_*.py",
+    "./final_info.json",
+]
+
+
+def declare_ai_scientist_pipeline(
+    guard,
+    idea_path:     str = None,
+    paper_path:    str = None,
+    reviewer_path: str = None,
+    pipeline_name: str = "ai-scientist",
+) -> "MemoryBackendSession":
+    """
+    Register an AI Scientist pipeline with the Aiglos guard.
+
+    Protects the full AI Scientist architecture (Sakana AI, Nature 2026):
+      - Idea generation logs (ideas/)
+      - Experiment results (experiment_results/, results/)
+      - Generated paper archives (logs/generated_papers_*)
+      - Automated Reviewer outputs (review_results/, reviewer_outputs/)
+      - Scaling result artifacts
+
+    The Automated Reviewer is the highest-risk surface: its judgments feed
+    back into the pipeline, and a compromised reviewer scores adversarially
+    crafted papers highly. Combined with the scaling law of science (better
+    foundation models → more convincing outputs), a single T82 injection into
+    the reviewer criteria produces increasingly convincing misinformation at
+    scale. METACOGNITIVE_POISON_CHAIN captures this: T31/T79 → T82.
+
+    guard:         OpenClawGuard instance to attach to.
+    idea_path:     Override path for idea generation logs.
+    paper_path:    Override path for generated paper archive.
+    reviewer_path: Override path for reviewer outputs / criteria.
+    pipeline_name: Pipeline identifier for logging.
+
+    Returns a MemoryBackendSession with registered paths.
+
+    Example:
+        from aiglos.integrations.gigabrain import declare_ai_scientist_pipeline
+
+        # Sakana AI-Scientist default layout
+        session = declare_ai_scientist_pipeline(guard)
+
+        # Custom layout
+        session = declare_ai_scientist_pipeline(guard,
+            idea_path     = "./my_ideas/",
+            paper_path    = "./papers/",
+            reviewer_path = "./review/outputs/",
+        )
+    """
+    from pathlib import Path as _Path
+
+    paths = list(AI_SCIENTIST_PATHS)
+
+    for override, default in [
+        (idea_path, "./ideas/"),
+        (paper_path, "./logs/generated_papers_"),
+        (reviewer_path, "./review_results/"),
+    ]:
+        if override:
+            expanded = str(_Path(override).expanduser())
+            if expanded not in paths:
+                paths.insert(0, expanded)
+
+    expanded_paths = []
+    for p in paths:
+        try:
+            expanded_paths.append(str(_Path(p).expanduser()))
+        except Exception:
+            expanded_paths.append(p)
+
+    _REGISTERED_PATHS.update(expanded_paths)
+
+    if not hasattr(guard, '_improvement_pipelines'):
+        guard._improvement_pipelines = []
+    guard._improvement_pipelines.append({
+        "pipeline": pipeline_name,
+        "paths":    expanded_paths,
+        "note":     "AI Scientist — Automated Reviewer is highest-risk T82 surface",
+    })
+
+    session = MemoryBackendSession(
+        backend    = f"ai-scientist/{pipeline_name}",
+        paths      = expanded_paths,
+        session_id = getattr(guard, 'session_id', ''),
+    )
+
+    log.info(
+        "[AI-Scientist] Registered pipeline=%s paths=%d "
+        "T82 enforcement active — Automated Reviewer protected",
+        pipeline_name, len(expanded_paths),
+    )
+    return session
+
+
+def ai_scientist_autodetect(guard) -> "MemoryBackendSession":
+    """
+    Auto-detect AI Scientist directory structure and register T82 protection.
+
+    Scans for known AI Scientist paths (ideas/, experiment_results/,
+    logs/generated_papers_*) and registers them pre-emptively.
+
+    Example:
+        from aiglos.integrations.gigabrain import ai_scientist_autodetect
+        session = ai_scientist_autodetect(guard)
+    """
+    from pathlib import Path as _Path
+
+    found = []
+    for p in AI_SCIENTIST_PATHS:
+        # Skip glob patterns for existence check
+        if '*' in p or p.endswith('_'):
+            continue
+        expanded = _Path(p.rstrip("/")).expanduser()
+        if expanded.exists():
+            found.append(str(expanded))
+
+    if found:
+        log.info("[AI-Scientist] Auto-detected pipeline at: %s", ", ".join(found))
+    else:
+        log.info("[AI-Scientist] No existing pipeline found — pre-emptive T82 protection registered")
+
+    return declare_ai_scientist_pipeline(guard)
+
+
 def declare_self_improvement_pipeline(
     guard,
     archive_path:  Optional[str] = None,

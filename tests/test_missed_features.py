@@ -495,7 +495,7 @@ class TestGovBenchRun:
         g = _guard(tmp_path)
         bench = GovBench(guard=g)
         result = bench.run()
-        assert result.aiglos_version == "0.25.8"
+        assert result.aiglos_version == "0.25.11"
 
     def test_duration_ms_positive(self, tmp_path):
         g = _guard(tmp_path)
@@ -510,7 +510,7 @@ class TestGovBenchRun:
 
 class TestV0200ModuleAPI:
     def test_version(self):
-        assert aiglos.__version__ == "0.25.8"
+        assert aiglos.__version__ == "0.25.11"
 
     def test_govbench_exported(self):
         assert "GovBench" in aiglos.__all__

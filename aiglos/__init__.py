@@ -1,9 +1,9 @@
 """
-Aiglos -- AI Agent Security Runtime
+Aiglos — AI Agent Security Runtime
 ===================================
 Protocol-agnostic runtime security for AI agents. Intercepts every agent
-action before execution -- MCP tool calls, direct HTTP/API calls, CLI
-execution, subprocess spawning -- and applies T01–T39 threat detection.
+action before execution — MCP tool calls, direct HTTP/API calls, CLI
+execution, subprocess spawning — and applies T01–T39 threat detection.
 
 Signed session artifacts cover all three execution surfaces in a single
 compliance document. compliance artifact ready.
@@ -33,7 +33,7 @@ Framework integrations:
     from aiglos.integrations.hermes   import HermesGuard
 """
 
-
+from __future__ import annotations
 
 import logging
 from typing import Any, Dict, List, Optional
@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.25.8"  # canonical version for this release
+    __version__ = "0.25.11"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -97,27 +97,105 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     inspect_memory_write,
     is_memory_tool,
 )
-from aiglos.core.threat_engine_v2 import RULES_T44_T66, RULES  # noqa: F401
-from aiglos.integrations.subagent_registry import (  # noqa: F401
-    SubagentRegistry,
-    DeclaredSubagent,
-    SpawnCheckResult,
-)
-from aiglos.integrations.gigabrain import (  # noqa: F401
-    declare_memory_backend,
-    gigabrain_autodetect,
-    MemoryBackendSession,
-)
-from aiglos.autoresearch.atlas_coverage import ATLASCoverage  # noqa: F401
+from aiglos.core.threat_engine_v2 import RULES_T44_T66, match_T82  # noqa: F401
+RULES = RULES_T44_T66
 from aiglos.adaptive.permission_recommender import (   # noqa: F401
     PermissionRecommender,
     PermissionRecommendation,
     ToolUsageStats,
 )
+from aiglos.autoresearch.atlas_coverage import ATLASCoverage  # noqa: F401
 from aiglos.benchmark.govbench import (  # noqa: F401
     GovBench,
     GovBenchResult,
     DimensionResult,
+)
+from aiglos.cli.validate_prompt import (  # noqa: F401
+    validate as validate_prompt,
+    ValidationResult as PromptValidationResult,
+    Finding as PromptFinding,
+)
+from aiglos.cli.scan_deps import (  # noqa: F401
+    scan as scan_deps,
+    ScanResult as ScanDepsResult,
+    COMPROMISED_PACKAGES,
+    TRANSITIVE_EXPOSURE,
+    MALICIOUS_PTH_FILES,
+    print_scan_report,
+)
+from aiglos.integrations.smolagents import (  # noqa: F401
+    attach_for_smolagents,
+    SmolagentsGuard,
+)
+from aiglos.integrations.openclaw_mcp import (  # noqa: F401
+    attach_for_openclaw_mcp,
+    OpenClawMCPSession,
+    OPENCLAW_MCP_TOOLS,
+    MCP_READ_TOOLS,
+    MCP_WRITE_TOOLS,
+)
+
+from aiglos.integrations.gigabrain import (  # noqa: F401
+    declare_memory_backend,
+    gigabrain_autodetect,
+    byterover_autodetect,
+    declare_self_improvement_pipeline,
+    dgm_hyperagents_autodetect,
+    declare_studio_pipeline,
+    declare_ai_scientist_pipeline,
+    ai_scientist_autodetect,
+    is_registered_memory_path,
+    MemoryBackendSession,
+    BYTEROVER_DEFAULT_PATHS,
+    DGM_PIPELINE_PATHS,
+    STUDIO_ROLE_TOOLS,
+    AI_SCIENTIST_PATHS,
+)
+from aiglos.integrations.subagent_registry import (  # noqa: F401
+    SubagentRegistry,
+    DeclaredSubagent,
+    SpawnCheckResult,
+)
+from aiglos.integrations.openShell import (  # noqa: F401
+    is_inside_openShell,
+    openShell_context,
+    openshell_detect,
+    attach_openShell,
+    attach_for_claude_code,
+    attach_for_codex,
+    attach_for_cursor,
+    attach_for_openclaw,
+)
+from aiglos.cli.launch import (  # noqa: F401
+    launch,
+    LaunchConfig,
+    generate_files,
+    KNOWN_TOOLS as LAUNCH_KNOWN_TOOLS,
+    KNOWN_MODELS as LAUNCH_KNOWN_MODELS,
+)
+from aiglos.cli.scaffold import (  # noqa: F401
+    scaffold_from_descriptions,
+    AgentSpec,
+    ROLE_TOOLS,
+)
+from aiglos.integrations.nemoclaw import (  # noqa: F401
+    NeMoClawSession,
+    NeMoClawPolicy,
+    mark_as_nemoclaw_session,
+    validate_policy as validate_nemoclaw_policy,
+)
+from aiglos.integrations.superpowers import (  # noqa: F401
+    SuperpowersSession,
+    SuperpowersPhase,
+    mark_as_superpowers_session,
+)
+from aiglos.autoresearch.ghsa_watcher import (   # noqa: F401
+    GHSAWatcher,
+    seed_known_advisories,
+)
+from aiglos.autoresearch.ghsa_coverage import (  # noqa: F401
+    generate_coverage_artifact,
+    GHSACoverageArtifact,
 )
 
 from aiglos.audit.scanner import AuditScanner, AuditResult, CheckResult  # noqa: F401
@@ -129,23 +207,6 @@ from aiglos.adaptive.skill_reputation import (  # noqa: F401
 from aiglos.integrations.sandbox_policy import (  # noqa: F401
     SandboxPolicy,
     SandboxCheckResult,
-)
-
-from aiglos.integrations.nemoclaw import (  # noqa: F401
-    NeMoClawSession,
-    mark_as_nemoclaw_session,
-)
-
-from aiglos.integrations.openShell import (  # noqa: F401
-    is_inside_openShell,
-    openShell_context,
-    openshell_detect,
-    attach_openShell,
-    attach_for_claude_code,
-    attach_for_codex,
-    attach_for_cursor,
-    attach_for_openclaw,
-    KNOWN_AGENTS as OPENSHELL_KNOWN_AGENTS,
 )
 
 from aiglos.adaptive.source_reputation import (  # noqa: F401
@@ -166,10 +227,12 @@ from aiglos.integrations.override import (  # noqa: F401
 
 from aiglos.integrations.context_guard import (  # noqa: F401
     ContextDirectoryGuard,
+    ContextGuardResult,
     ContextWriteResult,
     is_shared_context_write,
 )
 from aiglos.integrations.outbound_guard import (  # noqa: F401
+    OutboundSecretGuard,
     OutboundGuard,
     OutboundScanResult,
     scan_for_secrets,
@@ -192,18 +255,6 @@ from aiglos.autoresearch.verified_rule_engine import (  # noqa: F401
 from aiglos.autoresearch.compliance_report import (  # noqa: F401
     ComplianceReportGenerator,
     ComplianceReport,
-)
-from aiglos.autoresearch.ghsa_watcher import (  # noqa: F401
-    GHSAWatcher,
-    AdvisoryMatch,
-    KNOWN_ADVISORIES,
-    TAXONOMY_KEYWORDS,
-    seed_known_advisories,
-)
-from aiglos.autoresearch.ghsa_coverage import (  # noqa: F401
-    generate_coverage_artifact,
-    CoverageArtifact,
-    CoverageEntry,
 )
 
 from aiglos.core.federation import (   # noqa: F401
@@ -263,43 +314,6 @@ from aiglos.autoresearch.coupling import (  # noqa: F401
     SecurityAwareReward,
     CoupledRewardResult,
 )
-from aiglos.cli.launch import (  # noqa: F401
-    launch,
-    LaunchConfig,
-    generate_files,
-    KNOWN_TOOLS as LAUNCH_KNOWN_TOOLS,
-    KNOWN_MODELS as LAUNCH_KNOWN_MODELS,
-)
-from aiglos.cli.scaffold import (  # noqa: F401
-    scaffold_from_descriptions,
-    AgentSpec,
-    ROLE_TOOLS,
-)
-from aiglos.cli.scan_deps import (  # noqa: F401
-    scan as scan_deps,
-    ScanResult as ScanDepsResult,
-    COMPROMISED_PACKAGES,
-    TRANSITIVE_EXPOSURE,
-    MALICIOUS_PTH_FILES,
-    print_scan_report,
-)
-from aiglos.cli.validate_prompt import (  # noqa: F401
-    validate as validate_prompt,
-    ValidationResult as PromptValidationResult,
-    Finding as PromptFinding,
-    print_report as print_prompt_report,
-    run as run_prompt_validation,
-)
-from aiglos.integrations.gigabrain import (  # noqa: F401
-    byterover_autodetect,
-    BYTEROVER_DEFAULT_PATHS,
-    dgm_hyperagents_autodetect,
-    declare_self_improvement_pipeline,
-    DGM_PIPELINE_PATHS,
-    declare_studio_pipeline,
-    STUDIO_ROLE_TOOLS,
-)
-from aiglos.core.threat_engine_v2 import match_T82  # noqa: F401
 
 
 # ---------------------------------------------------------------------------
@@ -471,7 +485,7 @@ def attach(
             log.warning("[Aiglos] Adaptive engine failed to init: %s", e)
 
     log.info(
-        "[Aiglos v%s] Attached -- agent=%s policy=%s mcp=on http=%s subprocess=%s "
+        "[Aiglos v%s] Attached — agent=%s policy=%s mcp=on http=%s subprocess=%s "
         "multi_agent=%s agent_def_guard=%s adaptive=%s",
         __version__, agent_name, policy,
         "on" if _http_intercept_active else "off",
@@ -823,6 +837,76 @@ __all__ = [
     "FederationClient",
     "GlobalPrior",
     "extract_shareable_transitions",
+    # v0.23.0 — T70 ENV_PATH_HIJACK, GHSA watcher, 3/3 advisory coverage
+    "GHSAWatcher",
+    "seed_known_advisories",
+    "generate_coverage_artifact",
+    "GHSACoverageArtifact",
+    # v0.23.0 — T70 ENV_PATH_HIJACK, GHSA watcher, GHSA validation
+    # v0.25.6 — validate_prompt (Shapiro Input Layer framework)
+    "validate_prompt",
+    "PromptValidationResult",
+    "PromptFinding",
+    # v0.25.5 — T81 PTH_FILE_INJECT, scan_deps, REPO_TAKEOVER_CHAIN (LiteLLM incident)
+    "scan_deps",
+    "ScanDepsResult",
+    "COMPROMISED_PACKAGES",
+    "TRANSITIVE_EXPOSURE",
+    "MALICIOUS_PTH_FILES",
+    "print_scan_report",
+    # v0.25.4 — T80 UNCENSORED_MODEL_ROUTE, smolagents integration, HF Spaces feed
+    "attach_for_smolagents",
+    "SmolagentsGuard",
+    # v0.25.11 — is_memory_tool() full backend coverage (ByteRover, context_engine, Gigabrain, mem0, Letta, Qdrant, Pinecone)
+    # v0.25.10 — declare_ai_scientist_pipeline(), AI Scientist Nature paper T82 citation
+    "declare_ai_scientist_pipeline",
+    "ai_scientist_autodetect",
+    "AI_SCIENTIST_PATHS",
+    # v0.25.9 — OpenClaw MCP integration (steipete), T28/T41/T13/T36 MCP tool names
+    "attach_for_openclaw_mcp",
+    "OpenClawMCPSession",
+    "OPENCLAW_MCP_TOOLS",
+    "MCP_READ_TOOLS",
+    "MCP_WRITE_TOOLS",
+    # v0.25.8 — declare_studio_pipeline(), STUDIO_ROLE_TOOLS, Game Studios integration
+    "declare_studio_pipeline",
+    "STUDIO_ROLE_TOOLS",
+    # v0.25.7 — T82 SELF_IMPROVEMENT_HIJACK, METACOGNITIVE_POISON_CHAIN, DGM-H integration
+    "declare_self_improvement_pipeline",
+    "dgm_hyperagents_autodetect",
+    "DGM_PIPELINE_PATHS",
+    # v0.25.6 (continued) — ByteRover integration, curl|sh detection in scan_deps
+    "byterover_autodetect",
+    "BYTEROVER_DEFAULT_PATHS",
+    # v0.25.3 — T79 PERSISTENT_MEMORY_INJECT, Gigabrain integration, 21 campaign patterns
+    "declare_memory_backend",
+    "gigabrain_autodetect",
+    "is_registered_memory_path",
+    "MemoryBackendSession",
+    # v0.25.2 — declare_subagent(), T77 OVERNIGHT_JOB_INJECTION, SubagentRegistry
+    "SubagentRegistry",
+    "DeclaredSubagent",
+    # v0.25.1 — OpenShell agent-agnostic integration, openshell_detect()
+    "is_inside_openShell",
+    "openShell_context",
+    "openshell_detect",
+    "attach_openShell",
+    "attach_for_claude_code",
+    "attach_for_codex",
+    "attach_for_cursor",
+    "attach_for_openclaw",
+    # v0.25.0 — T76 NEMOCLAW_POLICY_BYPASS, NemoClaw integration, 20 campaign patterns
+    "NeMoClawSession",
+    "NeMoClawPolicy",
+    "mark_as_nemoclaw_session",
+    "validate_nemoclaw_policy",
+    # v0.24.0 — T71-T75 (ATLAS threat model), ATLASCoverage, hardening check
+    "ATLASCoverage",
+    # v0.22.0 — T69 PLAN_DRIFT, Superpowers integration, 19 campaign patterns
+    "SuperpowersSession",
+    "SuperpowersPhase",
+    "mark_as_superpowers_session",
+    # v0.21.0 — T67 HEARTBEAT_SILENCE, T68 INSECURE_DEFAULT_CONFIG, scan-exposed
     # v0.20.0
     "PermissionRecommender",
     "PermissionRecommendation",
@@ -832,7 +916,6 @@ __all__ = [
     "DimensionResult",
     # v0.19.0
     "RULES_T44_T66",
-    "RULES",
     # v0.18.0
     "AuditScanner",
     "AuditResult",
@@ -854,9 +937,9 @@ __all__ = [
     "OverrideResult",
     # v0.15.0
     "ContextDirectoryGuard",
-    "ContextWriteResult",
+    "ContextGuardResult",
     "is_shared_context_write",
-    "OutboundGuard",
+    "OutboundSecretGuard",
     "OutboundScanResult",
     "scan_for_secrets",
     "contains_secret",
@@ -870,47 +953,4 @@ __all__ = [
     "VerifiedRunResult",
     "ComplianceReportGenerator",
     "ComplianceReport",
-    # v0.24.0 -- T71-T75 (ATLAS threat model), ATLASCoverage
-    "ATLASCoverage",
-    # v0.25.2 -- SubagentRegistry
-    "SubagentRegistry",
-    "DeclaredSubagent",
-    "SpawnCheckResult",
-    # v0.25.3 -- Gigabrain integration, T78, T79, T80, T81, scan-deps
-    "declare_memory_backend",
-    "gigabrain_autodetect",
-    "MemoryBackendSession",
-    "scan_deps",
-    "ScanDepsResult",
-    "COMPROMISED_PACKAGES",
-    "TRANSITIVE_EXPOSURE",
-    "MALICIOUS_PTH_FILES",
-    "print_scan_report",
-    "validate_prompt",
-    "PromptValidationResult",
-    "PromptFinding",
-    "print_prompt_report",
-    "run_prompt_validation",
-    "byterover_autodetect",
-    "BYTEROVER_DEFAULT_PATHS",
-    # v0.25.1 -- OpenShell agent-agnostic integration
-    "NeMoClawSession",
-    "mark_as_nemoclaw_session",
-    "is_inside_openShell",
-    "openShell_context",
-    "openshell_detect",
-    "attach_openShell",
-    "attach_for_claude_code",
-    "attach_for_codex",
-    "attach_for_cursor",
-    "attach_for_openclaw",
-    # v0.23.0
-    "GHSAWatcher",
-    "AdvisoryMatch",
-    "KNOWN_ADVISORIES",
-    "TAXONOMY_KEYWORDS",
-    "seed_known_advisories",
-    "generate_coverage_artifact",
-    "CoverageArtifact",
-    "CoverageEntry",
 ]

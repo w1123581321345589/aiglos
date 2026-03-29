@@ -163,6 +163,7 @@ class SubagentRegistry:
         scope_files: Optional[List[str]] = None,
         scope_hosts: Optional[List[str]] = None,
         model:       Optional[str] = None,
+        hard_bans:   Optional[List[str]] = None,
     ) -> DeclaredSubagent:
         """
         Declare a sub-agent as expected.

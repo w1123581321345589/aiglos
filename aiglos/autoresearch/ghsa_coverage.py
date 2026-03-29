@@ -33,6 +33,7 @@ class CoverageEntry:
 
 @dataclass
 class CoverageArtifact:
+    """Coverage report artifact. Also exported as GHSACoverageArtifact."""
     version:        str
     generated_at:   float
     total_ghsa:     int
@@ -115,3 +116,6 @@ def generate_coverage_artifact() -> CoverageArtifact:
         coverage_pct  = pct,
         entries       = entries,
     )
+
+
+GHSACoverageArtifact = CoverageArtifact

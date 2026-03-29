@@ -327,7 +327,7 @@ class TestV0240RuleCount:
         assert hasattr(aiglos, "ATLASCoverage")
 
     def test_version_correct(self):
-        assert aiglos.__version__ == "0.25.8"
+        assert aiglos.__version__ == "0.25.11"
 
     def test_atlas_coverage_importable(self):
         cov = aiglos.ATLASCoverage()
