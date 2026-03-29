@@ -106,6 +106,14 @@ class NeMoClawSession:
     events: List[Dict[str, Any]] = field(default_factory=list)
 
     @property
+    def policy(self) -> "NeMoClawPolicy":
+        return NeMoClawPolicy(
+            name=self.policy_data.get("name", "unnamed"),
+            rules=self.policy_data,
+            version=self.policy_data.get("version", "1.0"),
+        )
+
+    @property
     def allowed_hosts(self) -> List[str]:
         network = self.policy_data.get("network", {})
         return network.get("allow", [])
@@ -200,3 +208,37 @@ def mark_as_nemoclaw_session(
     )
 
     return session
+
+
+@dataclass
+class NeMoClawPolicy:
+    """Named policy definition for NemoClaw sandbox enforcement."""
+    name: str
+    rules: Dict[str, Any] = field(default_factory=dict)
+    version: str = "1.0"
+
+    @property
+    def hash(self) -> str:
+        raw = f"{self.name}:{self.version}:{sorted(self.rules.items())}"
+        return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+    @property
+    def policy_hash(self) -> str:
+        return self.hash
+
+    def allows(self, action: str) -> bool:
+        deny = self.rules.get("deny", [])
+        allow = self.rules.get("allow", [])
+        if deny and action in deny:
+            return False
+        if allow:
+            return action in allow
+        return True
+
+
+def validate_policy(policy_data: Dict[str, Any]) -> bool:
+    """Validate a NemoClaw policy document."""
+    if not isinstance(policy_data, dict):
+        return False
+    required = {"name"}
+    return required.issubset(policy_data.keys())
