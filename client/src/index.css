@@ -1,9 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* LIGHT MODE */
 :root {
+  --pub-dark: #09090b;
+  --pub-card: #111116;
+  --pub-surface: #0a0a0a;
+  --pub-border: rgba(255,255,255,0.06);
+  --pub-border-strong: rgba(255,255,255,0.1);
+  --pub-blue: #2563eb;
+  --pub-ice: #60a5fa;
+  --pub-green: #22c55e;
+  --pub-red: #ef4444;
+  --pub-orange: #f97316;
+  --pub-yellow: #fbbf24;
+  --pub-text: #fff;
+  --pub-text-muted: rgba(255,255,255,0.6);
+  --pub-text-dim: rgba(255,255,255,0.35);
+  --pub-text-ghost: rgba(255,255,255,0.2);
+  --pub-code-bg: #0d1117;
+  --pub-code-bar: #161b22;
+  --font-pub-sans: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-pub-mono: 'DM Mono', monospace;
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
   --opaque-button-border-intensity: -8;
@@ -285,4 +306,45 @@
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after {
     inset: -1px;
   }
+}
+
+@keyframes pub-fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pub-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes pub-spin {
+  to { transform: rotate(360deg); }
+}
+
+@layer utilities {
+  .pub-fade-up {
+    animation: pub-fade-up 0.6s ease forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  .pub-delay-1 { animation-delay: 0.1s; }
+  .pub-delay-2 { animation-delay: 0.2s; }
+  .pub-delay-3 { animation-delay: 0.3s; }
+  .pub-pulse { animation: pub-pulse 2s infinite; }
+  .pub-spin { animation: pub-spin 0.6s linear infinite; }
+}
+
+@media (max-width: 900px) {
+  .pub-nav-links { display: none !important; }
+  .pub-nav-mobile-toggle { display: block !important; }
+}
+
+@media (max-width: 768px) {
+  .pub-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  .pub-grid-3 { grid-template-columns: 1fr !important; }
+  .pub-grid-5 { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+@media (max-width: 480px) {
+  .pub-grid-4 { grid-template-columns: 1fr !important; }
+  .pub-grid-5 { grid-template-columns: 1fr !important; }
 }

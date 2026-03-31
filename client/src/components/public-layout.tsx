@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
@@ -15,77 +15,45 @@ const NAV_LINKS = [
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#09090b",
-        color: "#fff",
-        fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-        WebkitFontSmoothing: "antialiased",
-      }}
-    >
+    <div className="min-h-screen bg-pub-dark text-white font-pub-sans antialiased">
       <nav
         data-testid="nav-public"
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          background: "rgba(9,9,11,0.85)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          padding: "0 48px",
-          height: "56px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
+        className={`fixed top-0 left-0 right-0 z-[100] backdrop-blur-[12px] px-12 h-14 flex items-center justify-between transition-[background,border] duration-200 ${
+          scrolled
+            ? "bg-pub-dark/90 border-b border-pub-strong"
+            : "bg-pub-dark/85 border-b border-pub"
+        }`}
       >
         <Link href="/" data-testid="link-home">
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", cursor: "pointer" }}>
+          <div className="flex items-center gap-2.5 no-underline cursor-pointer">
             <svg width="20" height="24" viewBox="0 0 44 50" fill="none">
               <polygon points="22,2 2,44 22,44" fill="white" />
               <polygon points="22,2 42,44 22,44" fill="rgba(255,255,255,0.42)" />
               <rect x="14" y="44" width="16" height="6" fill="white" />
             </svg>
-            <span
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: "13px",
-                fontWeight: 500,
-                letterSpacing: "0.04em",
-                color: "#fff",
-              }}
-            >
+            <span className="font-pub-mono text-[13px] font-medium tracking-[0.04em] text-white">
               aiglos
             </span>
           </div>
         </Link>
 
-        <ul
-          style={{
-            display: "flex",
-            gap: "24px",
-            listStyle: "none",
-            margin: 0,
-            padding: 0,
-          }}
-          className="public-nav-links"
-        >
+        <ul className="pub-nav-links flex gap-6 list-none m-0 p-0">
           {NAV_LINKS.map((link) => (
             <li key={link.href}>
               <Link href={link.href} data-testid={`link-${link.label.toLowerCase()}`}>
                 <span
-                  style={{
-                    fontSize: "13px",
-                    color: location === link.href ? "#fff" : "rgba(255,255,255,0.35)",
-                    textDecoration: "none",
-                    cursor: "pointer",
-                    transition: "color 0.15s",
-                  }}
+                  className={`text-[13px] no-underline cursor-pointer transition-colors duration-150 ${
+                    location === link.href ? "text-white" : "text-pub-dim hover:text-pub-muted"
+                  }`}
                 >
                   {link.label}
                 </span>
@@ -94,24 +62,13 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           ))}
         </ul>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div className="flex gap-2.5 items-center">
           <a
             href="https://github.com/w1123581321345589/aiglos"
             target="_blank"
             rel="noopener noreferrer"
             data-testid="link-github"
-            style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: "11px",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase" as const,
-              color: "rgba(255,255,255,0.35)",
-              textDecoration: "none",
-              padding: "7px 14px",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "4px",
-              transition: "all 0.15s",
-            }}
+            className="font-pub-mono text-[11px] tracking-[0.1em] uppercase text-pub-dim no-underline py-[7px] px-3.5 border border-pub-strong rounded transition-all duration-150 hover:text-pub-muted hover:border-white/20"
           >
             GitHub
           </a>
@@ -120,33 +77,14 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             target="_blank"
             rel="noopener noreferrer"
             data-testid="link-pip-install"
-            style={{
-              fontFamily: "'DM Mono', monospace",
-              fontSize: "11px",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase" as const,
-              background: "#fff",
-              color: "#09090b",
-              padding: "7px 16px",
-              borderRadius: "4px",
-              textDecoration: "none",
-              transition: "opacity 0.15s",
-            }}
+            className="font-pub-mono text-[11px] tracking-[0.1em] uppercase bg-white text-pub-dark py-[7px] px-4 rounded no-underline transition-opacity duration-150 hover:opacity-90"
           >
             pip install
           </a>
           <button
             data-testid="button-mobile-menu"
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="public-nav-mobile-toggle"
-            style={{
-              display: "none",
-              background: "transparent",
-              border: "none",
-              color: "#fff",
-              cursor: "pointer",
-              padding: "4px",
-            }}
+            className="pub-nav-mobile-toggle hidden bg-transparent border-none text-white cursor-pointer p-1"
           >
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -154,33 +92,14 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       </nav>
 
       {mobileOpen && (
-        <div
-          className="public-nav-mobile-menu"
-          style={{
-            position: "fixed",
-            top: "56px",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(9,9,11,0.98)",
-            zIndex: 99,
-            padding: "24px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "8px",
-          }}
-        >
+        <div className="fixed top-14 inset-x-0 bottom-0 bg-pub-dark/[0.98] z-[99] p-6 flex flex-col gap-2">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href}>
               <div
                 onClick={() => setMobileOpen(false)}
-                style={{
-                  padding: "12px 16px",
-                  fontSize: "15px",
-                  color: location === link.href ? "#fff" : "rgba(255,255,255,0.5)",
-                  cursor: "pointer",
-                  borderBottom: "1px solid rgba(255,255,255,0.06)",
-                }}
+                className={`py-3 px-4 text-[15px] cursor-pointer border-b border-pub ${
+                  location === link.href ? "text-white" : "text-pub-muted"
+                }`}
               >
                 {link.label}
               </div>
@@ -189,62 +108,21 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         </div>
       )}
 
-      <main style={{ paddingTop: "56px" }}>{children}</main>
+      <main className="pt-14">{children}</main>
 
-      <footer
-        style={{
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          padding: "40px 48px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "16px",
-        }}
-      >
-        <span
-          style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "13px",
-            color: "rgba(255,255,255,0.35)",
-          }}
-        >
-          aiglos
-        </span>
-        <div style={{ display: "flex", gap: "24px" }}>
+      <footer className="border-t border-pub py-10 px-12 flex justify-between items-center flex-wrap gap-4">
+        <span className="font-pub-mono text-[13px] text-pub-dim">aiglos</span>
+        <div className="flex gap-6">
           {NAV_LINKS.map((link) => (
             <Link key={link.href} href={link.href}>
-              <span
-                style={{
-                  fontSize: "12px",
-                  color: "rgba(255,255,255,0.35)",
-                  textDecoration: "none",
-                  cursor: "pointer",
-                }}
-              >
+              <span className="text-xs text-pub-dim no-underline cursor-pointer hover:text-pub-muted transition-colors duration-150">
                 {link.label}
               </span>
             </Link>
           ))}
         </div>
-        <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.2)" }}>
-          MIT License
-        </span>
+        <span className="text-xs text-pub-ghost">MIT License</span>
       </footer>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-        .fade-up { opacity: 0; transform: translateY(20px); animation: fadeUp 0.6s ease forwards; }
-        .delay-1 { animation-delay: .1s; }
-        .delay-2 { animation-delay: .2s; }
-        .delay-3 { animation-delay: .3s; }
-        @media (max-width: 900px) {
-          .public-nav-links { display: none !important; }
-          .public-nav-mobile-toggle { display: block !important; }
-        }
-      `}</style>
     </div>
   );
 }

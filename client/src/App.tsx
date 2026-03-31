@@ -29,6 +29,7 @@ import AiglosScan from "@/pages/aiglos_scan";
 import GovBench from "@/pages/aiglos_govbench";
 import AiglosIntel from "@/pages/aiglos_intel";
 import AiglosCompliance from "@/pages/aiglos_compliance";
+
 import ComparePage from "@/pages/compare";
 import PricingPage from "@/pages/pricing";
 import ReferencePage from "@/pages/reference";

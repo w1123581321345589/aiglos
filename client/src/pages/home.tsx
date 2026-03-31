@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useSeo } from "@/hooks/use-seo";
+import SectionLabel from "@/components/public/section-label";
+import CodeWindow from "@/components/public/code-window";
 
 export default function HomePage() {
   const [copied, setCopied] = useState(false);
@@ -20,221 +22,71 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* HERO - LiteLLM Incident First */}
-      <section
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          textAlign: "center",
-          padding: "80px 48px 64px",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "radial-gradient(ellipse 80% 60% at 50% 20%, rgba(37,99,235,0.08) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
+      <section className="min-h-screen flex flex-col justify-center items-center text-center py-20 px-12 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_20%,rgba(37,99,235,0.08)_0%,transparent_70%)] pointer-events-none" />
 
-        {/* Incident Badge */}
         <div
-          className="fade-up"
+          className="pub-fade-up inline-flex items-center gap-2 bg-pub-red/10 border border-pub-red/25 rounded-full py-1 px-3.5 mb-8 font-pub-mono text-[11px] tracking-[0.12em] uppercase text-pub-red relative z-[1]"
           data-testid="badge-incident"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            background: "rgba(239,68,68,0.1)",
-            border: "1px solid rgba(239,68,68,0.25)",
-            borderRadius: "100px",
-            padding: "5px 14px",
-            marginBottom: "32px",
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "11px",
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            color: "#ef4444",
-            position: "relative",
-            zIndex: 1,
-          }}
         >
-          <span
-            style={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              background: "#ef4444",
-              animation: "pulse 2s infinite",
-            }}
-          />
+          <span className="w-1.5 h-1.5 rounded-full bg-pub-red pub-pulse" />
           March 24, 2026 - Supply chain attack confirmed
         </div>
 
         <h1
-          className="fade-up delay-1"
+          className="pub-fade-up pub-delay-1 text-[clamp(32px,5vw,64px)] font-bold leading-[1.05] tracking-tight max-w-[900px] mb-6 relative z-[1]"
           data-testid="text-hero-title"
-          style={{
-            fontSize: "clamp(32px, 5vw, 64px)",
-            fontWeight: 700,
-            lineHeight: 1.05,
-            letterSpacing: "-0.03em",
-            maxWidth: "900px",
-            marginBottom: "24px",
-            position: "relative",
-            zIndex: 1,
-          }}
         >
           LiteLLM 1.82.8 exfiltrated every credential on every machine that installed it.{" "}
-          <span style={{ color: "#60a5fa" }}>T81 caught it.</span>
+          <span className="text-pub-ice">T81 caught it.</span>
         </h1>
 
-        <p
-          className="fade-up delay-2"
-          style={{
-            fontSize: "18px",
-            fontWeight: 300,
-            color: "rgba(255,255,255,0.6)",
-            maxWidth: "600px",
-            lineHeight: 1.65,
-            marginBottom: "48px",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
+        <p className="pub-fade-up pub-delay-2 text-lg font-light text-pub-muted max-w-[600px] leading-[1.65] mb-12 relative z-[1]">
           97 million monthly downloads. SSH keys, AWS credentials, database passwords, crypto wallets
           sent to models.litellm.cloud. One .pth file. Aiglos rule T81 PTH_FILE_INJECT existed before anyone
           knew the attack happened.
         </p>
 
-        {/* Dual CTAs */}
-        <div
-          className="fade-up delay-2"
-          style={{
-            display: "flex",
-            gap: "16px",
-            alignItems: "stretch",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            marginBottom: "48px",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          {/* Developer CTA */}
+        <div className="pub-fade-up pub-delay-2 flex gap-4 items-stretch flex-wrap justify-center mb-12 relative z-[1]">
           <div
             data-testid="cta-developer"
-            style={{
-              background: "#111116",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "6px",
-              padding: "16px 24px",
-              display: "flex",
-              alignItems: "center",
-              gap: "16px",
-            }}
+            className="bg-pub-card border border-pub-strong rounded-md py-4 px-6 flex items-center gap-4"
           >
-            <div style={{ textAlign: "left" }}>
-              <div
-                style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: "10px",
-                  letterSpacing: "0.15em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.35)",
-                  marginBottom: "4px",
-                }}
-              >
+            <div className="text-left">
+              <div className="font-pub-mono text-[10px] tracking-[0.15em] uppercase text-pub-dim mb-1">
                 For developers
               </div>
-              <code
-                style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: "13px",
-                  color: "#fff",
-                }}
-              >
+              <code className="font-pub-mono text-[13px] text-white">
                 pip install aiglos && aiglos launch
               </code>
             </div>
             <button
               data-testid="button-copy-install"
               onClick={handleCopy}
-              style={{
-                background: "none",
-                border: "1px solid rgba(255,255,255,0.06)",
-                borderRadius: "3px",
-                padding: "4px 10px",
-                fontFamily: "'DM Mono', monospace",
-                fontSize: "10px",
-                color: copied ? "#4ade80" : "rgba(255,255,255,0.35)",
-                cursor: "pointer",
-                transition: "all 0.15s",
-              }}
+              className={`bg-transparent border border-pub rounded-[3px] py-1 px-2.5 font-pub-mono text-[10px] cursor-pointer transition-all duration-150 ${
+                copied ? "text-pub-green" : "text-pub-dim"
+              }`}
             >
               {copied ? "Copied" : "Copy"}
             </button>
           </div>
 
-          {/* Enterprise CTA */}
           <Link href="/compliance">
             <div
               data-testid="cta-enterprise"
-              style={{
-                background: "#fff",
-                color: "#09090b",
-                borderRadius: "6px",
-                padding: "16px 24px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                cursor: "pointer",
-                transition: "opacity 0.15s",
-              }}
+              className="bg-white text-pub-dark rounded-md py-4 px-6 flex flex-col justify-center cursor-pointer transition-opacity duration-150 hover:opacity-90"
             >
-              <div
-                style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: "10px",
-                  letterSpacing: "0.15em",
-                  textTransform: "uppercase",
-                  color: "rgba(0,0,0,0.4)",
-                  marginBottom: "4px",
-                }}
-              >
+              <div className="font-pub-mono text-[10px] tracking-[0.15em] uppercase text-black/40 mb-1">
                 For enterprise
               </div>
-              <span
-                style={{
-                  fontSize: "13px",
-                  fontWeight: 600,
-                }}
-              >
-                See compliance coverage
-              </span>
+              <span className="text-[13px] font-semibold">See compliance coverage</span>
             </div>
           </Link>
         </div>
 
-        {/* 3/3 GHSA Proof Banner */}
         <div
-          className="fade-up delay-3"
+          className="pub-fade-up pub-delay-3 flex gap-12 flex-wrap justify-center relative z-[1]"
           data-testid="banner-ghsa-proof"
-          style={{
-            display: "flex",
-            gap: "48px",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            position: "relative",
-            zIndex: 1,
-          }}
         >
           {[
             ["3/3", "GHSAs caught"],
@@ -243,29 +95,11 @@ export default function HomePage() {
             ["<1ms", "Per call"],
             ["0", "Dependencies"],
           ].map(([n, l]) => (
-            <div key={l} style={{ textAlign: "center" }}>
-              <span
-                style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: "28px",
-                  fontWeight: 500,
-                  color: "#fff",
-                  display: "block",
-                  lineHeight: 1,
-                }}
-              >
+            <div key={l} className="text-center">
+              <span className="font-pub-mono text-[28px] font-medium text-white block leading-none">
                 {n}
               </span>
-              <span
-                style={{
-                  fontSize: "11px",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.35)",
-                  marginTop: "4px",
-                  display: "block",
-                }}
-              >
+              <span className="text-[11px] tracking-[0.1em] uppercase text-pub-dim mt-1 block">
                 {l}
               </span>
             </div>
@@ -273,165 +107,56 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* PROOF SECTION */}
-      <div
-        style={{
-          padding: "80px 48px",
-          textAlign: "center",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
+      <div className="py-20 px-12 text-center border-t border-b border-pub">
         <span
           data-testid="text-proof-number"
-          style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "clamp(48px, 8vw, 96px)",
-            fontWeight: 500,
-            color: "#fff",
-            lineHeight: 1,
-            display: "block",
-            letterSpacing: "-0.02em",
-          }}
+          className="font-pub-mono text-[clamp(48px,8vw,96px)] font-medium text-white leading-none block tracking-tight"
         >
           3 / 3
         </span>
-        <p
-          style={{
-            fontSize: "16px",
-            color: "rgba(255,255,255,0.6)",
-            maxWidth: "560px",
-            margin: "20px auto 0",
-            lineHeight: 1.6,
-          }}
-        >
+        <p className="text-base text-pub-muted max-w-[560px] mx-auto mt-5 leading-relaxed">
           Every published OpenClaw GHSA caught by Aiglos rules that{" "}
-          <strong style={{ color: "#fff" }}>existed before the advisories were disclosed</strong>.
+          <strong className="text-white">existed before the advisories were disclosed</strong>.
           The rules came first. Every time.
         </p>
       </div>
 
-      {/* ARCHITECTURE POSITION DIAGRAM */}
-      <section
-        style={{
-          padding: "80px 48px",
-          maxWidth: "1100px",
-          margin: "0 auto",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "10px",
-            letterSpacing: "0.25em",
-            textTransform: "uppercase",
-            color: "#60a5fa",
-            marginBottom: "16px",
-          }}
-        >
-          Architecture
-        </div>
+      <section className="py-20 px-12 max-w-[1100px] mx-auto">
+        <SectionLabel>Architecture</SectionLabel>
         <h2
           data-testid="text-architecture-title"
-          style={{
-            fontSize: "clamp(28px, 4vw, 44px)",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-            marginBottom: "16px",
-          }}
+          className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight leading-[1.1] mb-4"
         >
           Where each product sits in the stack
         </h2>
-        <p
-          style={{
-            fontSize: "16px",
-            color: "rgba(255,255,255,0.6)",
-            lineHeight: 1.7,
-            maxWidth: "560px",
-            marginBottom: "48px",
-          }}
-        >
+        <p className="text-base text-pub-muted leading-[1.7] max-w-[560px] mb-12">
           Every competitor operates at the API gateway or model inference layer. Aiglos operates at the
           agent runtime layer. Three surfaces. One position no one else occupies.
         </p>
 
-        {/* Architecture Diagram */}
         <div
           data-testid="diagram-architecture"
-          style={{
-            border: "1px solid rgba(255,255,255,0.06)",
-            borderRadius: "8px",
-            overflow: "hidden",
-            background: "#111116",
-          }}
+          className="border border-pub rounded-lg overflow-hidden bg-pub-card"
         >
           {[
-            {
-              layer: "Package Registry",
-              product: "Snyk",
-              desc: "Static dependency scanning",
-              color: "rgba(255,255,255,0.2)",
-              isAiglos: false,
-            },
-            {
-              layer: "Container / Sandbox Boundary",
-              product: "NVIDIA OpenShell",
-              desc: "Kernel-level agent sandboxing",
-              color: "rgba(255,255,255,0.2)",
-              isAiglos: false,
-            },
-            {
-              layer: "API Gateway / Model Inference",
-              product: "HiddenLayer",
-              desc: "Model file scanning, inference-time detection",
-              color: "rgba(255,255,255,0.2)",
-              isAiglos: false,
-            },
-            {
-              layer: "Agent Runtime (MCP + HTTP + Subprocess)",
-              product: "Aiglos",
-              desc: "Every tool call, HTTP request, and subprocess intercepted before execution",
-              color: "#2563eb",
-              isAiglos: true,
-            },
+            { layer: "Package Registry", product: "Snyk", desc: "Static dependency scanning", isAiglos: false },
+            { layer: "Container / Sandbox Boundary", product: "NVIDIA OpenShell", desc: "Kernel-level agent sandboxing", isAiglos: false },
+            { layer: "API Gateway / Model Inference", product: "HiddenLayer", desc: "Model file scanning, inference-time detection", isAiglos: false },
+            { layer: "Agent Runtime (MCP + HTTP + Subprocess)", product: "Aiglos", desc: "Every tool call, HTTP request, and subprocess intercepted before execution", isAiglos: true },
           ].map((item) => (
             <div
               key={item.layer}
-              style={{
-                padding: "24px 32px",
-                borderBottom: "1px solid rgba(255,255,255,0.04)",
-                display: "grid",
-                gridTemplateColumns: "260px 140px 1fr",
-                gap: "24px",
-                alignItems: "center",
-                background: item.isAiglos ? "rgba(37,99,235,0.05)" : "transparent",
-              }}
+              className={`py-6 px-8 border-b border-white/[0.04] grid grid-cols-[260px_140px_1fr] gap-6 items-center ${
+                item.isAiglos ? "bg-pub-blue/5" : ""
+              }`}
             >
-              <div
-                style={{
-                  fontSize: "13px",
-                  fontWeight: item.isAiglos ? 600 : 400,
-                  color: item.isAiglos ? "#60a5fa" : "rgba(255,255,255,0.6)",
-                }}
-              >
+              <div className={`text-[13px] ${item.isAiglos ? "font-semibold text-pub-ice" : "text-pub-muted"}`}>
                 {item.layer}
               </div>
-              <div
-                style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: "12px",
-                  color: item.isAiglos ? "#fff" : "rgba(255,255,255,0.35)",
-                }}
-              >
+              <div className={`font-pub-mono text-xs ${item.isAiglos ? "text-white" : "text-pub-dim"}`}>
                 {item.product}
               </div>
-              <div
-                style={{
-                  fontSize: "13px",
-                  color: item.isAiglos ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.35)",
-                }}
-              >
+              <div className={`text-[13px] ${item.isAiglos ? "text-white/80" : "text-pub-dim"}`}>
                 {item.desc}
               </div>
             </div>
@@ -439,155 +164,39 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section
-        style={{
-          padding: "80px 48px",
-          maxWidth: "1100px",
-          margin: "0 auto",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "10px",
-            letterSpacing: "0.25em",
-            textTransform: "uppercase",
-            color: "#60a5fa",
-            marginBottom: "16px",
-          }}
-        >
-          How it works
-        </div>
-        <h2
-          style={{
-            fontSize: "clamp(28px, 4vw, 44px)",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-            marginBottom: "16px",
-          }}
-        >
+      <section className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
+        <SectionLabel>How it works</SectionLabel>
+        <h2 className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight leading-[1.1] mb-4">
           One line. Nothing else changes.
         </h2>
-        <p
-          style={{
-            fontSize: "16px",
-            color: "rgba(255,255,255,0.6)",
-            lineHeight: 1.7,
-            maxWidth: "560px",
-            marginBottom: "48px",
-          }}
-        >
+        <p className="text-base text-pub-muted leading-[1.7] max-w-[560px] mb-12">
           Aiglos intercepts every tool call, HTTP request, and shell command before execution. The agent
           never knows it's running.
         </p>
 
-        <div
-          style={{
-            background: "#0d1117",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "8px",
-            overflow: "hidden",
-            maxWidth: "680px",
-          }}
-        >
-          <div
-            style={{
-              background: "#161b22",
-              padding: "10px 16px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
-            }}
-          >
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57" }} />
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e" }} />
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840" }} />
-            <span
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: "11px",
-                color: "rgba(255,255,255,0.35)",
-                marginLeft: "8px",
-              }}
-            >
-              agent.py
-            </span>
-          </div>
-          <div style={{ padding: "24px", overflowX: "auto" }}>
-            <pre
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: "13.5px",
-                lineHeight: 1.75,
-                color: "#e6edf3",
-                margin: 0,
-              }}
-            >
-              <span style={{ color: "#ff7b72" }}>import</span> aiglos{"\n\n"}
-              aiglos.<span style={{ color: "#d2a8ff" }}>attach</span>(
-              {"\n    "}
-              <span style={{ color: "#79c0ff" }}>agent_name</span>=
-              <span style={{ color: "#a5d6ff" }}>"my-agent"</span>,{"\n    "}
-              <span style={{ color: "#79c0ff" }}>policy</span>=
-              <span style={{ color: "#a5d6ff" }}>"enterprise"</span>,{"\n"}){"\n\n"}
-              <span style={{ color: "#6e7681" }}>
-                {"# The agent keeps running. Nothing else changes.\n"}
-                {"# Until something tries to exfiltrate credentials.\n"}
-                {"# Then it stops."}
-              </span>
-            </pre>
-          </div>
-        </div>
+        <CodeWindow filename="agent.py">
+          <span className="text-[#ff7b72]">import</span> aiglos{"\n\n"}
+          aiglos.<span className="text-[#d2a8ff]">attach</span>(
+          {"\n    "}
+          <span className="text-[#79c0ff]">agent_name</span>=
+          <span className="text-[#a5d6ff]">"my-agent"</span>,{"\n    "}
+          <span className="text-[#79c0ff]">policy</span>=
+          <span className="text-[#a5d6ff]">"enterprise"</span>,{"\n"}){"\n\n"}
+          <span className="text-[#6e7681]">
+            {"# The agent keeps running. Nothing else changes.\n"}
+            {"# Until something tries to exfiltrate credentials.\n"}
+            {"# Then it stops."}
+          </span>
+        </CodeWindow>
       </section>
 
-      {/* FEATURE GRID */}
-      <section
-        style={{
-          padding: "80px 48px",
-          maxWidth: "1100px",
-          margin: "0 auto",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "10px",
-            letterSpacing: "0.25em",
-            textTransform: "uppercase",
-            color: "#60a5fa",
-            marginBottom: "16px",
-          }}
-        >
-          Capabilities
-        </div>
-        <h2
-          style={{
-            fontSize: "clamp(28px, 4vw, 44px)",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-            marginBottom: "48px",
-          }}
-        >
+      <section className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
+        <SectionLabel>Capabilities</SectionLabel>
+        <h2 className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight leading-[1.1] mb-12">
           Built for the way agents actually work.
         </h2>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
-            gap: "1px",
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.06)",
-            borderRadius: "8px",
-            overflow: "hidden",
-          }}
-        >
+        <div className="grid grid-cols-3 pub-grid-3 gap-px bg-white/[0.06] border border-pub rounded-lg overflow-hidden">
           {[
             {
               title: "82 Threat Families",
@@ -614,230 +223,78 @@ export default function HomePage() {
               body: "The first governance benchmark for AI agents. Five dimensions. A-F grade. Published before any standard body required one. The company that defines the benchmark owns the compliance category.",
             },
           ].map((f) => (
-            <div
-              key={f.title}
-              style={{
-                background: "#09090b",
-                padding: "32px",
-                transition: "background 0.2s",
-              }}
-            >
-              <div style={{ fontSize: "15px", fontWeight: 600, marginBottom: "8px" }}>{f.title}</div>
-              <div
-                style={{
-                  fontSize: "13px",
-                  color: "rgba(255,255,255,0.35)",
-                  lineHeight: 1.65,
-                }}
-              >
-                {f.body}
-              </div>
+            <div key={f.title} className="bg-pub-dark p-8 transition-colors duration-200">
+              <div className="text-[15px] font-semibold mb-2">{f.title}</div>
+              <div className="text-[13px] text-pub-dim leading-[1.65]">{f.body}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* GHSA VALIDATION */}
-      <section
-        style={{
-          padding: "80px 48px",
-          maxWidth: "1100px",
-          margin: "0 auto",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "10px",
-            letterSpacing: "0.25em",
-            textTransform: "uppercase",
-            color: "#60a5fa",
-            marginBottom: "16px",
-          }}
-        >
-          Empirical validation
-        </div>
-        <h2
-          style={{
-            fontSize: "clamp(28px, 4vw, 44px)",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-            marginBottom: "16px",
-          }}
-        >
+      <section className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
+        <SectionLabel>Empirical validation</SectionLabel>
+        <h2 className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight leading-[1.1] mb-4">
           Every published OpenClaw vulnerability.
           <br />
           Caught by existing rules.
         </h2>
-        <p
-          style={{
-            fontSize: "16px",
-            color: "rgba(255,255,255,0.6)",
-            lineHeight: 1.7,
-            maxWidth: "560px",
-            marginBottom: "40px",
-          }}
-        >
+        <p className="text-base text-pub-muted leading-[1.7] max-w-[560px] mb-10">
           Three published advisories. All three covered by Aiglos rules before the advisories were
           disclosed, before any patch existed.
         </p>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "1px",
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.06)",
-            borderRadius: "8px",
-            overflow: "hidden",
-          }}
-        >
+        <div className="flex flex-col gap-px bg-white/[0.06] border border-pub rounded-lg overflow-hidden">
           {[
-            {
-              ghsa: "GHSA-g8p2-7wf7-98mq",
-              cvss: "8.8",
-              title: "1-Click RCE via Authentication Token Exfiltration",
-              rules: "T03 T12 T19 T68",
-            },
-            {
-              ghsa: "GHSA-q284-4pvr-m585",
-              cvss: "8.6",
-              title: "OS Command Injection via Project Root Path",
-              rules: "T03 T04 T70",
-            },
-            {
-              ghsa: "GHSA-mc68-q9jw-2h3v",
-              cvss: "8.4",
-              title: "Command Injection via PATH Environment Variable",
-              rules: "T03 T70",
-            },
-          ].map((a) => (
-            <div
-              key={a.ghsa}
-              data-testid={`row-ghsa-${a.ghsa}`}
-              style={{
-                background: "#111116",
-                display: "grid",
-                gridTemplateColumns: "180px 1fr auto",
-                gap: "24px",
-                padding: "20px 24px",
-                alignItems: "center",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontFamily: "'DM Mono', monospace",
-                    fontSize: "11px",
-                    color: "#60a5fa",
-                  }}
-                >
-                  {a.ghsa}
-                </div>
-                <div
-                  style={{
-                    fontSize: "10px",
-                    color: "rgba(255,255,255,0.35)",
-                    marginTop: "2px",
-                  }}
-                >
-                  CVSS {a.cvss}
-                </div>
-              </div>
-              <div
-                style={{
-                  fontSize: "13px",
-                  color: "rgba(255,255,255,0.6)",
-                }}
-              >
-                {a.title}
-              </div>
-              <div
-                style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: "11px",
-                  color: "#4ade80",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {a.rules} ✓
+            { ghsa: "GHSA-g8p2-7wf7-98mq", cvss: "8.8", title: "1-Click RCE via Authentication Token Exfiltration", rules: "T03 T12 T19 T68" },
+            { ghsa: "GHSA-q284-4pvr-m585", cvss: "8.6", title: "OS Command Injection via PATH Manipulation", rules: "T03 T04 T70" },
+            { ghsa: "GHSA-mc68-q9jw-2h3v", cvss: "8.4", title: "Remote Code Execution via Command Injection", rules: "T03 T70" },
+          ].map((g) => (
+            <div key={g.ghsa} className="bg-pub-dark py-5 px-8 grid grid-cols-[160px_50px_1fr_auto] gap-6 items-center">
+              <div className="font-pub-mono text-xs text-pub-ice">{g.ghsa}</div>
+              <div className="font-pub-mono text-xs text-pub-red">{g.cvss}</div>
+              <div className="text-[13px] text-pub-muted">{g.title}</div>
+              <div className="flex gap-1.5">
+                {g.rules.split(" ").map((r) => (
+                  <span key={r} className="bg-pub-card border border-white/[0.08] text-pub-dim py-0.5 px-2 rounded-sm text-[10px] font-pub-mono tracking-[0.1em]">
+                    {r}
+                  </span>
+                ))}
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section
-        style={{
-          padding: "80px 48px",
-          maxWidth: "1100px",
-          margin: "0 auto",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          textAlign: "center",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "clamp(28px, 4vw, 44px)",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            marginBottom: "16px",
-          }}
-        >
-          Start in 30 seconds.
+      <section className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
+        <SectionLabel>Get started</SectionLabel>
+        <h2 className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight leading-[1.1] mb-4">
+          30 seconds to full coverage.
         </h2>
-        <p
-          style={{
-            fontSize: "16px",
-            color: "rgba(255,255,255,0.6)",
-            marginBottom: "32px",
-          }}
-        >
-          The free tier runs the full detection engine. Every rule. Every campaign pattern.
+        <p className="text-base text-pub-muted leading-[1.7] max-w-[560px] mb-12">
+          Install. Attach. Every tool call protected. No configuration. No network dependency. No proxy.
         </p>
-        <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
+
+        <div className="grid grid-cols-3 pub-grid-3 gap-px bg-white/[0.06] rounded-lg overflow-hidden mb-8">
+          {[
+            { step: "01", title: "Install", desc: "pip install aiglos. Zero dependencies. Under 2MB." },
+            { step: "02", title: "Attach", desc: "import aiglos; aiglos.attach(). One line in your agent entrypoint." },
+            { step: "03", title: "Ship", desc: "Every tool call intercepted. Signed artifact on session close. CI integration in 2 minutes." },
+          ].map((s) => (
+            <div key={s.step} className="bg-pub-card p-8">
+              <div className="font-pub-mono text-[28px] font-medium text-pub-ice mb-3">{s.step}</div>
+              <div className="text-[15px] font-semibold mb-2">{s.title}</div>
+              <div className="text-[13px] text-pub-muted leading-relaxed">{s.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center">
           <Link href="/scan">
             <span
               data-testid="link-try-scan"
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: "11px",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.35)",
-                textDecoration: "none",
-                padding: "12px 24px",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "4px",
-                cursor: "pointer",
-                transition: "all 0.15s",
-              }}
+              className="font-pub-mono text-[11px] tracking-[0.1em] uppercase text-pub-dim no-underline py-3 px-6 border border-pub-strong rounded cursor-pointer transition-all duration-150 hover:text-pub-muted hover:border-white/20 inline-block"
             >
-              Try the scanner
-            </span>
-          </Link>
-          <Link href="/pricing">
-            <span
-              data-testid="link-view-pricing"
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: "11px",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                background: "#fff",
-                color: "#09090b",
-                padding: "12px 24px",
-                borderRadius: "4px",
-                cursor: "pointer",
-                textDecoration: "none",
-                transition: "opacity 0.15s",
-              }}
-            >
-              View pricing
+              Try the free scanner now
             </span>
           </Link>
         </div>

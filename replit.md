@@ -75,13 +75,20 @@ Pushed to `w1123581321345589/aiglos` on the `main` branch.
 ## Website (Landing Site)
 The root `/` serves the landing page directly (no SPA, no login). Styled like cursor.com with a premium dark theme.
 
-### Design Language
-- **Background**: #09090b (near-black)
-- **Fonts**: Plus Jakarta Sans (body) + DM Mono (code/monospace)
-- **Accent**: Blue #2563eb / Ice #60a5fa
-- **Text**: #fff (primary), rgba(255,255,255,0.35) (dim), rgba(255,255,255,0.6) (mid)
-- **Navigation**: Glass-morphism backdrop with rgba(9,9,11,0.85), blur(12px)
-- **Animations**: Fade-up on load with staggered delays
+### Design System (Tailwind + pub-* tokens)
+All public pages use Tailwind CSS with a unified `pub-*` design token system. No inline styles on public pages (dynamic progress bar widths are the sole exception).
+
+- **CSS Variables**: Defined in `client/src/index.css` under `--pub-*` prefix
+- **Tailwind Config**: `pub-*` color aliases + font families in `tailwind.config.ts`
+- **Colors**: `pub-dark` (#09090b), `pub-blue` (#2563eb), `pub-ice` (#60a5fa), `pub-green`, `pub-red`, `pub-orange`, `pub-muted`, `pub-dim`
+- **Fonts**: `font-pub-sans` (Plus Jakarta Sans body), `font-pub-mono` (DM Mono code)
+- **Animations**: `animate-fade-up`, `animate-pulse-slow`, `animate-spin-slow` (keyframes in index.css)
+- **Shared Components**: `client/src/components/public/` directory
+  - `code-window.tsx` -- Terminal-style code block with macOS dots
+  - `section-label.tsx` -- Uppercase mono section labels
+- **Layout**: `client/src/components/public-layout.tsx` (glass-morphism nav + footer)
+- **SEO Hook**: `client/src/hooks/use-seo.ts` (dynamic title/description/OG tags)
+- **Special fonts**: Intel and Compliance pages use `font-pub-mono` as primary (terminal aesthetic)
 
 ### Public Routes (React SPA, no auth required)
 - `/` -- Homepage (LiteLLM-incident-first hero, dual CTAs, architecture diagram, GHSA validation, feature grid)

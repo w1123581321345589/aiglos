@@ -1,369 +1,94 @@
 import { useSeo } from "@/hooks/use-seo";
+import SectionLabel from "@/components/public/section-label";
+
+const featureMatrix = [
+  { feature: "What it protects", aiglos: "Agents (runtime behavior)", hiddenlayer: "Models (pre-deployment + inference)", snyk: "Dependencies (static scanning)", openshell: "Containers (kernel-level sandbox)" },
+  { feature: "Interception surface", aiglos: "MCP + HTTP + subprocess", hiddenlayer: "API gateway + model inference", snyk: "Package manifest only", openshell: "Syscall + network boundary" },
+  { feature: "Multi-step attack detection", aiglos: "23 campaign patterns across sessions", hiddenlayer: "Cascading chains (single session)", snyk: "None", openshell: "None" },
+  { feature: "Signed audit artifact", aiglos: "HMAC-SHA256 / RSA-2048 per session", hiddenlayer: "Audit-ready logs (unsigned)", snyk: "None", openshell: "None" },
+  { feature: "Agent definition monitoring", aiglos: "T36 monitors .cursorrules, AGENTS.md, claude.md, YAML configs", hiddenlayer: "Not covered", snyk: "Not covered", openshell: "Not covered" },
+  { feature: "Persistent memory protection", aiglos: "T79 guards Gigabrain, Chroma, Pinecone, Qdrant, mem0, Letta, Zep", hiddenlayer: "Partial (RAG poisoning only)", snyk: "None", openshell: "None" },
+  { feature: "Self-improvement pipeline", aiglos: "T82 monitors auto-fine-tuning, recursive self-mod", hiddenlayer: "Not covered", snyk: "None", openshell: "None" },
+  { feature: "Coding agent integrations", aiglos: "Claude Code, Cursor, Codex, Windsurf, Aider, smolagents, Cline, Augment, OpenClaw", hiddenlayer: "0 (discovers vulns in Cursor/Windsurf, does not protect them)", snyk: "CI/CD integration only", openshell: "Claude Code, Codex, Cursor, OpenClaw, Windsurf, Aider, Continue, Cody" },
+  { feature: "Governance benchmark", aiglos: "GOVBENCH: 5 dimensions, A-F grade, README badge", hiddenlayer: "None", snyk: "None", openshell: "None" },
+  { feature: "NDAA Section 1513 compliance", aiglos: "Automated attestation artifact per session", hiddenlayer: "DoD contracts exist, no automated artifact", snyk: "None", openshell: "None" },
+  { feature: "Federated threat intelligence", aiglos: "Differential privacy, collective intelligence across deployments", hiddenlayer: "SAI team research (centralized)", snyk: "Centralized vuln database", openshell: "None" },
+  { feature: "Onboarding time", aiglos: "30 seconds (pip install aiglos && aiglos launch)", hiddenlayer: "Enterprise sales cycle (weeks to months)", snyk: "Minutes (CLI install)", openshell: "Minutes (container config)" },
+  { feature: "Pricing", aiglos: "Free tier with full detection. Pro $49/dev/mo", hiddenlayer: "Enterprise custom (~$500/mo minimum)", snyk: "Free tier + paid plans", openshell: "Open source" },
+];
+
+const competitors = [
+  { name: "HiddenLayer", layer: "Model layer", desc: "Scans model files before deployment. Detects adversarial inputs at inference time. Discovers shadow AI across cloud environments.", strength: "Model supply chain security", highlight: false },
+  { name: "Snyk mcp-scan", layer: "Package layer", desc: "Static analysis of MCP server configurations. Identifies known-vulnerable dependencies in package manifests.", strength: "Dependency vulnerability database", highlight: false },
+  { name: "NVIDIA OpenShell", layer: "Container layer", desc: "Kernel-level sandboxing. Controls what the agent can access at the OS level. Same YAML policy for all agents.", strength: "Agent-agnostic sandbox", highlight: false },
+  { name: "Aiglos", layer: "Agent runtime layer", desc: "Wraps the agent execution environment. Intercepts every MCP tool call, HTTP request, and subprocess before execution. Sees behavior, not just inputs.", strength: "Behavioral sequence detection", highlight: true },
+];
 
 export default function ComparePage() {
   useSeo({
     title: "Aiglos vs HiddenLayer, Snyk, OpenShell - AI Security Comparison | Aiglos",
-    description:
-      "Honest feature comparison: Aiglos vs HiddenLayer, Snyk mcp-scan, and NVIDIA OpenShell. Different architectures, different layers, complementary but distinct.",
+    description: "Honest feature comparison: Aiglos vs HiddenLayer, Snyk mcp-scan, and NVIDIA OpenShell. Different architectures, different layers, complementary but distinct.",
     ogTitle: "AI Security Tool Comparison | Aiglos",
   });
 
-  const featureMatrix = [
-    {
-      feature: "What it protects",
-      aiglos: "Agents (runtime behavior)",
-      hiddenlayer: "Models (pre-deployment + inference)",
-      snyk: "Dependencies (static scanning)",
-      openshell: "Containers (kernel-level sandbox)",
-    },
-    {
-      feature: "Interception surface",
-      aiglos: "MCP + HTTP + subprocess",
-      hiddenlayer: "API gateway + model inference",
-      snyk: "Package manifest only",
-      openshell: "Syscall + network boundary",
-    },
-    {
-      feature: "Multi-step attack detection",
-      aiglos: "23 campaign patterns across sessions",
-      hiddenlayer: "Cascading chains (single session)",
-      snyk: "None",
-      openshell: "None",
-    },
-    {
-      feature: "Signed audit artifact",
-      aiglos: "HMAC-SHA256 / RSA-2048 per session",
-      hiddenlayer: "Audit-ready logs (unsigned)",
-      snyk: "None",
-      openshell: "None",
-    },
-    {
-      feature: "Agent definition monitoring",
-      aiglos: "T36 monitors .cursorrules, AGENTS.md, claude.md, YAML configs",
-      hiddenlayer: "Not covered",
-      snyk: "Not covered",
-      openshell: "Not covered",
-    },
-    {
-      feature: "Persistent memory protection",
-      aiglos: "T79 guards Gigabrain, Chroma, Pinecone, Qdrant, mem0, Letta, Zep",
-      hiddenlayer: "Partial (RAG poisoning only)",
-      snyk: "None",
-      openshell: "None",
-    },
-    {
-      feature: "Self-improvement pipeline",
-      aiglos: "T82 monitors auto-fine-tuning, recursive self-mod",
-      hiddenlayer: "Not covered",
-      snyk: "None",
-      openshell: "None",
-    },
-    {
-      feature: "Coding agent integrations",
-      aiglos: "Claude Code, Cursor, Codex, Windsurf, Aider, smolagents, Cline, Augment, OpenClaw",
-      hiddenlayer: "0 (discovers vulns in Cursor/Windsurf, does not protect them)",
-      snyk: "CI/CD integration only",
-      openshell: "Claude Code, Codex, Cursor, OpenClaw, Windsurf, Aider, Continue, Cody",
-    },
-    {
-      feature: "Governance benchmark",
-      aiglos: "GOVBENCH: 5 dimensions, A-F grade, README badge",
-      hiddenlayer: "None",
-      snyk: "None",
-      openshell: "None",
-    },
-    {
-      feature: "NDAA Section 1513 compliance",
-      aiglos: "Automated attestation artifact per session",
-      hiddenlayer: "DoD contracts exist, no automated artifact",
-      snyk: "None",
-      openshell: "None",
-    },
-    {
-      feature: "Federated threat intelligence",
-      aiglos: "Differential privacy, collective intelligence across deployments",
-      hiddenlayer: "SAI team research (centralized)",
-      snyk: "Centralized vuln database",
-      openshell: "None",
-    },
-    {
-      feature: "Onboarding time",
-      aiglos: "30 seconds (pip install aiglos && aiglos launch)",
-      hiddenlayer: "Enterprise sales cycle (weeks to months)",
-      snyk: "Minutes (CLI install)",
-      openshell: "Minutes (container config)",
-    },
-    {
-      feature: "Pricing",
-      aiglos: "Free tier with full detection. Pro $49/dev/mo",
-      hiddenlayer: "Enterprise custom (~$500/mo minimum)",
-      snyk: "Free tier + paid plans",
-      openshell: "Open source",
-    },
-  ];
-
   return (
     <div>
-      {/* Hero */}
-      <section
-        style={{
-          padding: "120px 48px 80px",
-          maxWidth: "1200px",
-          margin: "0 auto",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "'DM Mono', monospace",
-            fontSize: "10px",
-            letterSpacing: "0.25em",
-            textTransform: "uppercase",
-            color: "#60a5fa",
-            marginBottom: "16px",
-          }}
-        >
-          Competitive landscape
-        </div>
+      <section className="pt-28 pb-20 px-12 max-w-[1200px] mx-auto">
+        <SectionLabel>Competitive landscape</SectionLabel>
         <h1
           data-testid="text-compare-title"
-          style={{
-            fontSize: "clamp(28px, 4vw, 48px)",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-            marginBottom: "16px",
-          }}
+          className="text-[clamp(28px,4vw,48px)] font-bold tracking-tight leading-[1.1] mb-4"
         >
           Different architectures.
           <br />
           Different layers.
         </h1>
-        <p
-          style={{
-            fontSize: "16px",
-            color: "rgba(255,255,255,0.6)",
-            lineHeight: 1.7,
-            maxWidth: "620px",
-            marginBottom: "48px",
-          }}
-        >
+        <p className="text-base text-pub-muted leading-[1.7] max-w-[620px] mb-12">
           HiddenLayer protects models. Snyk scans packages. OpenShell sandboxes containers. Aiglos
           protects agents at runtime. These products are complementary, not interchangeable. Here is what
           each one does, honestly.
         </p>
 
-        {/* Architecture Position Diagram */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: "1px",
-            background: "rgba(255,255,255,0.06)",
-            borderRadius: "8px",
-            overflow: "hidden",
-            marginBottom: "64px",
-          }}
-        >
-          {[
-            {
-              name: "HiddenLayer",
-              layer: "Model layer",
-              desc: "Scans model files before deployment. Detects adversarial inputs at inference time. Discovers shadow AI across cloud environments.",
-              funding: "$56M raised",
-              strength: "Model supply chain security",
-            },
-            {
-              name: "Snyk mcp-scan",
-              layer: "Package layer",
-              desc: "Static analysis of MCP server configurations. Identifies known-vulnerable dependencies in package manifests.",
-              funding: "Public (Snyk)",
-              strength: "Dependency vulnerability database",
-            },
-            {
-              name: "NVIDIA OpenShell",
-              layer: "Container layer",
-              desc: "Kernel-level sandboxing. Controls what the agent can access at the OS level. Same YAML policy for all agents.",
-              funding: "NVIDIA",
-              strength: "Agent-agnostic sandbox",
-            },
-            {
-              name: "Aiglos",
-              layer: "Agent runtime layer",
-              desc: "Wraps the agent execution environment. Intercepts every MCP tool call, HTTP request, and subprocess before execution. Sees behavior, not just inputs.",
-              funding: "Open source",
-              strength: "Behavioral sequence detection",
-              highlight: true,
-            },
-          ].map((p) => (
-            <div
-              key={p.name}
-              style={{
-                background: p.highlight ? "rgba(37,99,235,0.06)" : "#111116",
-                padding: "32px 24px",
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: "12px",
-                  color: p.highlight ? "#60a5fa" : "#fff",
-                  fontWeight: 600,
-                  marginBottom: "4px",
-                }}
-              >
+        <div className="grid grid-cols-4 pub-grid-4 gap-px bg-white/[0.06] rounded-lg overflow-hidden mb-16">
+          {competitors.map((p) => (
+            <div key={p.name} className={`p-8 ${p.highlight ? "bg-pub-blue/[0.06]" : "bg-pub-card"}`}>
+              <div className={`font-pub-mono text-xs font-semibold mb-1 ${p.highlight ? "text-pub-ice" : "text-white"}`}>
                 {p.name}
               </div>
-              <div
-                style={{
-                  fontFamily: "'DM Mono', monospace",
-                  fontSize: "10px",
-                  letterSpacing: "0.15em",
-                  textTransform: "uppercase",
-                  color: p.highlight ? "#60a5fa" : "rgba(255,255,255,0.35)",
-                  marginBottom: "16px",
-                }}
-              >
+              <div className={`font-pub-mono text-[10px] tracking-[0.15em] uppercase mb-4 ${p.highlight ? "text-pub-ice" : "text-pub-dim"}`}>
                 {p.layer}
               </div>
-              <div
-                style={{
-                  fontSize: "13px",
-                  color: "rgba(255,255,255,0.5)",
-                  lineHeight: 1.6,
-                  marginBottom: "16px",
-                }}
-              >
-                {p.desc}
-              </div>
-              <div
-                style={{
-                  fontSize: "11px",
-                  color: "rgba(255,255,255,0.25)",
-                }}
-              >
-                {p.strength}
-              </div>
+              <div className="text-[13px] text-white/50 leading-[1.6] mb-4">{p.desc}</div>
+              <div className="text-[11px] text-white/25">{p.strength}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Feature Matrix */}
-      <section
-        style={{
-          padding: "0 48px 80px",
-          maxWidth: "1200px",
-          margin: "0 auto",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "clamp(24px, 3vw, 36px)",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            marginBottom: "40px",
-          }}
-        >
+      <section className="pb-20 px-12 max-w-[1200px] mx-auto">
+        <h2 className="text-[clamp(24px,3vw,36px)] font-bold tracking-tight mb-10">
           Feature-by-feature comparison
         </h2>
 
-        <div
-          data-testid="table-compare"
-          style={{
-            width: "100%",
-            overflowX: "auto",
-          }}
-        >
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "13px",
-            }}
-          >
+        <div data-testid="table-compare" className="w-full overflow-x-auto">
+          <table className="w-full border-collapse text-[13px]">
             <thead>
               <tr>
-                {["Capability", "Aiglos", "HiddenLayer", "Snyk mcp-scan", "OpenShell"].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      style={{
-                        fontFamily: "'DM Mono', monospace",
-                        fontSize: "10px",
-                        letterSpacing: "0.15em",
-                        textTransform: "uppercase",
-                        color: "rgba(255,255,255,0.35)",
-                        padding: "12px 16px",
-                        textAlign: "left",
-                        borderBottom: "2px solid rgba(255,255,255,0.1)",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  )
-                )}
+                {["Capability", "Aiglos", "HiddenLayer", "Snyk mcp-scan", "OpenShell"].map((h) => (
+                  <th key={h} className="font-pub-mono text-[10px] tracking-[0.15em] uppercase text-pub-dim py-3 px-4 text-left border-b-2 border-white/10">
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {featureMatrix.map((row) => (
                 <tr key={row.feature}>
-                  <td
-                    style={{
-                      padding: "14px 16px",
-                      borderBottom: "1px solid rgba(255,255,255,0.06)",
-                      fontWeight: 500,
-                      color: "#fff",
-                      verticalAlign: "top",
-                      minWidth: "160px",
-                    }}
-                  >
-                    {row.feature}
-                  </td>
-                  <td
-                    style={{
-                      padding: "14px 16px",
-                      borderBottom: "1px solid rgba(255,255,255,0.06)",
-                      background: "rgba(37,99,235,0.04)",
-                      color: "#fff",
-                      verticalAlign: "top",
-                      minWidth: "200px",
-                    }}
-                  >
-                    {row.aiglos}
-                  </td>
-                  <td
-                    style={{
-                      padding: "14px 16px",
-                      borderBottom: "1px solid rgba(255,255,255,0.06)",
-                      color: "rgba(255,255,255,0.6)",
-                      verticalAlign: "top",
-                      minWidth: "200px",
-                    }}
-                  >
-                    {row.hiddenlayer}
-                  </td>
-                  <td
-                    style={{
-                      padding: "14px 16px",
-                      borderBottom: "1px solid rgba(255,255,255,0.06)",
-                      color: "rgba(255,255,255,0.6)",
-                      verticalAlign: "top",
-                      minWidth: "160px",
-                    }}
-                  >
-                    {row.snyk}
-                  </td>
-                  <td
-                    style={{
-                      padding: "14px 16px",
-                      borderBottom: "1px solid rgba(255,255,255,0.06)",
-                      color: "rgba(255,255,255,0.6)",
-                      verticalAlign: "top",
-                      minWidth: "160px",
-                    }}
-                  >
-                    {row.openshell}
-                  </td>
+                  <td className="py-3.5 px-4 border-b border-white/[0.06] font-medium text-white align-top min-w-[160px]">{row.feature}</td>
+                  <td className="py-3.5 px-4 border-b border-white/[0.06] bg-pub-blue/[0.04] text-white align-top min-w-[200px]">{row.aiglos}</td>
+                  <td className="py-3.5 px-4 border-b border-white/[0.06] text-white/60 align-top min-w-[200px]">{row.hiddenlayer}</td>
+                  <td className="py-3.5 px-4 border-b border-white/[0.06] text-white/60 align-top min-w-[160px]">{row.snyk}</td>
+                  <td className="py-3.5 px-4 border-b border-white/[0.06] text-white/60 align-top min-w-[160px]">{row.openshell}</td>
                 </tr>
               ))}
             </tbody>
@@ -371,63 +96,15 @@ export default function ComparePage() {
         </div>
       </section>
 
-      {/* Key Insight */}
-      <section
-        style={{
-          padding: "80px 48px",
-          maxWidth: "1100px",
-          margin: "0 auto",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: "clamp(24px, 3vw, 36px)",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            marginBottom: "24px",
-          }}
-        >
+      <section className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
+        <h2 className="text-[clamp(24px,3vw,36px)] font-bold tracking-tight mb-6">
           The architectural gap
         </h2>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "24px",
-          }}
-        >
-          <div
-            style={{
-              background: "#111116",
-              border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: "8px",
-              padding: "32px",
-            }}
-          >
-            <div
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: "10px",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.35)",
-                marginBottom: "16px",
-              }}
-            >
-              HiddenLayer sees
-            </div>
-            <ul
-              style={{
-                listStyle: "none",
-                padding: 0,
-                margin: 0,
-                fontSize: "13px",
-                color: "rgba(255,255,255,0.6)",
-                lineHeight: 2,
-              }}
-            >
+        <div className="grid grid-cols-2 pub-grid-2 gap-6">
+          <div className="bg-pub-card border border-pub rounded-lg p-8">
+            <div className="font-pub-mono text-[10px] tracking-[0.2em] uppercase text-pub-dim mb-4">HiddenLayer sees</div>
+            <ul className="list-none p-0 m-0 text-[13px] text-white/60 leading-[2]">
               <li>What goes into the model</li>
               <li>What comes out of the model</li>
               <li>Malware embedded in model files</li>
@@ -435,36 +112,9 @@ export default function ComparePage() {
             </ul>
           </div>
 
-          <div
-            style={{
-              background: "rgba(37,99,235,0.06)",
-              border: "1px solid rgba(37,99,235,0.2)",
-              borderRadius: "8px",
-              padding: "32px",
-            }}
-          >
-            <div
-              style={{
-                fontFamily: "'DM Mono', monospace",
-                fontSize: "10px",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: "#60a5fa",
-                marginBottom: "16px",
-              }}
-            >
-              Aiglos sees
-            </div>
-            <ul
-              style={{
-                listStyle: "none",
-                padding: 0,
-                margin: 0,
-                fontSize: "13px",
-                color: "rgba(255,255,255,0.8)",
-                lineHeight: 2,
-              }}
-            >
+          <div className="bg-pub-blue/[0.06] border border-pub-blue/20 rounded-lg p-8">
+            <div className="font-pub-mono text-[10px] tracking-[0.2em] uppercase text-pub-ice mb-4">Aiglos sees</div>
+            <ul className="list-none p-0 m-0 text-[13px] text-white/80 leading-[2]">
               <li>Every tool call the agent makes</li>
               <li>Every HTTP request it sends</li>
               <li>Every subprocess it spawns</li>
@@ -476,15 +126,7 @@ export default function ComparePage() {
           </div>
         </div>
 
-        <p
-          style={{
-            marginTop: "32px",
-            fontSize: "14px",
-            color: "rgba(255,255,255,0.5)",
-            lineHeight: 1.7,
-            maxWidth: "680px",
-          }}
-        >
+        <p className="mt-8 text-sm text-white/50 leading-[1.7] max-w-[680px]">
           HiddenLayer operates between the application and the model. Aiglos wraps the agent itself. This
           means Aiglos sees attacks that never touch the model layer: agent definition file tampering,
           memory poisoning across sessions, self-improvement pipeline exploitation, and multi-step
