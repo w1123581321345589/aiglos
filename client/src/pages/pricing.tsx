@@ -2,6 +2,7 @@ import { useSeo } from "@/hooks/use-seo";
 import { Link } from "wouter";
 import SectionLabel from "@/components/public/section-label";
 import RevealSection from "@/components/public/reveal-section";
+import Heading from "@/components/public/heading";
 
 const tiers = [
   {
@@ -108,12 +109,9 @@ export default function PricingPage() {
     <div>
       <section className="pt-28 pb-10 px-12 max-w-[1200px] mx-auto text-center">
         <SectionLabel>Pricing</SectionLabel>
-        <h1
-          data-testid="text-pricing-title"
-          className="text-[clamp(28px,4vw,48px)] font-bold tracking-tight leading-[1.1] mb-4"
-        >
+        <Heading as="h1" data-testid="text-pricing-title" className="mb-4">
           Free to detect. Pro to prove.
-        </h1>
+        </Heading>
         <p className="text-base text-pub-muted leading-[1.7] max-w-[560px] mx-auto mb-12">
           The free tier runs the full detection engine. Pro adds the federation intelligence and the signed
           compliance artifact -- the document that turns a security tool into a regulatory submission.
@@ -168,9 +166,7 @@ export default function PricingPage() {
       </section>
 
       <RevealSection className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
-        <h2 className="text-[clamp(24px,3vw,36px)] font-bold tracking-tight mb-6">
-          The conversion happens automatically.
-        </h2>
+        <Heading className="mb-6">The conversion happens automatically.</Heading>
 
         <div className="grid grid-cols-3 pub-grid-3 gap-px bg-white/[0.06] rounded-lg overflow-hidden mb-8">
           {[

@@ -1,6 +1,8 @@
 import { useSeo } from "@/hooks/use-seo";
 import SectionLabel from "@/components/public/section-label";
 import RevealSection from "@/components/public/reveal-section";
+import Heading from "@/components/public/heading";
+import ComparisonTable from "@/components/public/comparison-table";
 
 const featureMatrix = [
   { feature: "What it protects", aiglos: "Agents (runtime behavior)", hiddenlayer: "Models (pre-deployment + inference)", snyk: "Dependencies (static scanning)", openshell: "Containers (kernel-level sandbox)" },
@@ -36,14 +38,11 @@ export default function ComparePage() {
     <div>
       <section className="pt-28 pb-20 px-12 max-w-[1200px] mx-auto">
         <SectionLabel>Competitive landscape</SectionLabel>
-        <h1
-          data-testid="text-compare-title"
-          className="text-[clamp(28px,4vw,48px)] font-bold tracking-tight leading-[1.1] mb-4"
-        >
+        <Heading as="h1" data-testid="text-compare-title" className="mb-4">
           Different architectures.
           <br />
           Different layers.
-        </h1>
+        </Heading>
         <p className="text-base text-pub-muted leading-[1.7] max-w-[620px] mb-12">
           HiddenLayer protects models. Snyk scans packages. OpenShell sandboxes containers. Aiglos
           protects agents at runtime. These products are complementary, not interchangeable. Here is what
@@ -67,40 +66,25 @@ export default function ComparePage() {
       </section>
 
       <RevealSection className="pb-20 px-12 max-w-[1200px] mx-auto">
-        <h2 className="text-[clamp(24px,3vw,36px)] font-bold tracking-tight mb-10">
-          Feature-by-feature comparison
-        </h2>
+        <Heading className="mb-10">Feature-by-feature comparison</Heading>
 
-        <div data-testid="table-compare" className="w-full overflow-x-auto">
-          <table className="w-full border-collapse text-[13px]">
-            <thead>
-              <tr>
-                {["Capability", "Aiglos", "HiddenLayer", "Snyk mcp-scan", "OpenShell"].map((h) => (
-                  <th key={h} className="font-pub-mono text-[10px] tracking-[0.15em] uppercase text-pub-dim py-3 px-4 text-left border-b-2 border-white/10">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {featureMatrix.map((row) => (
-                <tr key={row.feature}>
-                  <td className="py-3.5 px-4 border-b border-white/[0.06] font-medium text-white align-top min-w-[160px]">{row.feature}</td>
-                  <td className="py-3.5 px-4 border-b border-white/[0.06] bg-pub-blue/[0.04] text-white align-top min-w-[200px]">{row.aiglos}</td>
-                  <td className="py-3.5 px-4 border-b border-white/[0.06] text-white/60 align-top min-w-[200px]">{row.hiddenlayer}</td>
-                  <td className="py-3.5 px-4 border-b border-white/[0.06] text-white/60 align-top min-w-[160px]">{row.snyk}</td>
-                  <td className="py-3.5 px-4 border-b border-white/[0.06] text-white/60 align-top min-w-[160px]">{row.openshell}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ComparisonTable
+          data-testid="table-compare"
+          columns={[
+            { key: "aiglos", label: "Aiglos", highlight: true },
+            { key: "hiddenlayer", label: "HiddenLayer" },
+            { key: "snyk", label: "Snyk mcp-scan" },
+            { key: "openshell", label: "OpenShell" },
+          ]}
+          rows={featureMatrix.map((row) => ({
+            label: row.feature,
+            values: { aiglos: row.aiglos, hiddenlayer: row.hiddenlayer, snyk: row.snyk, openshell: row.openshell },
+          }))}
+        />
       </RevealSection>
 
       <RevealSection className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
-        <h2 className="text-[clamp(24px,3vw,36px)] font-bold tracking-tight mb-6">
-          The architectural gap
-        </h2>
+        <Heading className="mb-6">The architectural gap</Heading>
 
         <div className="grid grid-cols-2 pub-grid-2 gap-6">
           <div className="bg-pub-card border border-pub rounded-lg p-8">

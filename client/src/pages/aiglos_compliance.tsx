@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSeo } from "@/hooks/use-seo";
+import RuleTag from "@/components/public/rule-tag";
 
 interface Capability {
   feature: string;
@@ -126,7 +127,7 @@ function ReqCard({ req, expanded, onToggle }: { req: Requirement; expanded: bool
               <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
                 <code className="text-[11px] text-pub-green font-pub-mono">{cap.feature}</code>
                 {cap.rules.map(r => (
-                  <span key={r} className="bg-pub-card border border-white/[0.08] text-pub-dim py-px px-1.5 rounded-sm text-[9px] tracking-[0.1em] font-pub-mono">{r}</span>
+                  <RuleTag key={r} rule={r} />
                 ))}
                 {cap.artifact_field && (
                   <span className="ml-auto text-[9px] text-neutral-700">

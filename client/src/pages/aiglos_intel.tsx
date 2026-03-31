@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSeo } from "@/hooks/use-seo";
+import RuleTag from "@/components/public/rule-tag";
 
 interface Incident {
   id: string;
@@ -97,14 +98,6 @@ function Badge({ label, className }: { label: string; className: string }) {
   return (
     <span className={`py-px px-[7px] rounded-[3px] text-[9px] tracking-[0.15em] font-semibold font-pub-mono border ${className}`}>
       {label}
-    </span>
-  );
-}
-
-function RuleTag({ rule }: { rule: string }) {
-  return (
-    <span className="bg-pub-card border border-white/[0.08] text-pub-dim py-px px-[7px] rounded-sm text-[9px] tracking-[0.1em] font-pub-mono">
-      {rule}
     </span>
   );
 }

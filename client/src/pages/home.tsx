@@ -4,6 +4,8 @@ import { useSeo } from "@/hooks/use-seo";
 import SectionLabel from "@/components/public/section-label";
 import CodeWindow from "@/components/public/code-window";
 import RevealSection from "@/components/public/reveal-section";
+import Heading from "@/components/public/heading";
+import RuleTag from "@/components/public/rule-tag";
 
 export default function HomePage() {
   const [copied, setCopied] = useState(false);
@@ -256,9 +258,7 @@ export default function HomePage() {
               <div className="text-[13px] text-pub-muted">{g.title}</div>
               <div className="flex gap-1.5">
                 {g.rules.split(" ").map((r) => (
-                  <span key={r} className="bg-pub-card border border-white/[0.08] text-pub-dim py-0.5 px-2 rounded-sm text-[10px] font-pub-mono tracking-[0.1em]">
-                    {r}
-                  </span>
+                  <RuleTag key={r} rule={r} />
                 ))}
               </div>
             </div>
