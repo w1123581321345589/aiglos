@@ -35,13 +35,13 @@ import { useTheme } from "@/components/theme-provider";
 import { useAuth } from "@/lib/auth";
 
 const monitoringItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Command Center", url: "/engine", icon: Cpu },
   { title: "Sessions", url: "/sessions", icon: Activity },
   { title: "Events", url: "/events", icon: AlertTriangle },
   { title: "Trust Registry", url: "/trust", icon: Server },
   { title: "Policies", url: "/policies", icon: ScrollText },
-  { title: "Compliance", url: "/compliance", icon: FileCheck },
+  { title: "Compliance", url: "/dashboard/compliance", icon: FileCheck },
 ];
 
 const adminItems = [

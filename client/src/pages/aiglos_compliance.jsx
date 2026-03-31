@@ -1,4 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+function useComplianceSeo() {
+  useEffect(() => {
+    document.title = "NDAA Section 1513 Compliance Mapping | Aiglos";
+    const setMeta = (name, content, attr = "name") => {
+      let el = document.querySelector(`meta[${attr}="${name}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute(attr, name); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+    };
+    setMeta("description", "NDAA Section 1513 FY2026 compliance mapping for AI/ML security. Workforce risks, supply chain, adversarial tampering, security monitoring. Status report due June 16, 2026.");
+    setMeta("og:title", "NDAA Section 1513 Compliance - Aiglos", "property");
+    setMeta("og:description", "Full coverage of NDAA Section 1513 requirements. Automated attestation artifacts for 80,000 defense contractors. C3PAO-ready evidence packages.", "property");
+  }, []);
+}
 
 // NDAA §1513 requirement → Aiglos capability mapping
 // Source: King & Spalding client alert, Government Contracts Legal Forum, WilmerHale
@@ -136,6 +150,7 @@ function ReqCard({ req, expanded, onToggle }) {
 }
 
 export default function AiglosCompliance() {
+  useComplianceSeo();
   const [expanded, setExpanded] = useState({ "1513-SC": true });
   const [showArtifact, setShowArtifact] = useState(false);
 
@@ -151,19 +166,13 @@ export default function AiglosCompliance() {
         background: "repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px)",
       }} />
 
-      {/* Header */}
+      {/* Status bar */}
       <div style={{
-        borderBottom: "1px solid #1a1a1a", padding: "14px 32px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: "rgba(8,8,8,0.96)", backdropFilter: "blur(8px)",
-        position: "sticky", top: 0, zIndex: 10,
+        borderBottom: "1px solid #1a1a1a", padding: "10px 32px",
+        display: "flex", alignItems: "center", justifyContent: "flex-end",
+        background: "rgba(8,8,8,0.96)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "15px", fontWeight: 600, color: "#fff" }}>▲ aiglos</span>
-          <span style={{ color: "#333", fontSize: "11px" }}>/</span>
-          <span style={{ color: "#888", fontSize: "11px", letterSpacing: "0.1em" }}>COMPLIANCE</span>
-        </div>
-        <div style={{ fontSize: "10px", color: "#555" }}>NDAA §1513 · FY2026 · Status report due June 16, 2026</div>
+        <div style={{ fontSize: "10px", color: "#555" }}>NDAA Section 1513 · FY2026 · Status report due June 16, 2026</div>
       </div>
 
       <div style={{ maxWidth: "860px", margin: "0 auto", padding: "40px 32px", position: "relative", zIndex: 1 }}>

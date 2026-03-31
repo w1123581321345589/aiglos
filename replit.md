@@ -83,32 +83,22 @@ The root `/` serves the landing page directly (no SPA, no login). Styled like cu
 - **Navigation**: Glass-morphism backdrop with rgba(9,9,11,0.85), blur(12px)
 - **Animations**: Fade-up on load with staggered delays
 
-### Route Table
-- `/`, `/landing`, `/aiglos` -- Landing page (hero with install badge, 233/247 breach window stat, code example, 6-feature grid, GHSA validation, competition comparison, ATLAS coverage, 3-tier pricing, v0.25.3/1,747 tests/81 threats throughout)
-- `/atlas`, `/ghsa`, `/superpowers`, `/benchmark` -- Also serve landing page (section routes)
-- `/docs` -- Documentation
-- `/pricing` -- Pricing tiers (Pro $39/dev/mo + Enterprise)
-- `/defense` -- Defense overview
-- `/demo` -- Interactive demo
-- `/coding-agents` -- Coding agents security
-- `/scan` -- Security scan
-- `/changelog` -- Release notes (v0.19 through v0.24)
-- `/intel` -- Security intelligence
-- `/skills` -- Skills overview
-- `/govbench-paper` -- GOVBENCH governance benchmark paper
-- `/nist-submission` -- NIST AI agent standards submission
-- `/playground` -- Interactive threat playground (5 attack scenarios, live event stream, GOVBENCH grading)
-- `/compare/clawkeeper`, `/compare/openshell` -- Competitive comparisons
-- `/tutorial-openclaw-hardening` -- OpenClaw hardening tutorial
-- `/tutorial-advanced` -- Advanced topics
-- `/tutorial-launch` -- aiglos launch side-by-side comparison tutorial
-- `/supernova-plan` -- Redirects 301 to `/landing`
-- `/tutorial-github-actions` -- Redirects 301 to `/landing`
+### Public Routes (React SPA, no auth required)
+- `/` -- Homepage (LiteLLM-incident-first hero, dual CTAs, architecture diagram, GHSA validation, feature grid)
+- `/scan` -- Dependency scanner (paste pip freeze, detect compromised packages)
+- `/govbench` -- Governance benchmark (5 dimensions, A-F grade)
+- `/intel` -- Threat intelligence feed (live incidents, PyPI monitoring, GHSA coverage)
+- `/compliance` -- NDAA Section 1513 compliance mapping (public)
+- `/compare` -- Feature matrix comparison (HiddenLayer, Snyk, OpenShell)
+- `/pricing` -- 4-tier pricing (Community $0, Pro $49, Teams $399, Enterprise custom)
+- `/reference` -- Complete Reference (82 rules, 23 campaigns, CLI, integrations)
 
-### Source of Truth
-- `client/public/landing.html` is the canonical landing page
-- Always sync to `aiglos.html` and `website/index.html` after edits
-- All subpages live in `client/public/*.html`
+### Dashboard Routes (authenticated)
+- `/dashboard`, `/sessions`, `/events`, `/trust`, `/policies`, `/dashboard/compliance`, `/engine`, `/audit`, `/retention`, `/alerts`, `/users`, `/reports`
+
+### Public Layout
+- `client/src/components/public-layout.tsx` -- Shared nav + footer for all public pages
+- `client/src/hooks/use-seo.ts` -- Dynamic SEO meta tag hook
 
 ## Key Files
 - `server/routes.ts` -- All route definitions (static pages, redirects, API)

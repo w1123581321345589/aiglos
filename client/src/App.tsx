@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,15 +23,31 @@ import Reports from "@/pages/reports";
 import EnginePage from "@/pages/engine";
 import { Skeleton } from "@/components/ui/skeleton";
 
-function Router() {
+import PublicLayout from "@/components/public-layout";
+import HomePage from "@/pages/home";
+import AiglosScan from "@/pages/aiglos_scan";
+import GovBench from "@/pages/aiglos_govbench";
+import AiglosIntel from "@/pages/aiglos_intel";
+import AiglosCompliance from "@/pages/aiglos_compliance";
+import ComparePage from "@/pages/compare";
+import PricingPage from "@/pages/pricing";
+import ReferencePage from "@/pages/reference";
+
+const PUBLIC_PATHS = ["/", "/scan", "/govbench", "/intel", "/compliance", "/compare", "/pricing", "/reference"];
+
+function isPublicPath(path: string) {
+  return PUBLIC_PATHS.includes(path);
+}
+
+function DashboardRouter() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
+      <Route path="/dashboard" component={Dashboard} />
       <Route path="/sessions" component={Sessions} />
       <Route path="/events" component={Events} />
       <Route path="/trust" component={TrustRegistry} />
       <Route path="/policies" component={Policies} />
-      <Route path="/compliance" component={Compliance} />
+      <Route path="/dashboard/compliance" component={Compliance} />
       <Route path="/engine" component={EnginePage} />
       <Route path="/audit" component={AuditLogs} />
       <Route path="/retention" component={Retention} />
@@ -76,12 +92,39 @@ function AuthenticatedApp() {
             <SidebarTrigger data-testid="button-sidebar-toggle" />
           </header>
           <main className="flex-1 overflow-auto">
-            <Router />
+            <DashboardRouter />
           </main>
         </div>
       </div>
     </SidebarProvider>
   );
+}
+
+function PublicPages() {
+  return (
+    <PublicLayout>
+      <Switch>
+        <Route path="/" component={HomePage} />
+        <Route path="/scan" component={AiglosScan} />
+        <Route path="/govbench" component={GovBench} />
+        <Route path="/intel" component={AiglosIntel} />
+        <Route path="/compliance" component={AiglosCompliance} />
+        <Route path="/compare" component={ComparePage} />
+        <Route path="/pricing" component={PricingPage} />
+        <Route path="/reference" component={ReferencePage} />
+      </Switch>
+    </PublicLayout>
+  );
+}
+
+function AppRouter() {
+  const [location] = useLocation();
+
+  if (isPublicPath(location)) {
+    return <PublicPages />;
+  }
+
+  return <AuthenticatedApp />;
 }
 
 function App() {
@@ -90,7 +133,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-            <AuthenticatedApp />
+            <AppRouter />
           </AuthProvider>
           <Toaster />
         </TooltipProvider>

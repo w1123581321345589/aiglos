@@ -1,5 +1,19 @@
 import { useState, useEffect } from "react";
 
+function useIntelSeo() {
+  useEffect(() => {
+    document.title = "Intel - AI Agent Threat Intelligence Feed | Aiglos";
+    const setMeta = (name, content, attr = "name") => {
+      let el = document.querySelector(`meta[${attr}="${name}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute(attr, name); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+    };
+    setMeta("description", "Live AI agent threat feed. PyPI release monitoring, GHSA advisory coverage, HF Spaces MCP scanner. Every incident mapped to T01-T82 taxonomy.");
+    setMeta("og:title", "Aiglos Intel - AI Agent Threat Intelligence", "property");
+    setMeta("og:description", "Live threat feed covering supply chain attacks, PyPI monitoring, GHSA advisories. 82 rules, 23 campaigns, 93% ATLAS coverage.", "property");
+  }, []);
+}
+
 // ── Static threat feed data (mirrors aiglos autoresearch module) ───────────────
 const INCIDENTS = [
   {
@@ -91,6 +105,7 @@ function Section({ title, count, color = "#555", children }) {
 }
 
 export default function AiglosIntel() {
+  useIntelSeo();
   const [activeTab, setActiveTab] = useState("incidents");
   const [tick, setTick] = useState(0);
 
@@ -118,24 +133,18 @@ export default function AiglosIntel() {
         background: "repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px)",
       }} />
 
-      {/* Header */}
+      {/* Status bar */}
       <div style={{
-        borderBottom: "1px solid #1a1a1a", padding: "14px 32px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: "rgba(8,8,8,0.96)", backdropFilter: "blur(8px)",
-        position: "sticky", top: 0, zIndex: 10,
+        borderBottom: "1px solid #1a1a1a", padding: "10px 32px",
+        display: "flex", alignItems: "center", justifyContent: "flex-end",
+        background: "rgba(8,8,8,0.96)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "15px", fontWeight: 600, color: "#fff" }}>▲ aiglos</span>
-          <span style={{ color: "#333", fontSize: "11px" }}>/</span>
-          <span style={{ color: "#888", fontSize: "11px", letterSpacing: "0.1em" }}>INTEL</span>
-        </div>
         <div style={{ display: "flex", gap: "20px", fontSize: "10px", alignItems: "center" }}>
           <span style={{ color: "#ef4444", display: "flex", alignItems: "center", gap: "5px" }}>
             <span style={{ width: "5px", height: "5px", background: "#ef4444", borderRadius: "50%", display: "inline-block", animation: "pulse 2s infinite" }} />
             LIVE
           </span>
-          <span style={{ color: "#333" }}>T01–T82 · {STATS.rules} rules · {STATS.campaigns} campaigns</span>
+          <span style={{ color: "#333" }}>T01-T82 · {STATS.rules} rules · {STATS.campaigns} campaigns</span>
         </div>
       </div>
 

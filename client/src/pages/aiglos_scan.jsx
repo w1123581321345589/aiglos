@@ -1,5 +1,19 @@
 import { useState, useEffect, useRef } from "react";
 
+function useScanSeo() {
+  useEffect(() => {
+    document.title = "Scan Dependencies - Check for Compromised Packages | Aiglos";
+    const setMeta = (name, content, attr = "name") => {
+      let el = document.querySelector(`meta[${attr}="${name}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute(attr, name); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+    };
+    setMeta("description", "Paste your pip freeze output to check for compromised packages. LiteLLM 1.82.8 supply chain attack detection. Free, instant, shareable results.");
+    setMeta("og:title", "Aiglos Scan - Check for Compromised Packages", "property");
+    setMeta("og:description", "Free dependency scanner. Detects LiteLLM supply chain attack and transitive exposure. 82 threat families.", "property");
+  }, []);
+}
+
 // ── Threat database (mirrors aiglos/cli/scan_deps.py) ──────────────────────
 const COMPROMISED = {
   "litellm": {
@@ -106,6 +120,7 @@ const EXAMPLES = {
 };
 
 export default function AiglosScan() {
+  useScanSeo();
   const [input, setInput] = useState("");
   const [result, setResult] = useState(null);
   const [scanning, setScanning] = useState(false);
@@ -176,27 +191,16 @@ export default function AiglosScan() {
         background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)",
       }} />
 
-      {/* Header */}
+      {/* Status bar */}
       <div style={{
         borderBottom: "1px solid #1e1e1e",
-        padding: "16px 32px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: "rgba(8,8,8,0.95)", backdropFilter: "blur(8px)",
-        position: "sticky", top: 0, zIndex: 10,
+        padding: "10px 32px",
+        display: "flex", alignItems: "center", justifyContent: "flex-end",
+        background: "rgba(8,8,8,0.95)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{
-            fontFamily: "'DM Mono', monospace", fontSize: "15px", fontWeight: 600,
-            letterSpacing: "0.05em", color: "#fff",
-          }}>
-            ▲ aiglos
-          </div>
-          <div style={{ color: "#444", fontSize: "11px" }}>/</div>
-          <div style={{ color: "#888", fontSize: "11px", letterSpacing: "0.1em" }}>SCAN</div>
-        </div>
         <div style={{ display: "flex", gap: "24px", fontSize: "11px", color: "#555" }}>
           <span style={{ color: "#ef4444", letterSpacing: "0.05em" }}>● LIVE</span>
-          <span>T01–T82 taxonomy</span>
+          <span>T01-T82 taxonomy</span>
           <span>LiteLLM 1.82.7/8 detected</span>
         </div>
       </div>
