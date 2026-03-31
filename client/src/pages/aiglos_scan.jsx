@@ -467,7 +467,7 @@ export default function AiglosScan() {
         </div>
 
         <div style={{ marginTop: "24px", textAlign: "center", fontSize: "10px", color: "#333", letterSpacing: "0.1em" }}>
-          aiglos.dev · MIT license · github.com/aiglos/aiglos
+          aiglos.dev · MIT license · github.com/w1123581321345589/aiglos
         </div>
       </div>
 

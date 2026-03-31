@@ -350,7 +350,7 @@ export default function AiglosIntel() {
           </div>
         </div>
         <div style={{ marginTop: "20px", textAlign: "center", fontSize: "9px", color: "#2a2a2a", letterSpacing: "0.1em" }}>
-          aiglos.dev · MIT · github.com/aiglos/aiglos
+          aiglos.dev · MIT · github.com/w1123581321345589/aiglos
         </div>
       </div>
 

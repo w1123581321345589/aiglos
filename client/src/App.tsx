@@ -36,7 +36,8 @@ import ReferencePage from "@/pages/reference";
 const PUBLIC_PATHS = ["/", "/scan", "/govbench", "/intel", "/compliance", "/compare", "/pricing", "/reference"];
 
 function isPublicPath(path: string) {
-  return PUBLIC_PATHS.includes(path);
+  const normalized = path.replace(/\/+$/, "") || "/";
+  return PUBLIC_PATHS.includes(normalized);
 }
 
 function DashboardRouter() {

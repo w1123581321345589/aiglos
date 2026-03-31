@@ -237,7 +237,7 @@ export default function ReferencePage() {
             marginBottom: "16px",
           }}
         >
-          Complete Reference - v0.25.3
+          Complete Reference - v0.25.11
         </div>
         <h1
           data-testid="text-reference-title"
@@ -369,7 +369,7 @@ export default function ReferencePage() {
             </p>
           </div>
 
-          <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px" }}>T67-T82: New Rules (v0.20.0-v0.25.8)</h3>
+          <h3 style={{ fontSize: "16px", fontWeight: 600, marginBottom: "16px" }}>T67-T82: New Rules (v0.20.0-v0.25.11)</h3>
           <RuleTable
             rules={[
               { id: "T67", name: "HEARTBEAT_SILENCE", score: "0.88", catches: "Overnight job suppression", source: "Power user architecture" },
@@ -771,7 +771,7 @@ declare_memory_backend(guard, backend="chroma", db_path="./chroma.db")
               ["v0.25.1", "1,636", "76", "20", "OpenShell agent-agnostic (9 agents)"],
               ["v0.25.2", "1,690", "77", "21", "declare_subagent(), hard_bans, AgentPhase"],
               ["v0.25.3", "1,747", "79", "21", "T78, T79, Gigabrain, aiglos launch"],
-              ["v0.25.8", "1,842", "82", "23", "T80-T82, REPO_TAKEOVER_CHAIN, METACOGNITIVE_POISON_CHAIN"],
+              ["v0.25.11", "1,830", "82", "23", "T80-T82, REPO_TAKEOVER_CHAIN, METACOGNITIVE_POISON_CHAIN"],
             ].map(([ver, tests, rules, campaigns, notes], i, arr) => (
               <div
                 key={ver}
@@ -794,7 +794,7 @@ declare_memory_backend(guard, backend="chroma", db_path="./chroma.db")
             ))}
           </div>
           <p style={{ marginTop: "16px", fontSize: "11px", color: "rgba(255,255,255,0.25)", fontFamily: "'DM Mono', monospace" }}>
-            Generated from v0.25.8 codebase. 1,842 tests passing. github.com/aiglos/aiglos
+            Generated from v0.25.11 codebase. 1,830 tests passing. github.com/w1123581321345589/aiglos
           </p>
         </Section>
       </div>

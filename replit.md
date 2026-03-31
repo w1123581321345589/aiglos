@@ -7,7 +7,7 @@ Aiglos is an AI agent security runtime (Python package) with a premium landing s
 The `aiglos/` directory contains the Python security runtime package covering threat families T01-T82 (82 total). 39 rules in engine, 23 campaign patterns, 17 known agents. 2,016+ tests passing.
 
 ### Package Structure
-- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.25.3. Exports ATLASCoverage, GHSAWatcher, OpenShell functions, NeMoClawSession, SubagentRegistry, DeclaredSubagent, SpawnCheckResult, declare_memory_backend, gigabrain_autodetect, MemoryBackendSession.
+- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.25.11. 158 exports. Exports ATLASCoverage, GHSAWatcher, OpenShell functions, NeMoClawSession, SubagentRegistry, DeclaredSubagent, SpawnCheckResult, declare_memory_backend, gigabrain_autodetect, MemoryBackendSession.
 - `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T77), lockdown policy, sandbox_context, allow_tool/tool_grants, nemoclaw_session(), declare_subagent(), declared_subagents(), subagent_registry()
 - `aiglos/integrations/subagent_registry.py` -- SubagentRegistry (declare, check_spawn, scope enforcement), DeclaredSubagent (allows_tool, allows_file, allows_host), SpawnCheckResult (DECLARED_IN_SCOPE/DECLARED_OUT_OF_SCOPE/UNDECLARED)
 - `aiglos/core/threat_engine_v2.py` -- T44-T81 threat rule library (38 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS wave + T76 NemoClaw + T77 OVERNIGHT_JOB_INJECTION + T78 HALLUCINATION_CASCADE + T79 PERSISTENT_MEMORY_INJECT + T80 UNCENSORED_MODEL_ROUTE + T81 PTH_FILE_INJECT)
@@ -54,8 +54,8 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `.github/workflows/aiglos-scan.yml` -- CI workflow (push/PR/nightly scan, deep mode, grade gating)
 - `aiglos_complete_reference_v0253.md` -- Complete technical/strategic reference (679 lines, architecture, all 22 campaigns, GHSA with reporter, 10 differentiation points)
 
-### Test Suites (1,747 tests)
-27+ test files covering all modules and integrations. Includes `tests/test_subagent_and_t77.py` (54 tests for SubagentRegistry, T77), `tests/test_atlas_and_t75.py` (72 tests for ATLAS coverage, T71-T75, Superpowers, GHSA aliases), `tests/test_openShell.py` (65 tests for OpenShell/NeMoClaw integration), `tests/test_launch_and_scaffold.py` (38 tests for launch wizard and scaffold), and `tests/test_t80_t81_scandeps.py` (43 tests for T80/T81 rules, REPO_TAKEOVER_CHAIN, scan_deps module).
+### Test Suites (1,830 tests)
+34 test files covering all modules and integrations. Includes `tests/test_subagent_and_t77.py` (54 tests for SubagentRegistry, T77), `tests/test_atlas_and_t75.py` (72 tests for ATLAS coverage, T71-T75, Superpowers, GHSA aliases), `tests/test_openShell.py` (65 tests for OpenShell/NeMoClaw integration), `tests/test_launch_and_scaffold.py` (38 tests for launch wizard and scaffold), and `tests/test_t80_t81_scandeps.py` (43 tests for T80/T81 rules, REPO_TAKEOVER_CHAIN, scan_deps module).
 
 ### Class Name Map (important for imports)
 - `ContextWriteResult` (NOT ContextGuardResult)

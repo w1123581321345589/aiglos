@@ -96,7 +96,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <a
-            href="https://github.com/aiglos/aiglos"
+            href="https://github.com/w1123581321345589/aiglos"
             target="_blank"
             rel="noopener noreferrer"
             data-testid="link-github"
