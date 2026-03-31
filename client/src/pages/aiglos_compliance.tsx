@@ -156,7 +156,7 @@ export default function AiglosCompliance() {
   const toggle = (id: string) => setExpanded(p => ({ ...p, [id]: !p[id] }));
 
   return (
-    <div className="min-h-screen bg-[#080808] font-pub-mono text-slate-200">
+    <div className="min-h-screen bg-[#080808] font-pub-sans text-slate-200">
       <div className="fixed inset-0 pointer-events-none bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,0,0,0.025)_2px,rgba(0,0,0,0.025)_4px)]" />
 
       <div className="border-b border-white/[0.06] py-2.5 px-8 flex items-center justify-end bg-[#080808]/95">

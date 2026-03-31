@@ -92,7 +92,7 @@ All public pages use Tailwind CSS with a unified `pub-*` design token system. No
 - **RevealSection**: `client/src/components/public/reveal-section.tsx` (fade-up on scroll into view)
 - **StatBlock**: `client/src/components/public/stat-block.tsx` (centered stat display)
 - **FeatureGrid**: `client/src/components/public/feature-grid.tsx` (grid of feature cards)
-- **Special fonts**: Intel and Compliance pages use `font-pub-mono` as primary (terminal aesthetic, intentional)
+- **Note**: Intel and Compliance pages use `font-pub-mono` on labels/code elements for terminal aesthetic; body text is `font-pub-sans` (consistent with all pages)
 
 ### Public Routes (React SPA, no auth required)
 - `/` -- Homepage (LiteLLM-incident-first hero, dual CTAs, architecture diagram, GHSA validation, feature grid)

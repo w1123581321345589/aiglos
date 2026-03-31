@@ -146,8 +146,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               { href: "/reference", label: "Reference" },
               { href: "/compare", label: "Compare" },
               { href: "/compliance", label: "Compliance" },
-              { href: "/docs.html", label: "Docs" },
-              { href: "/changelog.html", label: "Changelog" },
             ].map((link) => (
               <Link key={link.href} href={link.href}>
                 <div className="text-xs text-white/40 no-underline cursor-pointer hover:text-pub-muted transition-colors duration-150 py-1.5">
@@ -155,6 +153,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 </div>
               </Link>
             ))}
+            <a href="/docs.html" className="block text-xs text-white/40 no-underline hover:text-pub-muted transition-colors duration-150 py-1.5">Docs</a>
+            <a href="/changelog.html" className="block text-xs text-white/40 no-underline hover:text-pub-muted transition-colors duration-150 py-1.5">Changelog</a>
           </div>
           <div>
             <div className="font-pub-mono text-[10px] tracking-[0.2em] uppercase text-pub-dim mb-4">Company</div>
