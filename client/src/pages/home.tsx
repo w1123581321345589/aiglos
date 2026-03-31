@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useSeo } from "@/hooks/use-seo";
 import SectionLabel from "@/components/public/section-label";
 import CodeWindow from "@/components/public/code-window";
+import RevealSection from "@/components/public/reveal-section";
 
 export default function HomePage() {
   const [copied, setCopied] = useState(false);
@@ -107,7 +108,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="py-20 px-12 text-center border-t border-b border-pub">
+      <RevealSection className="py-20 px-12 text-center border-t border-b border-pub">
         <span
           data-testid="text-proof-number"
           className="font-pub-mono text-[clamp(48px,8vw,96px)] font-medium text-white leading-none block tracking-tight"
@@ -119,9 +120,9 @@ export default function HomePage() {
           <strong className="text-white">existed before the advisories were disclosed</strong>.
           The rules came first. Every time.
         </p>
-      </div>
+      </RevealSection>
 
-      <section className="py-20 px-12 max-w-[1100px] mx-auto">
+      <RevealSection className="py-20 px-12 max-w-[1100px] mx-auto">
         <SectionLabel>Architecture</SectionLabel>
         <h2
           data-testid="text-architecture-title"
@@ -162,9 +163,9 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
+      <RevealSection className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
         <SectionLabel>How it works</SectionLabel>
         <h2 className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight leading-[1.1] mb-4">
           One line. Nothing else changes.
@@ -188,9 +189,9 @@ export default function HomePage() {
             {"# Then it stops."}
           </span>
         </CodeWindow>
-      </section>
+      </RevealSection>
 
-      <section className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
+      <RevealSection className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
         <SectionLabel>Capabilities</SectionLabel>
         <h2 className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight leading-[1.1] mb-12">
           Built for the way agents actually work.
@@ -229,9 +230,9 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
+      <RevealSection className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
         <SectionLabel>Empirical validation</SectionLabel>
         <h2 className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight leading-[1.1] mb-4">
           Every published OpenClaw vulnerability.
@@ -263,9 +264,9 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
+      <RevealSection className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
         <SectionLabel>Get started</SectionLabel>
         <h2 className="text-[clamp(28px,4vw,44px)] font-bold tracking-tight leading-[1.1] mb-4">
           30 seconds to full coverage.
@@ -298,7 +299,7 @@ export default function HomePage() {
             </span>
           </Link>
         </div>
-      </section>
+      </RevealSection>
     </div>
   );
 }

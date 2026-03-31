@@ -110,18 +110,62 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
 
       <main className="pt-14">{children}</main>
 
-      <footer className="border-t border-pub py-10 px-12 flex justify-between items-center flex-wrap gap-4">
-        <span className="font-pub-mono text-[13px] text-pub-dim">aiglos</span>
-        <div className="flex gap-6">
-          {NAV_LINKS.map((link) => (
-            <Link key={link.href} href={link.href}>
-              <span className="text-xs text-pub-dim no-underline cursor-pointer hover:text-pub-muted transition-colors duration-150">
-                {link.label}
-              </span>
-            </Link>
-          ))}
+      <footer className="border-t border-pub py-14 px-12">
+        <div className="max-w-[1200px] mx-auto grid grid-cols-4 pub-grid-4 gap-8">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <svg width="16" height="19" viewBox="0 0 44 50" fill="none">
+                <polygon points="22,2 2,44 22,44" fill="white" />
+                <polygon points="22,2 42,44 22,44" fill="rgba(255,255,255,0.42)" />
+                <rect x="14" y="44" width="16" height="6" fill="white" />
+              </svg>
+              <span className="font-pub-mono text-[13px] font-medium text-white">aiglos</span>
+            </div>
+            <p className="text-xs text-pub-dim leading-[1.6] max-w-[200px]">
+              Runtime security for AI agents. Zero dependencies. Under 1ms.
+            </p>
+          </div>
+          <div>
+            <div className="font-pub-mono text-[10px] tracking-[0.2em] uppercase text-pub-dim mb-4">Product</div>
+            {[
+              { href: "/scan", label: "Scanner" },
+              { href: "/govbench", label: "GovBench" },
+              { href: "/intel", label: "Intel" },
+              { href: "/pricing", label: "Pricing" },
+            ].map((link) => (
+              <Link key={link.href} href={link.href}>
+                <div className="text-xs text-white/40 no-underline cursor-pointer hover:text-pub-muted transition-colors duration-150 py-1.5">
+                  {link.label}
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div>
+            <div className="font-pub-mono text-[10px] tracking-[0.2em] uppercase text-pub-dim mb-4">Resources</div>
+            {[
+              { href: "/reference", label: "Reference" },
+              { href: "/compare", label: "Compare" },
+              { href: "/compliance", label: "Compliance" },
+              { href: "/docs.html", label: "Docs" },
+              { href: "/changelog.html", label: "Changelog" },
+            ].map((link) => (
+              <Link key={link.href} href={link.href}>
+                <div className="text-xs text-white/40 no-underline cursor-pointer hover:text-pub-muted transition-colors duration-150 py-1.5">
+                  {link.label}
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div>
+            <div className="font-pub-mono text-[10px] tracking-[0.2em] uppercase text-pub-dim mb-4">Company</div>
+            <a href="https://github.com/w1123581321345589/aiglos" target="_blank" rel="noopener noreferrer" className="block text-xs text-white/40 no-underline hover:text-pub-muted transition-colors duration-150 py-1.5">GitHub</a>
+            <a href="https://pypi.org/project/aiglos/" target="_blank" rel="noopener noreferrer" className="block text-xs text-white/40 no-underline hover:text-pub-muted transition-colors duration-150 py-1.5">PyPI</a>
+            <div className="text-xs text-pub-ghost py-1.5">MIT License</div>
+          </div>
         </div>
-        <span className="text-xs text-pub-ghost">MIT License</span>
+        <div className="max-w-[1200px] mx-auto mt-10 pt-6 border-t border-pub text-[11px] text-pub-ghost">
+          &copy; {new Date().getFullYear()} Aiglos. Runtime security for autonomous AI agents.
+        </div>
       </footer>
     </div>
   );

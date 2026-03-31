@@ -1,5 +1,6 @@
 import { useSeo } from "@/hooks/use-seo";
 import SectionLabel from "@/components/public/section-label";
+import RevealSection from "@/components/public/reveal-section";
 
 const featureMatrix = [
   { feature: "What it protects", aiglos: "Agents (runtime behavior)", hiddenlayer: "Models (pre-deployment + inference)", snyk: "Dependencies (static scanning)", openshell: "Containers (kernel-level sandbox)" },
@@ -65,7 +66,7 @@ export default function ComparePage() {
         </div>
       </section>
 
-      <section className="pb-20 px-12 max-w-[1200px] mx-auto">
+      <RevealSection className="pb-20 px-12 max-w-[1200px] mx-auto">
         <h2 className="text-[clamp(24px,3vw,36px)] font-bold tracking-tight mb-10">
           Feature-by-feature comparison
         </h2>
@@ -94,9 +95,9 @@ export default function ComparePage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
+      <RevealSection className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
         <h2 className="text-[clamp(24px,3vw,36px)] font-bold tracking-tight mb-6">
           The architectural gap
         </h2>
@@ -134,7 +135,7 @@ export default function ComparePage() {
           autonomous agents with tool access, persistent memory, and self-improvement capabilities, these
           are the threat vectors that matter.
         </p>
-      </section>
+      </RevealSection>
     </div>
   );
 }

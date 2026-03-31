@@ -86,9 +86,13 @@ All public pages use Tailwind CSS with a unified `pub-*` design token system. No
 - **Shared Components**: `client/src/components/public/` directory
   - `code-window.tsx` -- Terminal-style code block with macOS dots
   - `section-label.tsx` -- Uppercase mono section labels
-- **Layout**: `client/src/components/public-layout.tsx` (glass-morphism nav + footer)
+- **Layout**: `client/src/components/public-layout.tsx` (glass-morphism nav + 4-column footer: Product/Resources/Company)
 - **SEO Hook**: `client/src/hooks/use-seo.ts` (dynamic title/description/OG tags)
-- **Special fonts**: Intel and Compliance pages use `font-pub-mono` as primary (terminal aesthetic)
+- **Reveal Hook**: `client/src/hooks/use-reveal.ts` (IntersectionObserver scroll-triggered animations)
+- **RevealSection**: `client/src/components/public/reveal-section.tsx` (fade-up on scroll into view)
+- **StatBlock**: `client/src/components/public/stat-block.tsx` (centered stat display)
+- **FeatureGrid**: `client/src/components/public/feature-grid.tsx` (grid of feature cards)
+- **Special fonts**: Intel and Compliance pages use `font-pub-mono` as primary (terminal aesthetic, intentional)
 
 ### Public Routes (React SPA, no auth required)
 - `/` -- Homepage (LiteLLM-incident-first hero, dual CTAs, architecture diagram, GHSA validation, feature grid)

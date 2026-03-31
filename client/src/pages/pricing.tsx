@@ -1,6 +1,7 @@
 import { useSeo } from "@/hooks/use-seo";
 import { Link } from "wouter";
 import SectionLabel from "@/components/public/section-label";
+import RevealSection from "@/components/public/reveal-section";
 
 const tiers = [
   {
@@ -166,7 +167,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
+      <RevealSection className="py-20 px-12 max-w-[1100px] mx-auto border-t border-pub">
         <h2 className="text-[clamp(24px,3vw,36px)] font-bold tracking-tight mb-6">
           The conversion happens automatically.
         </h2>
@@ -195,7 +196,7 @@ export default function PricingPage() {
             </span>
           </Link>
         </div>
-      </section>
+      </RevealSection>
     </div>
   );
 }
