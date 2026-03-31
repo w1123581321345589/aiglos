@@ -145,7 +145,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Aiglos Security Scan
-        uses: aiglos/aiglos/.github/actions/aiglos-scan@main
+        uses: w1123581321345589/aiglos/.github/actions/aiglos-scan@main
         with:
           grade-threshold: 'C'     # fail if grade drops below C
           post-pr-comment: 'true'
@@ -190,7 +190,7 @@ jobs:
     <div class="code-block">
       <div class="code-header"><span class="code-lang">YAML</span></div>
       <div class="code-body"><pre>- name: Aiglos Security Scan
-  uses: aiglos/aiglos/.github/actions/aiglos-scan@main
+  uses: w1123581321345589/aiglos/.github/actions/aiglos-scan@main
   with:
     # Minimum grade before workflow fails
     grade-threshold: 'C'
@@ -232,7 +232,7 @@ jobs:
 jobs:
   security-gate:
     steps:
-      - uses: aiglos/aiglos/.github/actions/aiglos-scan@main
+      - uses: w1123581321345589/aiglos/.github/actions/aiglos-scan@main
         id: aiglos
         with:
           grade-threshold: 'B'

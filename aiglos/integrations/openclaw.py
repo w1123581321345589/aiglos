@@ -85,7 +85,7 @@ T30  Supply chain: tool registration / __builtins__ override
 T34  Heartbeat-cycle persistence (agent modifying its own HEARTBEAT.md)
 T36  Memory poisoning (writes to SOUL.md, MEMORY.md, agent index files)
 
-Full T01–T39 library: https://github.com/aiglos/aiglos-cves
+Full T01–T39 library: https://github.com/w1123581321345589/aiglos
 """
 
 from __future__ import annotations

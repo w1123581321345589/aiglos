@@ -30,7 +30,7 @@ The coordination layer is worth protecting too.
 
 No ask. The integration is one line.
 
-github.com/aiglos/aiglos
+github.com/w1123581321345589/aiglos
 
 ---
 
@@ -39,4 +39,4 @@ github.com/aiglos/aiglos
 Hey — Game Studios is great. Two things Aiglos solves for 48-agent pipelines:
 1. declare_studio_pipeline() — one call, all 48 roles declared, T38 suppressed for legit spawns
 2. T78 HALLUCINATION_CASCADE fires when cross-agent confidence amplification builds up
-Both are free. github.com/aiglos/aiglos
+Both are free. github.com/w1123581321345589/aiglos
