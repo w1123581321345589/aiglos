@@ -22,7 +22,7 @@ T30 again (attacker republishes with stolen GitHub/PyPI token).
 You documented exactly the attack the taxonomy was built to catch.
 Worth knowing about — no ask.
 
-github.com/w1123581321345589/aiglos
+github.com/aiglos/aiglos
 
 ---
 
@@ -30,4 +30,4 @@ github.com/w1123581321345589/aiglos
 
 You found the LiteLLM breach. T81 PTH_FILE_INJECT in Aiglos fires the moment
 litellm_init.pth hits site-packages — before the first restart, before exfil.
-aiglos scan-deps checks if you're affected. github.com/w1123581321345589/aiglos
+aiglos scan-deps checks if you're affected. github.com/aiglos/aiglos

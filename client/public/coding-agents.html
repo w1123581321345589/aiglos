@@ -8,7 +8,7 @@
 <meta property="og:title" content="Aiglos — Coding Agent Security for Enterprise"/>
 <meta property="og:description" content="Your developers are running AI coding agents with root access to production codebases. Aiglos watches every subprocess call, every API request, every file write — before it executes."/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300;1,9..144,400&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; background: #0a0a0a; }
@@ -27,16 +27,16 @@ html { scroll-behavior: smooth; background: #0a0a0a; }
   --green: #00d97e;
   --amber: #f5a623;
   --blue:  #4f8ef7;
-  --disp:  'Inter', Georgia, serif;
-  --body:  'Inter', system-ui, sans-serif;
-  --mono:  'JetBrains Mono', ui-monospace, monospace;
+  --disp:  'Fraunces', Georgia, serif;
+  --body:  'Outfit', system-ui, sans-serif;
+  --mono:  'IBM Plex Mono', ui-monospace, monospace;
 }
 body {
   background: #0a0a0a;
   background: var(--bg);
   color: #eeeef0;
   color: var(--ink);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Outfit', system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -218,6 +218,11 @@ h2 .red { color: var(--red); font-style: italic; }
 .quote-text { font-size: 14px; color: var(--ink2); line-height: 1.7; margin-bottom: 16px; font-style: italic; }
 .quote-attr { font-family: var(--mono); font-size: 11px; color: var(--ink3); }
 
+/* PRICING NUDGE */
+.pricing-nudge { background: var(--s1); border-top: 1px solid var(--rule); padding: 80px 40px; text-align: center; }
+.pricing-nudge-inner { max-width: 560px; margin: 0 auto; }
+.pricing-nudge h2 { font-family: var(--disp); font-size: clamp(28px, 4vw, 40px); font-weight: 300; letter-spacing: -0.025em; margin-bottom: 14px; }
+.pricing-nudge p { font-size: 15px; color: var(--ink3); line-height: 1.72; margin-bottom: 32px; }
 .nudge-ctas { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
 
 /* FOOTER */
@@ -226,14 +231,6 @@ footer { border-top: 1px solid var(--rule); padding: 32px 40px; display: flex; a
 .footer-links { display: flex; gap: 24px; }
 .footer-links a { font-size: 13px; color: var(--ink3); transition: color .15s; }
 .footer-links a:hover { color: var(--ink2); }
-
-.compare-dropdown{position:relative;display:inline-block}
-.compare-dropdown>a{font-size:13.5px;color:var(--ink3);cursor:pointer;transition:color .15s}
-.compare-dropdown>a:hover{color:var(--ink2)}
-.compare-menu{display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:8px;background:var(--s2);border:1px solid var(--rule2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.4);min-width:180px;padding:6px;z-index:200}
-.compare-dropdown:hover .compare-menu{display:block}
-.compare-menu a{display:block;padding:8px 12px;font-size:13px;color:var(--ink3);border-radius:5px;transition:all .12s}
-.compare-menu a:hover{background:var(--s3);color:var(--ink)}
 
 @media (max-width: 700px) {
   nav { padding: 0 20px; }
@@ -256,14 +253,13 @@ footer { border-top: 1px solid var(--rule); padding: 32px 40px; display: flex; a
   </div>
   <div class="nav-links">
     <a href="../index.html">Home</a>
-    <a href="/skills">Skills</a>
     <a href="#how">How it works</a>
     <a href="#vulns">Vulnerabilities</a>
-    <div class="compare-dropdown"><a>Compare ▾</a><div class="compare-menu"><a href="/compare/clawkeeper">vs ClawKeeper</a><a href="/compare/openshell">vs OpenShell</a></div></div>
+    <a href="../website/pricing.html">Pricing</a>
   </div>
   <div style="display:flex;gap:10px;align-items:center;">
     <a href="https://github.com/w1123581321345589/aiglos" target="_blank"><button class="btn-nav-ghost">GitHub ↗</button></a>
-    <button class="btn-nav-red" onclick="window.location='https://docs.aiglos.dev'">Get started →</button>
+    <button class="btn-nav-red" onclick="window.location='../index.html#pricing'">Get started →</button>
   </div>
 </nav>
 
@@ -288,7 +284,7 @@ footer { border-top: 1px solid var(--rule); padding: 32px 40px; display: flex; a
   </p>
 
   <div class="hero-ctas">
-    <button class="btn-hero" onclick="window.location='https://docs.aiglos.dev'">Get started →</button>
+    <button class="btn-hero" onclick="window.location='../index.html#pricing'">Deploy for your team →</button>
     <a href="https://github.com/w1123581321345589/aiglos" target="_blank">
       <button class="btn-ghost-hero">View on GitHub ↗</button>
     </a>
@@ -544,7 +540,7 @@ footer { border-top: 1px solid var(--rule); padding: 32px 40px; display: flex; a
   </table>
 
   <p style="margin-top:16px;font-size:13px;color:var(--ink3);">
-    Full CVE registry: <a href="https://github.com/w1123581321345589/aiglos" style="color:var(--blue);">github.com/w1123581321345589/aiglos-cves ↗</a>
+    Full CVE registry: <a href="https://github.com/w1123581321345589/aiglos" style="color:var(--blue);">github.com/aiglos/aiglos-cves ↗</a>
   </p>
 </section>
 
@@ -564,12 +560,32 @@ footer { border-top: 1px solid var(--rule); padding: 32px 40px; display: flex; a
 </div>
 
 
+<!-- PRICING NUDGE -->
+<div class="pricing-nudge">
+  <div class="pricing-nudge-inner">
+    <h2>Free for individual developers.<br/><em>Built for teams.</em></h2>
+    <p>
+      The open-source MIT tier includes the full T01–T39 detection stack and subprocess
+      monitoring. Pro adds cloud dashboard, signed session artifacts, and HTTP interception
+      on by default. Defense &amp; Government adds on-prem deployment and NDAA §1513 artifacts.
+    </p>
+    <div class="nudge-ctas">
+      <button class="btn-hero" onclick="window.location='../index.html#pricing'">See pricing →</button>
+      <a href="../website/defense.html">
+        <button class="btn-ghost-hero">Enterprise &amp; Defense →</button>
+      </a>
+    </div>
+  </div>
+</div>
+
+
 <footer>
-  <div class="footer-logo">aiglos v0.13.0</div>
+  <div class="footer-logo">aiglos v0.2.0</div>
   <div class="footer-links">
     <a href="../index.html">Home</a>
     <a href="https://github.com/w1123581321345589/aiglos" target="_blank">GitHub</a>
     <a href="../website/defense.html">Defense</a>
+    <a href="../index.html#pricing">Pricing</a>
   </div>
 </footer>
 

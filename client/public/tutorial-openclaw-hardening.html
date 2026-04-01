@@ -5,44 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tutorial: Harden OpenClaw — Aiglos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#000000;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--red:#f87171;--amber:#fbbf24;--gold:#b8860b}
-body{background:var(--bg);color:var(--hi);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
+:root{--bg:#09090b;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--red:#f87171;--amber:#fbbf24;--gold:#b8860b}
+body{background:var(--bg);color:var(--hi);font-family:'Plus Jakarta Sans',sans-serif;-webkit-font-smoothing:antialiased}
 nav{background:rgba(9,9,11,0.9);border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;position:sticky;top:0;z-index:100}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .nav-mark{width:18px;height:22px}
-.nav-name{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--hi)}
+.nav-name{font-family:'DM Mono',monospace;font-size:13px;color:var(--hi)}
 .layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 56px)}
 .sidebar{padding:32px 24px;border-right:1px solid var(--ln);position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
-.sidebar-section{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;margin-top:24px}
+.sidebar-section{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;margin-top:24px}
 .sidebar-section:first-child{margin-top:0}
 .sidebar-links{list-style:none}
 .sidebar-links a{font-size:13px;color:var(--dim);text-decoration:none;display:block;padding:4px 8px;border-radius:4px;transition:all .12s}
 .sidebar-links a:hover,.sidebar-links a.active{color:var(--hi);background:var(--bg2)}
 .sidebar-links a.active{color:var(--ice)}
 main{padding:56px 64px;max-width:800px}
-.breadcrumb{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-bottom:24px}
+.breadcrumb{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);margin-bottom:24px}
 .breadcrumb a{color:var(--ice);text-decoration:none}
 .meta{display:flex;gap:12px;margin-bottom:32px;flex-wrap:wrap}
-.meta-badge{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;padding:4px 10px;border-radius:100px;background:var(--bg2);border:1px solid var(--ln2);color:var(--dim)}
+.meta-badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;padding:4px 10px;border-radius:100px;background:var(--bg2);border:1px solid var(--ln2);color:var(--dim)}
 .meta-badge.intermediate{color:var(--amber);border-color:rgba(251,191,36,0.2);background:rgba(251,191,36,0.05)}
 h1{font-size:36px;font-weight:700;letter-spacing:-0.03em;line-height:1.1;margin-bottom:16px}
 .intro{font-size:16px;color:var(--mid);line-height:1.7;margin-bottom:36px}
 h2{font-size:19px;font-weight:600;letter-spacing:-0.02em;margin:36px 0 12px}
-h3{font-size:14px;font-weight:600;margin:20px 0 8px;color:var(--ice);font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;text-transform:uppercase;font-size:10px}
+h3{font-size:14px;font-weight:600;margin:20px 0 8px;color:var(--ice);font-family:'DM Mono',monospace;letter-spacing:0.04em;text-transform:uppercase;font-size:10px}
 p{font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:12px}
 p strong{color:var(--hi);font-weight:500}
-.code-block{background:#000000;border:1px solid var(--ln2);border-radius:6px;overflow:hidden;margin:14px 0 20px}
+.code-block{background:#0d1117;border:1px solid var(--ln2);border-radius:6px;overflow:hidden;margin:14px 0 20px}
 .code-header{background:#161b22;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ln)}
-.code-lang{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
+.code-lang{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim)}
 .code-body{padding:20px;overflow-x:auto}
-.code-body pre{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:#e6edf3}
+.code-body pre{font-family:'DM Mono',monospace;font-size:13px;line-height:1.7;color:#e6edf3}
 .check-table{width:100%;border-collapse:collapse;font-size:13px;margin:16px 0 24px}
-.check-table th{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim);padding:8px 12px;text-align:left;border-bottom:1px solid var(--ln2)}
+.check-table th{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim);padding:8px 12px;text-align:left;border-bottom:1px solid var(--ln2)}
 .check-table td{padding:10px 12px;border-bottom:1px solid var(--ln);color:var(--mid);font-size:12px;vertical-align:top}
-.check-table td:first-child{font-family:'JetBrains Mono',monospace;color:var(--ice)}
+.check-table td:first-child{font-family:'DM Mono',monospace;color:var(--ice)}
 .pass{color:var(--green)}.fail{color:var(--red)}.warn{color:var(--amber)}
 .callout{background:var(--bg2);border-left:3px solid var(--gold);padding:14px 18px;border-radius:0 6px 6px 0;margin:16px 0;font-size:13px;color:var(--mid);line-height:1.65}
 .callout strong{color:var(--hi)}
@@ -89,7 +89,7 @@ p strong{color:var(--hi);font-weight:500}
       <span class="meta-badge">OpenClaw · Security</span>
     </div>
     <h1>Harden OpenClaw with Aiglos</h1>
-    <p class="intro">The <code style="font-family:'JetBrains Mono',monospace;font-size:13px">aiglos audit --hardening-check</code> command compares your running OpenClaw configuration against the official hardened baseline from docs.openclaw.ai. This tutorial walks through every check, what it means, and how to fix it.</p>
+    <p class="intro">The <code style="font-family:'DM Mono',monospace;font-size:13px">aiglos audit --hardening-check</code> command compares your running OpenClaw configuration against the official hardened baseline from docs.openclaw.ai. This tutorial walks through every check, what it means, and how to fix it.</p>
 
     <h2>Run the audit</h2>
     <div class="code-block">
@@ -125,7 +125,7 @@ aiglos audit --hardening-check --format json</pre></div>
     </table>
 
     <h2>The hardened baseline config</h2>
-    <p>Copy this directly into your <code style="font-family:'JetBrains Mono',monospace;font-size:12px">openclaw.json</code>. It passes all 12 hardening checks:</p>
+    <p>Copy this directly into your <code style="font-family:'DM Mono',monospace;font-size:12px">openclaw.json</code>. It passes all 12 hardening checks:</p>
     <div class="code-block">
       <div class="code-header"><span class="code-lang">JSON — openclaw.json</span></div>
       <div class="code-body"><pre>{
@@ -163,7 +163,7 @@ aiglos audit --hardening-check --format json</pre></div>
     </div>
 
     <div class="callout">
-      <strong>After applying the hardened config:</strong> run <code style="font-family:'JetBrains Mono',monospace;font-size:12px">aiglos baseline reset</code> to suppress behavioral anomaly alerts for the next 20 sessions while your agents re-establish their baseline under the new policy.
+      <strong>After applying the hardened config:</strong> run <code style="font-family:'DM Mono',monospace;font-size:12px">aiglos baseline reset</code> to suppress behavioral anomaly alerts for the next 20 sessions while your agents re-establish their baseline under the new policy.
     </div>
 
     <h2>After hardening: run a baseline reset</h2>

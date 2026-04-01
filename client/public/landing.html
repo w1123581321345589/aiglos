@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aiglos — Runtime Security for AI Agents</title>
-<meta name="description" content="The runtime security layer for AI agents. 82 threat families. One import. Under 1ms.">
+<meta name="description" content="The runtime security layer for AI agents. 75 threat families. One import. Under 1ms.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -246,7 +246,7 @@ footer{border-top:1px solid var(--ln);padding:40px 48px;
     <li><a href="/compare/clawkeeper">Compare</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="/docs">Docs</a></li>
-    <li><a href="https://github.com/w1123581321345589/aiglos">GitHub</a></li>
+    <li><a href="https://github.com/aiglos/aiglos">GitHub</a></li>
   </ul>
   <div class="nav-cta">
     <a href="/docs" class="btn-ghost">Docs</a>
@@ -258,7 +258,7 @@ footer{border-top:1px solid var(--ln);padding:40px 48px;
 <section class="hero">
   <div class="hero-badge">
     <span class="hero-badge-dot"></span>
-    v0.25.8 — 82 threat families — 1,842 tests passing
+    v0.24.0 — 75 threat families — 1514 tests passing
   </div>
   <h1 class="fade-up">Runtime security for<br><span>AI agents.</span></h1>
   <p class="hero-sub fade-up delay-1">One import. Every tool call inspected before execution. Under 1ms. The security layer the OpenClaw ecosystem doesn't ship.</p>
@@ -266,19 +266,19 @@ footer{border-top:1px solid var(--ln);padding:40px 48px;
     <div class="hero-install">
       <div>
         <div class="hero-install-label">Install</div>
-        <code>pip install aiglos &amp;&amp; aiglos launch</code>
+        <code>pip install aiglos</code>
       </div>
-      <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install aiglos &amp;&amp; aiglos launch');this.textContent='Copied'">Copy</button>
+      <button class="copy-btn" onclick="navigator.clipboard.writeText('pip install aiglos');this.textContent='Copied'">Copy</button>
     </div>
-    <a href="https://github.com/w1123581321345589/aiglos" class="btn-ghost">GitHub →</a>
+    <a href="https://github.com/aiglos/aiglos" class="btn-ghost">GitHub →</a>
   </div>
   <div class="hero-stats fade-up delay-3">
     <div class="hero-stat">
-      <span class="hero-stat-n">79</span>
+      <span class="hero-stat-n">75</span>
       <span class="hero-stat-l">Threat families</span>
     </div>
     <div class="hero-stat">
-      <span class="hero-stat-n">21</span>
+      <span class="hero-stat-n">19</span>
       <span class="hero-stat-l">Campaign patterns</span>
     </div>
     <div class="hero-stat">
@@ -325,12 +325,12 @@ aiglos.<span class="tok-fn">attach</span>(
   </div>
   <div class="feature-grid">
     <div class="feature-cell">
-      <div class="feature-title">82 Threat Families</div>
-      <div class="feature-body">T01-T82 covering MCP tool calls, HTTP/API requests, subprocess execution, session data extraction, content wrapper escapes, environment hijacking, .pth supply chain persistence, uncensored model routing, self-improvement pipeline hijacking, and every attack class in the OpenClaw ATLAS threat model.</div>
+      <div class="feature-title">75 Threat Families</div>
+      <div class="feature-body">T01–T75 covering MCP tool calls, HTTP/API requests, subprocess execution, session data extraction, content wrapper escapes, environment hijacking, and every attack class in the OpenClaw ATLAS threat model.</div>
     </div>
     <div class="feature-cell">
       <div class="feature-title">Campaign Detection</div>
-      <div class="feature-body">23 multi-step attack patterns. A git log followed by a .env read followed by an outbound POST is a credential exfiltration campaign. Each call looks clean. The sequence is the attack. Aiglos sees sequences.</div>
+      <div class="feature-body">19 multi-step attack patterns. A git log followed by a .env read followed by an outbound POST is a credential exfiltration campaign. Each call looks clean. The sequence is the attack. Aiglos sees sequences.</div>
     </div>
     <div class="feature-cell">
       <div class="feature-title">Behavioral Baseline</div>
@@ -357,8 +357,8 @@ aiglos.<span class="tok-fn">attach</span>(
   <h2>Built for the way agents actually work.</h2>
   <div class="stat-row">
     <div class="stat-cell">
-      <span class="stat-n">79</span>
-      <span class="stat-l">Threat families T01–T79</span>
+      <span class="stat-n">75</span>
+      <span class="stat-l">Threat families T01–T75</span>
     </div>
     <div class="stat-cell">
       <span class="stat-n">93%</span>
@@ -369,7 +369,7 @@ aiglos.<span class="tok-fn">attach</span>(
       <span class="stat-l">Published GHSAs caught</span>
     </div>
     <div class="stat-cell">
-      <span class="stat-n">1,747</span>
+      <span class="stat-n">1514</span>
       <span class="stat-l">Tests passing</span>
     </div>
   </div>
@@ -434,7 +434,7 @@ aiglos.<span class="tok-fn">attach</span>(
 <section class="section" style="border-top:1px solid var(--ln)">
   <div class="section-kicker">OpenClaw ATLAS Threat Model</div>
   <h2>93% coverage of the platform's<br>own documented threat model.</h2>
-  <p class="section-sub">OpenClaw published a formal MITRE ATLAS threat model in February 2026. 22 threats across 8 tactic categories. Aiglos covers 19 fully, 3 partially, 0 gaps. v0.25.7 adds T82 Self-Improvement Hijack for DGM-Hyperagents architectures.</p>
+  <p class="section-sub">OpenClaw published a formal MITRE ATLAS threat model in February 2026. 22 threats across 8 tactic categories. Aiglos covers 19 fully, 3 partially, 0 gaps.</p>
   <div class="atlas-grid">
     <div class="atlas-cell"><div>
       <span class="atlas-id">T-EXEC-001 · T-EXEC-002</span>
@@ -472,7 +472,7 @@ aiglos.<span class="tok-fn">attach</span>(
       <div class="price-tier">Free</div>
       <div class="price-amount">$0</div>
       <ul class="price-features">
-        <li>Full T01–T79 detection</li>
+        <li>Full T01–T75 detection</li>
         <li>GitHub Actions CI integration</li>
         <li>A–F security grade</li>
         <li>GOVBENCH scoring</li>
@@ -520,8 +520,8 @@ aiglos.<span class="tok-fn">attach</span>(
     NDAA compliance: June 2026. EU AI Act: August 2026. The standard is being written. The company that defines the benchmark owns the category.
   </p>
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-    <a href="https://pypi.org/project/aiglos/" class="btn-primary" style="padding:12px 28px;font-size:12px">pip install aiglos &amp;&amp; aiglos launch</a>
-    <a href="https://github.com/w1123581321345589/aiglos" class="btn-ghost" style="padding:12px 28px;font-size:12px">View on GitHub →</a>
+    <a href="https://pypi.org/project/aiglos/" class="btn-primary" style="padding:12px 28px;font-size:12px">pip install aiglos</a>
+    <a href="https://github.com/aiglos/aiglos" class="btn-ghost" style="padding:12px 28px;font-size:12px">View on GitHub →</a>
   </div>
 </section>
 
@@ -531,7 +531,7 @@ aiglos.<span class="tok-fn">attach</span>(
     <a href="/intel">Intel</a>
     <a href="/compare/clawkeeper">Compare</a>
     <a href="/docs">Docs</a>
-    <a href="https://github.com/w1123581321345589/aiglos">GitHub</a>
+    <a href="https://github.com/aiglos/aiglos">GitHub</a>
   </div>
   <div class="footer-copy">© 2026 Aiglos · Runtime security for AI agents</div>
 </footer>

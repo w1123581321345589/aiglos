@@ -24,7 +24,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Plus } from "lucide-react";
+import { ScrollText, Plus, ShieldAlert } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { PolicyRule } from "@shared/schema";
@@ -90,7 +90,7 @@ export default function Policies() {
             Security Policies
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Rules for agent tool access and behavior
+            Define rules to control agent behavior and tool access
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -172,7 +172,7 @@ export default function Policies() {
 
       {isLoading ? (
         <div className="space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
+          {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-20 w-full" />
           ))}
         </div>
@@ -217,8 +217,12 @@ export default function Policies() {
         </div>
       ) : (
         <Card>
-          <CardContent className="py-14 text-center">
-            <p className="text-sm text-muted-foreground">No policy rules defined yet</p>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <ScrollText className="w-12 h-12 text-muted-foreground/30 mb-4" />
+            <p className="text-sm text-muted-foreground">No policy rules defined</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Create rules to control tool access and agent behavior
+            </p>
           </CardContent>
         </Card>
       )}

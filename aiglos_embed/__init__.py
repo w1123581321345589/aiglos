@@ -21,7 +21,7 @@ Four-tier deployment:
   3. On-prem container                  -- hours
   4. Program contract  (DoD/enterprise) -- weeks
 
-Full stack: https://aiglos.dev/docs
+Full stack: https://aiglos.io/docs
 """
 
 from __future__ import annotations
@@ -80,7 +80,7 @@ def _auto_register() -> None:
     if config.is_free_tier:
         print(
             f"[Aiglos] Running in free tier (up to {config.free_limit:,} tool calls/month). "
-            f"Set AIGLOS_KEY for cloud telemetry. aiglos.dev"
+            f"Set AIGLOS_KEY for cloud telemetry. aiglos.io"
         )
 
 

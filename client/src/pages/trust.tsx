@@ -76,6 +76,9 @@ export default function TrustRegistry() {
           <h2 className="text-xl font-semibold tracking-tight" data-testid="text-trust-title">
             Trust Registry
           </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage trusted and blocked MCP server connections
+          </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -254,9 +257,12 @@ export default function TrustRegistry() {
         </div>
       ) : (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-14">
-            <Server className="w-10 h-10 text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">No servers registered</p>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <Server className="w-12 h-12 text-muted-foreground/30 mb-4" />
+            <p className="text-sm text-muted-foreground">No servers in registry</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Add MCP servers to manage their trust status
+            </p>
           </CardContent>
         </Card>
       )}

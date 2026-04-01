@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aiglos vs ClawKeeper — Runtime vs Configuration</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#000000;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--red:#f87171}
-body{background:var(--bg);color:var(--hi);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
+:root{--bg:#09090b;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--red:#f87171}
+body{background:var(--bg);color:var(--hi);font-family:'Plus Jakarta Sans',sans-serif;-webkit-font-smoothing:antialiased}
 nav{background:rgba(9,9,11,0.9);border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;position:sticky;top:0;z-index:100}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .nav-mark{width:18px;height:22px}
-.nav-name{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--hi)}
+.nav-name{font-family:'DM Mono',monospace;font-size:13px;color:var(--hi)}
 .nav-links{display:flex;gap:24px;list-style:none}
 .nav-links a{font-size:13px;color:var(--dim);text-decoration:none}
 .nav-links a:hover{color:var(--hi)}
 main{max-width:960px;margin:0 auto;padding:80px 48px}
-.breadcrumb{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-bottom:32px}
+.breadcrumb{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);margin-bottom:32px}
 .breadcrumb a{color:var(--ice);text-decoration:none}
 h1{font-size:clamp(32px,5vw,56px);font-weight:700;letter-spacing:-0.03em;line-height:1.1;margin-bottom:20px}
 .subtitle{font-size:17px;color:var(--mid);line-height:1.65;max-width:560px;margin-bottom:56px}
@@ -29,7 +29,7 @@ h1{font-size:clamp(32px,5vw,56px);font-weight:700;letter-spacing:-0.03em;line-he
 .section{margin-bottom:56px}
 .section h2{font-size:22px;font-weight:700;letter-spacing:-0.02em;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--ln)}
 table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px}
-thead th{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim);padding:10px 16px;text-align:left;border-bottom:2px solid var(--ln2)}
+thead th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--dim);padding:10px 16px;text-align:left;border-bottom:2px solid var(--ln2)}
 thead th:first-child{padding-left:0}
 tbody td{padding:14px 16px;border-bottom:1px solid var(--ln);color:var(--mid);vertical-align:top}
 tbody td:first-child{padding-left:0;font-weight:500;color:var(--hi);white-space:nowrap}
@@ -37,10 +37,10 @@ tbody td:first-child{padding-left:0;font-weight:500;color:var(--hi);white-space:
 .no{color:var(--red)}
 .partial{color:#fbbf24}
 .highlight-row td{background:rgba(96,165,250,0.06)}
-.highlight-row td:first-child{color:var(--ice);font-family:'JetBrains Mono',monospace;font-size:12px}
+.highlight-row td:first-child{color:var(--ice);font-family:'DM Mono',monospace;font-size:12px}
 .callout{background:var(--bg2);border-left:3px solid var(--ice);padding:20px 24px;border-radius:0 6px 6px 0;margin:24px 0;font-size:14px;color:var(--mid);line-height:1.65}
 .callout strong{color:var(--hi)}
-.code-line{font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,255,255,0.05);padding:3px 8px;border-radius:3px;color:var(--ice)}
+.code-line{font-family:'DM Mono',monospace;font-size:12px;background:rgba(255,255,255,0.05);padding:3px 8px;border-radius:3px;color:var(--ice)}
 .integration-box{background:var(--bg2);border:1px solid var(--ln);border-radius:8px;padding:28px;margin-top:24px}
 .integration-title{font-size:15px;font-weight:600;margin-bottom:8px;color:var(--green)}
 .integration-body{font-size:13px;color:var(--mid);line-height:1.65}
@@ -122,7 +122,7 @@ footer a{color:var(--ice);text-decoration:none}
     <h2>Using both together</h2>
     <p style="font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:20px">Aiglos ingests ClawKeeper badge data from the Skills Hub and incorporates it into the SkillReputationGraph. A skill flagged as Critical by ClawKeeper automatically elevates Aiglos's detection sensitivity for agents using that skill.</p>
     <p style="font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:16px">Run a unified audit combining both:</p>
-    <div style="background:#000000;border-radius:6px;padding:20px 24px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#e6edf3;margin-bottom:20px">
+    <div style="background:#0d1117;border-radius:6px;padding:20px 24px;font-family:'DM Mono',monospace;font-size:13px;color:#e6edf3;margin-bottom:20px">
       <span style="color:#6e7681"># ClawKeeper host audit</span><br>
       clawkeeper audit --json &gt; host-audit.json<br><br>
       <span style="color:#6e7681"># Aiglos runtime + clawkeeper merge</span><br>

@@ -81,34 +81,11 @@ export default {
           busy: "rgb(239 68 68)",
           offline: "rgb(156 163 175)",
         },
-        pub: {
-          dark: "var(--pub-dark)",
-          card: "var(--pub-card)",
-          surface: "var(--pub-surface)",
-          blue: "var(--pub-blue)",
-          ice: "var(--pub-ice)",
-          green: "var(--pub-green)",
-          red: "var(--pub-red)",
-          orange: "var(--pub-orange)",
-          yellow: "var(--pub-yellow)",
-        },
-      },
-      borderColor: {
-        "pub": "var(--pub-border)",
-        "pub-strong": "var(--pub-border-strong)",
-      },
-      textColor: {
-        "pub": "var(--pub-text)",
-        "pub-muted": "var(--pub-text-muted)",
-        "pub-dim": "var(--pub-text-dim)",
-        "pub-ghost": "var(--pub-text-ghost)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
-        "pub-sans": ["var(--font-pub-sans)"],
-        "pub-mono": ["var(--font-pub-mono)"],
       },
       keyframes: {
         "accordion-down": {

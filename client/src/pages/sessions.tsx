@@ -3,9 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/severity-badge";
-import { IntegrityIndicator } from "@/components/integrity-indicator";
 import { Activity, Clock, Target, User } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import type { Session } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
@@ -16,18 +15,23 @@ export default function Sessions() {
 
   return (
     <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
-      <h2 className="text-xl font-semibold tracking-tight" data-testid="text-sessions-title">
-        Agent Sessions
-      </h2>
+      <div>
+        <h2 className="text-xl font-semibold tracking-tight" data-testid="text-sessions-title">
+          Agent Sessions
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Monitor and inspect AI agent sessions with integrity scoring
+        </p>
+      </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2, 3].map((i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
               <CardContent className="p-5">
                 <Skeleton className="h-6 w-40 mb-3" />
                 <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-3/4" />
               </CardContent>
             </Card>
           ))}
@@ -40,9 +44,12 @@ export default function Sessions() {
         </div>
       ) : (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Activity className="w-10 h-10 text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">No sessions recorded</p>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <Activity className="w-12 h-12 text-muted-foreground/30 mb-4" />
+            <p className="text-sm text-muted-foreground">No sessions recorded yet</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Sessions appear when AI agents connect through the proxy
+            </p>
           </CardContent>
         </Card>
       )}
@@ -51,7 +58,18 @@ export default function Sessions() {
 }
 
 function SessionCard({ session }: { session: Session }) {
-  const anomalyPct = Math.round(session.anomalyScore * 100);
+  const integrityPercent = Math.round(session.goalIntegrityScore * 100);
+  const anomalyPercent = Math.round(session.anomalyScore * 100);
+
+  let integrityColor = "text-emerald-500";
+  let integrityBg = "bg-emerald-500";
+  if (integrityPercent < 50) {
+    integrityColor = "text-red-500";
+    integrityBg = "bg-red-500";
+  } else if (integrityPercent < 75) {
+    integrityColor = "text-amber-500";
+    integrityBg = "bg-amber-500";
+  }
 
   return (
     <Card className="hover-elevate" data-testid={`card-session-${session.id}`}>
@@ -81,7 +99,17 @@ function SessionCard({ session }: { session: Session }) {
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">
               Goal Integrity
             </p>
-            <IntegrityIndicator score={session.goalIntegrityScore} />
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full transition-all", integrityBg)}
+                  style={{ width: `${integrityPercent}%` }}
+                />
+              </div>
+              <span className={cn("text-xs font-mono font-semibold", integrityColor)}>
+                {integrityPercent}%
+              </span>
+            </div>
           </div>
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">
@@ -92,16 +120,16 @@ function SessionCard({ session }: { session: Session }) {
                 <div
                   className={cn(
                     "h-full rounded-full transition-all",
-                    anomalyPct > 50 ? "bg-red-500" : anomalyPct > 25 ? "bg-amber-500" : "bg-emerald-500"
+                    anomalyPercent > 50 ? "bg-red-500" : anomalyPercent > 25 ? "bg-amber-500" : "bg-emerald-500"
                   )}
-                  style={{ width: `${Math.max(anomalyPct, 3)}%` }}
+                  style={{ width: `${Math.max(anomalyPercent, 3)}%` }}
                 />
               </div>
               <span className={cn(
                 "text-xs font-mono font-semibold",
-                anomalyPct > 50 ? "text-red-500" : anomalyPct > 25 ? "text-amber-500" : "text-emerald-500"
+                anomalyPercent > 50 ? "text-red-500" : anomalyPercent > 25 ? "text-amber-500" : "text-emerald-500"
               )}>
-                {anomalyPct}%
+                {anomalyPercent}%
               </span>
             </div>
           </div>

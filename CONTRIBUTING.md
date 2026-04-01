@@ -15,7 +15,7 @@ The detection engine is open. The CVE database is open. Contributions are welcom
 ## Setup
 
 ```bash
-git clone https://github.com/w1123581321345589/aiglos
+git clone https://github.com/aiglos/aiglos
 cd aiglos
 pip install -e ".[dev]"
 pytest tests/

@@ -3,12 +3,12 @@ aiglos.config
 Configuration loaded from environment variables.  Zero-file, zero-yaml.
 
 Required env vars (only one):
-  AIGLOS_KEY   -- API key from aiglos.dev.  If absent, runs in free-tier mode
+  AIGLOS_KEY   -- API key from aiglos.io.  If absent, runs in free-tier mode
                   (local-only scanning, no cloud telemetry, 10,000 call limit)
 
 Optional env vars:
   AIGLOS_MODE       -- "block" (default) | "warn" | "audit"
-  AIGLOS_ENDPOINT   -- cloud telemetry endpoint (default: https://api.aiglos.dev/v1)
+  AIGLOS_ENDPOINT   -- cloud telemetry endpoint (default: https://api.aiglos.io/v1)
   AIGLOS_LOG_LEVEL  -- "debug" | "info" (default) | "warning" | "error"
   AIGLOS_FREE_LIMIT -- free-tier call limit per month (default: 10000)
 """
@@ -25,7 +25,7 @@ class AiglosConfig:
     All fields have safe defaults so the library works with zero configuration.
     """
 
-    DEFAULT_ENDPOINT = "https://api.aiglos.dev/v1"
+    DEFAULT_ENDPOINT = "https://api.aiglos.io/v1"
     DEFAULT_FREE_LIMIT = 10_000
 
     def __init__(

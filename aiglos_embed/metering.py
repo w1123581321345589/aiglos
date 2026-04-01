@@ -63,7 +63,7 @@ class MeterClient:
     Thread-safe usage metering client with async support.
 
     Free-tier (no API key): counts locally, no network calls.
-    Paid-tier (API key set): batches events and sends to aiglos.dev/v1/events.
+    Paid-tier (API key set): batches events and sends to aiglos.io/v1/events.
     """
 
     def __init__(self, config: AiglosConfig | None = None):
@@ -89,7 +89,7 @@ class MeterClient:
                 if not self._free_tier_warned:
                     log.warning(
                         "[Aiglos] Free tier limit (%d tool calls/month) reached. "
-                        "Set AIGLOS_KEY to continue. Visit aiglos.dev to sign up.",
+                        "Set AIGLOS_KEY to continue. Visit aiglos.io to sign up.",
                         cfg.free_limit
                     )
                     self._free_tier_warned = True

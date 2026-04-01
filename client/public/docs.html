@@ -5,30 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Docs — Aiglos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 :root {
-  --bg: #000000;
-  --ink: #ededed;
-  --mid: rgba(255,255,255,0.5);
-  --dim: rgba(255,255,255,0.3);
-  --rule: rgba(255,255,255,0.06);
+  --bg: #fafaf9;
+  --ink: #0a0a0a;
+  --mid: #525252;
+  --dim: #a3a3a3;
+  --rule: #e5e5e5;
   --panel: #111111;
   --panel-border: #252525;
-  --green: #00d4aa;
-  --blue: #3b82f6;
+  --green: #16a34a;
+  --blue: #2563eb;
   --sidebar-w: 220px;
 }
-body { background: var(--bg); color: var(--ink); font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.65; }
+body { background: var(--bg); color: var(--ink); font-family: 'Geist', sans-serif; font-size: 15px; line-height: 1.65; }
 a { color: inherit; text-decoration: none; }
 
 nav {
   position: sticky; top: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 40px; height: 56px;
-  background: rgba(0,0,0,0.7); backdrop-filter: blur(12px);
+  background: rgba(250,250,249,0.94); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--rule);
 }
 .nav-logo { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
@@ -37,8 +37,8 @@ nav {
 .nav-links a:hover, .nav-links a.active { color: var(--ink); }
 .nav-right { display: flex; gap: 10px; align-items: center; }
 .btn-ghost { font-size: 13px; color: var(--mid); background: none; border: 1px solid var(--rule); padding: 6px 14px; border-radius: 6px; cursor: pointer; transition: all .15s; }
-.btn-ghost:hover { border-color: rgba(255,255,255,0.12); color: var(--ink); }
-.btn-dark { font-size: 13px; color: #ededed; background: var(--ink); border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+.btn-ghost:hover { border-color: #a3a3a3; color: var(--ink); }
+.btn-dark { font-size: 13px; color: #fff; background: var(--ink); border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
 .btn-dark:hover { opacity: .8; }
 
 /* Docs layout */
@@ -61,7 +61,7 @@ nav {
 }
 
 .sidebar-heading {
-  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  font-family: 'Geist Mono', monospace; font-size: 10px;
   letter-spacing: 0.12em; color: var(--dim); text-transform: uppercase;
   margin-bottom: 8px; padding: 0 12px;
 }
@@ -70,7 +70,7 @@ nav {
   display: block; padding: 6px 12px; font-size: 13px;
   color: var(--mid); border-radius: 5px; transition: all .12s;
 }
-.sidebar-link:hover { color: var(--ink); background: #0a0a0a; }
+.sidebar-link:hover { color: var(--ink); background: #f0f0ef; }
 .sidebar-link.active { color: var(--ink); background: #ebebea; font-weight: 500; }
 
 /* Content */
@@ -118,12 +118,12 @@ nav {
 }
 
 .code-lang {
-  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  font-family: 'Geist Mono', monospace; font-size: 10px;
   color: #555; letter-spacing: 0.08em;
 }
 
 .copy-code {
-  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  font-family: 'Geist Mono', monospace; font-size: 10px;
   color: #555; background: none; border: none; cursor: pointer;
   transition: color .15s; letter-spacing: 0.04em;
 }
@@ -131,7 +131,7 @@ nav {
 .copy-code.done { color: var(--green); }
 
 .code-block pre {
-  padding: 18px 20px; overflow-x: auto; font-family: 'JetBrains Mono', monospace;
+  padding: 18px 20px; overflow-x: auto; font-family: 'Geist Mono', monospace;
   font-size: 13px; line-height: 1.7; color: #e2e8f0;
 }
 
@@ -139,8 +139,8 @@ nav {
 
 /* Inline code */
 .docs-content :not(.code-block) code {
-  font-family: 'JetBrains Mono', monospace; font-size: 12px;
-  background: #0a0a0a; padding: 2px 6px; border-radius: 4px; color: var(--ink);
+  font-family: 'Geist Mono', monospace; font-size: 12px;
+  background: #f0f0ef; padding: 2px 6px; border-radius: 4px; color: var(--ink);
 }
 
 /* Callout */
@@ -149,7 +149,7 @@ nav {
   font-size: 13px; line-height: 1.6;
 }
 .callout.info  { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
-.callout.warn  { background: #000000beb; border: 1px solid #fde68a; color: #92400e; }
+.callout.warn  { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
 .callout.tip   { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
 
 /* Verdict table */
@@ -157,16 +157,16 @@ nav {
 .verdict-table th {
   text-align: left; padding: 10px 14px;
   background: #f5f5f4; border-bottom: 1px solid var(--rule);
-  font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-family: 'Geist Mono', monospace;
   text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); font-weight: 400;
 }
 .verdict-table td {
   padding: 11px 14px; border-bottom: 1px solid #f5f5f4; color: var(--mid);
 }
-.verdict-table td:first-child { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-.tag { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; font-family: 'JetBrains Mono', monospace; }
+.verdict-table td:first-child { font-family: 'Geist Mono', monospace; font-size: 12px; }
+.tag { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; font-family: 'Geist Mono', monospace; }
 .tag.clean { background: #f0fdf4; color: #166534; }
-.tag.warn  { background: #000000beb; color: #92400e; }
+.tag.warn  { background: #fffbeb; color: #92400e; }
 .tag.block { background: #fef2f2; color: #991b1b; }
 
 /* Footer */
@@ -186,13 +186,6 @@ footer {
 .cm { color: #5c6370; font-style: italic; }
 .nb { color: #e5c07b; }
 
-.compare-dropdown { position: relative; }
-.compare-dropdown > a { cursor: pointer; }
-.compare-menu { display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px; background: #000000; border: 1px solid var(--rule); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); min-width: 180px; padding: 6px; z-index: 200; }
-.compare-dropdown:hover .compare-menu { display: block; }
-.compare-menu a { display: block; padding: 8px 12px; font-size: 13px; color: var(--mid); border-radius: 5px; transition: all .12s; }
-.compare-menu a:hover { background: #f5f5f4; color: var(--ink); }
-
 @media (max-width: 768px) {
   nav { padding: 0 20px; }
   .nav-links { display: none; }
@@ -210,10 +203,7 @@ footer {
   <ul class="nav-links">
     <li><a href="/#how">Product</a></li>
     <li><a href="/threats.html">Threats</a></li>
-    <li><a href="/intel">Intel</a></li>
-    <li><a href="/skills">Skills</a></li>
     <li><a href="/pricing.html">Pricing</a></li>
-    <li class="compare-dropdown"><a>Compare ▾</a><div class="compare-menu"><a href="/compare/clawkeeper">vs ClawKeeper</a><a href="/compare/openshell">vs OpenShell</a></div></li>
     <li><a href="/docs.html" class="active">Docs</a></li>
   </ul>
   <div class="nav-right">
@@ -403,7 +393,7 @@ valid = aiglos.<span class="fn">verify</span>(artifact)
     <p>The free tier generates zero telemetry. Nothing is sent to any remote endpoint without an API key.</p>
 
     <h2 id="rule-families">Rule Families</h2>
-    <p>All 36 rule families are MIT licensed. <a href="https://github.com/w1123581321345589/aiglos-core">View source on GitHub →</a></p>
+    <p>All 36 rule families are MIT licensed. <a href="https://github.com/aiglos/aiglos-core">View source on GitHub →</a></p>
     <ul>
       <li><strong>T01–T06</strong> — Injection &amp; Exfiltration</li>
       <li><strong>T07–T12</strong> — Shell &amp; OS Abuse</li>
@@ -438,9 +428,9 @@ valid = aiglos.<span class="fn">verify</span>(artifact)
 <footer>
   <span>Aiglos</span>
   <ul class="footer-links">
-    <li><a href="https://github.com/w1123581321345589/aiglos">GitHub</a></li>
+    <li><a href="https://github.com/aiglos">GitHub</a></li>
     <li><a href="/threats.html">CVEs</a></li>
-
+    <li><a href="/pricing.html">Pricing</a></li>
     <li><a href="/changelog.html">Changelog</a></li>
     <li><a href="/defense.html">Defense</a></li>
     <li><a href="/cdn-cgi/l/email-protection#b2c1d3ded7c1f2d3dbd5deddc19cdbdd">Contact</a></li>

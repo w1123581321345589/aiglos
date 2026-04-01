@@ -1,17 +1,15 @@
-# Aiglos -- AI Agent Security Runtime
+# Aiglos Security Dashboard
 
 ## Overview
-Aiglos is an AI agent security runtime (Python package) with a premium landing site. The Python package (`aiglos/`) provides runtime security for AI agents with zero required dependencies (stdlib only). The web application serves the marketing/documentation site at `/` styled after cursor.com.
+Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provides real-time monitoring, event logging, trust management, policy configuration, CMMC compliance tracking, autonomous threat scanning, and full administrative capabilities for AI agents operating through MCP (Model Context Protocol) proxies.
 
-## Python Package (aiglos/ v0.25.11)
-The `aiglos/` directory contains the Python security runtime package covering threat families T01-T82 (82 total). 39 rules in engine, 23 campaign patterns, 17 known agents. 2,016+ tests passing.
+## Python Package (aiglos/ v0.24.0)
+The `aiglos/` directory contains the Python security runtime package covering threat families T01-T75 (75 total). 1,644 tests passing.
 
 ### Package Structure
-- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.25.11. 158 exports. Exports ATLASCoverage, GHSAWatcher, OpenShell functions, NeMoClawSession, SubagentRegistry, DeclaredSubagent, SpawnCheckResult, declare_memory_backend, gigabrain_autodetect, MemoryBackendSession.
-- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T77), lockdown policy, sandbox_context, allow_tool/tool_grants, nemoclaw_session(), declare_subagent(), declared_subagents(), subagent_registry()
-- `aiglos/integrations/subagent_registry.py` -- SubagentRegistry (declare, check_spawn, scope enforcement), DeclaredSubagent (allows_tool, allows_file, allows_host), SpawnCheckResult (DECLARED_IN_SCOPE/DECLARED_OUT_OF_SCOPE/UNDECLARED)
-- `aiglos/core/threat_engine_v2.py` -- T44-T81 threat rule library (38 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS wave + T76 NemoClaw + T77 OVERNIGHT_JOB_INJECTION + T78 HALLUCINATION_CASCADE + T79 PERSISTENT_MEMORY_INJECT + T80 UNCENSORED_MODEL_ROUTE + T81 PTH_FILE_INJECT)
-- `aiglos/cli/scan_deps.py` -- Dependency scanner for supply chain attacks (COMPROMISED_PACKAGES, MALICIOUS_PTH_FILES, TRANSITIVE_EXPOSURE, scan(), ScanResult, print_scan_report)
+- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.24.0. Exports ATLASCoverage, GHSAWatcher.
+- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T75), lockdown policy, sandbox_context, allow_tool/tool_grants
+- `aiglos/core/threat_engine_v2.py` -- T44-T75 threat rule library (32 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS wave)
 - `aiglos/core/behavioral_baseline.py` -- AgentBaseline, BaselineScore, set_hardening_mode, is_suppressed
 - `aiglos/autoresearch/atlas_coverage.py` -- ATLASCoverage, ATLAS_THREAT_MAP (22 threats, 93% coverage), coverage_report(), gap_analysis(), compliance_score()
 - `aiglos/autoresearch/ghsa_watcher.py` -- GHSAWatcher, KNOWN_ADVISORIES (3/3 covered), local_only param, check_local(), coverage_artifact()
@@ -28,14 +26,9 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/integrations/override.py` -- OverrideManager (6-char codes, 120s expiry, 3 attempts)
 - `aiglos/adaptive/source_reputation.py` -- SourceReputationGraph (cross-session source tracking, 4 risk levels)
 - `aiglos/adaptive/observation.py` -- ObservationGraph with source_records, honeypot_events, override_challenges, baseline_events tables
-- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (22 patterns including SANDBOX_CONFIRMED_ESCAPE, GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN, SUPERPOWERS_PLAN_HIJACK, NEMOCLAW_POLICY_HIJACK, GIGABRAIN_MEMORY_POISON, REPO_TAKEOVER_CHAIN)
-- `aiglos/integrations/gigabrain.py` -- Gigabrain/cross-session memory integration: declare_memory_backend, gigabrain_autodetect, MemoryBackendSession, is_registered_memory_path, GIGABRAIN_DEFAULT_PATHS, COMPATIBLE_BACKENDS
-- `aiglos/integrations/superpowers.py` -- SuperpowersSession, mark_as_superpowers_session, phase management, file/host scope checking, drift recording
-- `aiglos/integrations/openShell.py` -- OpenShell agent-agnostic integration: is_inside_openShell, openShell_context, openshell_detect, attach_openShell, attach_for_claude_code/codex/cursor/openclaw, KNOWN_AGENTS
-- `aiglos/integrations/nemoclaw.py` -- NeMoClawSession (YAML policy loader, policy_hash, allowed_hosts/denied_hosts/workspace/allowed_tools/denied_tools, check_host_scope, check_file_scope, record_event, artifact_data), mark_as_nemoclaw_session
+- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (18 patterns including SANDBOX_CONFIRMED_ESCAPE, GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN)
 - `aiglos/adaptive/permission_recommender.py` -- PermissionRecommender, PermissionRecommendation (minimum viable allowlist from observation graph)
 - `aiglos/adaptive/skill_reputation.py` -- SkillReputationGraph (ClawKeeper badge data, sync_security_feed)
-- `aiglos/adaptive/inspect.py` -- InspectRunner (18 triggers including PLAN_DRIFT_DETECTED)
 - `aiglos/benchmark/govbench.py` -- GovBench, GovBenchResult (5-dimension governance benchmark: campaign detection, agentdef resistance, memory belief, RL exploitation, outbound leakage)
 - `aiglos/audit/scanner.py` -- AuditScanner (5-phase, 50+ checks, A-F grade)
 - `aiglos/audit/report.py` -- AuditReporter (5 formats: summary, full, json, briefing, clawkeeper)
@@ -43,19 +36,15 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/skills/SKILL.md` -- Context Hub skill distribution for Claude Code
 - `aiglos/desktop/` -- Tauri desktop app (main.rs, App.jsx, aiglos_sidecar.py, install.sh)
 - `aiglos/cli.py` -- CLI: scan-message, scan-exposed, honeypot, override, reputation, audit (--ghsa, --atlas), skill, baseline, benchmark
-- `aiglos/cli/launch.py` -- `aiglos launch` wizard: 5-question interactive setup, generates .aiglos/ directory (soul.md, learnings.md, heartbeat.md, crons.md, tools.md, agents.md, config.py), wires T67/T79/lockdown/T38 automatically, runs GOVBENCH baseline. Supports --from for non-interactive mode.
-- `aiglos/cli/scaffold.py` -- `aiglos agents scaffold`: NL description to declare_subagent() config. 15 role-to-tools mappings, 8 model families, infers scope_files/hard_bans from description.
-- `aiglos/templates/` -- Reference templates for aiglos launch output (soul.md, learnings.md, heartbeat.md, crons.md, tools.md, agents.md, config.py, README.md)
 
 - `server/federation/` -- Federation server (FastAPI, aggregator, auth, Supabase store, Railway deploy)
 - `sdk/typescript/src/` -- TypeScript SDK (full parity: behavioral_baseline, policy_proposals, federation, security_surfaces, index)
-- `website/` -- Landing site source (index.html, plus subpages)
+- `website/` -- Landing site source (index.html, changelog.html, pricing.html) also served at /aiglos, /changelog, /pricing
 - `.github/actions/aiglos-scan/action.yml` -- Reusable GitHub Action for Aiglos security audit
 - `.github/workflows/aiglos-scan.yml` -- CI workflow (push/PR/nightly scan, deep mode, grade gating)
-- `aiglos_complete_reference_v0253.md` -- Complete technical/strategic reference (679 lines, architecture, all 22 campaigns, GHSA with reporter, 10 differentiation points)
 
-### Test Suites (1,830 tests)
-34 test files covering all modules and integrations. Includes `tests/test_subagent_and_t77.py` (54 tests for SubagentRegistry, T77), `tests/test_atlas_and_t75.py` (72 tests for ATLAS coverage, T71-T75, Superpowers, GHSA aliases), `tests/test_openShell.py` (65 tests for OpenShell/NeMoClaw integration), `tests/test_launch_and_scaffold.py` (38 tests for launch wizard and scaffold), and `tests/test_t80_t81_scandeps.py` (43 tests for T80/T81 rules, REPO_TAKEOVER_CHAIN, scan_deps module).
+### Test Suites (1644 tests)
+23 test files covering all modules and integrations. Includes `tests/test_atlas_and_t75.py` (51 tests for v0.24.0 ATLAS coverage and T71-T75).
 
 ### Class Name Map (important for imports)
 - `ContextWriteResult` (NOT ContextGuardResult)
@@ -67,57 +56,163 @@ The `aiglos/` directory contains the Python security runtime package covering th
 Pushed to `w1123581321345589/aiglos` on the `main` branch.
 
 ## Architecture
-- **Frontend**: React + TypeScript + Vite + Tailwind CSS + shadcn/ui (serves landing site)
-- **Backend**: Express.js + TypeScript (serves static pages + API)
+- **Frontend**: React + TypeScript + Vite + Tailwind CSS + shadcn/ui
+- **Backend**: Express.js + TypeScript
 - **Database**: PostgreSQL with Drizzle ORM
-- **Routing**: Express serves static HTML pages from `client/public/`
+- **Routing**: wouter (frontend), Express (backend API)
+- **State**: TanStack React Query
+- **Security**: Helmet, express-rate-limit, session-based auth, RBAC, API key auth for ingest
+- **Real-time**: WebSocket server for event streaming from Aiglos proxy
+- **Autonomous Engine**: In-process threat scanner (server/engine.ts), ported from aiglos_autonomous.py
 
-## Website (Landing Site)
-The root `/` serves the landing page directly (no SPA, no login). Styled like cursor.com with a premium dark theme.
+## Enterprise Features
+1. **Authentication & RBAC** - Session-based login with 3 roles (admin, analyst, viewer)
+2. **Proxy Integration** - WebSocket + HTTP ingest API for Aiglos Python runtime events (org-scoped broadcast)
+3. **Data Retention** - Configurable retention policies per resource type with scheduled enforcement (6h cycle) and manual purge
+4. **Audit Trail** - Logs all system mutations (who did what, when, from where)
+5. **Multi-tenancy** - Organization-scoped data isolation across all tables
+6. **API Security** - Rate limiting, helmet headers, API key validation, secure cookies
+7. **Report Export** - JSON and CSV exports for events, sessions, compliance, audit logs
+8. **Alerting** - Webhook/Slack/Splunk/SIEM/PagerDuty alert destination management
+9. **Autonomous Engine (Command Center)** - Always-on threat scanner with 5 hunt modules, 8 built-in threat patterns from NVD/OWASP/internal research, scheduler, and watchdog
 
-### Design System (Tailwind + pub-* tokens)
-All public pages use Tailwind CSS with a unified `pub-*` design token system. No inline styles on public pages (dynamic progress bar widths are the sole exception).
+## Autonomous Engine (server/engine.ts)
+Ported from `aiglos_autonomous.py`. Runs in-process as a TypeScript singleton.
 
-- **CSS Variables**: Defined in `client/src/index.css` under `--pub-*` prefix
-- **Tailwind Config**: `pub-*` color aliases + font families in `tailwind.config.ts`
-- **Colors**: `pub-dark` (#09090b), `pub-blue` (#2563eb), `pub-ice` (#60a5fa), `pub-green`, `pub-red`, `pub-orange`, `pub-muted`, `pub-dim`
-- **Fonts**: `font-pub-sans` (Plus Jakarta Sans body), `font-pub-mono` (DM Mono code)
-- **Animations**: `animate-fade-up`, `animate-pulse-slow`, `animate-spin-slow` (keyframes in index.css)
-- **Shared Components**: `client/src/components/public/` directory
-  - `code-window.tsx` -- Terminal-style code block with macOS dots
-  - `section-label.tsx` -- Uppercase mono section labels
-- **Layout**: `client/src/components/public-layout.tsx` (glass-morphism nav + 4-column footer: Product/Resources/Company)
-- **SEO Hook**: `client/src/hooks/use-seo.ts` (dynamic title/description/OG tags)
-- **Reveal Hook**: `client/src/hooks/use-reveal.ts` (IntersectionObserver scroll-triggered animations)
-- **RevealSection**: `client/src/components/public/reveal-section.tsx` (fade-up on scroll into view)
-- **StatBlock**: `client/src/components/public/stat-block.tsx` (centered stat display)
-- **FeatureGrid**: `client/src/components/public/feature-grid.tsx` (grid of feature cards)
-- **Note**: Intel and Compliance pages use `font-pub-mono` on labels/code elements for terminal aesthetic; body text is `font-pub-sans` (consistent with all pages)
+### 5 Hunt Modules
+- **Credential Scan** - Detects API keys, tokens, passwords in tool call logs
+- **Injection Hunt** - Finds prompt injection patterns (ignore-instructions, role-override, unicode steganography)
+- **Behavioral Trends** - Rising anomaly scores, goal drift patterns across sessions
+- **Policy Trends** - Repeated policy violations suggesting automated probing
+- **Server Exposure** - MCP servers bound to 0.0.0.0, missing manifest hashes
 
-### Public Routes (React SPA, no auth required)
-- `/` -- Homepage (LiteLLM-incident-first hero, dual CTAs, architecture diagram, GHSA validation, feature grid)
-- `/scan` -- Dependency scanner (paste pip freeze, detect compromised packages)
-- `/govbench` -- Governance benchmark (5 dimensions, A-F grade)
-- `/intel` -- Threat intelligence feed (live incidents, PyPI monitoring, GHSA coverage)
-- `/compliance` -- NDAA Section 1513 compliance mapping (public)
-- `/compare` -- Feature matrix comparison (HiddenLayer, Snyk, OpenShell)
-- `/pricing` -- 4-tier pricing (Community $0, Pro $49, Teams $399, Enterprise custom)
-- `/reference` -- Complete Reference (82 rules, 23 campaigns, CLI, integrations)
+### 8 Threat Intelligence Patterns
+- tp-001: MCP Tool Poisoning via Hidden System Prompt (internal)
+- tp-002: MCP Preference Manipulation Attack (internal)
+- tp-003: GitHub Copilot YOLO Mode RCE, CVE-2025-53773 (NVD)
+- tp-004: Cursor RCE via MCP Config Poisoning, CVE-2025-54135 (NVD)
+- tp-005: OWASP Agentic #1 Prompt Injection via Tool Response (OWASP)
+- tp-006: OWASP Agentic #2 Covert Exfiltration (OWASP)
+- tp-007: OAuth Token Harvest via Compromised MCP Server (internal)
+- tp-008: Unicode Steganography in Tool Arguments (internal)
 
-### Dashboard Routes (authenticated)
-- `/dashboard`, `/sessions`, `/events`, `/trust`, `/policies`, `/dashboard/compliance`, `/engine`, `/audit`, `/retention`, `/alerts`, `/users`, `/reports`
+On intel refresh, the engine auto-creates policy rules in the DB from these patterns.
 
-### Public Layout
-- `client/src/components/public-layout.tsx` -- Shared nav + footer for all public pages
-- `client/src/hooks/use-seo.ts` -- Dynamic SEO meta tag hook
+### Engine Lifecycle
+- Start: Creates singleton, runs initial scan + intel refresh, starts scheduled intervals
+- Scheduler: Scan every 5m, Intel every 1h (configurable)
+- Watchdog: Monitors for repeated scan failures (possible interference)
+- Stop: Clears all intervals, sets state to shutdown
+
+## Pages
+1. **Login** (`/`) - Authentication gate, redirects to dashboard after login
+2. **Dashboard** (`/`) - Security overview with metrics, recent events, active sessions
+3. **Command Center** (`/engine`) - Engine controls, threat level, findings, intel patterns, architecture
+4. **Sessions** (`/sessions`) - Agent session monitoring with integrity/anomaly scores
+5. **Events** (`/events`) - Security event log with severity/type filtering
+6. **Trust Registry** (`/trust`) - Manage trusted/blocked MCP servers
+7. **Policies** (`/policies`) - Security policy rules with toggle/create (includes auto-generated intel rules)
+8. **Compliance** (`/compliance`) - CMMC/NIST control coverage visualization
+9. **Users** (`/users`) - User management with role assignment (admin only)
+10. **Audit Trail** (`/audit`) - System activity log with resource type filtering (admin only)
+11. **Data Retention** (`/retention`) - Retention policy management with manual purge (admin only)
+12. **Alerting** (`/alerts`) - Alert destination configuration and testing (admin/analyst)
+13. **Reports** (`/reports`) - Report export, API key management, integration docs
+
+## Data Models
+- `organizations` - Multi-tenant organization entities
+- `users` - Auth users with roles and org membership
+- `sessions` - AI agent sessions with goal integrity and anomaly scores
+- `securityEvents` - Security events (goal drift, credential detection, policy violations, etc.)
+- `toolCalls` - MCP tool call audit log
+- `trustedServers` - MCP server trust registry
+- `policyRules` - Security policy rules (seed + auto-generated from threat intel)
+- `auditLogs` - System audit trail
+- `dataRetentionPolicies` - Data lifecycle configuration
+- `alertDestinations` - Alert delivery endpoints
+- `apiKeys` - Hashed API keys for ingest authentication
+
+## Theme
+- Dark-first cybersecurity theme with cyan primary (`hsl(199, 89%, 48%)`)
+- Inter font family, JetBrains Mono for code
+- Custom severity badge system (critical/high/medium/low/info)
+
+## API Routes
+All prefixed with `/api/`:
+
+### Auth
+- `POST /auth/login` - Authenticate with username/password
+- `POST /auth/logout` - End session
+- `GET /auth/me` - Get current user
+- `POST /auth/register` - Create user (admin only)
+
+### Monitoring
+- `GET /dashboard/stats` - Aggregate dashboard metrics
+- `GET /sessions` - List sessions (with `?active=true` filter)
+- `GET /events` - List events with `?severity=` and `?type=` filters
+- `GET/POST /trust` - Trust registry CRUD
+- `GET/POST /policies` - Policy rules CRUD
+- `GET /compliance` - CMMC compliance data
+
+### Engine (Command Center)
+- `GET /engine/status` - Engine state, threat level, task stats, schedule info
+- `POST /engine/start` - Start the autonomous engine (admin)
+- `POST /engine/stop` - Stop the engine (admin)
+- `POST /engine/scan` - Trigger one-shot threat hunt (admin/analyst)
+- `POST /engine/intel` - Trigger one-shot intel refresh (admin/analyst)
+- `GET /engine/findings` - Latest hunt findings
+- `GET /engine/patterns` - Built-in threat intelligence patterns
+
+### Administration
+- `GET /users` - List users (admin)
+- `PATCH /users/:id` - Update user role (admin)
+- `DELETE /users/:id` - Delete user (admin)
+- `GET /audit-logs` - Audit trail (admin)
+- `GET/POST /retention` - Data retention policies (admin)
+- `POST /retention/purge` - Manual data purge (admin)
+- `GET/POST /alerts` - Alert destinations (admin/analyst)
+- `POST /alerts/:id/test` - Test alert delivery (admin)
+- `GET/POST /api-keys` - API key management (admin)
+
+### Reports
+- `GET /reports/events` - Export events (JSON/CSV)
+- `GET /reports/sessions` - Export sessions (JSON/CSV)
+- `GET /reports/compliance` - Export compliance report
+- `GET /reports/audit` - Export audit trail (admin, JSON/CSV)
+
+### Ingest (API key required)
+- `POST /ingest/event` - Push security event from proxy
+- `POST /ingest/session` - Push session data from proxy
+- `WS /ws?apiKey=KEY` - WebSocket real-time event streaming
 
 ## Key Files
-- `server/routes.ts` -- All route definitions (static pages, redirects, API)
-- `shared/schema.ts` -- Data models and Zod schemas
-- `client/public/landing.html` -- Canonical landing page source
-- `aiglos/` -- Python package root
+- `server/engine.ts` - Autonomous engine (orchestrator, hunter, intel, scheduler, watchdog)
+- `aiglos_autonomous.py` - Original Python engine (reference)
+- `shared/schema.ts` - All data models and Zod schemas
+- `server/routes.ts` - All API routes
+- `server/storage.ts` - Database access layer
+- `server/middleware.ts` - Auth, RBAC, audit logging middleware
+- `client/src/pages/engine.tsx` - Command Center UI
 
-## User Preferences
-- No em dashes in code/content files
-- Zero required dependencies, stdlib only for the Python package
-- All pages must use consistent dark theme (#09090b bg, Plus Jakarta Sans font, blue/ice accent)
+## Website (Dark Theme)
+- **Design**: Dark theme (#09090b bg), Plus Jakarta Sans + DM Mono fonts, blue (#2563eb) accent
+- **Routes**: 12 static HTML pages served from `client/public/`
+  - `/landing` and `/aiglos` -- hero with live interceptor feed, ATLAS coverage grid, pricing
+  - `/intel` -- security intelligence feed
+  - `/compare/clawkeeper` and `/compare/openshell` -- competitive comparison pages
+  - `/changelog` -- v0.19 through v0.24 changelog
+  - `/govbench-paper` -- GOVBENCH governance benchmark paper
+  - `/nist-submission` -- NIST AI agent standards submission draft
+  - `/tutorial-github-actions` -- CI integration tutorial
+  - `/tutorial-openclaw-hardening` -- OpenClaw hardening tutorial
+  - `/tutorial-advanced` -- Advanced topics (lockdown policy, GOVBENCH, scan-exposed)
+  - `/docs` -- documentation
+  - `/pricing` -- pricing tiers (Pro $39/dev/mo + Enterprise)
+
+## Demo Credentials
+- admin / admin123 (full access)
+- analyst / analyst123 (monitoring + policies)
+- viewer / viewer123 (read-only)
+
+## GitHub Repository
+https://github.com/w1123581321345589/aiglos-dashboard

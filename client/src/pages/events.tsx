@@ -43,6 +43,9 @@ export default function Events() {
           <h2 className="text-xl font-semibold tracking-tight" data-testid="text-events-title">
             Security Events
           </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Real-time security event log with filtering and analysis
+          </p>
         </div>
       </div>
 
@@ -90,12 +93,9 @@ export default function Events() {
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-4 space-y-3">
-              <Skeleton className="h-14 w-full" />
-              <Skeleton className="h-14 w-full" />
-              <Skeleton className="h-14 w-full" />
-              <Skeleton className="h-14 w-full" />
-              <Skeleton className="h-14 w-full" />
-              <Skeleton className="h-14 w-[95%]" />
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))}
             </div>
           ) : events && events.length > 0 ? (
             <div className="divide-y divide-border/50">
@@ -105,9 +105,12 @@ export default function Events() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16">
-              <ShieldCheck className="w-10 h-10 text-muted-foreground/30 mb-3" />
+              <ShieldCheck className="w-12 h-12 text-muted-foreground/30 mb-4" />
               <p className="text-sm text-muted-foreground">
-                {hasFilters ? "No events match current filters" : "No events recorded"}
+                {hasFilters ? "No events match the current filters" : "No security events recorded"}
+              </p>
+              <p className="text-xs text-muted-foreground/60 mt-1">
+                {hasFilters ? "Try adjusting your filters" : "Events will appear when agents interact with MCP servers"}
               </p>
             </div>
           )}

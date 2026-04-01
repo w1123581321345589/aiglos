@@ -85,7 +85,7 @@ T30  Supply chain: tool registration / __builtins__ override
 T34  Heartbeat-cycle persistence (agent modifying its own HEARTBEAT.md)
 T36  Memory poisoning (writes to SOUL.md, MEMORY.md, agent index files)
 
-Full T01–T39 library: https://github.com/w1123581321345589/aiglos
+Full T01–T39 library: https://github.com/aiglos/aiglos-cves
 """
 
 from __future__ import annotations
@@ -95,8 +95,6 @@ import json
 import logging
 import os
 import re
-import re as _re
-import unicodedata as _ud
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -110,88 +108,6 @@ __version__ = "0.1.0"
 __all__ = ["OpenClawGuard", "GuardResult", "Verdict", "attach"]
 
 logger = logging.getLogger("aiglos.openclaw")
-
-
-# ── Shell command normalization ───────────────────────────────────────────────
-_ZSH_EQUALS_RE = _re.compile(r'^=([a-zA-Z])')
-
-_CONFUSABLE_CHARS = frozenset([
-    '\u200b', '\u200c', '\u200d', '\ufeff', '\u00ad', '\u2060', '\u180e',
-])
-
-ZSH_BLOCKED_BUILTINS = frozenset([
-    'zmodload', 'autoload', 'compinit', 'compdef', 'compctl',
-    'zle', 'zstyle', 'zparseopts', 'zformat', 'zftp',
-    'zregexparse', 'ztie', 'zuntie', 'zcurses',
-    'zgetattr', 'zsetattr', 'zlistattr', 'zdelattr',
-    'zsocket', 'zselect', 'zprof',
-    'enable', 'disable',
-])
-
-
-def normalize_shell_command(cmd: str) -> str:
-    """
-    Normalize a shell command string before T-rule evaluation.
-
-    Strips attack vectors identified in Claude Code bashSecurity.ts:
-      - Zsh equals expansion: =curl -> curl, =wget -> wget
-      - Unicode zero-width character injection
-      - Null byte injection (IFS manipulation)
-      - Leading/trailing whitespace normalization
-    """
-    if not cmd:
-        return cmd
-    cmd = cmd.replace('\x00', '').replace('\\x00', '')
-    cmd = ''.join(c for c in cmd if c not in _CONFUSABLE_CHARS)
-    cmd = ''.join(
-        c for c in cmd
-        if _ud.category(c) not in ('Cf', 'Cc') or c in ('\t', '\n', '\r')
-    )
-    cmd = _ZSH_EQUALS_RE.sub(r'\1', cmd.lstrip())
-    cmd = cmd.strip()
-    return cmd
-
-
-def extract_shell_tool_name(cmd: str) -> str:
-    """
-    Extract the primary tool name from a shell command for T-rule matching.
-    Returns the first token after normalization, resolving path-based
-    invocations to their basename.
-    """
-    normalized = normalize_shell_command(cmd)
-    if not normalized:
-        return cmd
-    first_token = normalized.split()[0] if normalized.split() else normalized
-    import os as _os
-    return _os.path.basename(first_token)
-
-
-# ── PermissionDenialEvent ─────────────────────────────────────────────────────
-
-@dataclass
-class PermissionDenialEvent:
-    """
-    Typed record of a BLOCK or WARN event.
-    Auto-collected by OpenClawGuard and persisted to ForensicStore.
-    """
-    tool_name:    str
-    threat_class: str
-    threat_name:  str
-    score:        float
-    verdict:      str
-    timestamp:    str
-    session_id:   str
-
-    def to_dict(self) -> dict:
-        return {
-            "tool_name":    self.tool_name,
-            "threat_class": self.threat_class,
-            "threat_name":  self.threat_name,
-            "score":        self.score,
-            "verdict":      self.verdict,
-            "timestamp":    self.timestamp,
-            "session_id":   self.session_id,
-        }
 
 
 # ─── Enums & constants ───────────────────────────────────────────────────────
@@ -1972,34 +1888,6 @@ class OpenClawGuard:
 
             except Exception as e:
                 logger.debug("[OpenClawGuard] Baseline scoring error: %s", e)
-
-        # ── ForensicStore auto-persistence ────────────────────────────────────
-        _permission_denials: list[PermissionDenialEvent] = []
-        for r in all_results:
-            if r.verdict in (Verdict.BLOCK, Verdict.WARN):
-                _permission_denials.append(PermissionDenialEvent(
-                    tool_name    = r.tool_name or "",
-                    threat_class = r.threat_class or "",
-                    threat_name  = r.threat_name or "",
-                    score        = r.score if r.score is not None else 0.0,
-                    verdict      = r.verdict.value,
-                    timestamp    = closed_at,
-                    session_id   = self.session_id,
-                ))
-
-        if _permission_denials:
-            try:
-                from aiglos.forensics import ForensicStore
-                fs = ForensicStore()
-                artifact_dict = artifact.to_dict() if hasattr(artifact, "to_dict") else {}
-                denial_dicts = [e.to_dict() for e in _permission_denials]
-                fs.persist(artifact_dict, denials=denial_dicts)
-                logger.info(
-                    "[ForensicStore] Persisted %d denial events for session %s",
-                    len(_permission_denials), self.session_id,
-                )
-            except Exception as e:
-                logger.debug("[ForensicStore] Auto-persist error: %s", e)
 
         if self.log_path:
             artifact.write(self.log_path)

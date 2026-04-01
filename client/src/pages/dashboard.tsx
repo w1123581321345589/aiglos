@@ -12,7 +12,6 @@ import {
   Zap,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { IntegrityIndicator } from "@/components/integrity-indicator";
 import type { SecurityEvent, Session } from "@shared/schema";
 
 interface DashboardStats {
@@ -39,9 +38,14 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
-      <h2 className="text-xl font-semibold tracking-tight" data-testid="text-dashboard-title">
-        Security Overview
-      </h2>
+      <div>
+        <h2 className="text-xl font-semibold tracking-tight" data-testid="text-dashboard-title">
+          Security Overview
+        </h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Real-time monitoring of AI agent security posture
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {statsLoading ? (
@@ -146,7 +150,13 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-10 text-center">No events yet</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <ShieldCheck className="w-10 h-10 text-muted-foreground/40 mb-3" />
+                <p className="text-sm text-muted-foreground">No security events recorded</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Events will appear here when agents connect
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -193,11 +203,44 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-10 text-center">No active sessions</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Activity className="w-10 h-10 text-muted-foreground/40 mb-3" />
+                <p className="text-sm text-muted-foreground">No active sessions</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Sessions will appear when agents connect
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
+
+function IntegrityIndicator({ score }: { score: number }) {
+  const percentage = Math.round(score * 100);
+  let color = "text-emerald-500";
+  let bgColor = "bg-emerald-500";
+  if (percentage < 50) {
+    color = "text-red-500";
+    bgColor = "bg-red-500";
+  } else if (percentage < 75) {
+    color = "text-amber-500";
+    bgColor = "bg-amber-500";
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full ${bgColor}`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+      <span className={`text-xs font-mono font-medium ${color}`}>
+        {percentage}%
+      </span>
     </div>
   );
 }

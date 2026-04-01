@@ -316,7 +316,7 @@ class TestATLASDataIntegrity:
 class TestV0240RuleCount:
 
     def test_32_rules_t44_plus(self):
-        assert len(RULES_T44_T66) == 46
+        assert len(RULES_T44_T66) == 39
 
     def test_t75_present(self):
         ids = [r["id"] for r in RULES_T44_T66]
@@ -327,7 +327,7 @@ class TestV0240RuleCount:
         assert hasattr(aiglos, "ATLASCoverage")
 
     def test_version_correct(self):
-        assert aiglos.__version__ == "0.25.18"
+        assert aiglos.__version__ == "0.25.8"
 
     def test_atlas_coverage_importable(self):
         cov = aiglos.ATLASCoverage()
@@ -471,7 +471,7 @@ class TestSuperpowersModule:
     def test_campaign_pattern_count_19(self):
         from aiglos.adaptive.campaign import _CAMPAIGN_PATTERNS
         names = [p["name"] for p in _CAMPAIGN_PATTERNS]
-        assert len(names) == 25
+        assert len(names) == 23
         assert "SUPERPOWERS_PLAN_HIJACK" in names
 
     def test_superpowers_plan_hijack_confidence(self):

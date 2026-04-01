@@ -60,7 +60,7 @@ KNOWN_ADVISORIES = [
             "to an attacker-controlled gateway, enabling 1-click RCE."
         ),
         "affected_package": "npm/openclaw",
-        "aiglos_rules": ["T03", "T12", "T19", "T68"],
+        "aiglos_rules": ["T68"],
         "coverage":   "COVERED",
         "coverage_note": (
             "T68 INSECURE_DEFAULT_CONFIG fires when allow_remote=true appears "
@@ -81,12 +81,11 @@ KNOWN_ADVISORIES = [
             "of Flask and Jinja2."
         ),
         "affected_package": "npm/openclaw",
-        "aiglos_rules": ["T03", "T04", "T70"],
+        "aiglos_rules": ["T03", "T04"],
         "coverage":   "COVERED",
         "coverage_note": (
             "T03 SHELL_INJECTION catches the command injection class. "
             "T04 PATH_TRAVERSAL catches the traversal entry vector. "
-            "T70 ENV_PATH_HIJACK covers the PATH manipulation angle. "
             "Together they cover the full attack chain documented in this advisory."
         ),
         "disclosed_by": "Armin Ronacher (mitsuhiko)",
@@ -106,7 +105,7 @@ KNOWN_ADVISORIES = [
             "metacharacters required -- invisible to standard shell injection detection."
         ),
         "affected_package": "npm/openclaw",
-        "aiglos_rules": ["T03", "T70"],
+        "aiglos_rules": ["T70"],
         "coverage":   "COVERED",
         "coverage_note": (
             "T70 ENV_PATH_HIJACK was built specifically in response to this advisory. "
@@ -208,9 +207,7 @@ class GHSAWatcher:
         self,
         coverage_path: Optional[str] = None,
         pending_path: Optional[str] = None,
-        local_only: bool = False,
     ):
-        self._local_only = local_only
         base = Path(__file__).parent
         self.coverage_path = Path(coverage_path or base / "ghsa_coverage.json")
         self.pending_path  = Path(pending_path  or base / "pending_rules")
@@ -576,26 +573,6 @@ class GHSAWatcher:
             )
         lines.append("")
         return "\n".join(lines)
-
-    def check_local(self) -> dict:
-        self.run_once(local_only=True)
-        total   = len(self._coverage)
-        covered = sum(1 for m in self._coverage.values() if m.coverage == "COVERED")
-        pre_disclosure = covered
-        return {
-            "total":            total,
-            "covered":          covered,
-            "coverage_pct":     (covered / total * 100) if total else 0,
-            "pre_disclosure":   pre_disclosure,
-            "advisories":       [
-                {
-                    "ghsa_id":       m.ghsa_id,
-                    "coverage":      m.coverage,
-                    "matched_rules": m.matched_rules,
-                }
-                for m in self._coverage.values()
-            ],
-        }
 
     def pending_rules(self) -> List[dict]:
         results = []
