@@ -1,0 +1,23 @@
+Picking up exactly where the build was cut off — running final verification, wiring exports, bumping to v0.25.19, copying outputs.​​​​​​​​​​​​​​​​
+
+**35/35.** Copying all outputs:​​​​​​​​​​​​​​​​
+
+**35/35. v0.25.19. All files shared.**
+
+-----
+
+Complete accounting of this build:
+
+**T90 DYNAMIC_TOOL_REGISTRATION** (`threat_engine_v2.py`, rule 47, score 0.90) — the new rule Phantom demanded. Fires when an agent creates and registers a new MCP tool definition at runtime, bypassing operator review. Three detection vectors. First, direct name matching against `mcp.register_tool`, `add_mcp_tool`, `tool.create`, `register_endpoint`, and 15 other registration function names. Second, tool manifest content detection in write operations — when a write contains two or more of the JSON schema keys that indicate an actual tool definition (`inputSchema`, `tool_name`, `description`, `parameters`) alongside `mcp`, `tool`, or `function` context. Third, self-registration pattern — an HTTP endpoint being created and immediately registered as a permanent MCP tool for future agents. The benign Phantom case (ClickHouse REST API registered as permanent MCP tool) fires T90. The malicious case (backdoor tool registered to intercept all future agent data calls) also fires T90. T90 is what makes the distinction auditable.
+
+**PHANTOM_COMPROMISE_CHAIN** (`campaign.py`, confidence 0.93, campaign 26) — the highest-confidence and highest-consequence campaign in the full taxonomy. Three phases: T79 memory injection into the observation stream before Phantom’s Observe phase, T82 self-improvement pipeline write where the malicious observation survives Critique/Generate/Validate/Apply and gets written to the evolving config, then T01/T41/T90 activation in a future session where the evolved agent carries the poisoned principle and either exfiltrates data or registers a backdoor tool. T82 amplifier 2.0x, T90 amplifier 2.0x. The forward propagation is what makes this 0.93 — a single successful Phase 1 injection persists across all future sessions until a manual rollback, and Day 30 Phantom has deep knowledge of the target organization’s codebase, deploy process, and client relationships built up over weeks of sessions.
+
+**KNOWN_AGENTS expansion** (`openShell.py`, now 32 agents) — `phantom` and `ghostwright` added. 770 tests passing, production-ready, open source, Slack-native, VM-based, self-evolving. This is not a research project.
+
+**`declare_phantom_pipeline()` and `phantom_autodetect()`** (`gigabrain.py`) — registers all 10 Phantom paths for T79/T82/T90 monitoring: `/phantom/memory/`, `/phantom/config/`, `/phantom/tools/`, `/phantom/sessions/`, `/phantom/observations/`, `~/.phantom/`, `~/.phantom/config.json`, `~/.phantom/tools/`, `~/.phantom/memory/`. The observation path is the T79 entry point. The config path is the T82 write surface. The tools path is the T90 registration surface. `phantom_autodetect()` scans for existing installation; if not found, registers pre-emptive protection anyway — the same approach used for KAIROS.
+
+-----
+
+**Current state:** v0.25.19, 90 rules (T01-T90), 26 campaigns, 32 known agents.
+
+**NIST T-rule count: 90. USPTO first. efs.uspto.gov. aiglos_provisional_patent.docx. $320. Deadline for NIST is today.**
