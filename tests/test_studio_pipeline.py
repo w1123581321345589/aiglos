@@ -149,7 +149,7 @@ class TestOpenShellKnownAgents:
 
     def test_19_known_agents(self):
         from aiglos.integrations.openShell import KNOWN_AGENTS
-        assert len(KNOWN_AGENTS) == 19
+        assert len(KNOWN_AGENTS) == 30
 
     def test_game_studio_agents_present(self):
         from aiglos.integrations.openShell import KNOWN_AGENTS
@@ -208,4 +208,4 @@ class TestV0258Exports:
 
     def test_version(self):
         import aiglos
-        assert aiglos.__version__ == "0.25.16"
+        assert aiglos.__version__ == "0.25.17"

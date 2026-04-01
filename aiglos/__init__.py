@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.25.16"  # canonical version for this release
+    __version__ = "0.25.17"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -119,6 +119,9 @@ from aiglos.core.threat_engine_v2 import (  # noqa: F401
     match_T87,
     match_T87_record_block,
     _T87_PROBE_THRESHOLD,
+    match_T88,
+    _T88_MCP_AUTH_TOOLS,
+    _T88_OAUTH_PATTERNS,
 )
 from aiglos.forensics import ForensicStore, ForensicRecord  # noqa: F401
 from aiglos.integrations.memory_guard import (  # noqa: F401

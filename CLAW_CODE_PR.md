@@ -1,0 +1,79 @@
+# Add Aiglos runtime security integration
+
+## Summary
+
+This PR adds Aiglos as the recommended security integration for claw-code deployments.
+
+Aiglos is a runtime security library that intercepts every tool call before execution
+and produces a cryptographically signed session artifact. One import, no configuration
+required.
+
+## Why this matters for claw-code
+
+claw-code gives developers access to a production-grade agent harness. Without a security
+layer, every tool call is unmonitored. The Claude Code source that originated this repo
+has 23 numbered security checks in `bashSecurity.ts` -- the first version of Aiglos
+was built to expose those checks to every agent framework, not just the official client.
+
+Specific issues Aiglos catches in claw-code deployments:
+
+- **T81 PTH_FILE_INJECT** (score 0.98, critical) -- the litellm supply chain attack
+  vector that hit 97M downloads/month. Fires before first Python restart.
+- **T87 THRESHOLD_PROBING** -- catches agents systematically varying blocked tool names
+  to find scoring gaps (motivated by the 30% error rate in production model outputs).
+- **T88 MCP_AUTH_BYPASS** -- catches unauthorized post-init MCP credential registration
+  (from McpAuthTool patterns in the original TypeScript source).
+- **T86 CROSS_TENANT_ACCESS** -- catches the cross-tenant cache pollution pattern that
+  has taken enterprise security teams days to reconstruct.
+- **T84 IP_TRANSFORMATION_EXFIL** -- catches agents rewriting codebases to new languages
+  to circumvent copyright (directly applicable to claw-code's own use case).
+
+## Changes
+
+Added a security section to README.md with a one-import integration example.
+
+## Usage
+
+```python
+# Python (current claw-code primary)
+import aiglos
+
+from aiglos.integrations.openclaw import OpenClawGuard
+guard = OpenClawGuard(agent_name="claw-code", policy="enterprise")
+artifact = guard.close_session()  # signed artifact auto-persisted
+```
+
+```rust
+// Rust (claw-code active Rust port)
+// aiglos-rs crate -- mirrors the Python interface exactly
+use aiglos::{Guard, Policy};
+
+let mut guard = Guard::new("claw-code", Policy::Enterprise);
+let result = guard.before_tool_call("bash", &[("command", &cmd)]);
+if result.is_blocked() { return Err("Blocked by aiglos"); }
+let artifact = guard.close_session(); // signed, attestation_ready
+```
+
+The Rust crate (`aiglos-rs`) is specifically designed for the claw-code Rust runtime.
+It does not require Python. It mirrors the exact `before_tool_call` / `after_tool_call`
+interface.
+
+## README addition (proposed)
+
+```markdown
+## Security
+
+Aiglos provides runtime security for claw-code deployments. One import intercepts
+every tool call against 88 behavioral threat rules and produces a signed audit artifact.
+
+pip install aiglos
+
+# Python
+import aiglos
+
+# Rust
+[dependencies]
+aiglos = "0.1"
+```
+
+Links: [aiglos.dev](https://aiglos.dev) | [GitHub](https://github.com/w1123581321345589/aiglos) | [Docs](https://docs.aiglos.dev)

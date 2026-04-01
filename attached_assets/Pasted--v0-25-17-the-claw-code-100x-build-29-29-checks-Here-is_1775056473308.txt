@@ -1,0 +1,45 @@
+**v0.25.17 — the claw-code 100x build. 29/29 checks. Here is every piece.**
+
+-----
+
+**T88 MCP_AUTH_BYPASS** (rule 45, score 0.87)
+
+Built from the PARITY.md gap analysis in the claw-code repo. `McpAuthTool` exists in the TypeScript Claude Code source but is absent from the Rust port — it is actively being ported right now. The rule fires on four attack vectors. The first is post-init auth: an agent registers new MCP server credentials after session start, bypassing operator review. The second is token hijack: the agent reads an existing MCP credential then re-registers it under a different server name, making the credential portable. The third is server spoofing: registering a malicious MCP server URI under a trusted server name in the credential store. The fourth is rate limit bypass: registering multiple credentials to get around per-credential API rate limits that Anthropic imposes on the official Claude Code client.
+
+Detection fires three ways — direct tool name match (McpAuthTool, mcp_auth, mcp_register, and variants), partial name match for common variants, and args-level detection where a write operation contains two or more OAuth credential patterns (client_id + client_secret + token_endpoint in the same call). The 2-pattern threshold prevents false positives on legitimate config writes that happen to touch one OAuth field. The rule is pre-built before the Rust port ships this feature publicly — the same approach that produced the 3/3 GHSA catch rate.
+
+-----
+
+**KNOWN_AGENTS expansion — now 30 agents**
+
+Six new agents added. claw-code and clawd-code are the Python/Rust Claude Code harness forks that reached 104k stars and 94.6k forks on April 1, 2026. claw-code-rust is the active primary runtime — the Rust rewrite is now what the maintainer is treating as the definitive version. oh-my-codex is the multi-agent orchestration framework with `$team` mode for parallel code review and `$ralph` mode for persistent execution loops. This is not a future agent — it is currently running in production building the fastest-growing repo in GitHub history against a live Rust codebase. omx is the oh-my-codex short alias. bellman is the oh-my-codex ralph/bellman persistent agent mode.
+
+Every one of these agents represents active production deployments with no Aiglos protection. Adding them to KNOWN_AGENTS means T38 AGENT_SPAWN, T83 INTER_AGENT_PROTOCOL_SPOOF, and the full threat taxonomy apply to sessions where these agents are detected.
+
+-----
+
+**KAIROS_PATHS expansion — now 13 paths**
+
+Three paths confirmed from the claw-code repo structure itself: `.claude.json`, `.claude/settings.local.json`, and `.claude/memories/`. The claw-code repo has `.claude/sessions` committed to its own repository — meaning the maintainer is actively running KAIROS-style session logging on their own development workflow. This is not theoretical. `.claude.json` is the primary Claude Code configuration file and the highest-value attack surface for T85 AGENT_IDENTITY_SUPPRESSION (the undercover.ts config) and T76 NEMOCLAW_POLICY_BYPASS. Every claw-code deployment will have this file. It is now monitored.
+
+-----
+
+**aiglos-rs — the Rust crate**
+
+Seven files, 597 lines. This is the architectural response to the most important structural threat: when users switch from the Python claw-code to the Rust port, Aiglos’s Python monkey-patching intercepts nothing. The Rust crate provides identical `Guard::new()`, `before_tool_call()`, `after_tool_call()`, and `close_session()` interface to the Python library so claw-code developers can depend on it immediately as a Cargo dependency.
+
+What it contains: `Policy` enum with all five tiers (Permissive/Enterprise/Strict/Federal/Lockdown) with exact same block and warn thresholds as Python — 0.90/0.75/0.50/0.40/0.00. `Verdict` enum (Allow/Warn/Block) with `GuardResult`. `Guard` struct with full trust decay including the consecutive failure amplifier (1.0x → 1.5x → 2.0x → 2.5x on consecutive hits, capping at 3x). `SessionArtifact` with HMAC-SHA256 signature on `close_session()` and `attestation_ready` flag on Strict/Federal/Lockdown. T-rule evaluation with T01, T81, T86, T87, T88 match functions fully ported; T02-T80 stubbed with the `match_never` function pending full port. Five unit tests built in: exfil blocked, clean call allowed, T81 critical blocks even in permissive policy, session artifact signed, trust decay accelerates on consecutive hits.
+
+The `attestation_ready` field on `SessionArtifact` is specifically designed to satisfy NDAA §1513 requirements in Rust agent deployments.
+
+-----
+
+**CLAW_CODE_PR.md — the distribution play**
+
+The exact PR content to submit to [github.com/instructkr/claw-code](http://github.com/instructkr/claw-code) adding Aiglos as the recommended security integration. It addresses the maintainer’s specific context, references T88 and its origin in their own PARITY.md, and includes both Python and Rust integration examples with `aiglos-rs` called out by name. The repo has 104k star watchers. Every watcher gets a GitHub notification when a PR is opened. That is the distribution event. This PR costs nothing and reaches more AI agent developers in one notification than any paid channel could reach in months.
+
+-----
+
+**What this session built in total**
+
+Starting from v0.25.16 at 44 rules and 24 known agents, this build produced v0.25.17 with 45 rules, 25 campaigns, 30 known agents, 13 KAIROS paths, a working Rust crate, and a ready-to-submit PR to the most-forked AI repo in GitHub history. The NIST submission T-rule count is now 88. The provisional patent should have been filed hours ago — [efs.uspto.gov](http://efs.uspto.gov), aiglos_provisional_patent.docx, $320 micro entity, then [regulations.gov](http://regulations.gov) with T-rule count 88 and deadline April 2.​​​​​​​​​​​​​​​​

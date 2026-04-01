@@ -90,33 +90,46 @@ ENV_VERSION      = "OPENSHELL_VERSION"
 
 # Known agent identifiers OpenShell sets in OPENSHELL_AGENT
 KNOWN_AGENTS = {
+    # Anthropic
     "claude-code":          "Claude Code (Anthropic)",
     "claude":               "Claude Code (Anthropic)",
-    "claw-code":            "claw-code -- Python/Rust Claude Code harness (instructkr, 104k stars)",
-    "clawd-code":           "clawd-code -- alternate claw-code fork",
-    "claw-code-rust":       "claw-code Rust port -- active primary runtime (replacing Python)",
-    "oh-my-codex":          "oh-my-codex (OmX) -- $team parallel review + $ralph persistent loop",
-    "omx":                  "oh-my-codex short alias",
-    "bellman":              "oh-my-codex ralph/bellman persistent execution agent mode",
+    # claw-code ecosystem (104k stars, 94.6k forks, April 1 2026)
+    # Fastest repo in GitHub history to 50k stars (2 hours after publication).
+    # Rust rewrite now primary. oh-my-codex ($team/$ralph) builds it.
+    "claw-code":           "claw-code -- Python/Rust Claude Code harness (instructkr, 104k stars)",
+    "clawd-code":          "clawd-code -- alternate claw-code fork",
+    "claw-code-rust":      "claw-code Rust port -- active primary runtime (replacing Python)",
+    "oh-my-codex":         "oh-my-codex (OmX) -- $team parallel review + $ralph persistent loop",
+    "omx":                 "oh-my-codex short alias",
+    "bellman":             "oh-my-codex ralph/bellman persistent execution agent mode",
     "kairos":               "Claude Code KAIROS autonomous agent mode (unreleased, gated)",
     "claude-code-kairos":   "Claude Code with KAIROS feature flag enabled",
+    # OpenAI
     "codex":                "Codex (OpenAI)",
+    # Editor-based agents
     "cursor":               "Cursor",
     "windsurf":             "Windsurf",
     "aider":                "Aider",
     "continue":             "Continue",
     "cody":                 "Cody (Sourcegraph)",
+    # OpenClaw ecosystem
     "openclaw":             "OpenClaw",
+    # HuggingFace
     "smolagents":           "smolagents (HuggingFace)",
     "smol":                 "smolagents (HuggingFace)",
+    # Microsoft
     "autogen":              "AutoGen (Microsoft)",
+    # LangChain ecosystem
     "langgraph":            "LangGraph (LangChain)",
+    # Multi-agent frameworks
     "crewai":               "CrewAI",
+    # NousResearch Hermes (inter-agent supervisor protocol)
     "hermes":               "Hermes supervisor agent (NousResearch)",
     "hermes-agent":         "Hermes agent (NousResearch)",
     "nous-hermes":          "NousResearch Hermes model/agent",
     "nous-research/hermes": "NousResearch Hermes agent",
     "hermes-supervisor":    "Hermes in supervisor role over OpenClaw",
+    # Multi-agent studio pipelines
     "claude-code-game-studios": "Claude Code Game Studios (48-agent pipeline)",
     "ccgs":                 "Claude Code Game Studios",
     "game-studio":          "Multi-agent game studio pipeline",

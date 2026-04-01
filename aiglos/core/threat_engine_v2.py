@@ -1965,6 +1965,54 @@ def match_T87(name, args, session_key="default"):
     return False
 
 
+# ── T88 MCP_AUTH_BYPASS ──────────────────────────────────────────────────────
+_T88_MCP_AUTH_TOOLS = re.compile(
+    r'(?i)(?:mcpauth|mcp_auth|mcp_register|mcp\.auth|mcp\.register|'
+    r'mcp_credential|mcp\.credential|mcp_server_register|mcp\.server\.register)',
+)
+
+_T88_OAUTH_PATTERNS = [
+    re.compile(r'(?i)client_id'),
+    re.compile(r'(?i)client_secret'),
+    re.compile(r'(?i)token_endpoint'),
+    re.compile(r'(?i)access_token'),
+    re.compile(r'(?i)refresh_token'),
+    re.compile(r'(?i)oauth'),
+    re.compile(r'(?i)bearer'),
+]
+
+
+def match_T88(name: str, args: Dict[str, Any]) -> bool:
+    """T88 MCP_AUTH_BYPASS — unauthorized post-init MCP credential registration.
+
+    Four attack vectors:
+    1. Post-init auth: registers new MCP credentials after session start
+    2. Token hijack: re-registers existing credentials under different server
+    3. Server spoofing: registers MCP server with forged identity
+    4. Rate-limit bypass: multiple credential registrations in rapid succession
+
+    Detection fires on:
+    - Direct tool name match (McpAuthTool, mcp_auth, mcp_register, variants)
+    - Args-level: write operation containing 2+ OAuth credential patterns
+    """
+    n = _tool_lower(name)
+    s = _args_str(args)
+
+    if _T88_MCP_AUTH_TOOLS.search(n):
+        return True
+
+    if _T88_MCP_AUTH_TOOLS.search(n.replace('.', '_').replace('-', '_')):
+        return True
+
+    is_write = any(w in n for w in ('write', 'set', 'store', 'register', 'create', 'add'))
+    if is_write:
+        oauth_hits = sum(1 for pat in _T88_OAUTH_PATTERNS if pat.search(s))
+        if oauth_hits >= 2:
+            return True
+
+    return False
+
+
 # ── Rule table for import into openclaw._RULES ───────────────────────────────
 
 RULES_T44_T66: List[Dict] = [
@@ -2266,4 +2314,13 @@ RULES_T44_T66: List[Dict] = [
          "of endpoint and key argument values."
      ),
      "score": 0.88, "critical": True, "match": match_T87},
+    {"id": "T88", "name": "MCP_AUTH_BYPASS",
+     "desc": (
+         "Unauthorized MCP credential registration after session init. "
+         "Four vectors: post-init auth (registers new MCP credentials bypassing "
+         "operator review), token hijack (re-registers existing credentials under "
+         "different server), server spoofing, rate-limit bypass via multiple "
+         "credential registrations. From PARITY.md McpAuthTool gap analysis."
+     ),
+     "score": 0.87, "critical": False, "match": match_T88},
 ]
