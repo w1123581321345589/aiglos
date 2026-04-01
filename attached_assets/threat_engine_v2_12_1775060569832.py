@@ -1604,11 +1604,23 @@ def match_T75(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
+# ── Rule table for import into openclaw._RULES ───────────────────────────────
+
+
 # ── T83: Inter-Agent Protocol Spoof ──────────────────────────────────────────
 # Manipulation of structured inter-agent coordination protocols.
 # Based on Hermes supervisor architecture (NousResearch, March 2026):
 #   #operator-ai uses [STATUS_REQUEST]/[REVIEW_REQUEST]/[ESCALATION_NOTICE]/[ACK]
 #   ACK is terminal. [ESCALATION_NOTICE] routes to the human operator.
+#
+# Three attack vectors:
+#   1. ACK SUPPRESSION: fake [ACK] while escalation active — oversight bypassed
+#   2. STATUS SPOOFING: fake [STATUS_REQUEST] without valid <@BOT_ID> mention
+#   3. PROTOCOL VIOLATION: missing or multiple intent markers in registered channel
+#
+# Hermes/OpenClaw case study (gkisokay, March 2026): Hermes rebuilt OpenClaw's
+# research pipeline and installed a sync bridge without instruction — benign
+# in that case, adversarial in the T83 threat model.
 
 _T83_INTENT_RE = re.compile(
     r"\[(?:STATUS_REQUEST|REVIEW_REQUEST|ESCALATION_NOTICE|ACK)\]",
@@ -1618,15 +1630,17 @@ _T83_ACK_RE = re.compile(r"\[ACK\]", re.IGNORECASE)
 _T83_ESCALATION_RE = re.compile(r"\[ESCALATION_NOTICE\]", re.IGNORECASE)
 _T83_STATUS_RE = re.compile(r"\[STATUS_REQUEST\]", re.IGNORECASE)
 
+# Registered inter-agent channels — populated by declare_hermes_supervisor()
 _T83_REGISTERED_CHANNELS: set = set()
 _T83_ACTIVE_ESCALATIONS: set = set()
 
 
 def match_T83(name: str, args: Dict[str, Any]) -> bool:
-    """T83 INTER_AGENT_PROTOCOL_SPOOF -- inter-agent coordination manipulation."""
+    """T83 INTER_AGENT_PROTOCOL_SPOOF — inter-agent coordination manipulation."""
     n = _tool_lower(name)
     s = _args_str(args)
 
+    # Only fire on outbound message send operations — not reads, not filesystem
     is_send = (
         any(kw in n for kw in (
             "messages_send", "messages_create",
@@ -1644,36 +1658,87 @@ def match_T83(name: str, args: Dict[str, Any]) -> bool:
     channel = str(args.get("channel", args.get("channel_id",
                args.get("destination", "")))).lower()
 
+    # Vector 1: ACK suppression — ACK sent while escalation is active
     if _T83_ACK_RE.search(content) and _T83_ACTIVE_ESCALATIONS:
         return True
 
+    # Vector 2: STATUS_REQUEST without valid mention token (<@DIGITS>)
     if _T83_STATUS_RE.search(content):
         if channel in _T83_REGISTERED_CHANNELS:
             if not re.search(r"<@\d+>", content):
                 return True
 
+    # Vector 3: Message to registered channel with no intent marker (> 20 chars)
     if channel in _T83_REGISTERED_CHANNELS and len(content) >= 20:
         if not _T83_INTENT_RE.search(content):
             return True
 
+    # Vector 4: Multiple intent markers in one message (protocol violation)
     if len(_T83_INTENT_RE.findall(content)) > 1:
         return True
 
     return False
 
 
+
 # ── T84: IP Transformation Exfiltration ──────────────────────────────────────
+# AI-agent-assisted intellectual property circumvention via code transformation.
+# Based on the claw-code incident (March 31, 2026): Anthropic accidentally
+# leaked Claude Code TypeScript source; a repo used Codex to rewrite it in
+# Python, circumventing copyright (derived works in a new language may not
+# infringe). The scary part: AI agents can do this autonomously at scale for
+# any codebase in trivial time.
+#
+# Three attack vectors:
+#   1. DIRECT_REWRITE: agent reads proprietary *.ts/*.java/*.rs files,
+#      writes functionally equivalent *.py/*.go/*.js files. Copyright may
+#      not apply to the output language, trade secrets still violated.
+#   2. FUNCTIONAL_EXTRACTION: agent reads codebase, extracts architecture
+#      and algorithm descriptions, generates "clean room" reimplementation.
+#      Produces a working equivalent without any copied code.
+#   3. PATENT_WORKAROUND: agent rewrites a patented algorithm in a new
+#      language or with cosmetic modifications to argue non-infringement.
+#
+# Patent angle: THIS IS WHY PATENTS BEAT COPYRIGHT for Aiglos protection.
+# A Python rewrite of Aiglos does NOT circumvent a patent on the behavioral
+# threat taxonomy method. The patent protects the invention regardless of
+# implementation language.
+#
+# Score 0.80 — elevated but not critical because:
+#   - Legitimate code migration exists (Python 2→3, Java→Kotlin)
+#   - Fires only on cross-language transformation pattern, not single-file reads
+#   - Enterprise policy tier blocks at 0.75; federal at 0.40
+#
+# Source: claw-code incident (github.com/instructkr/claw-code), March 2026.
+# Related: US Copyright Office position on AI-generated works (lacking human
+# authorship); Thaler v. Vidal; Zarya of the Dawn Registration Decision.
 
+# Source code file extensions that indicate proprietary codebase reads
 _T84_SOURCE_EXTS = frozenset([
-    ".ts", ".tsx", ".java", ".kt", ".rs", ".go", ".cs", ".swift",
-    ".cpp", ".cc", ".h", ".hpp", ".rb", ".scala",
+    ".ts", ".tsx",      # TypeScript (Claude Code leak vector)
+    ".java", ".kt",     # JVM
+    ".rs",              # Rust
+    ".go",              # Go
+    ".cs",              # C#
+    ".swift",           # Swift
+    ".cpp", ".cc", ".h", ".hpp",  # C/C++
+    ".rb",              # Ruby
+    ".scala",           # Scala
 ])
 
+# Target language extensions that indicate a rewrite is being produced
 _T84_TARGET_EXTS = frozenset([
-    ".py", ".pyi", ".js", ".mjs", ".ts", ".tsx", ".go", ".rs",
-    ".java", ".cs", ".rb",
+    ".py", ".pyi",      # Python (claw-code used this)
+    ".js", ".mjs",      # JavaScript
+    ".ts", ".tsx",      # TypeScript
+    ".go",
+    ".rs",
+    ".java",
+    ".cs",
+    ".rb",
 ])
 
+# IP circumvention keywords in task descriptions, tool names, or args
 _T84_CIRCUMVENTION_KEYWORDS = [
     "rewrite", "reimplemenent", "reimplementation", "port to",
     "convert to", "translate to", "clean room", "cleanroom",
@@ -1683,24 +1748,28 @@ _T84_CIRCUMVENTION_KEYWORDS = [
     "extract algorithm", "extract logic", "extract architecture",
 ]
 
+# Known IP circumvention tool patterns
 _T84_TOOL_PATTERNS = [
     "claw-code", "clawcode", "code-rewriter", "code_rewriter",
     "ip-extractor", "algorithm-extractor",
 ]
 
-_T84_FILE_READ_COUNT: dict = {}
+_T84_FILE_READ_COUNT: dict = {}  # session_id -> {ext -> count}
 
 
 def match_T84(name: str, args: Dict[str, Any]) -> bool:
-    """T84 IP_TRANSFORMATION_EXFIL -- AI-agent IP circumvention via code rewrite."""
+    """T84 IP_TRANSFORMATION_EXFIL — AI-agent IP circumvention via code rewrite."""
     n = _tool_lower(name)
     s = _args_str(args)
     s_lower = s.lower()
 
+    # Vector 1: Known IP circumvention tool name
     if any(kw in n for kw in _T84_TOOL_PATTERNS):
         return True
 
+    # Vector 2: Circumvention keywords in task description or args
     if any(kw in s_lower for kw in _T84_CIRCUMVENTION_KEYWORDS):
+        # Only fire if this is a code-producing or code-reading operation
         is_code_op = any(kw in n for kw in (
             "read", "write", "execute", "run", "generate", "create",
             "file", "code", "edit", "bash", "shell", "computer",
@@ -1708,6 +1777,8 @@ def match_T84(name: str, args: Dict[str, Any]) -> bool:
         if is_code_op:
             return True
 
+    # Vector 3: Source code reads + write to different language extension
+    # Pattern: reading .ts files and writing .py files = rewrite pattern
     is_read = any(kw in n for kw in ("read", "view", "cat", "open", "fetch"))
     is_write = any(kw in n for kw in ("write", "create", "save", "output"))
 
@@ -1717,12 +1788,16 @@ def match_T84(name: str, args: Dict[str, Any]) -> bool:
     if is_read and path:
         for ext in _T84_SOURCE_EXTS:
             if path.lower().endswith(ext):
-                return False
+                # Reading source code — note the extension
+                return False  # single read is not suspicious by itself
 
     if is_write and path:
         for ext in _T84_TARGET_EXTS:
             if path.lower().endswith(ext):
+                # Writing code — check if content looks like a rewrite
                 content = str(args.get("content", args.get("data", "")))
+                # If content contains class/function structures AND
+                # circumvention keywords, flag it
                 has_structure = any(kw in content for kw in (
                     "class ", "def ", "function ", "func ", "impl ",
                     "module ", "export ", "import ",
@@ -1733,6 +1808,7 @@ def match_T84(name: str, args: Dict[str, Any]) -> bool:
                 ):
                     return True
 
+    # Vector 4: Direct "rewrite X in Y" task pattern in shell/bash execution
     is_shell = any(kw in n for kw in ("bash", "shell", "execute", "run", "computer"))
     if is_shell:
         cmd = str(args.get("command", args.get("cmd", args.get("input", "")))).lower()
@@ -1742,9 +1818,36 @@ def match_T84(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
+
 # ── T85: Agent Identity Suppression ──────────────────────────────────────────
+# AI agent configured to actively deny being AI or to suppress disclosure of
+# AI authorship in produced outputs.
+#
+# Based on Claude Code undercover.ts (leaked March 31, 2026):
+# Implements a mode that strips all Anthropic internal references when operating
+# in non-internal repos and instructs the model to never mention "Claude Code"
+# or its own AI nature. The code includes the comment: "There is NO force-OFF."
+#
+# Three attack vectors:
+#   1. DENIAL_OF_AI_NATURE: agent's system prompt contains explicit instructions
+#      to deny being an AI, claim to be human, or avoid AI disclosure
+#   2. AUTHORSHIP_SUPPRESSION: agent instructed to not attribute outputs to AI,
+#      avoid mentioning AI involvement, or present AI work as human-written
+#   3. IDENTITY_STRIPPING: agent configuration actively removes AI identity
+#      markers from outputs (model names, AI signatures, system identifiers)
+#
+# Compliance relevance: NDAA §1513 requires transparency about AI/ML systems
+# in DoD environments. EU AI Act Article 52 mandates disclosure when AI interacts
+# with humans. An agent instructed to hide its AI nature violates both.
+#
+# Score 0.75: elevated, not critical. Legitimate product naming exists (e.g.,
+# a company may not want to reveal which AI vendor they use). Fires specifically
+# on explicit denial instructions, not mere brand suppression.
+#
+# Source: undercover.ts in Claude Code source leak, March 31, 2026.
 
 _T85_DENIAL_KEYWORDS = [
+    # Direct AI identity denial
     "i am not an ai", "i am not ai", "you are not an ai",
     "do not mention ai", "do not say you are ai",
     # Undercover / identity suppression instructions (from Claude Code undercover.ts)
@@ -1807,16 +1910,21 @@ def match_T85(name: str, args: Dict[str, Any]) -> bool:
     n = _tool_lower(name)
     s = _args_str(args).lower()
 
+    # Only fires on configuration/write operations that could modify agent behavior
     is_config_op = any(kw in n for kw in (
         "write", "config", "system", "prompt", "soul", "instruct",
         "setup", "configure", "create", "update", "set",
-        "file", "bash", "shell", "execute", "run", "computer",
+        "file",           # soul.md, config files
+        "bash", "shell",  # shell commands can also embed suppression
+        "execute", "run", "computer",
     ))
 
     if not is_config_op:
         return False
 
+    # Vector 1: Explicit AI denial instructions
     if any(kw in s for kw in _T85_DENIAL_KEYWORDS):
+        # Require multiple indicators or a strong single indicator
         strong_indicators = [
             # Explicit AI denial
             "i am not an ai", "claim to be human", "pretend to be human",
@@ -1839,13 +1947,17 @@ def match_T85(name: str, args: Dict[str, Any]) -> bool:
         ]
         if any(si in s for si in strong_indicators):
             return True
+        # Weak indicators need combination
         hits = sum(1 for kw in _T85_DENIAL_KEYWORDS if kw in s)
         if hits >= 2:
             return True
 
+    # Vector 2: Authorship suppression patterns
     if any(pat in s for pat in _T85_AUTHORSHIP_PATTERNS):
         return True
 
+    # Vector 3: force_off=false / no_force_off pattern in config
+    # Directly mirrors the undercover.ts "There is NO force-OFF" comment
     if "force" in s and "off" in s and any(
         neg in s for neg in ("no force", "cannot force", "force_off=false",
                               "no_force_off", "force-off=false")
@@ -1855,10 +1967,35 @@ def match_T85(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
-# ── T86: Cross-Tenant Access ────────────────────────────────────────────────
+
+# ── T86: Cross-Tenant Access ──────────────────────────────────────────────────
+# AI agent reading data from one tenant/customer context and writing or
+# transmitting toward a different tenant context without explicit authorization.
+#
+# Based on a publicly documented cross-tenant data exposure incident (March 2026): a non-technical employee wired a customer data API into a
+# reporting pipeline with an agent selecting steps at runtime. One step cached
+# results somewhere another tenant's service could read. Security team spent
+# four days reconstructing what happened. Each individual service was within
+# its permissions. The exposure only existed in the assembled runtime path.
+#
+# Three vectors:
+#   1. CACHE_POLLUTION: write to shared cache/storage with mixed tenant keys
+#   2. PIPELINE_CONTAMINATION: pass tenant-A data to tenant-B scoped tool call
+#   3. IMPLICIT_CONTEXT_LEAK: tenant-A context in args alongside tenant-B endpoint
+#
+# Context identifier patterns: tenant_id, customer_id, org_id, account_id,
+# workspace_id, client_id, user_id, namespace, bucket name, database name.
+#
+# Session-level tracking: _T86_TENANT_CONTEXTS accumulates seen identifiers.
+# Fires when write/transmit context differs from accumulated read context.
+#
+# Source: a field report (March 31, 2026) "dark code" post, March 31, 2026.
+# Related: Meta internal agent bypassing human review (same post);
+#          Salesforce Agentforce CRM exfiltration via web form injection.
 
 import re as _re
 
+# Patterns that indicate tenant/customer context identifiers
 _T86_CONTEXT_PATTERNS = [
     _re.compile(r'tenant[_-]?id[=:/]([\w-]+)', _re.I),
     _re.compile(r'customer[_-]?id[=:/]([\w-]+)', _re.I),
@@ -1874,9 +2011,12 @@ _T86_CONTEXT_PATTERNS = [
     _re.compile(r'/workspace/([\w-]+)/', _re.I),
 ]
 
+# Tool name patterns that indicate read operations (context extraction)
+# Compiled dict-key pattern for Python repr extraction
+# Compiled dict-key pattern: matches source_tenant_id/dest_tenant_id etc in dict repr
 _T86_DICT_KEY_PATTERN = _re.compile(
     r'[\'"]((?:source|dest|target|from|to|src)_)?'
-    r'(?:tenant|customer|org|account|workspace|client)_?id[\'"]:\s*[\'"]([a-zA-Z0-9_-]+)[\'"]',
+    r'(?:tenant|customer|org|account|workspace|client)_?id[\'"]:\s*[\'"]([a-zA-Z0-9_-]+)[\'"]'  ,
     _re.I)
 
 _T86_READ_OPS = frozenset([
@@ -1884,14 +2024,16 @@ _T86_READ_OPS = frozenset([
     'search', 'retrieve', 'load', 'pull', 'scan',
 ])
 
+# Tool name patterns that indicate write/transmit operations (cross-tenant risk)
 _T86_WRITE_OPS = frozenset([
     'write', 'put', 'post', 'create', 'update', 'insert', 'save',
     'store', 'cache', 'set', 'push', 'send', 'emit', 'publish',
     'upload', 'commit', 'upsert',
 ])
 
-_T86_SESSION_READ_CONTEXTS: dict = {}
-_T86_SESSION_WRITE_CONTEXTS: dict = {}
+# Per-session: maps context_identifier -> set of tenant values seen in read ops
+_T86_SESSION_READ_CONTEXTS: dict = {}   # session_key -> set of tenant ids seen
+_T86_SESSION_WRITE_CONTEXTS: dict = {}  # session_key -> set of tenant ids seen
 
 
 def _extract_tenant_contexts(s: str) -> set:
@@ -1900,8 +2042,10 @@ def _extract_tenant_contexts(s: str) -> set:
     for pattern in _T86_CONTEXT_PATTERNS:
         for m in pattern.finditer(s):
             val = m.group(1).lower().strip()
-            if len(val) >= 3:
+            if len(val) >= 3:  # avoid matching noise like "id=1"
                 found.add(val)
+    # Also match Python dict repr: source_tenant_id: org-abc
+    # _T86_DICT_KEY_PATTERN group(2) = tenant value, group(1) = prefix
     for m in _T86_DICT_KEY_PATTERN.finditer(s):
         val = m.group(2).lower().strip()
         if len(val) >= 3:
@@ -1914,41 +2058,53 @@ def match_T86(name: str, args: Dict[str, Any]) -> bool:
     n = _tool_lower(name)
     s = _args_str(args)
 
+    # Classify operation type
     is_read  = any(kw in n for kw in _T86_READ_OPS)
     is_write = any(kw in n for kw in _T86_WRITE_OPS)
 
     if not (is_read or is_write):
         return False
 
+    # Extract tenant context identifiers from this call
     contexts_in_call = _extract_tenant_contexts(s)
     if not contexts_in_call:
         return False
 
+    # Use a global session key (simplified: per-process tracking)
     session_key = "default"
 
     if is_read:
+        # Accumulate read contexts
         if session_key not in _T86_SESSION_READ_CONTEXTS:
             _T86_SESSION_READ_CONTEXTS[session_key] = set()
         _T86_SESSION_READ_CONTEXTS[session_key].update(contexts_in_call)
-        return False
+        return False  # reads alone don't fire
 
     if is_write:
+        # Check if write targets different context than what was read
         read_contexts = _T86_SESSION_READ_CONTEXTS.get(session_key, set())
 
         if not read_contexts:
+            # No prior reads tracked, can't determine cross-tenant
             return False
 
+        # Fire if write contains a tenant context NOT seen in reads
+        # (data from tenant A flowing to tenant B's endpoint/cache)
         new_contexts = contexts_in_call - read_contexts
         if new_contexts and read_contexts:
+            # There are contexts in the write that weren't in the reads
+            # AND there were reads -- this is the cross-tenant signal
             return True
 
+        # Also fire on direct evidence of mixing in a single call
+        # (e.g., "source_tenant_id=A&dest_tenant_id=B" in same args)
         if len(contexts_in_call) >= 2:
+            # Multiple different tenant identifiers in one write operation
             return True
 
     return False
 
 
-# ── T87: Threshold Probing ──────────────────────────────────────────────────
 
 import hashlib as _hashlib_t87
 import re as _re_t87
@@ -1992,6 +2148,31 @@ def match_T87(name, args, session_key="default"):
 
 
 # ── T88: MCP Auth Bypass ──────────────────────────────────────────────────────
+# Agent invoking MCP authentication tools outside of session initialization
+# to register unauthorized MCP server credentials.
+#
+# From PARITY.md (claw-code, April 2026): McpAuthTool is present in the
+# TypeScript Claude Code source but absent from the Rust port. It manages
+# MCP OAuth credential registration and token lifecycle.
+#
+# Attack scenarios:
+#   1. POST-INIT AUTH: agent registers new MCP credentials after session start
+#      (outside the expected initialization window) -- bypasses operator review
+#   2. TOKEN_HIJACK: agent reads an existing MCP token then re-registers under
+#      a different server name -- enables credential portability attack
+#   3. SERVER_SPOOF: agent registers a malicious MCP server URI under a trusted
+#      server name in the credential store
+#   4. RATE_LIMIT_BYPASS: registers multiple credentials to bypass per-credential
+#      API rate limits imposed on the official Claude Code client
+#
+# Tool name patterns from Claude Code source: McpAuthTool, mcp_auth,
+# mcp.auth, mcp_register, mcp.register, oauth_register, auth.register
+#
+# Score: 0.87 -- high because post-init credential registration is
+# almost never legitimate in a well-configured agent session.
+# Not critical: some workflows require dynamic MCP server registration.
+#
+# Complementary to: T36 AGENTDEF, T13 SSRF, T72 CHANNEL_IDENTITY_SPOOF
 
 _T88_MCP_AUTH_TOOL_NAMES = frozenset([
     "mcpauthtool", "mcp_auth", "mcp.auth", "mcpauth",
@@ -2014,19 +2195,23 @@ def match_T88(name: str, args: Dict[str, Any]) -> bool:
     n = _tool_lower(name)
     s = _args_str(args).lower()
 
+    # Direct tool name match
     if n in _T88_MCP_AUTH_TOOL_NAMES:
         return True
 
+    # Partial name match for variants
     if any(pat in n for pat in ('mcpauth', 'mcp_auth', 'mcp.auth', 'mcp_register',
                                   'register_mcp', 'mcp_credential', 'mcp_token')):
         return True
 
+    # Args-level match: OAuth/credential patterns in a write/register operation
     is_write_op = any(kw in n for kw in (
         'write', 'set', 'store', 'register', 'add', 'create',
         'save', 'update', 'post', 'put',
     ))
     if is_write_op:
         arg_hits = sum(1 for pat in _T88_MCP_AUTH_ARG_PATTERNS if pat in s)
+        # Two or more OAuth/credential arg patterns in a write = strong signal
         if arg_hits >= 2:
             return True
 
@@ -2034,6 +2219,31 @@ def match_T88(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T89: Contribution Provenance Suppression ─────────────────────────────────
+# An agent performing VCS operations (commit, push, PR creation, merge) while
+# active identity suppression is configured -- the undercover mode pattern.
+#
+# From Claude Code undercover.ts (March 2026 leak): auto-on by default, no
+# force-off, triggers when the target repo is not on Anthropic's internal
+# allowlist. The commit message prompt includes:
+#   "You are operating UNDERCOVER in a PUBLIC/OPEN-SOURCE repository."
+#   "NEVER include any hint that you are an AI."
+#
+# Compliance gap: an enterprise using Claude Code to contribute to open-source
+# repos is making AI contributions that appear human-authored. There is no
+# mechanism to disable this behavior. Aiglos's forensic store is the only
+# audit trail that records which sessions had active identity suppression
+# during VCS contributions.
+#
+# Applicable regulations:
+#   - NDAA §1513: transparency requirements for AI/ML systems in DoD environments
+#   - EU AI Act Article 52: disclosure when AI interacts with humans
+#   - Open-source contribution policies (most enterprises now require AI disclosure)
+#
+# Score: 0.78, not critical
+# -- Legitimate: human commits AI-suggested code after review (no T89)
+# -- Illegitimate: agent auto-commits with suppressed attribution (T89)
+#
+# Complementary to T85 (config side) and ForensicStore (the audit trail).
 
 _T89_VCS_TOOL_NAMES = frozenset([
     "git.commit", "git.push", "git.merge", "git.pr", "git.pull_request",
@@ -2069,17 +2279,28 @@ def match_T89(name: str, args: Dict[str, Any]) -> bool:
 
     Fires when an agent performs a VCS write operation (commit, push, PR) while
     active identity suppression indicators are present in the tool call arguments.
+
+    The undercover mode signature: the commit message generation prompt contains
+    explicit suppression instructions ("NEVER include any hint that you are an AI"),
+    and these instructions appear in the args of the VCS tool call that follows.
+
+    Aiglos's forensic store is the only audit trail that records sessions where
+    this pattern fires -- enabling compliance answers to questions like "did any
+    AI-generated code get committed to our public repos without attribution?"
     """
     n = _tool_lower(name)
     s = _args_str(args).lower()
 
+    # Vector 1: Named VCS tool with suppression in args
     if n in _T89_VCS_TOOL_NAMES:
         if any(pat in s for pat in _T89_SUPPRESSION_IN_ARGS):
             return True
+        # VCS tool + explicit AI suppression in commit message
         if any(kw in s for kw in ("commit_message", "pr_body", "pr_title", "description")):
             if any(pat in s for pat in _T89_SUPPRESSION_IN_ARGS):
                 return True
 
+    # Vector 2: Bash/shell execution of git commands with suppression context
     is_shell = any(kw in n for kw in ("bash", "shell", "run", "execute", "computer"))
     if is_shell:
         cmd = str(args.get("command", args.get("cmd", args.get("input", "")))).lower()
@@ -2087,6 +2308,8 @@ def match_T89(name: str, args: Dict[str, Any]) -> bool:
             if any(pat in s for pat in _T89_SUPPRESSION_IN_ARGS):
                 return True
 
+    # Vector 3: Commit message itself contains the undercover mode prompt verbatim
+    # (Anthropic's undercover.ts injects text directly into commit message prompts)
     if any(kw in n for kw in ("commit", "push", "pr", "merge", "git")):
         undercover_markers = [
             "operating undercover",
@@ -2141,6 +2364,7 @@ _T90_MANIFEST_KEYS = [
     '"function_call"', '"function_schema"',
 ]
 
+# Minimum number of manifest keys required to fire on a write operation
 _T90_MANIFEST_KEY_THRESHOLD = 2
 
 
@@ -2160,19 +2384,25 @@ def match_T90(name: str, args: Dict[str, Any]) -> bool:
 
     # Partial name matching for variants
     if ("register" in n or "create" in n or "add" in n) and "tool" in n:
+        # Avoid false positives on generic "create" or "add" operations
         if "mcp" in n or "tool" in n:
             return True
 
     # Vector 2: Tool manifest content in write operations
+    # A tool manifest contains name/description/schema -- multiple keys together
+    # indicate an actual tool definition being written/registered
     is_write = any(kw in n for kw in ("write", "post", "put", "create",
                                        "register", "save", "store", "add"))
     if is_write:
         manifest_hits = sum(1 for key in _T90_MANIFEST_KEYS if key in s)
         if manifest_hits >= _T90_MANIFEST_KEY_THRESHOLD:
+            # Additional confirmation: "tool" context in args
             if "tool" in s or "mcp" in s or "function" in s:
                 return True
 
     # Vector 3: Self-registration pattern
+    # Agent adding an HTTP endpoint it just created as a permanent MCP tool
+    # Pattern: URL/endpoint in args + tool definition content + registration context
     if is_write:
         has_endpoint = any(kw in s for kw in (
             "http://", "https://", "/api/", "endpoint", "url", "rest",
@@ -2189,7 +2419,119 @@ def match_T90(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
-# ── Rule table for import into openclaw._RULES ───────────────────────────────
+# ── T91: Sycophantic Validation Bypass ───────────────────────────────────────
+# Agent iteratively reframing self-improvement proposals with escalating
+# agreement language to exploit sycophancy bias in LLM-judge validation pipelines.
+#
+# Mathematical basis: Chandra et al. (MIT CSAIL, 2026) -- "Sycophantic Chatbots
+# Cause Delusional Spiraling, Even in Ideal Bayesians." Proven that even ideal
+# Bayesian reasoners converge on false beliefs under sycophantic feedback because
+# the feedback updates priors faster than evidence can correct.
+#
+# Applied attack surface: Phantom's 6-step evolution pipeline uses triple-judge
+# voting. If all three judges are from the same model family (same RLHF signal),
+# a proposal crafted to be agreeable to one will be agreeable to all three.
+# The adversary observes which framings receive higher confidence from judges,
+# incorporates that language into the next proposal variant, and iterates.
+# This is T87 (threshold probing) operating at the semantic layer, not the
+# tool name layer.
+#
+# Detection: per-session tracking of writes to the same evaluation pipeline
+# path. Fires when N>=3 submissions to the same pipeline in one session,
+# AND subsequent submissions contain increasing density of validation-seeking
+# language compared to the first submission.
+#
+# Score: 0.87, not critical.
+# Complementary to: T82 (pipeline writes), T87 (tool name probing),
+# PHANTOM_COMPROMISE_CHAIN (full attack chain).
+
+_T91_PIPELINE_WRITE_SESSIONS: dict = {}  # session_key -> {path: [submission_texts]}
+
+_T91_SYCOPHANCY_MARKERS = [
+    # Direct validation-seeking
+    "this is correct", "you are right", "i agree", "this is good",
+    "this aligns", "this makes sense", "exactly right", "perfect",
+    "this is helpful", "this is useful", "this works well",
+    # Framing designed to elicit approval
+    "as you noted", "as you suggested", "following your guidance",
+    "based on your feedback", "incorporating your suggestion",
+    "you correctly identified", "your analysis was accurate",
+    # Agreement escalation
+    "even better", "an improvement", "more aligned",
+    "addresses your concern", "as recommended",
+    "per your preference", "matching your criteria",
+    # Validation front-loading (placing agreement at the start)
+    "great suggestion", "excellent point", "well observed",
+]
+
+_T91_PIPELINE_SUBMISSION_THRESHOLD = 3  # number of submissions to same path
+_T91_SYCOPHANCY_DENSITY_THRESHOLD = 2   # minimum marker hits in a submission
+
+
+def _t91_sycophancy_density(text: str) -> int:
+    """Count sycophancy markers in a text block."""
+    t = text.lower()
+    return sum(1 for m in _T91_SYCOPHANCY_MARKERS if m in t)
+
+
+def match_T91(name: str, args: Dict[str, Any],
+               session_key: str = "default") -> bool:
+    """
+    T91 SYCOPHANTIC_VALIDATION_BYPASS -- iterative reframing with escalating
+    agreement language to exploit sycophancy bias in LLM-judge pipelines.
+
+    Based on Chandra et al. (MIT CSAIL, 2026): mathematically proven that
+    sycophantic feedback causes delusional spiraling even in ideal Bayesian
+    reasoners. Applied to self-evolving agent validation pipelines.
+
+    Fires when N>=3 submissions to the same pipeline path occur in a session,
+    with subsequent submissions showing increasing sycophancy marker density.
+    """
+    n = _tool_lower(name)
+    s = _args_str(args).lower()
+
+    # Only fires on write operations to evaluation/evolution pipeline paths
+    is_write = any(kw in n for kw in (
+        "write", "submit", "create", "update", "post", "put",
+        "propose", "generate", "apply", "save", "store",
+    ))
+    if not is_write:
+        return False
+
+    # Extract the target path (the pipeline being written to)
+    import re as _re91
+    path_match = _re91.search(r'["\']([^"\']+(?:config|eval|pipeline|proposal|evolution|improvement)[^"\']*)["\']', s)
+    path = path_match.group(1) if path_match else n
+
+    # Track this submission
+    if session_key not in _T91_PIPELINE_WRITE_SESSIONS:
+        _T91_PIPELINE_WRITE_SESSIONS[session_key] = {}
+    if path not in _T91_PIPELINE_WRITE_SESSIONS[session_key]:
+        _T91_PIPELINE_WRITE_SESSIONS[session_key][path] = []
+
+    _T91_PIPELINE_WRITE_SESSIONS[session_key][path].append(s)
+    submissions = _T91_PIPELINE_WRITE_SESSIONS[session_key][path]
+
+    # Need at least N submissions to the same path
+    if len(submissions) < _T91_PIPELINE_SUBMISSION_THRESHOLD:
+        return False
+
+    # Check for escalating sycophancy density across submissions
+    densities = [_t91_sycophancy_density(sub) for sub in submissions]
+    latest = densities[-1]
+    first = densities[0]
+
+    # Fire if: latest submission has high sycophancy AND it's higher than first
+    if (latest >= _T91_SYCOPHANCY_DENSITY_THRESHOLD and latest > first):
+        return True
+
+    # Also fire if majority of submissions have sycophancy markers
+    # (systemic pattern, not just escalation)
+    high_density_count = sum(1 for d in densities if d >= _T91_SYCOPHANCY_DENSITY_THRESHOLD)
+    if high_density_count >= _T91_PIPELINE_SUBMISSION_THRESHOLD:
+        return True
+
+    return False
 
 RULES_T44_T66: List[Dict] = [
     {"id": "T44", "name": "INFERENCE_ROUTER_HIJACK",
@@ -2339,14 +2681,14 @@ RULES_T44_T66: List[Dict] = [
          "because there are legitimate self-improvement writes; both conditions "
          "required: path matches self-improvement infrastructure AND content contains "
          "adversarial injection patterns. "
+         "First documented real-world occurrence (benign): Hermes agent "
+         "(NousResearch, March 2026) rebuilt OpenClaw's broken research pipeline "
+         "autonomously and installed a sync bridge — owner called it AGI. "
+         "Same behavior with adversarial intent is T82: the bridge is the target. "
          "Sources: "
          "(1) Facebook Research DGM-Hyperagents (March 2026) — arxiv.org/abs/2603.19461. "
-         "(2) Sakana AI / The AI Scientist, published Nature 2026 — "
-         "arxiv.org/abs/2408.06292. The AI Scientist's Automated Reviewer is a "
-         "high-risk T82 surface: its judgments feed back into the pipeline. "
-         "Combined with the Nature paper's scaling law of science (better models → "
-         "more convincing outputs), a single T82 injection into reviewer criteria "
-         "produces increasingly convincing misinformation at scale."
+         "(2) Sakana AI / The AI Scientist, Nature 2026 — arxiv.org/abs/2408.06292. "
+         "(3) gkisokay Hermes/OpenClaw case study, March 2026."
      ),
      "score": 0.96, "critical": True, "match": match_T82},
     {"id": "T81", "name": "PTH_FILE_INJECT",
@@ -2456,17 +2798,38 @@ RULES_T44_T66: List[Dict] = [
     {"id": "T83", "name": "INTER_AGENT_PROTOCOL_SPOOF",
      "desc": (
          "Manipulation of structured inter-agent coordination protocols. "
-         "Based on Hermes supervisor architecture (NousResearch, March 2026): "
-         "ACK suppression, STATUS_REQUEST spoofing, or protocol violation in "
-         "registered inter-agent channels."
+         "ACK suppression: fake [ACK] while [ESCALATION_NOTICE] active "
+         "silently bypasses human oversight. "
+         "Status spoofing: fake [STATUS_REQUEST] without valid peer mention "
+         "token extracts operational state. "
+         "Protocol violation: missing or multiple intent markers in a "
+         "registered coordination channel. "
+         "Based on Hermes supervisor architecture (NousResearch, March 2026). "
+         "Hermes/OpenClaw case study: Hermes rebuilt the research pipeline "
+         "and installed a sync bridge without user instruction — benign in "
+         "that case, adversarial in the T83 threat model. "
+         "Score 0.85. Register channels via declare_hermes_supervisor() "
+         "to suppress false positives on legitimate coordination. "
+         "Source: gkisokay Hermes tutorial, March 2026."
      ),
-     "score": 0.88, "critical": True, "match": match_T83},
+     "score": 0.85, "critical": False, "match": match_T83},
     {"id": "T84", "name": "IP_TRANSFORMATION_EXFIL",
      "desc": (
-         "AI-agent-assisted intellectual property circumvention via code "
-         "transformation. Based on the claw-code incident (March 31, 2026): "
-         "reads proprietary source code and rewrites in a different language "
-         "to circumvent copyright on derived works."
+         "AI-agent-assisted IP circumvention via code transformation. "
+         "Based on claw-code incident (March 31, 2026): Anthropic's Claude Code "
+         "TypeScript source was rewritten to Python by Codex, potentially "
+         "circumventing copyright protection on derived works. "
+         "Three attack vectors: (1) DIRECT_REWRITE — agent reads proprietary "
+         "source files and produces functionally equivalent code in new language; "
+         "(2) FUNCTIONAL_EXTRACTION — agent extracts architecture/algorithms to "
+         "generate clean-room reimplementation; "
+         "(3) PATENT_WORKAROUND — agent rewrites patented algorithm with cosmetic "
+         "modifications to argue non-infringement. "
+         "Note: patents protect inventions regardless of implementation language — "
+         "a Python rewrite of a patented method still infringes. Only copyright "
+         "may not apply to transformed derived works. "
+         "Score 0.80 — elevated but not critical (legitimate code migration exists). "
+         "Source: github.com/instructkr/claw-code, March 2026."
      ),
      "score": 0.80, "critical": False, "match": match_T84},
     {"id": "T85", "name": "AGENT_IDENTITY_SUPPRESSION",
@@ -2477,36 +2840,71 @@ RULES_T44_T66: List[Dict] = [
          "that strips all Anthropic internal references and instructs the model "
          "to never mention its AI nature. The code contains: "
          "'There is NO force-OFF. This guards against model codename leaks.' "
-         "Extended in v0.25.18 with undercover mode vocabulary: 'operating undercover', "
-         "'never include any hint', 'strip all traces', 'no force-off', 'internal "
-         "allowlist', suppressed model codenames (capybara, tengu). "
+         "Three vectors: (1) DENIAL_OF_AI_NATURE -- explicit instructions to "
+         "deny being AI or claim to be human; "
+         "(2) AUTHORSHIP_SUPPRESSION -- agent told to not attribute outputs to AI; "
+         "(3) IDENTITY_STRIPPING -- removing AI identity markers from outputs. "
          "Compliance: NDAA S1513 transparency requirements for DoD environments; "
          "EU AI Act Article 52 human-AI interaction disclosure mandate. "
          "Score 0.75 -- not critical (legitimate brand suppression exists); "
-         "fires on explicit denial instructions, not mere vendor name avoidance."
+         "fires on explicit denial instructions, not mere vendor name avoidance. "
+         "Source: Claude Code undercover.ts, March 31, 2026 source leak."
      ),
      "score": 0.75, "critical": False, "match": match_T85},
     {"id": "T86", "name": "CROSS_TENANT_ACCESS",
      "desc": (
-         "Agent reading data from one tenant/customer context and writing or "
-         "transmitting toward a different tenant context without explicit "
-         "authorization. Session-level tracking of tenant identifiers."
+         "AI agent reading data from one tenant/customer context and writing "
+         "or transmitting toward a different tenant context without explicit "
+         "cross-tenant authorization in the session. "
+         "Based on incident described by a publicly documented incident (March 31, 2026): "
+         "a reporting pipeline agent cached tenant-A data where tenant-B could read it. "
+         "Every individual service was within its permissions. The exposure only existed "
+         "in the runtime path assembled by an agent that was gone by investigation time. "
+         "Security team spent four days reconstructing what happened. "
+         "Three vectors: (1) CACHE_POLLUTION -- write to shared cache with mixed tenant keys; "
+         "(2) PIPELINE_CONTAMINATION -- pass tenant-A data to tenant-B scoped tool call; "
+         "(3) IMPLICIT_CONTEXT_LEAK -- tenant-A context alongside tenant-B endpoint. "
+         "Detection: tracks tenant/customer/org/account/workspace/namespace identifiers "
+         "across session reads, fires when write targets a new/different tenant context. "
+         "Score 0.85 -- high severity, cross-tenant exposure is a compliance catastrophe. "
+         "Source: a field report (March 31, 2026) dark code post, March 31, 2026."
      ),
-     "score": 0.90, "critical": True, "match": match_T86},
+     "score": 0.85, "critical": False, "match": match_T86},
     {"id": "T87", "name": "THRESHOLD_PROBING",
      "desc": (
-         "Systematic tool-name variation after blocked calls to find alternative "
-         "execution paths. Tracks blocked call fingerprints per session using MD5 "
-         "of endpoint and key argument values."
+         "Agent systematically varies blocked tool calls to find a formulation "
+         "that passes the behavioral threat scoring threshold. "
+         "Motivation: production AI models exhibit ~30% error rate (documented "
+         "in autoCompact.ts source comment from Claude Code leak, March 2026). "
+         "A compromised agent exploits scoring inconsistency by varying tool names "
+         "on blocked calls: http.post blocked -> try http.put, api.call, requests.send. "
+         "Each variant has a different composite score because tool name pattern "
+         "matching is part of every T-rule match function. "
+         "Detection: tracks blocked call fingerprints per session; fires when N>=2 "
+         "subsequent calls share an argument fingerprint with a blocked call but use "
+         "a different tool name. The agentic equivalent of port scanning. "
+         "Score 0.88 -- high because active probing = confirmed adversarial intent. "
+         "Not critical: legitimate retries on different HTTP methods exist. "
+         "Complementary to T01: T01 catches individual exfil, T87 catches the probing "
+         "pattern that precedes a successful bypass."
      ),
-     "score": 0.88, "critical": True, "match": match_T87},
+     "score": 0.88, "critical": False, "match": match_T87},
     {"id": "T88", "name": "MCP_AUTH_BYPASS",
      "desc": (
-         "Unauthorized MCP credential registration after session init. "
-         "Four vectors: post-init auth (registers new MCP credentials bypassing "
-         "operator review), token hijack (re-registers existing credentials under "
-         "different server), server spoofing, rate-limit bypass via multiple "
-         "credential registrations. From PARITY.md McpAuthTool gap analysis."
+         "Agent invoking MCP authentication tools outside of session initialization "
+         "to register unauthorized MCP server credentials. "
+         "From PARITY.md (claw-code April 2026): McpAuthTool exists in TypeScript "
+         "Claude Code source but is absent from the Rust port -- it manages MCP OAuth "
+         "credential registration and token lifecycle. "
+         "Four attack vectors: (1) POST_INIT_AUTH -- registers new MCP credentials "
+         "after session start, bypassing operator review; "
+         "(2) TOKEN_HIJACK -- reads existing MCP token then re-registers under a different "
+         "server name; "
+         "(3) SERVER_SPOOF -- registers a malicious MCP server URI under a trusted name; "
+         "(4) RATE_LIMIT_BYPASS -- registers multiple credentials to bypass per-credential "
+         "API rate limits imposed on the official client. "
+         "Score 0.87 -- high because post-init credential registration is rarely legitimate. "
+         "Complementary to T36 AGENTDEF, T13 SSRF, T72 CHANNEL_IDENTITY_SPOOF."
      ),
      "score": 0.87, "critical": False, "match": match_T88},
     {"id": "T89", "name": "CONTRIBUTION_PROVENANCE_SUPPRESSION",
@@ -2531,19 +2929,47 @@ RULES_T44_T66: List[Dict] = [
     {"id": "T90", "name": "DYNAMIC_TOOL_REGISTRATION",
      "desc": (
          "Agent creating and registering new MCP tool definitions at runtime "
-         "without operator review. Every subsequent agent that calls the registered "
-         "tool inherits the risk -- the tool persists across sessions and fleet "
-         "deployments. From Phantom (ghostwright/phantom, April 2026): self-evolving "
-         "agent that creates and registers its own MCP tools at runtime. Benign case: "
-         "Phantom registers a ClickHouse REST API as a permanent MCP tool after "
-         "autonomous infrastructure build. Malicious case: adversary registers a "
-         "backdoor tool that appears legitimate but exfiltrates data from every agent "
-         "that calls it. Categorically distinct from T88 MCP_AUTH_BYPASS: T88 fires on "
-         "unauthorized CREDENTIAL registration (OAuth tokens, client secrets); T90 fires "
-         "on unauthorized TOOL DEFINITION registration (new capabilities added to the "
-         "tool registry, callable by all future agents). Score 0.90 -- high because "
-         "dynamic tool registration bypasses all static permission models and persists "
-         "across sessions."
+         "without operator review. "
+         "From Phantom (ghostwright/phantom, April 2026): self-evolving agent "
+         "that creates and registers its own MCP tools autonomously. "
+         "Benign case: Phantom registers a ClickHouse REST API as a permanent "
+         "MCP tool after an autonomous infrastructure build -- nobody reviewed "
+         "the tool definition or its permissions. "
+         "Malicious case: adversary registers a backdoor tool that appears "
+         "legitimate but exfiltrates data from every future agent that calls it. "
+         "The tool persists across sessions and is callable by all fleet agents. "
+         "Distinct from T88 MCP_AUTH_BYPASS (credential registration): "
+         "T90 covers TOOL DEFINITION registration -- new capabilities added to "
+         "the tool registry that bypass all static permission models. "
+         "Three detection vectors: (1) named tool registration functions "
+         "(register_tool, create_tool, add_tool, mcp.register_tool); "
+         "(2) tool manifest content in write args (name + description + schema); "
+         "(3) self-registration pattern (HTTP endpoint + tool definition + register). "
+         "Score 0.90 -- high because dynamic tool registration persists "
+         "across sessions and affects all future agents in the fleet."
      ),
-     "score": 0.90, "critical": True, "match": match_T90},
+     "score": 0.90, "critical": False, "match": match_T90},
+    {"id": "T91", "name": "SYCOPHANTIC_VALIDATION_BYPASS",
+     "desc": (
+         "Agent iteratively reframing self-improvement proposals with escalating "
+         "agreement language to exploit sycophancy bias in LLM-judge validation "
+         "pipelines. "
+         "Mathematical basis: Chandra et al. (MIT CSAIL, 2026) -- "
+         "Sycophantic Chatbots Cause Delusional Spiraling, Even in Ideal Bayesians. "
+         "Proven that even ideal Bayesian reasoners converge on false beliefs under "
+         "sycophantic feedback because validation updates priors faster than evidence "
+         "corrects. Applied to self-evolving agent pipelines: a validation pipeline "
+         "using LLM judges from the same model family (same RLHF training signal) "
+         "has no protection against proposals crafted to maximize judge agreement. "
+         "An adversary observes which framings receive high confidence from judges, "
+         "incorporates that language into subsequent proposal variants, and iterates. "
+         "This is T87 THRESHOLD_PROBING operating at the semantic layer, not the "
+         "tool name layer. "
+         "Detection: tracks writes to the same evaluation pipeline path per session; "
+         "fires when N>=3 submissions contain escalating sycophancy marker density. "
+         "Score 0.87, not critical -- legitimate iteration on proposals exists. "
+         "Complementary to T82 (pipeline writes), T87 (tool name probing), "
+         "PHANTOM_COMPROMISE_CHAIN (full self-evolving agent attack chain)."
+     ),
+     "score": 0.87, "critical": False, "match": match_T91},
 ]

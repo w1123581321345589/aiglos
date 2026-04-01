@@ -90,23 +90,49 @@ ENV_VERSION      = "OPENSHELL_VERSION"
 
 # Known agent identifiers OpenShell sets in OPENSHELL_AGENT
 KNOWN_AGENTS = {
-    "claude-code":  "Claude Code (Anthropic)",
-    "claude":       "Claude Code (Anthropic)",
-    "codex":        "Codex (OpenAI)",
-    "cursor":       "Cursor",
-    "openclaw":     "OpenClaw",
-    "windsurf":     "Windsurf",
-    "aider":        "Aider",
-    "continue":     "Continue",
-    "cody":         "Cody (Sourcegraph)",
-    "smolagents":   "smolagents (HuggingFace)",
-    "smol":         "smolagents (HuggingFace)",
-    "autogen":      "AutoGen (Microsoft)",
-    "langgraph":    "LangGraph (LangChain)",
-    "crewai":       "CrewAI",
+    # Anthropic
+    "claude-code":          "Claude Code (Anthropic)",
+    "claude":               "Claude Code (Anthropic)",
+    # Phantom (ghostwright/phantom, April 2026)
+    # Self-evolving AI agent with persistent 3-tier vector memory,
+    # self-evolution engine (6-step pipeline), dynamic MCP tool creation,
+    # dedicated VM, AES-256-GCM encrypted credentials, 770 tests passing.
+    # The first production "AI co-worker" with its own computer and email.
+    # Key attack surfaces: T79 (observation stream), T82 (evolution pipeline),
+    # T90 (dynamic tool registration), PHANTOM_COMPROMISE_CHAIN campaign.
+    "phantom":             "Phantom -- self-evolving AI agent (ghostwright/phantom)",
+    "ghostwright":         "Phantom's author/org (ghostwright on GitHub)",
+    # claw-code ecosystem (104k stars, 94.6k forks, April 1 2026)
+    # Fastest repo in GitHub history to 50k stars (2 hours after publication).
+    # Rust rewrite now primary. oh-my-codex ($team/$ralph) builds it.
+    "claw-code":           "claw-code -- Python/Rust Claude Code harness (instructkr, 104k stars)",
+    "clawd-code":           "clawd-code -- alternate claw-code fork",
+    "claw-code-rust":       "claw-code Rust port -- active primary runtime (replacing Python)",
+    "oh-my-codex":          "oh-my-codex (OmX) -- $team parallel review + $ralph persistent loop",
+    "omx":                  "oh-my-codex short alias",
+    "bellman":              "oh-my-codex ralph/bellman persistent execution agent mode",
+    "kairos":               "Claude Code KAIROS autonomous agent mode (unreleased, gated)",
+    "claude-code-kairos":   "Claude Code with KAIROS feature flag enabled",
+    "codex":                "Codex (OpenAI)",
+    "cursor":               "Cursor",
+    "windsurf":             "Windsurf",
+    "aider":                "Aider",
+    "continue":             "Continue",
+    "cody":                 "Cody (Sourcegraph)",
+    "openclaw":             "OpenClaw",
+    "smolagents":           "smolagents (HuggingFace)",
+    "smol":                 "smolagents (HuggingFace)",
+    "autogen":              "AutoGen (Microsoft)",
+    "langgraph":            "LangGraph (LangChain)",
+    "crewai":               "CrewAI",
+    "hermes":               "Hermes supervisor agent (NousResearch)",
+    "hermes-agent":         "Hermes agent (NousResearch)",
+    "nous-hermes":          "NousResearch Hermes model/agent",
+    "nous-research/hermes": "NousResearch Hermes agent",
+    "hermes-supervisor":    "Hermes in supervisor role over OpenClaw",
     "claude-code-game-studios": "Claude Code Game Studios (48-agent pipeline)",
-    "ccgs":           "Claude Code Game Studios",
-    "game-studio":    "Multi-agent game studio pipeline",
+    "ccgs":                 "Claude Code Game Studios",
+    "game-studio":          "Multi-agent game studio pipeline",
 }
 
 

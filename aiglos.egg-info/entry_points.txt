@@ -1,0 +1,2 @@
+[console_scripts]
+aiglos = aiglos.__main__:main

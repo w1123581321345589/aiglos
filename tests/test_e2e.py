@@ -815,7 +815,7 @@ class TestVersionConsistency:
     should match.
     """
 
-    EXPECTED_VERSION = "0.25.8"
+    EXPECTED_VERSION = "0.25.19"
 
     def test_module_version(self):
         assert aiglos.__version__ == self.EXPECTED_VERSION, (

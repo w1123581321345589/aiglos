@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aiglos"
-version = "0.25.11"
-description = "AI agent security runtime. 82 threat families, 23 campaign patterns, signed compliance artifacts. Zero dependencies."
+version = "0.25.19"
+description = "AI agent security runtime. 88 threat families, 26 campaign patterns, signed compliance artifacts. Zero dependencies."
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -34,7 +34,9 @@ requires-python = ">=3.11"
 
 # Core detection engine has ZERO required deps (stdlib only).
 # Optional deps unlock attestation signing and reporting.
-dependencies = []
+dependencies = [
+    "pytest>=9.0.2",
+]
 
 [project.optional-dependencies]
 signing = [

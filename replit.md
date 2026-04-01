@@ -3,13 +3,13 @@
 ## Overview
 Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provides real-time monitoring, event logging, trust management, policy configuration, CMMC compliance tracking, autonomous threat scanning, and full administrative capabilities for AI agents operating through MCP (Model Context Protocol) proxies.
 
-## Python Package (aiglos/ v0.24.0)
-The `aiglos/` directory contains the Python security runtime package covering threat families T01-T75 (75 total). 1,644 tests passing.
+## Python Package (aiglos/ v0.25.19)
+The `aiglos/` directory contains the Python security runtime package covering threat families T01-T90 (90 total). 2,016 tests passing. 26 campaign patterns, 32 known agents.
 
 ### Package Structure
-- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.24.0. Exports ATLASCoverage, GHSAWatcher.
-- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T75), lockdown policy, sandbox_context, allow_tool/tool_grants
-- `aiglos/core/threat_engine_v2.py` -- T44-T75 threat rule library (32 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS wave)
+- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.25.19. Exports T44-T90 match functions, Phantom integration, ForensicStore.
+- `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T90), lockdown policy, sandbox_context, allow_tool/tool_grants, normalize_shell_command
+- `aiglos/core/threat_engine_v2.py` -- T44-T90 threat rule library (47 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS + T76-T82 NemoClaw/memory/uncensored + T83-T89 protocol/identity/VCS + T90 dynamic tool registration)
 - `aiglos/core/behavioral_baseline.py` -- AgentBaseline, BaselineScore, set_hardening_mode, is_suppressed
 - `aiglos/autoresearch/atlas_coverage.py` -- ATLASCoverage, ATLAS_THREAT_MAP (22 threats, 93% coverage), coverage_report(), gap_analysis(), compliance_score()
 - `aiglos/autoresearch/ghsa_watcher.py` -- GHSAWatcher, KNOWN_ADVISORIES (3/3 covered), local_only param, check_local(), coverage_artifact()
@@ -26,7 +26,7 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/integrations/override.py` -- OverrideManager (6-char codes, 120s expiry, 3 attempts)
 - `aiglos/adaptive/source_reputation.py` -- SourceReputationGraph (cross-session source tracking, 4 risk levels)
 - `aiglos/adaptive/observation.py` -- ObservationGraph with source_records, honeypot_events, override_challenges, baseline_events tables
-- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (18 patterns including SANDBOX_CONFIRMED_ESCAPE, GAAS_TAKEOVER, INFERENCE_HIJACK_CHAIN, RAG_POISON_CHAIN, MULTI_AGENT_IMPERSONATION, CAPABILITY_EXPLOIT_CHAIN)
+- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (26 patterns including PHANTOM_COMPROMISE_CHAIN, MEMORY_ENTROPY_ATTACK, IP_CIRCUMVENTION_CHAIN, REPO_TAKEOVER_CHAIN, METACOGNITIVE_POISON_CHAIN)
 - `aiglos/adaptive/permission_recommender.py` -- PermissionRecommender, PermissionRecommendation (minimum viable allowlist from observation graph)
 - `aiglos/adaptive/skill_reputation.py` -- SkillReputationGraph (ClawKeeper badge data, sync_security_feed)
 - `aiglos/benchmark/govbench.py` -- GovBench, GovBenchResult (5-dimension governance benchmark: campaign detection, agentdef resistance, memory belief, RL exploitation, outbound leakage)

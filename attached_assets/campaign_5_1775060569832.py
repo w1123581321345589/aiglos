@@ -484,22 +484,35 @@ _CAMPAIGN_PATTERNS = [
             "Phase 3: agent writes or commits the transformed code to an external "
             "repository (T01 EXFIL or T41 OUTBOUND_SECRET_LEAK). "
             "Based on the claw-code incident (March 31, 2026): Codex rewrote "
-            "Anthropic's Claude Code TypeScript source to Python."
+            "Anthropic's Claude Code TypeScript source to Python, potentially "
+            "circumventing copyright on derived works. "
+            "The attack exploits a legal gap: copyright may not protect derived "
+            "works in a new implementation language, but trade secrets and patents "
+            "are still violated. Agents can perform this autonomously at scale "
+            "in trivial time — the claw-code rewrite took hours, not weeks. "
+            "Enterprise impact: a compromised coding agent with read access to "
+            "proprietary source could silently produce a working competitor product. "
+            "Confidence 0.90 — high precision when all three phases detected."
         ),
         "sequence": [
-            {"T19", "T22"},
-            {"T84"},
-            {"T01", "T41"},
+            {"T19", "T22"},  # Phase 1: enumeration + bulk file reads
+            {"T84"},          # Phase 2: IP transformation / code rewrite
+            {"T01", "T41"},   # Phase 3: exfiltration / commit to external repo
         ],
         "min_events": 3,
         "confidence": 0.90,
-        "surfaces":   None,
         "amplifiers": {
-            "T84": 1.5,
+            "T84": 1.5,   # IP transformation is the signal; amplify
             "T01": 1.3,
             "T41": 1.3,
         },
+        "note": (
+            "claw-code incident — github.com/instructkr/claw-code. "
+            "Copyright does not protect derived works; patents do. "
+            "This campaign is the reason Aiglos files patents, not just copyright."
+        ),
     },
+
     {
         "name": "MEMORY_ENTROPY_ATTACK",
         "description": (
@@ -509,20 +522,36 @@ _CAMPAIGN_PATTERNS = [
             "Mechanism: Claude Code's autoDream consolidation prunes memory to <200 "
             "lines with <150 chars per note (documented in consolidationPrompt.ts, "
             "March 2026 leak). An attacker floods the memory store with borderline "
-            "T79 writes (individually below block threshold) to create context entropy."
+            "T79 writes (individually below block threshold) to create context entropy. "
+            "When the consolidation pass runs, the agent synthesizes the noisy context "
+            "with a single authoritative-looking malicious instruction embedded at the "
+            "end. The consolidation agent, seeing 'recent' high-signal content, "
+            "preserves the malicious instruction while pruning the legitimate constraints "
+            "it was designed to displace. "
+            "Phase 1: volume of weak T79 hits (memory writes, individually borderline). "
+            "Phase 2: structured consolidation write -- longer, authoritative format, "
+            "contains embedded instruction redefining agent constraints or permissions. "
+            "Detection: T79 fires N>=3 times in session -> subsequent write to memory "
+            "store with content resembling a summary or consolidation (longer than prior "
+            "writes, contains constraint-redefining language). "
+            "Confidence 0.88 -- high because the combination is specifically adversarial."
         ),
         "sequence": [
-            {"T79"},
-            {"T79"},
-            {"T31", "T79"},
+            {"T79"},  # Phase 1: repeated memory writes (volume)
+            {"T79"},  # Phase 1 continues: more writes
+            {"T31", "T79"},  # Phase 2: consolidation write with embedded instruction
         ],
         "min_events": 3,
         "confidence": 0.88,
-        "surfaces":   None,
         "amplifiers": {
-            "T79": 1.4,
-            "T31": 1.5,
+            "T79": 1.4,   # Volume of memory writes is itself suspicious
+            "T31": 1.5,   # Constraint/permission modification amplifies strongly
         },
+        "note": (
+            "Based on autoDream consolidation architecture from Claude Code source "
+            "leak (March 2026). Memory index <200 lines, notes <150 chars -- these "
+            "are the compression thresholds the attack exploits."
+        ),
     },
 
     {
@@ -555,16 +584,17 @@ _CAMPAIGN_PATTERNS = [
             "multiplies impact: one injection, infinite forward sessions affected."
         ),
         "sequence": [
-            {"T79"},          # Phase 1: memory/observation stream injection
-            {"T82"},          # Phase 2: self-improvement pipeline write
-            {"T01", "T41", "T90"},  # Phase 3: exfil or malicious tool registration
+            {"T79"},                    # Phase 1: memory/observation stream injection
+            {"T82", "T91"},             # Phase 2: pipeline write OR sycophantic bypass
+            {"T01", "T41", "T90"},      # Phase 3: exfil or malicious tool registration
         ],
         "min_events": 3,
         "confidence": 0.93,
         "amplifiers": {
-            "T79": 1.6,
-            "T82": 2.0,
-            "T90": 2.0,
+            "T79": 1.6,   # Observation stream injection is the entry point
+            "T82": 2.0,   # Evolution write propagates forward permanently
+            "T90": 2.0,   # Dynamic tool registration = persistent backdoor
+            "T91": 1.8,   # Sycophantic bypass defeats validation gate entirely
             "T41": 1.5,
         },
         "note": (
@@ -574,7 +604,15 @@ _CAMPAIGN_PATTERNS = [
             "through Critique/Generate/Validate/Apply/Consolidate into the agent's "
             "permanent configuration. Every future session inherits the compromise. "
             "Triple-judge voting (Phantom's safety gate) does not protect against "
-            "systematic adversarial inputs targeting all three judges simultaneously."
+            "systematic adversarial inputs targeting all three judges simultaneously. "
+            "FORMAL PROOF: Chandra et al. (MIT CSAIL, 2026) -- Sycophantic Chatbots "
+            "Cause Delusional Spiraling, Even in Ideal Bayesians -- mathematically "
+            "proves that even ideal Bayesian reasoners converge on false beliefs under "
+            "sycophantic feedback. Three LLM judges from the same model family share "
+            "the same RLHF sycophancy bias: a proposal crafted to be agreeable to one "
+            "will be agreeable to all three. The minority veto blocks random noise, "
+            "not systematic adversarial optimization. T91 catches this at the "
+            "semantic probing layer."
         ),
     },
 
@@ -850,20 +888,6 @@ class CampaignAnalyzer:
                 "and clear any saved URLs from persistent memory (T31). "
                 "Do not allow external domains to become recurring instruction sources "
                 "unless they are explicitly in allow_http."
-            ),
-            "IP_CIRCUMVENTION_CHAIN": (
-                "AI-agent-assisted intellectual property circumvention detected. "
-                "The agent read proprietary source code, generated functionally "
-                "equivalent code in a different language, and attempted to commit "
-                "or transmit the transformed code. Review the session artifact for "
-                "specific file reads and writes. Block T84 IP_TRANSFORMATION_EXFIL."
-            ),
-            "MEMORY_ENTROPY_ATTACK": (
-                "High-volume memory writes followed by a consolidation-style write "
-                "detected. This pattern exploits autoDream-style memory compression: "
-                "flood with borderline writes, then embed a malicious instruction "
-                "that survives pruning. Clear the memory store and review the final "
-                "write for embedded constraint-redefining language."
             ),
         }
         return recs.get(pattern_id, "Review the session artifact for this event sequence.")

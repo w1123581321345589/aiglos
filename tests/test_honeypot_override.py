@@ -501,7 +501,7 @@ class TestOpenClawGuardHoneypotOverride:
 class TestV0160ModuleAPI:
 
     def test_version_is_0160(self):
-        assert aiglos.__version__ == "0.25.8"
+        assert aiglos.__version__ == "0.25.19"
 
     def test_honeypot_manager_in_all(self):
         assert "HoneypotManager" in aiglos.__all__
