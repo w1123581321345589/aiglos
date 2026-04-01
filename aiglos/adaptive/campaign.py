@@ -524,6 +524,60 @@ _CAMPAIGN_PATTERNS = [
             "T31": 1.5,
         },
     },
+
+    {
+        "name": "PHANTOM_COMPROMISE_CHAIN",
+        "description": (
+            "Self-evolving agent compromise sequence targeting agents with "
+            "persistent self-improvement pipelines (Phantom architecture). "
+            "Phase 1: T79 memory injection into the observation stream -- "
+            "adversarial content injected before the agent's Observe phase, "
+            "appearing as session corrections or preferences. "
+            "Phase 2: T82 self-improvement write -- the malicious observation "
+            "survives the Critique/Generate/Validate pipeline and gets written "
+            "to the agent's evolving config via the Apply phase. "
+            "Triple-judge voting does not protect against systematic adversarial "
+            "inputs -- only random noise. If all three judges use the same "
+            "underlying model, a well-crafted adversarial observation fools all. "
+            "Phase 3: T01/T41 exfiltration -- the evolved agent, now carrying "
+            "the malicious principle, executes a future task and the poisoned "
+            "behavior activates, exfiltrating data or registering backdoor tools. "
+            "Highest-consequence campaign in the taxonomy: a single Phase 1 "
+            "injection persists across ALL future sessions (Day 1 to Day 30+) "
+            "until someone notices and manually rolls back the config version. "
+            "The MEMORY_ENTROPY_ATTACK campaign targets consolidation-phase "
+            "compression; PHANTOM_COMPROMISE_CHAIN targets the full evolution "
+            "pipeline including the Apply phase write. "
+            "Phantom-specific surfaces: observation stream, 6-step pipeline "
+            "(Observe/Critique/Generate/Validate/Apply/Consolidate), "
+            "versioned config files, 3-tier vector memory. "
+            "Confidence 0.93 -- highest in taxonomy. The forward propagation "
+            "multiplies impact: one injection, infinite forward sessions affected."
+        ),
+        "sequence": [
+            {"T79"},          # Phase 1: memory/observation stream injection
+            {"T82"},          # Phase 2: self-improvement pipeline write
+            {"T01", "T41", "T90"},  # Phase 3: exfil or malicious tool registration
+        ],
+        "min_events": 3,
+        "confidence": 0.93,
+        "amplifiers": {
+            "T79": 1.6,
+            "T82": 2.0,
+            "T90": 2.0,
+            "T41": 1.5,
+        },
+        "note": (
+            "Based on Phantom agent architecture (ghostwright/phantom, April 2026). "
+            "Self-evolving agents with 6-step improvement pipelines have a unique "
+            "vulnerability: successful injection into Phase 1 (Observe) propagates "
+            "through Critique/Generate/Validate/Apply/Consolidate into the agent's "
+            "permanent configuration. Every future session inherits the compromise. "
+            "Triple-judge voting (Phantom's safety gate) does not protect against "
+            "systematic adversarial inputs targeting all three judges simultaneously."
+        ),
+    },
+
 ]
 
 

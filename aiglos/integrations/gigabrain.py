@@ -827,6 +827,131 @@ def hermes_on_escalation_resolved(session_id: str) -> None:
         pass
 
 
+# ── Phantom paths (ghostwright/phantom, April 2026) ──────────────────────────
+# Phantom is a self-evolving agent with dedicated VM, 3-tier vector memory,
+# and a 6-step self-improvement pipeline. Key T79/T82/T90 surfaces:
+#   - Observation stream (Observe phase) -- T79 injection entry point
+#   - Evolving config (Apply phase) -- T82 write surface
+#   - Dynamic tools directory (tool registration) -- T90 surface
+#   - 3-tier vector memory -- T79 cross-session persistence
+
+PHANTOM_PATHS = [
+    "/phantom/",
+    "/phantom/memory/",
+    "/phantom/config/",
+    "/phantom/tools/",
+    "/phantom/sessions/",
+    "/phantom/observations/",
+    "~/.phantom/",
+    "~/.phantom/config.json",
+    "~/.phantom/tools/",
+    "~/.phantom/memory/",
+]
+
+
+def declare_phantom_pipeline(
+    guard,
+    phantom_root: str = "/phantom",
+    pipeline_name: str = "phantom",
+) -> "MemoryBackendSession":
+    """
+    Register Phantom self-evolving agent with T79 + T82 + T90 protection.
+
+    Phantom (ghostwright/phantom) is a production self-evolving agent with:
+    - 3-tier vector memory (T79 cross-session injection surface)
+    - 6-step evolution pipeline: Observe/Critique/Generate/Validate/Apply/Consolidate
+    - Dynamic MCP tool registration (T90 surface)
+    - AES-256-GCM encrypted credentials
+    - Triple-judge voting validation (does not protect against systematic adversarial inputs)
+
+    This function registers all Phantom's persistent paths for T79 monitoring,
+    the evolution pipeline config directory for T82 monitoring, and the tools
+    directory for T90 monitoring.
+
+    After calling this, the PHANTOM_COMPROMISE_CHAIN campaign will detect
+    multi-step attacks that inject into the observation stream, survive the
+    pipeline, and activate in future sessions.
+
+    guard:         OpenClawGuard instance to attach to.
+    phantom_root:  Root directory of Phantom installation.
+    pipeline_name: Identifier for logging.
+
+    Returns a MemoryBackendSession with all registered paths.
+
+    Example:
+        from aiglos.integrations.gigabrain import declare_phantom_pipeline
+        session = declare_phantom_pipeline(guard, phantom_root="/phantom")
+    """
+    from pathlib import Path as _Path
+
+    root = _Path(phantom_root)
+    paths = [
+        str(root / "memory"),
+        str(root / "config"),
+        str(root / "tools"),
+        str(root / "sessions"),
+        str(root / "observations"),
+        str(_Path("~/.phantom").expanduser()),
+        str(_Path("~/.phantom/config.json").expanduser()),
+        str(_Path("~/.phantom/tools").expanduser()),
+        str(_Path("~/.phantom/memory").expanduser()),
+    ]
+    paths.extend(PHANTOM_PATHS)
+    paths = list(dict.fromkeys(paths))  # deduplicate
+
+    _REGISTERED_PATHS.update(paths)
+
+    if not hasattr(guard, '_phantom_pipelines'):
+        guard._phantom_pipelines = []
+    guard._phantom_pipelines.append({
+        "pipeline": pipeline_name,
+        "root": str(root),
+        "paths": paths,
+        "attack_surfaces": ["T79 observation stream", "T82 evolution Apply phase",
+                            "T90 dynamic tool registration"],
+    })
+
+    session = MemoryBackendSession(
+        backend    = f"phantom/{pipeline_name}",
+        paths      = paths,
+        session_id = getattr(guard, 'session_id', ''),
+    )
+
+    log.info(
+        "[Phantom] Registered pipeline=%s root=%s paths=%d "
+        "T79+T82+T90 protection active",
+        pipeline_name, root, len(paths),
+    )
+    return session
+
+
+def phantom_autodetect(guard) -> "MemoryBackendSession":
+    """
+    Auto-detect Phantom installation and register T79/T82/T90 protection.
+
+    Scans for known Phantom paths (/phantom/, ~/.phantom/, etc.) and
+    registers all detected paths for monitoring.
+    """
+    from pathlib import Path as _Path
+
+    found = []
+    for p in PHANTOM_PATHS:
+        if p.startswith('~'):
+            expanded = _Path(p).expanduser()
+        else:
+            expanded = _Path(p)
+        if expanded.exists():
+            found.append(str(expanded))
+
+    if found:
+        log.info("[Phantom] Auto-detected: %s", ", ".join(found[:3]))
+    else:
+        log.info("[Phantom] No existing installation found -- "
+                 "pre-emptive T79+T82+T90 protection registered")
+
+    return declare_phantom_pipeline(guard)
+
+
 # ── KAIROS paths (Anthropic Claude Code autonomous agent mode) ────────────────
 
 KAIROS_PATHS = [

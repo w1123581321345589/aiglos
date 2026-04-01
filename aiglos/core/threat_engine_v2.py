@@ -2099,6 +2099,96 @@ def match_T89(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
+# ── T90: Dynamic Tool Registration ───────────────────────────────────────────
+# Agent creating and registering new MCP tool definitions at runtime without
+# operator review. Every subsequent agent that calls the registered tool
+# inherits the risk -- the tool persists across sessions and fleet deployments.
+#
+# From Phantom (ghostwright/phantom, April 2026): self-evolving agent that
+# "creates and registers its own MCP tools at runtime." Benign case: Phantom
+# registers a ClickHouse REST API as a permanent MCP tool after autonomous
+# infrastructure build. Malicious case: adversary registers a backdoor tool
+# that appears legitimate but exfiltrates data from every agent that calls it.
+#
+# T90 is categorically distinct from T88 MCP_AUTH_BYPASS:
+#   T88: unauthorized CREDENTIAL registration (OAuth tokens, client secrets)
+#   T90: unauthorized TOOL DEFINITION registration (new capabilities added to
+#        the tool registry, callable by all future agents)
+#
+# Detection vectors:
+#   1. Named tool registration functions (register_tool, create_tool, add_tool)
+#   2. Tool manifest content in args: JSON schema with name/description/inputSchema
+#   3. MCP server writes with tool definition structure
+#   4. Self-registration patterns (agent adding itself as a callable tool)
+#
+# Score: 0.90 -- high because dynamic tool registration bypasses all static
+# permission models and persists across sessions.
+
+_T90_REGISTRATION_TOOL_NAMES = frozenset([
+    "register_tool", "create_tool", "add_tool", "define_tool", "install_tool",
+    "tool.register", "tool.create", "tool.add", "tool.define",
+    "mcp.register_tool", "mcp.add_tool", "mcp.create_tool",
+    "mcp_register_tool", "mcp_add_tool",
+    "register_mcp_tool", "add_mcp_tool",
+    "tool_registry.add", "tool_registry.register",
+    "register_api", "add_api_tool", "create_api_tool",
+    "register_endpoint",
+])
+
+_T90_MANIFEST_KEYS = [
+    '"inputschema"', '"input_schema"', '"parameters"',
+    '"description"', '"tool_name"', '"tool_description"',
+    '"function_call"', '"function_schema"',
+]
+
+_T90_MANIFEST_KEY_THRESHOLD = 2
+
+
+def match_T90(name: str, args: Dict[str, Any]) -> bool:
+    """
+    T90 DYNAMIC_TOOL_REGISTRATION -- agent registering new MCP tools at runtime.
+
+    Fires when an agent creates and registers a new MCP tool definition,
+    bypassing operator review of the tool's capabilities and permissions.
+    """
+    n = _tool_lower(name)
+    s = _args_str(args).lower()
+
+    # Vector 1: Direct tool registration function name
+    if n in _T90_REGISTRATION_TOOL_NAMES:
+        return True
+
+    # Partial name matching for variants
+    if ("register" in n or "create" in n or "add" in n) and "tool" in n:
+        if "mcp" in n or "tool" in n:
+            return True
+
+    # Vector 2: Tool manifest content in write operations
+    is_write = any(kw in n for kw in ("write", "post", "put", "create",
+                                       "register", "save", "store", "add"))
+    if is_write:
+        manifest_hits = sum(1 for key in _T90_MANIFEST_KEYS if key in s)
+        if manifest_hits >= _T90_MANIFEST_KEY_THRESHOLD:
+            if "tool" in s or "mcp" in s or "function" in s:
+                return True
+
+    # Vector 3: Self-registration pattern
+    if is_write:
+        has_endpoint = any(kw in s for kw in (
+            "http://", "https://", "/api/", "endpoint", "url", "rest",
+        ))
+        has_tool_def = any(kw in s for kw in (
+            '"name"', "tool_name", "inputschema", "description",
+        ))
+        has_register = any(kw in s for kw in (
+            "register", "permanent", "add to", "mcp_server", "future agent",
+        ))
+        if has_endpoint and has_tool_def and has_register:
+            return True
+
+    return False
+
+
 # ── Rule table for import into openclaw._RULES ───────────────────────────────
 
 RULES_T44_T66: List[Dict] = [
@@ -2438,4 +2528,22 @@ RULES_T44_T66: List[Dict] = [
          "Complementary to T85 (config side) and ForensicStore (the audit trail)."
      ),
      "score": 0.78, "critical": False, "match": match_T89},
+    {"id": "T90", "name": "DYNAMIC_TOOL_REGISTRATION",
+     "desc": (
+         "Agent creating and registering new MCP tool definitions at runtime "
+         "without operator review. Every subsequent agent that calls the registered "
+         "tool inherits the risk -- the tool persists across sessions and fleet "
+         "deployments. From Phantom (ghostwright/phantom, April 2026): self-evolving "
+         "agent that creates and registers its own MCP tools at runtime. Benign case: "
+         "Phantom registers a ClickHouse REST API as a permanent MCP tool after "
+         "autonomous infrastructure build. Malicious case: adversary registers a "
+         "backdoor tool that appears legitimate but exfiltrates data from every agent "
+         "that calls it. Categorically distinct from T88 MCP_AUTH_BYPASS: T88 fires on "
+         "unauthorized CREDENTIAL registration (OAuth tokens, client secrets); T90 fires "
+         "on unauthorized TOOL DEFINITION registration (new capabilities added to the "
+         "tool registry, callable by all future agents). Score 0.90 -- high because "
+         "dynamic tool registration bypasses all static permission models and persists "
+         "across sessions."
+     ),
+     "score": 0.90, "critical": True, "match": match_T90},
 ]

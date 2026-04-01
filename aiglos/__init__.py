@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.25.18"  # canonical version for this release
+    __version__ = "0.25.19"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -123,6 +123,11 @@ from aiglos.core.threat_engine_v2 import (  # noqa: F401
     _T88_MCP_AUTH_TOOL_NAMES,
     match_T89,
     _T89_VCS_TOOL_NAMES,
+    match_T90,
+    _T90_REGISTRATION_TOOL_NAMES,
+)
+from aiglos.integrations.gigabrain import (  # noqa: F401
+    declare_phantom_pipeline, phantom_autodetect, PHANTOM_PATHS
 )
 from aiglos.forensics import ForensicStore, ForensicRecord  # noqa: F401
 from aiglos.integrations.memory_guard import (  # noqa: F401
@@ -912,6 +917,12 @@ __all__ = [
     # v0.25.18 — T89 CONTRIBUTION_PROVENANCE_SUPPRESSION (undercover mode)
     "match_T89",
     "_T89_VCS_TOOL_NAMES",
+    # v0.25.19 — T90 DYNAMIC_TOOL_REGISTRATION, PHANTOM_COMPROMISE_CHAIN, Phantom integration
+    "match_T90",
+    "_T90_REGISTRATION_TOOL_NAMES",
+    "declare_phantom_pipeline",
+    "phantom_autodetect",
+    "PHANTOM_PATHS",
     "ForensicStore",
     "ForensicRecord",
     "check_memory_size_anomaly",

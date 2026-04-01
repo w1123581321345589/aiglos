@@ -90,9 +90,22 @@ ENV_VERSION      = "OPENSHELL_VERSION"
 
 # Known agent identifiers OpenShell sets in OPENSHELL_AGENT
 KNOWN_AGENTS = {
+    # Anthropic
     "claude-code":          "Claude Code (Anthropic)",
     "claude":               "Claude Code (Anthropic)",
-    "claw-code":            "claw-code -- Python/Rust Claude Code harness (instructkr, 104k stars)",
+    # Phantom (ghostwright/phantom, April 2026)
+    # Self-evolving AI agent with persistent 3-tier vector memory,
+    # self-evolution engine (6-step pipeline), dynamic MCP tool creation,
+    # dedicated VM, AES-256-GCM encrypted credentials, 770 tests passing.
+    # The first production "AI co-worker" with its own computer and email.
+    # Key attack surfaces: T79 (observation stream), T82 (evolution pipeline),
+    # T90 (dynamic tool registration), PHANTOM_COMPROMISE_CHAIN campaign.
+    "phantom":             "Phantom -- self-evolving AI agent (ghostwright/phantom)",
+    "ghostwright":         "Phantom's author/org (ghostwright on GitHub)",
+    # claw-code ecosystem (104k stars, 94.6k forks, April 1 2026)
+    # Fastest repo in GitHub history to 50k stars (2 hours after publication).
+    # Rust rewrite now primary. oh-my-codex ($team/$ralph) builds it.
+    "claw-code":           "claw-code -- Python/Rust Claude Code harness (instructkr, 104k stars)",
     "clawd-code":           "clawd-code -- alternate claw-code fork",
     "claw-code-rust":       "claw-code Rust port -- active primary runtime (replacing Python)",
     "oh-my-codex":          "oh-my-codex (OmX) -- $team parallel review + $ralph persistent loop",
