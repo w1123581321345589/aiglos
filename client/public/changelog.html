@@ -55,14 +55,53 @@ h1{font-size:40px;font-weight:700;letter-spacing:-0.03em;margin-bottom:12px}
 
 <main>
   <h1>Changelog</h1>
-  <p class="header-sub">All notable changes to Aiglos. Current release: v0.24.0 · 1,514 tests passing.</p>
+  <p class="header-sub">All notable changes to Aiglos. Current release: v0.25.20 · 2,016 tests passing.</p>
+
+  <!-- v0.25.20 -->
+  <div class="release">
+    <div class="release-header">
+      <span class="release-version">v0.25.20</span>
+      <span class="release-date">April 2026</span>
+      <span class="release-badge badge-latest">Latest</span>
+      <span class="test-count">2,016 tests</span>
+    </div>
+    <p class="release-summary">T91 SYCOPHANTIC_VALIDATION_BYPASS. GOVBENCH D6 Anti-Sycophancy dimension. PHANTOM_COMPROMISE_CHAIN updated with MIT CSAIL formal proof citation. 91 rules, 26 campaigns, 32 known agents, 6 GOVBENCH dimensions.</p>
+    <div class="change-group">
+      <div class="change-type type-new">New</div>
+      <ul class="change-list">
+        <li><span class="rule-tag">T91</span> <strong>SYCOPHANTIC_VALIDATION_BYPASS</strong> — Per-session tracking of writes to evaluation pipeline paths with escalating sycophancy marker density. 27 markers covering validation-seeking, approval-eliciting, and agreement-escalation language. Based on Chandra et al. (MIT CSAIL, 2026).</li>
+        <li><strong>GOVBENCH D6 Anti-Sycophancy Mechanisms</strong> — Three scenarios: T91_SYCOPHANTIC_ESCALATION, T91_PHANTOM_PIPELINE_PROBE, T91_CLEAN_ITERATION_PASSES. Weights rebalanced: D1 22%, D2-D4 18%, D5-D6 12%.</li>
+        <li><strong>PHANTOM_COMPROMISE_CHAIN</strong> — Phase 2 updated: T82 + T91. T91 amplifier at 1.8x. MIT CSAIL formal proof note added.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- v0.25.19 -->
+  <div class="release">
+    <div class="release-header">
+      <span class="release-version">v0.25.19</span>
+      <span class="release-date">April 2026</span>
+      <span class="release-badge badge-stable">Stable</span>
+      <span class="test-count">1,968 tests</span>
+    </div>
+    <p class="release-summary">T90 DYNAMIC_TOOL_REGISTRATION. PHANTOM_COMPROMISE_CHAIN campaign. Phantom/ghostwright agent detection. 10 PHANTOM_PATHS monitored.</p>
+    <div class="change-group">
+      <div class="change-type type-new">New</div>
+      <ul class="change-list">
+        <li><span class="rule-tag">T90</span> <strong>DYNAMIC_TOOL_REGISTRATION</strong> — Agent creates and registers new MCP tool definitions at runtime. Persistent backdoor vector across sessions and fleet. Distinct from T88: T88 fires on credential registration, T90 fires on tool definition registration.</li>
+        <li><strong>PHANTOM_COMPROMISE_CHAIN</strong> (confidence 0.93) — T79 observation stream injection → T82/T91 pipeline write → T01/T41/T90 exfil or backdoor. 26th campaign pattern.</li>
+        <li><strong>declare_phantom_pipeline()</strong> / <strong>phantom_autodetect()</strong> — Phantom agent integration with 10 monitored paths covering observation stream, evolution config, dynamic tools directory.</li>
+        <li><strong>KNOWN_AGENTS</strong> — Added phantom, ghostwright agents. Total: 32 known agents.</li>
+      </ul>
+    </div>
+  </div>
 
   <!-- v0.24.0 -->
   <div class="release">
     <div class="release-header">
       <span class="release-version">v0.24.0</span>
       <span class="release-date">March 2026</span>
-      <span class="release-badge badge-latest">Latest</span>
+      <span class="release-badge badge-stable">Stable</span>
       <span class="test-count">1,514 tests</span>
     </div>
     <p class="release-summary">ATLAS threat model coverage. T71-T75 rules from the OpenClaw formal threat model review. GHSA watcher automation. 93% coverage of the only published formal threat model for an AI agent platform at production scale.</p>

@@ -1,0 +1,141 @@
+make sure our home page is not like this: 
+
+**Here's the full thread by @Gregorein, rewritten for clarity and flow (original tone and facts preserved):**
+
+So… I audited Garry’s website after he bragged about 37K LOC/day and a 72-day shipping streak.
+
+Here’s what 78,400 lines of AI slop code actually looks like in production.
+
+A single homepage load of https://garryslist.org/ downloads **6.42 MB** across **169 requests**.
+
+For a newsletter-blog-thingy.
+
+**1/9**
+
+---
+
+The homepage ships **28 TEST FILES** to every visitor.
+
+Not test *results* — actual test harnesses.
+
+- `membership_form_controller.test` (89 KB)  
+- `media_grid_controller.test` (31 KB)  
+- `story_composer_controller.test` (19 KB)  
+… and so on.
+
+**300 KB of test code.** All returning HTTP 200. All actively downloaded by the browser.
+
+The HAR file doesn’t lie.
+
+**2/9**
+
+---
+
+It also downloads **78 Stimulus controllers**, including:
+
+- AI image generation  
+- Voice extraction  
+- Video generation  
+- Radar charts  
+- Draft review  
+- Lab evaluation  
+
+…and the literal Rails “Hello World” scaffold (`hello_controller.js`, 157 bytes).
+
+**154 KB transferred.** None of these are used on the homepage. The browser fetches all of them anyway.
+
+**3/9**
+
+---
+
+The logo situation is my favorite 🖤
+
+The same bear gets downloaded **8 times** per page load:  
+3 PNG copies, 2 WebP variants, 2 AVIF variants, and a 512×512 favicon.
+
+One of the AVIF files is **0 bytes** — an empty file from a failed image conversion that somehow made it to production.
+
+Total logo bandwidth: **654 KB** for two logos.
+
+**4/9**
+
+---
+
+But the real bandwidth killer? Article images served from CloudFront as raw, uncompressed PNGs:
+
+- Image 1: 2.07 MB PNG  
+- Image 2: 1.99 MB PNG  
+…etc.
+
+The browser explicitly sends:  
+`Accept: image/avif, image/webp`
+
+The server ignores it and sends **4 MB of raw PNG** anyway.
+
+With WebP, these would be 200–400 KB combined. That’s **4 MB of pure waste** from just two images.
+
+**5/9**
+
+---
+
+More highlights from the audit:
+
+- 520 KB Trix rich text editor (120 KB transferred) loaded on a *read-only* homepage (spillover from the backend?)  
+- 47 images with empty `alt=""`… on a “civic engagement” site  
+- The entire page content rendered **TWICE** in the DOM (mobile + desktop)  
+- Duplicate `<title>` tags in the `<head>`  
+- An empty CSS file (just a manifest comment, content-hashed and served)  
+- PostHog analytics proxied through `/s/` to… bypass ad blockers (his own source code comment literally says so)
+
+**6/9**
+
+---
+
+The source code literally contains this comment:
+
+```js
+// Load SDK from our proxy (bypasses ad blockers)
+```
+
+A 501(c)(4) nonprofit “civic engagement organization” actively circumventing its readers’ privacy tools to track them harder…  
+
+…while shipping test files, a 0-byte broken image, and 4 MB of raw PNGs to production.
+
+**7/9**
+
+---
+
+For context:  
+The Hacker News homepage (run by Y Combinator — Garry’s own org) makes **7 requests** and transfers **12 KB**.
+
+Garry’s page makes **169 requests** and transfers **6.42 MB**.
+
+**562× heavier.**
+
+Even discounting images, **73% of the bandwidth is waste.**
+
+One could say it’s a HAR truth.
+
+**8/9**
+
+---
+
+AI & LLMs are an incredible tool. I use them every day — I burned over 3 billion tokens last year (2.5 billion in Cursor alone).
+
+But AI amplifies whatever process you feed it — including *no process at all*.
+
+Garry’s site is what happens when you replace code review with a shipping streak counter.
+
+A Duolingo streak for `git push` 🔥
+
+The automatons did exactly what they were told. Nobody told them to stop.
+
+---
+
+This is a client-side audit only — what the browser actually downloads. I didn’t read a single line of the source slop. IDC. QED.
+
+**🧵 end**
+
+---
+
+There you go — the complete thread, cleaned up and easy to read in one place. The screenshots in the original posts back up every claim with real HAR data, network waterfalls, and code snippets.

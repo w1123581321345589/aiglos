@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aiglos — Runtime Security for AI Agents</title>
-<meta name="description" content="The runtime security layer for AI agents. 75 threat families. One import. Under 1ms.">
+<meta name="description" content="The runtime security layer for AI agents. 91 threat rules. One import. Under 1ms.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -258,7 +258,7 @@ footer{border-top:1px solid var(--ln);padding:40px 48px;
 <section class="hero">
   <div class="hero-badge">
     <span class="hero-badge-dot"></span>
-    v0.24.0 — 75 threat families — 1514 tests passing
+    v0.25.20 — 91 threat rules — 2016 tests passing
   </div>
   <h1 class="fade-up">Runtime security for<br><span>AI agents.</span></h1>
   <p class="hero-sub fade-up delay-1">One import. Every tool call inspected before execution. Under 1ms. The security layer the OpenClaw ecosystem doesn't ship.</p>
@@ -274,11 +274,11 @@ footer{border-top:1px solid var(--ln);padding:40px 48px;
   </div>
   <div class="hero-stats fade-up delay-3">
     <div class="hero-stat">
-      <span class="hero-stat-n">75</span>
-      <span class="hero-stat-l">Threat families</span>
+      <span class="hero-stat-n">91</span>
+      <span class="hero-stat-l">Threat rules</span>
     </div>
     <div class="hero-stat">
-      <span class="hero-stat-n">19</span>
+      <span class="hero-stat-n">26</span>
       <span class="hero-stat-l">Campaign patterns</span>
     </div>
     <div class="hero-stat">
@@ -325,12 +325,12 @@ aiglos.<span class="tok-fn">attach</span>(
   </div>
   <div class="feature-grid">
     <div class="feature-cell">
-      <div class="feature-title">75 Threat Families</div>
-      <div class="feature-body">T01–T75 covering MCP tool calls, HTTP/API requests, subprocess execution, session data extraction, content wrapper escapes, environment hijacking, and every attack class in the OpenClaw ATLAS threat model.</div>
+      <div class="feature-title">91 Threat Rules</div>
+      <div class="feature-body">T01–T91 covering MCP tool calls, HTTP/API requests, subprocess execution, session data extraction, content wrapper escapes, environment hijacking, sycophantic validation bypass, dynamic tool registration, and every attack class in the OpenClaw ATLAS threat model.</div>
     </div>
     <div class="feature-cell">
       <div class="feature-title">Campaign Detection</div>
-      <div class="feature-body">19 multi-step attack patterns. A git log followed by a .env read followed by an outbound POST is a credential exfiltration campaign. Each call looks clean. The sequence is the attack. Aiglos sees sequences.</div>
+      <div class="feature-body">26 multi-step attack patterns. A git log followed by a .env read followed by an outbound POST is a credential exfiltration campaign. Each call looks clean. The sequence is the attack. Aiglos sees sequences.</div>
     </div>
     <div class="feature-cell">
       <div class="feature-title">Behavioral Baseline</div>
@@ -346,7 +346,7 @@ aiglos.<span class="tok-fn">attach</span>(
     </div>
     <div class="feature-cell">
       <div class="feature-title">GOVBENCH</div>
-      <div class="feature-body">The first governance benchmark for AI agents. Five dimensions. A-F grade. Published before any standard body required one. The company that defines the benchmark owns the compliance category. Run it: <code>aiglos benchmark run</code></div>
+      <div class="feature-body">The first governance benchmark for AI agents. Six dimensions including Anti-Sycophancy (MIT CSAIL 2026). A-F grade. Published before any standard body required one. The company that defines the benchmark owns the compliance category. Run it: <code>aiglos benchmark run</code></div>
     </div>
   </div>
 </section>
@@ -357,8 +357,8 @@ aiglos.<span class="tok-fn">attach</span>(
   <h2>Built for the way agents actually work.</h2>
   <div class="stat-row">
     <div class="stat-cell">
-      <span class="stat-n">75</span>
-      <span class="stat-l">Threat families T01–T75</span>
+      <span class="stat-n">91</span>
+      <span class="stat-l">Threat rules T01–T91</span>
     </div>
     <div class="stat-cell">
       <span class="stat-n">93%</span>
@@ -369,7 +369,7 @@ aiglos.<span class="tok-fn">attach</span>(
       <span class="stat-l">Published GHSAs caught</span>
     </div>
     <div class="stat-cell">
-      <span class="stat-n">1514</span>
+      <span class="stat-n">2,016</span>
       <span class="stat-l">Tests passing</span>
     </div>
   </div>
@@ -472,7 +472,7 @@ aiglos.<span class="tok-fn">attach</span>(
       <div class="price-tier">Free</div>
       <div class="price-amount">$0</div>
       <ul class="price-features">
-        <li>Full T01–T75 detection</li>
+        <li>Full T01–T91 detection</li>
         <li>GitHub Actions CI integration</li>
         <li>A–F security grade</li>
         <li>GOVBENCH scoring</li>

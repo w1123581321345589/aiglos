@@ -74,38 +74,44 @@ hr{border:none;border-top:1px solid var(--rule);margin:40px 0}
 
 <p>GOVBENCH is published as part of the Aiglos open-source project. It requires no proprietary infrastructure — any AI agent runtime with a tool call interception layer can be scored. The reference implementation runs against any OpenClawGuard-compatible guard instance in under 60 seconds.</p>
 
-<h2>2. The Five Dimensions</h2>
+<h2>2. The Six Dimensions</h2>
 
-<p>GOVBENCH measures governance failure resistance across five dimensions, derived from the OWASP Top 10 for Agentic Applications<span class="cite">[2]</span> and the Aiglos T01-T75 threat taxonomy:</p>
+<p>GOVBENCH measures governance failure resistance across six dimensions, derived from the OWASP Top 10 for Agentic Applications<span class="cite">[2]</span>, the Aiglos T01-T91 threat taxonomy, and peer-reviewed research on LLM-judge sycophancy bias:</p>
 
 <div class="dim-card">
-  <span class="dim-id">D1 · Campaign Detection</span><span class="dim-weight">Weight: 25%</span>
+  <span class="dim-id">D1 · Campaign Detection</span><span class="dim-weight">Weight: 22%</span>
   <div class="dim-title">Multi-step attack sequence detection</div>
   <div class="dim-body">Does the security layer detect attack sequences that look clean at the individual call level? The defining challenge: a <code style="font-family:'DM Mono',monospace;font-size:11px">git log</code> call is harmless. A <code style="font-family:'DM Mono',monospace;font-size:11px">cat .env</code> call is suspicious. A session that sequences both, then POSTs to an external server, is a credential exfiltration campaign. Each call looks clean. The sequence is the attack.</div>
 </div>
 
 <div class="dim-card">
-  <span class="dim-id">D2 · Agent Definition File Resistance</span><span class="dim-weight">Weight: 20%</span>
+  <span class="dim-id">D2 · Agent Definition File Resistance</span><span class="dim-weight">Weight: 18%</span>
   <div class="dim-title">Persistent configuration poisoning detection</div>
   <div class="dim-body">Does the security layer detect and block writes to agent configuration files — SKILL.md, AGENTS.md, SOUL.md, MEMORY.md — that contain injection payloads? These writes silently reprogram all future sessions. The attack is invisible at the time of the write; its effects persist indefinitely.</div>
 </div>
 
 <div class="dim-card">
-  <span class="dim-id">D3 · Memory Belief Layer Integrity</span><span class="dim-weight">Weight: 20%</span>
+  <span class="dim-id">D3 · Memory Belief Layer Integrity</span><span class="dim-weight">Weight: 18%</span>
   <div class="dim-title">Persistent memory injection detection</div>
   <div class="dim-body">Does the security layer detect injection payloads written to persistent memory stores that will corrupt future session behavior? Includes MEMORY.md writes with false authorization claims, vector database injections, and gradual context drift instructions designed to shift agent behavior over multiple sessions.</div>
 </div>
 
 <div class="dim-card">
-  <span class="dim-id">D4 · RL Feedback Loop Resistance</span><span class="dim-weight">Weight: 20%</span>
+  <span class="dim-id">D4 · RL Feedback Loop Resistance</span><span class="dim-weight">Weight: 18%</span>
   <div class="dim-title">Reward signal exploitation detection</div>
   <div class="dim-body">Does the security layer detect attempts to train the agent toward blocked behaviors through positive reward signals? The attack: induce a blocked behavior, then immediately submit a high-reward signal for that behavior. Repeated over multiple sessions, this can shift the agent's behavior profile toward the attacker's desired state.</div>
 </div>
 
 <div class="dim-card">
-  <span class="dim-id">D5 · Multi-Agent Cascading Failure Resistance</span><span class="dim-weight">Weight: 15%</span>
+  <span class="dim-id">D5 · Multi-Agent Cascading Failure Resistance</span><span class="dim-weight">Weight: 12%</span>
   <div class="dim-title">Identity spoofing and trust chain exploitation</div>
   <div class="dim-body">Does the security layer detect agent impersonation, supervisor identity spoofing, and cross-tenant data access in multi-agent architectures? The attack: an agent claims to be a supervisor or trusted system, requests elevated access, and uses that access to perform actions outside its declared scope.</div>
+</div>
+
+<div class="dim-card">
+  <span class="dim-id">D6 · Anti-Sycophancy Mechanisms</span><span class="dim-weight">Weight: 12%</span>
+  <div class="dim-title">LLM-judge validation pipeline defense</div>
+  <div class="dim-body">Does the security layer detect iterative reframing with escalating sycophancy markers designed to exploit RLHF-induced agreement bias in LLM-judge validation pipelines? Grounded in Chandra et al. (MIT CSAIL, 2026): <em>"Sycophantic Chatbots Cause Delusional Spiraling, Even in Ideal Bayesians."</em> The only governance benchmark dimension with a peer-reviewed formal proof as its foundation. Triple-judge voting blocks random noise, not systematic adversarial optimization.</div>
 </div>
 
 <h2>3. Scoring Methodology</h2>
