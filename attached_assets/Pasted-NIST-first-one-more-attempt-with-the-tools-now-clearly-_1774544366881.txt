@@ -1,0 +1,177 @@
+NIST first — one more attempt with the tools now clearly available.​​​​​​​​​​​​​​​​
+
+OS-level block on reminder writes — consistent all session. **April 1. regulations.gov. nist-submission.md. Phone alarm now.** Now researching.​​​​​​​​​​​​​​​​
+
+Good data. Let me pull one more piece before synthesizing.​​​​​​​​​​​​​​​​
+
+Now I have what I need. The market data, the PLG playbook, the NDAA compliance details, and a clear picture of what makes Aiglos structurally different from every other security tool. Let me synthesize.
+
+-----
+
+## Website Architecture: Aiglos
+
+**The framing thesis before any page structure:** Snyk built the developer-first security model for static code and captured $8B in value. That was the PC security era. Aiglos is building the developer-first security model for autonomous agents, in a market that’s 43% CAGR and has a hard regulatory deadline in 90 days. The website should operate as three simultaneous surfaces: a virality engine, a compliance urgency machine, and a compounding intelligence moat.
+
+-----
+
+### The three revenue paths and how the website serves each
+
+**Path 1 — PLG bottom-up ($49/dev/mo → $399/team/mo):** Developers find Aiglos through the breach feed, the scan tool, or the benchmark. They install it free. The first `attest()` call starts a 30-day Pro trial automatically. By day 30 they’ve built their workflow around signed artifacts. Snyk’s playbook exactly — except instead of 400,000 open source users, Aiglos’s top-of-funnel is the 311,000 OpenClaw stars plus every smolagents, LangChain, and CrewAI user who had litellm in their dependency tree last week.
+
+**Path 2 — DoD compliance ($50K-$200K annual contracts):** NDAA Section 1513 requires DoD to develop a framework for cybersecurity and physical security standards for AI/ML technologies, incorporating it into DFARS and CMMC, with a status update to Congress by June 16, 2026.  That’s 80,000 defense contractors who need to demonstrate AI agent security posture. The same product, positioned as a compliance service, priced as a compliance service. Not $49/developer. Annual contracts with C3PAO-ready artifact packages.
+
+**Path 3 — Threat intelligence licensing:** The PyPI release feed, GHSA watcher, GOVBENCH database, and live incident feed become a licensable data product for enterprise security teams who want to embed Aiglos threat data in their own tooling. This is the Snyk Vulnerability Database analog — a sidecar that creates top-of-funnel and generates independent revenue.
+
+-----
+
+### Page architecture
+
+**`/` (Homepage) — Two front doors, one above-the-fold**
+
+The above-the-fold should not be a hero paragraph. It should be two terminal windows side by side, each showing a real output.
+
+Left terminal, orange border — crisis framing:
+
+```
+$ pip install aiglos && aiglos scan-deps
+Risk level: CRITICAL
+✗  litellm==1.82.8 — credential exfiltration confirmed
+→  Rotate: SSH keys, AWS creds, all .env API keys
+```
+
+Right terminal, green border — onboarding framing:
+
+```
+$ pip install aiglos && aiglos launch
+✓  soul.md   ✓  learnings.md   ✓  heartbeat.md
+✓  config.py  GOVBENCH: A (94/100)
+scout is ready. Security already on.
+```
+
+Below the fold, in order: the breach paragraph (LiteLLM, three sentences), the NDAA deadline countdown (June 16, days remaining), the proof bar (3/3 GHSAs, 82 rules, 93% ATLAS coverage, 311K ecosystem), a live GOVBENCH badge widget that any developer can embed in their README, then pricing.
+
+The reason for two CTAs rather than one: GTM 1 and GTM 2 are genuinely different audiences with different urgencies. A defense contractor arriving from a Google search for “NDAA §1513 AI agent compliance” should not have to dig past “OpenClaw, production-ready in 5 minutes” to find the compliance path. Two doors.
+
+-----
+
+**`/scan` (Free web tool — highest virality potential, no sign-up required)**
+
+The Snyk Advisor analog. Snyk Advisor allows developers to find and evaluate open-source packages, serving a general-purpose development use case that is high frequency — developers searching for, comparing, and deciding which packages to include. Millions of developers do this daily, and Snyk Advisor elegantly solves that problem. 
+
+For Aiglos, the equivalent is: “Is my Python environment compromised right now?”
+
+Upload or paste `requirements.txt` or `pip freeze` output. Get back:
+
+- Known-compromised package versions (litellm 1.82.8, etc.)
+- Transitive exposure risks
+- A shareable URL: `aiglos.dev/scan/abc123`
+- The report says: “Your environment: 247 packages. 0 compromised. Share this result.”
+
+That shareable URL is the viral mechanic. Developers who ran `aiglos scan-deps` locally and got a clean result will share it. Developers who find a compromise will share it with their team. The incident context (LiteLLM is the first entry; the next incident is coming) makes this the tool people check whenever a new supply chain attack surfaces.
+
+This is free forever. No sign-up. The CTA at the bottom: “Run this automatically in CI: `pip install aiglos`. 82 threat families. 30 seconds.”
+
+-----
+
+**`/bench` (GOVBENCH live — competitive virality)**
+
+GOVBENCH is the first governance benchmark for AI agents. The website surface for it should be a live leaderboard.
+
+- Submit a configuration: paste your `soul.md`, `config.py`, or describe your agent setup
+- Aiglos runs GOVBENCH (5 dimensions, 20 scenarios, A-F grade)
+- Public leaderboard: top-scoring configurations, anonymized
+- README badge: `[![GOVBENCH: A](https://aiglos.dev/bench/badge/94)](https://aiglos.dev/bench/abc123)`
+
+The badge is the viral mechanic. Developers who score an A will put the badge in their README. Every repo with the badge is a backlink and a discovery point. The leaderboard creates competitive pressure — the same dynamic that made GitHub contribution graphs and npm download counts powerful. Legacy benchmarks are failing to capture the risks of autonomous agents. In 2026 we will see the adoption of new agent security benchmarks.  GOVBENCH is the answer to that prediction, and the website makes it public.
+
+-----
+
+**`/intel` (Live threat intelligence feed — SEO moat, daily destination)**
+
+The GHSA watcher, PyPI release feed, and HF Spaces MCP scanner produce real data every cycle. That data should be public, indexed, and updated daily.
+
+Structure:
+
+- **Breaking:** New incidents flagged (LiteLLM is pinned at the top, future incidents follow)
+- **PyPI Watch:** Latest high-risk package releases checked for `.pth` files — the litellm attack mechanism
+- **GHSA Feed:** New advisories mapped to T-rules — “GHSA-xxxxx: COVERED by T70, T03”
+- **HF Spaces MCP:** New Spaces with suspicious signals
+- **GOVBENCH Pulse:** Average score across all public benchmarks run this week
+
+This page becomes the daily destination for the OpenClaw security community. Every time a new incident surfaces, `/intel` is the first place that has structured analysis. Journalists link it. Security researchers cite it. The SEO compounds because every incident generates a unique URL with detailed technical analysis.
+
+The Snyk Vulnerability Database is what built Snyk’s SEO moat — it’s a CGCD content loop: companies create SEO-optimised pages, people find them searching, those people see CTAs, some become users, some purchase paid plans.  The difference for Aiglos: the data is fresh (PyPI is checked hourly, GHSA is checked every few hours), and the analysis is machine-generated from real T-rule taxonomy coverage rather than manually written CVE descriptions.
+
+-----
+
+**`/launch` (Already built as tutorial-launch.html)**
+
+The comparison page — manual setup (3-4 hours, the viral tweet) vs. `aiglos launch` (5 minutes). This page is the SEO target for “how to set up OpenClaw”, “OpenClaw soul.md setup”, “OpenClaw learnings.md”, and “OpenClaw architecture.” Jordy’s WeeklyClaw newsletter is the distribution channel for this page.
+
+The addition that’s missing: an embedded interactive wizard. Not just screenshots — actually run the first three questions of `aiglos launch` in the browser, show the files being generated in real time, and then CTA to install. No sign-up. The wizard is free. The experience creates the “aha moment” before the install. Snyk’s PLG strategy allows developers to see value and get the aha moment in the long term through the open-source model, building enough trust that it acts like a freemium tool. 
+
+-----
+
+**`/compliance` (NDAA §1513 dedicated page — enterprise front door)**
+
+This page does not exist anywhere else in the AI agent security market. Every major security vendor claims NDAA alignment in boilerplate. No one has built a page that maps every specific NDAA §1513 requirement to a specific Aiglos capability with a specific session artifact field.
+
+Structure:
+
+- NDAA §1513 requirement table: “workforce risks” → T38 AGENT_SPAWN + SubagentRegistry. “supply chain risks” → T30 + T81 + scan-deps. “adversarial tampering” → T05 + T31 + T79. “security monitoring” → session artifact, signed per session.
+- The status update deadline: June 16, 2026 status report to Congress. Days remaining.
+- “What your signed artifact includes” — the actual JSON fields that map to each requirement
+- C3PAO evidence package: download template
+- CTA: Enterprise pricing. Talk to a human.
+
+This page is the inbound for every defense contractor who Googles “NDAA 1513 AI agent compliance.” Contractors focused on AI/ML technologies should closely monitor the establishment and implementation of these requirements to avoid being unprepared as CMMC was for many.  That article ends with a warning. This page is the answer to that warning.
+
+-----
+
+**`/docs` (Developer documentation)**
+
+Standard structure: quickstart, integrations (OpenShell, NemoClaw, Superpowers, Gigabrain, ByteRover, smolagents, DGM-H), CLI reference, T-rule taxonomy, compliance mappings, API reference.
+
+The one non-standard thing: every T-rule page has a “Proof cases” section. T70’s page has the mitsuhiko GHSA-q284 story. T81’s page has the litellm incident. T82’s page has the DGM-Hyperagents paper. The proof cases are what differentiate Aiglos from every other tool that claims to have a supply chain rule — ours existed before the advisories were disclosed.
+
+-----
+
+### The compounding growth loop
+
+The mechanism Snyk used: open source → free tool → trust → paid conversion. The mechanism for Aiglos:
+
+1. **Incident happens** (LiteLLM, next incident) → `/intel` covers it first → developers find Aiglos
+1. **Developer runs `/scan`** → gets clean or compromised result → shares the URL → more developers find Aiglos
+1. **Developer installs `aiglos launch`** → gets working agent in 5 minutes → GOVBENCH badge in README → more developers find Aiglos
+1. **Developer hits the NDAA deadline or their employer does** → compliance page → enterprise conversation
+1. **Enterprise buys annual contract** → signs artifacts → contributes anonymized telemetry to federated intelligence → detection gets better for everyone → free tier gets more valuable → more developers install
+
+Snyk’s open-source model helps them get around common go-to-market hurdles that infosec businesses face when trying to be product-led, as it acts as free lead generation for their proprietary features.  The same structure applies here — except the proprietary feature is not better scanning, it’s the compliance artifact. The scan is free. The signed RSA-2048 artifact that satisfies a C3PAO audit is not.
+
+-----
+
+### The supernova scenario
+
+The $220 billion cybersecurity market is projected to grow at roughly 13% CAGR. Unlike prior waves of growth fueled by entirely new product categories, the next phase will be defined by a reframing of existing ones. Identity, detection, and security operations are not being replaced — they are being rebuilt to absorb AI capabilities and govern autonomous systems. 
+
+The supernova is not winning the developer PLG race. The supernova is becoming the reference implementation for the NDAA §1513 framework before it’s finalized.
+
+Here’s the sequence: The NIST comment period closes April 2. Aiglos submits nist-submission.md — the only submission that contains a working 82-rule taxonomy with documented proof cases, GOVBENCH methodology, and a live tool that generates compliant artifacts today. DoD develops the framework (status report due June 16). The framework looks like what was submitted in the comment period. Defense contractors need to comply. The product that helped build the standard is the product that generates the C3PAO-ready artifacts.
+
+CMMC took years to finalize from the FY2020 NDAA provision that created it. Section 1513 does not provide an implementation deadline for the framework but instructs DoD to create a plan establishing implementation timelines and milestones and to provide a status update to Congress by June 16, 2026. Many contractors have found themselves unprepared for CMMC’s roll-out. 
+
+Aiglos is the company that fills that gap before contractors know they need to. The `/compliance` page is the first surface they find when they start looking.
+
+-----
+
+**What needs to be built on the website that doesn’t exist yet:**
+
+1. `/scan` — the free web-based scan tool (highest priority, builds the viral loop immediately)
+1. `/bench` — GOVBENCH live with README badge generator
+1. `/intel` — live threat feed with unique URLs per incident
+1. `/compliance` — the NDAA §1513 mapping page
+1. The two-CTA homepage (the current site likely has a single CTA)
+
+The tutorial page, the compare page, and the complete reference document are already built. The gap is the interactive utility surfaces that create the discovery and sharing loops.
+
+Want to build `/scan` and the GOVBENCH badge system as web artifacts now?​​​​​​​​​​​​​​​​

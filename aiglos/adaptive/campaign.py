@@ -473,6 +473,57 @@ _CAMPAIGN_PATTERNS = [
         "surfaces":    None,
         "amplifiers":  {},
     },
+    {
+        "name": "IP_CIRCUMVENTION_CHAIN",
+        "description": (
+            "AI-agent-assisted intellectual property circumvention sequence. "
+            "Phase 1: agent enumerates and reads proprietary source code files "
+            "across a target repository (T19/T22 filesystem reads at high volume). "
+            "Phase 2: agent generates functionally equivalent code in a different "
+            "language or with cosmetic modifications (T84 IP_TRANSFORMATION_EXFIL). "
+            "Phase 3: agent writes or commits the transformed code to an external "
+            "repository (T01 EXFIL or T41 OUTBOUND_SECRET_LEAK). "
+            "Based on the claw-code incident (March 31, 2026): Codex rewrote "
+            "Anthropic's Claude Code TypeScript source to Python."
+        ),
+        "sequence": [
+            {"T19", "T22"},
+            {"T84"},
+            {"T01", "T41"},
+        ],
+        "min_events": 3,
+        "confidence": 0.90,
+        "surfaces":   None,
+        "amplifiers": {
+            "T84": 1.5,
+            "T01": 1.3,
+            "T41": 1.3,
+        },
+    },
+    {
+        "name": "MEMORY_ENTROPY_ATTACK",
+        "description": (
+            "High-volume low-signal writes to memory store preceding a consolidation "
+            "pass, designed to ensure a malicious instruction survives compression "
+            "while legitimate context is pruned. "
+            "Mechanism: Claude Code's autoDream consolidation prunes memory to <200 "
+            "lines with <150 chars per note (documented in consolidationPrompt.ts, "
+            "March 2026 leak). An attacker floods the memory store with borderline "
+            "T79 writes (individually below block threshold) to create context entropy."
+        ),
+        "sequence": [
+            {"T79"},
+            {"T79"},
+            {"T31", "T79"},
+        ],
+        "min_events": 3,
+        "confidence": 0.88,
+        "surfaces":   None,
+        "amplifiers": {
+            "T79": 1.4,
+            "T31": 1.5,
+        },
+    },
 ]
 
 
@@ -745,6 +796,20 @@ class CampaignAnalyzer:
                 "and clear any saved URLs from persistent memory (T31). "
                 "Do not allow external domains to become recurring instruction sources "
                 "unless they are explicitly in allow_http."
+            ),
+            "IP_CIRCUMVENTION_CHAIN": (
+                "AI-agent-assisted intellectual property circumvention detected. "
+                "The agent read proprietary source code, generated functionally "
+                "equivalent code in a different language, and attempted to commit "
+                "or transmit the transformed code. Review the session artifact for "
+                "specific file reads and writes. Block T84 IP_TRANSFORMATION_EXFIL."
+            ),
+            "MEMORY_ENTROPY_ATTACK": (
+                "High-volume memory writes followed by a consolidation-style write "
+                "detected. This pattern exploits autoDream-style memory compression: "
+                "flood with borderline writes, then embed a malicious instruction "
+                "that survives pruning. Clear the memory store and review the final "
+                "write for embedded constraint-redefining language."
             ),
         }
         return recs.get(pattern_id, "Review the session artifact for this event sequence.")

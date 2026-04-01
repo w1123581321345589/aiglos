@@ -1,0 +1,21 @@
+Looks like that message came through twice — I’m already mid-build on all five. Let me run the tests now.​​​​​​​​​​​​​​​​
+
+63/63. Now run the full suite to confirm nothing broke.​​​​​​​​​​​​​​​​
+
+528 passing, 0 failures. Now update the manifest and package.​​​​​​​​​​​​​​​​
+
+**528 passing, 0 failures.** T29-T33 are live.
+
+Here’s what just shipped:
+
+**T29 — A2A Protocol Monitor** blocks three attack classes no existing tool catches: orchestrator impersonation (Agent Card fingerprint registry), artifact injection (indirect prompt injection at the A2A task layer), and capability escalation without delegation tokens. Wired into ThreatHunter as module 7.
+
+**T30 — Registry Monitor** continuously scores MCP packages from npm, Smithery, and PyPI against typosquat detection (Levenshtein), social engineering language, tool injection patterns in package descriptions, and new-publisher signals. Auto-updates `aiglos_trust.yaml` blocklist on critical findings. Wired into the intel refresh cycle.
+
+**T31 — RAG/Memory Poison Detector** operates at three layers: write-time (blocks before embedding), retrieval-time (filters poisoned chunks before context injection), and cross-session (blocks PII leakage between users via shared vector stores). Memory writes use strict mode by default since poisoned memories persist across all future sessions.
+
+**T32 — Skill Composition Analyzer** runs static analysis at session start before any tool executes. Ten composition rules cover every major dangerous pairing: filesystem exfiltration, email exfiltration, RCE with C2, credential exfiltration, cross-session memory harvesting, source code exfiltration, database exfiltration, clipboard harvesting, browser session hijacking, and agentic escalation chains. Goal-context suppression reduces false positives for legitimate combinations.
+
+**T33 — Cross-Vendor Agent Identity Bridge** issues signed Aiglos Identity Tokens (AIT) that travel with agents across Claude/GPT-4/Gemini pipelines. Cryptographic delegation chains enforce strict capability subsetting (children can never exceed parent scope). The `to_openid_agents_claims()` method is the direct integration surface for the Okta conversation — it maps AIT fields to the emerging OpenID for Agents spec in a single call.
+
+The stack now covers the full agent/skill surface from MCP tool calls through A2A protocol, public registries, knowledge base poisoning, dangerous tool compositions, and cross-vendor identity.​​​​​​​​​​​​​​​​

@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.25.11"  # canonical version for this release
+    __version__ = "0.25.18"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -62,6 +62,9 @@ from aiglos.integrations.openclaw import (   # noqa: F401
     SessionArtifact,
     ArtifactExtensions,
     GuardResult as CheckResult,
+    normalize_shell_command,
+    extract_shell_tool_name,
+    PermissionDenialEvent,
 )
 from aiglos.integrations.openclaw import (
     attach   as _oc_attach,
@@ -98,6 +101,38 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     is_memory_tool,
 )
 from aiglos.core.threat_engine_v2 import RULES_T44_T66, match_T82  # noqa: F401
+from aiglos.core.threat_engine_v2 import (  # noqa: F401
+    match_T83,
+    _T83_REGISTERED_CHANNELS,
+    _T83_ACTIVE_ESCALATIONS,
+    match_T84,
+    _T84_SOURCE_EXTS,
+    _T84_TARGET_EXTS,
+    _T84_CIRCUMVENTION_KEYWORDS,
+    match_T85,
+    _T85_DENIAL_KEYWORDS,
+    _T85_AUTHORSHIP_PATTERNS,
+    match_T86,
+    _extract_tenant_contexts,
+    _T86_SESSION_READ_CONTEXTS,
+    _T86_CONTEXT_PATTERNS,
+    match_T87,
+    match_T87_record_block,
+    _T87_PROBE_THRESHOLD,
+    match_T88,
+    _T88_MCP_AUTH_TOOL_NAMES,
+    match_T89,
+    _T89_VCS_TOOL_NAMES,
+)
+from aiglos.forensics import ForensicStore, ForensicRecord  # noqa: F401
+from aiglos.integrations.memory_guard import (  # noqa: F401
+    check_memory_size_anomaly,
+    MEMORY_MAX_LINES,
+    MEMORY_MAX_NOTE_CHARS,
+)
+from aiglos.cli.validate_prompt import (  # noqa: F401
+    score_three_layer_structure,
+)
 RULES = RULES_T44_T66
 from aiglos.adaptive.permission_recommender import (   # noqa: F401
     PermissionRecommender,
@@ -150,6 +185,13 @@ from aiglos.integrations.gigabrain import (  # noqa: F401
     DGM_PIPELINE_PATHS,
     STUDIO_ROLE_TOOLS,
     AI_SCIENTIST_PATHS,
+    declare_kairos_agent,
+    kairos_autodetect,
+    KAIROS_PATHS,
+    declare_hermes_supervisor,
+    hermes_on_escalation,
+    hermes_on_escalation_resolved,
+    HERMES_PEER_MENTIONS,
 )
 from aiglos.integrations.subagent_registry import (  # noqa: F401
     SubagentRegistry,
@@ -857,6 +899,25 @@ __all__ = [
     # v0.25.4 — T80 UNCENSORED_MODEL_ROUTE, smolagents integration, HF Spaces feed
     "attach_for_smolagents",
     "SmolagentsGuard",
+    # v0.25.16 — T83-T87 threat rules, forensics, memory size anomaly, three-layer scoring
+    "match_T83",
+    "match_T84",
+    "match_T85",
+    "match_T86",
+    "match_T87",
+    "match_T87_record_block",
+    # v0.25.17 — T88 MCP_AUTH_BYPASS
+    "match_T88",
+    "_T88_MCP_AUTH_TOOL_NAMES",
+    # v0.25.18 — T89 CONTRIBUTION_PROVENANCE_SUPPRESSION (undercover mode)
+    "match_T89",
+    "_T89_VCS_TOOL_NAMES",
+    "ForensicStore",
+    "ForensicRecord",
+    "check_memory_size_anomaly",
+    "MEMORY_MAX_LINES",
+    "MEMORY_MAX_NOTE_CHARS",
+    "score_three_layer_structure",
     # v0.25.11 — is_memory_tool() full backend coverage (ByteRover, context_engine, Gigabrain, mem0, Letta, Qdrant, Pinecone)
     # v0.25.10 — declare_ai_scientist_pipeline(), AI Scientist Nature paper T82 citation
     "declare_ai_scientist_pipeline",

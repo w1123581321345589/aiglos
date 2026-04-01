@@ -524,6 +524,39 @@ class ATLASCoverage:
 
         return "\n".join(lines)
 
+    def coverage_report(self) -> dict:
+        return {
+            "total_threats":     len(self._threats),
+            "full_coverage":     len(self.covered()),
+            "partial_coverage":  len(self.partial()),
+            "no_coverage":       len(self.gaps()),
+            "weighted_coverage": round(self.coverage_pct() / 100, 3),
+            "grade":             (
+                "A" if self.coverage_pct() >= 90 else
+                "B" if self.coverage_pct() >= 75 else
+                "C" if self.coverage_pct() >= 60 else
+                "D" if self.coverage_pct() >= 45 else "F"
+            ),
+            "rules_used":        self.rules_used(),
+        }
+
+    def gap_analysis(self) -> List[dict]:
+        result = []
+        for t in self._threats:
+            if t.coverage != "FULL":
+                result.append({
+                    "atlas_id":      t.atlas_id,
+                    "title":         t.title,
+                    "tactic":        t.tactic,
+                    "coverage":      t.coverage,
+                    "current_rules": t.aiglos_rules,
+                    "note":          t.coverage_note,
+                })
+        return result
+
+    def compliance_score(self) -> float:
+        return round(self.coverage_pct() / 100, 3)
+
     def to_json(self) -> str:
         return json.dumps({
             "total":        len(self._threats),

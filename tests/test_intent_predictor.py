@@ -397,7 +397,7 @@ class TestThreatForecastAlertTrigger:
 class TestV0100ModuleAPI:
 
     def test_version_is_0100(self):
-        assert aiglos.__version__ == "0.25.8"
+        assert aiglos.__version__ == "0.25.18"
 
     def test_exports_predictor_types(self):
         assert hasattr(aiglos, "IntentPredictor")

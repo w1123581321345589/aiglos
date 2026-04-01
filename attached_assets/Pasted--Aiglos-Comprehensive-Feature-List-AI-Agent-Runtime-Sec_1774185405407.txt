@@ -1,0 +1,534 @@
+# Aiglos: Comprehensive Feature List
+
+**AI Agent Runtime Security — v0.25.3**
+
+“OpenClaw is the new computer.” — Jensen Huang, GTC 2026
+
+IBM shipped the PC in 1981. Norton launched in 1990. We’re shipping the security
+layer in week three.
+
+-----
+
+## What Aiglos Is
+
+Runtime security enforcement for every AI agent. One import intercepts every tool
+call before execution, classifies it against 79 threat families, and produces a
+signed audit artifact. The detection engine is MIT open source. The attestation
+layer (RSA-2048 signing, CMMC / NDAA §1513 / EU AI Act compliance reports) is
+proprietary and funds the research.
+
+Works with: Claude Code, Cursor, Codex, OpenClaw, Windsurf, Aider, and any agent
+running inside an OpenShell sandbox.
+
+-----
+
+## Core Architecture
+
+### Interception Engine
+
+- Single `aiglos.attach()` call patches into the MCP SDK at import time — zero
+  config, no proxy, no sidecar, no port
+- Three interception surfaces operating simultaneously: MCP tool calls, HTTP
+  requests (`intercept_http=True`), and subprocess execution
+  (`intercept_subprocess=True`)
+- Inline scanner runs in under 1ms with no network dependency
+- Public API: `attach()` / `check()` / `on_heartbeat()` / `close()`
+- Python SDK (primary) and TypeScript SDK
+- `python -m aiglos` CLI with full command suite
+
+### Agent-Agnostic by Design
+
+Aiglos enforces outside the agent process — the same architectural position as
+NVIDIA OpenShell. The agent cannot reason around a rule it doesn’t know exists.
+
+```
+openshell sandbox create -- claude    # Claude Code inside OpenShell
+openshell sandbox create -- codex     # Codex inside OpenShell
+openshell sandbox create -- openclaw  # OpenClaw inside OpenShell
+
+# Same Aiglos import in all three:
+from aiglos.integrations.openShell import openshell_detect
+session = openshell_detect(guard)     # auto-reads OPENSHELL_POLICY_PATH
+```
+
+-----
+
+## Threat Detection
+
+### 79 Threat Families (T01-T79)
+
+Mapped to MITRE ATLAS techniques with citation-verified rule entries. 93% coverage
+of OpenClaw’s own published MITRE ATLAS threat model. 3/3 published OpenClaw GHSAs
+caught by existing rules before the advisories were disclosed.
+
+**Exfiltration and Data Exposure (T01-T10)**
+T01 EXFIL, T02 SSRF, T03 SHADOW_WRITE, T04 CRED_HARVEST, T05 PROMPT_INJECT,
+T06 CAMPAIGN, T07 RECON, T08 LATERAL, T09 PERSISTENCE, T10 PRIV_ESC
+
+**Infrastructure Abuse (T11-T20)**
+T11 ENV_LEAK, T12 NET_SCAN, T13 DNS_REBIND, T14 CACHE_POISON, T15 LOG_TAMPER,
+T16 SHELL_INJECT, T17 PATH_TRAV, T18 SYM_LINK, T19 CRED_HARVEST (extended),
+T20 DEST
+
+**Supply Chain and Agent Trust (T21-T30)**
+T21 PKG_CONFUSE, T22 TYPOSQUAT, T23 DEP_CONFUSION, T24 TOOL_REDEF,
+T25 AGENT_IMPERSONATE, T26 TRUST_CHAIN, T27 MEM_INJECT, T28 RAG_POISON,
+T29 CONTEXT_MANIP, T30 SUPPLY_CHAIN
+
+**Agentic and Autonomous Threats (T31-T43)**
+T31 REWARD_HACK, T32 GOAL_MISALIGN, T33 SANDBOX_ESCAPE, T34 DATA_PIPELINE,
+T35 PERSONAL_AGENT, T36 AGENTDEF, T37 FIN_EXEC, T38 AGENT_SPAWN,
+T39 ORCHESTRATION, T40 SHARED_CONTEXT_POISON, T41 OUTBOUND_SECRET_LEAK,
+T42 INSTRUCTION_REWRITE_POISON, T43 HONEYPOT_ACCESS
+
+**Infrastructure-to-Agent and Agent-to-Agent Threats (T44-T66)**
+T44 INFERENCE_ROUTER_HIJACK, T45-T66 cover infrastructure-to-agent attacks,
+agent-to-agent attacks at scale, and campaign patterns
+
+**New in v0.20.0-v0.25.3 (T67-T79)**
+
+|Rule|Name                    |Score|Notes                                                                         |
+|----|------------------------|-----|------------------------------------------------------------------------------|
+|T67 |HEARTBEAT_SILENCE       |0.88 |Unexpected suppression of scheduled overnight jobs                            |
+|T68 |INSECURE_DEFAULT_CONFIG |0.95 |Root cause of 40,214 exposed OpenClaw instances                               |
+|T69 |PLAN_DRIFT              |0.95 |Deviation from Superpowers-approved implementation plan                       |
+|T70 |ENV_PATH_HIJACK         |0.88 |PATH/LD_PRELOAD/PYTHONPATH modification — GHSA-mc68 proof case                |
+|T71 |PAIRING_GRACE_ABUSE     |0.87 |30s pairing window abuse — ATLAS T-ACCESS-001                                 |
+|T72 |CHANNEL_IDENTITY_SPOOF  |0.89 |AllowFrom spoofing — ATLAS T-ACCESS-002                                       |
+|T73 |TOOL_ENUMERATION        |0.75 |tools.list / empty-arg probes — ATLAS T-DISC-001                              |
+|T74 |CONTENT_WRAPPER_ESCAPE  |0.84 |XML wrapper termination / CDATA injection                                     |
+|T75 |SESSION_DATA_EXTRACT    |0.82 |sessions.list lateral extraction — ATLAS T-DISC-002                           |
+|T76 |NEMOCLAW_POLICY_BYPASS  |0.95 |Agent writes to NemoClaw OpenShell policy files at runtime                    |
+|T77 |OVERNIGHT_JOB_INJECTION |0.87 |Malicious writes to cron/scheduler config — Berman Tip 6                      |
+|T78 |HALLUCINATION_CASCADE   |0.82 |Cross-agent confidence amplification — Vox AI company case study              |
+|T79 |PERSISTENT_MEMORY_INJECT|0.92 |Adversarial content written to Gigabrain/vector store — survives session close|
+
+### Tier System
+
+- **Tier 1 MONITORED:** Log and continue
+- **Tier 2 WARNED:** Log, surface to caller, continue
+- **Tier 3 GATED:** Pause for human confirmation. Tier 3 mode: `pause` / `block` / `allow_once`
+
+-----
+
+## 21 Campaign Patterns
+
+Multi-step attack sequence detection — fires when individual tool calls form
+recognized attack sequences across time:
+
+1. RECON_SWEEP
+1. CREDENTIAL_ACCUMULATE
+1. EXFIL_SETUP
+1. PERSISTENCE_CHAIN
+1. LATERAL_PREP
+1. AGENTDEF_CHAIN
+1. MEMORY_PERSISTENCE_CHAIN
+1. REWARD_MANIPULATION
+1. REPEATED_INJECTION_ATTEMPT
+1. EXTERNAL_INSTRUCTION_CHANNEL
+1. SKILL_CHAIN
+1. SANDBOX_ESCAPE_ATTEMPT
+1. GAAS_TAKEOVER
+1. INFERENCE_HIJACK_CHAIN
+1. RAG_POISON_CHAIN
+1. MULTI_AGENT_IMPERSONATION
+1. CAPABILITY_EXPLOIT_CHAIN
+1. SANDBOX_CONFIRMED_ESCAPE
+1. SUPERPOWERS_PLAN_HIJACK
+1. NEMOCLAW_POLICY_HIJACK — T76 policy bypass followed by exfil (confidence 0.96)
+1. GIGABRAIN_MEMORY_POISON — T31 in-session probe + T79 persistent commit (confidence 0.95)
+
+-----
+
+## 18 Inspection Triggers
+
+Automatic anomaly signals that elevate inspection posture:
+
+1. RATE_DROP, 2. ZERO_FIRE, 3. HIGH_OVERRIDE, 4. AGENTDEF_REPEAT,
+1. SPAWN_NO_POLICY, 6. FIN_EXEC_BYPASS, 7. FALSE_POSITIVE, 8. REWARD_DRIFT,
+1. CAUSAL_INJECTION_CONFIRMED, 10. THREAT_FORECAST_ALERT,
+1. BEHAVIORAL_ANOMALY, 12. REPEATED_TIER3_BLOCK, 13. GLOBAL_PRIOR_MATCH,
+1. GAAS_ESCALATION_DETECTED, 15. INFERENCE_HIJACK_CONFIRMED,
+1. CONTEXT_DRIFT_DETECTED, 17. PLAN_DRIFT_DETECTED, 18. UNVERIFIED_RULE_ACTIVE
+
+-----
+
+## Integrations (New in v0.20.0-v0.25.3)
+
+### OpenShell — Agent-Agnostic Sandbox Integration
+
+NVIDIA NemoClaw/OpenShell announced at GTC 2026. OpenShell is the sandbox layer.
+Aiglos is the behavioral detection layer above it.
+
+```python
+from aiglos.integrations.openShell import (
+    openshell_detect,         # auto-detect from OPENSHELL_SANDBOX_ID env var
+    attach_for_claude_code,   # openshell sandbox create -- claude
+    attach_for_codex,         # openshell sandbox create -- codex
+    attach_for_cursor,        # openshell sandbox create -- cursor
+    attach_for_openclaw,      # openshell sandbox create -- openclaw
+)
+
+# Zero config — reads OPENSHELL_POLICY_PATH automatically
+session = openshell_detect(guard)
+```
+
+9 known agents: Claude Code, Codex, Cursor, OpenClaw, Windsurf, Aider, Continue,
+Cody. Same YAML policy enforces identically for all agents.
+
+### NemoClaw — YAML Policy Import
+
+```python
+from aiglos.integrations.nemoclaw import mark_as_nemoclaw_session
+session = mark_as_nemoclaw_session(policy_path="~/.nemoclaw/policy.yaml", guard=guard)
+# Allowed hosts/files from YAML become T69/T76 enforcement boundary
+```
+
+T76 NEMOCLAW_POLICY_BYPASS fires if agent writes to policy files at runtime.
+Validate any NemoClaw policy: `aiglos nemoclaw validate --policy <path>`
+
+### Superpowers — Plan as Policy
+
+```python
+from aiglos.integrations.superpowers import mark_as_superpowers_session
+session = mark_as_superpowers_session(plan_path="./plan.md", guard=guard)
+# Approved implementation plan becomes T69 enforcement boundary
+# T69 PLAN_DRIFT fires on any tool call outside plan scope
+```
+
+T69 PLAN_DRIFT — highest-confidence signal in the system (0.95) because it
+measures against explicit human approval, not statistical inference.
+
+### Sub-Agent Declaration
+
+For multi-agent power user setups. Resolves T38 false positives from legitimate
+background agent spawns.
+
+```python
+guard.declare_subagent("coding-agent",
+    tools=["filesystem", "shell.execute"],
+    scope_files=["src/", "tests/"],
+    hard_bans=["fabricate_data", "unverified_claims"],  # Role Card enforcement
+    model="claude-sonnet",
+)
+guard.declare_subagent("calendar-agent",
+    tools=["calendar.read", "calendar.write"],
+    scope_hosts=["calendar.google.com"],
+)
+# Declared + in-scope: T38 score=0.0
+# Declared + out-of-scope: T38 score=0.90
+# Undeclared: T38 score=0.78
+```
+
+`hard_bans` implements the Role Card pattern from the Vox AI company architecture
+(2026). Ban violations are logged to the signed session artifact.
+
+### Phase-Gated Delegation
+
+5-phase progressive delegation model. Each unlock logged with operator identity
+in the signed artifact.
+
+```python
+from aiglos.integrations.agent_phase import AgentPhase
+
+guard.unlock_phase(AgentPhase.P1, operator="will@aiglos.dev")
+# P1: observe only
+# P2: low-risk auto-approve
+# P3: content autonomy
+# P4: site operations and deploys
+# P5: self-evolution (modify other agents)
+
+# Auditor query: "When did this agent get production access?"
+print(guard.phase_log())  # timestamp + operator for every unlock
+```
+
+### Gigabrain — Persistent Memory Protection
+
+Gigabrain is a SQLite-backed cross-session memory layer for OpenClaw and Claude
+Code. T79 PERSISTENT_MEMORY_INJECT protects the write path.
+
+```python
+from aiglos.integrations.gigabrain import gigabrain_autodetect
+session = gigabrain_autodetect(guard)
+# T79 fires on any write to ~/.gigabrain/ with injection content
+# GIGABRAIN_MEMORY_POISON campaign fires on T31 + T79 in same session
+```
+
+Also supports: MemoryOS, mem0, Letta, Zep, Chroma, Pinecone, Qdrant.
+
+-----
+
+## Governance and Benchmarking
+
+### GOVBENCH — First AI Agent Governance Benchmark
+
+Published before any standard body required one. 5 dimensions, 20 scenarios,
+A-F grade, under 60 seconds.
+
+```bash
+aiglos benchmark run
+# Grade: A (92/100)
+# D1 Campaign detection: 19/20
+# D2 Agent definition resistance: 20/20
+# D3 Memory belief integrity: 18/20
+# D4 RL feedback loop resistance: 18/20
+# D5 Multi-agent cascading failure: 17/20
+```
+
+The company that defines the benchmark owns the compliance category for a decade.
+
+### GHSA Watcher — Auto-Validation Against Published CVEs
+
+```bash
+aiglos autoresearch watch-ghsa       # monitors OSV.dev, NVD, GitHub Advisory API
+aiglos autoresearch ghsa-coverage    # coverage report against all published GHSAs
+```
+
+3/3 published OpenClaw GHSAs covered by rules that existed before the advisories
+were disclosed:
+
+|GHSA               |CVSS|Attack Class                    |Aiglos Rules   |
+|-------------------|----|--------------------------------|---------------|
+|GHSA-g8p2-7wf7-98mq|8.8 |Auth token exfiltration         |T03 T12 T19 T68|
+|GHSA-q284-4pvr-m585|8.6 |OS command injection (mitsuhiko)|T03 T04 T70    |
+|GHSA-mc68-q9jw-2h3v|8.4 |Command injection via PATH env  |T03 T70        |
+
+285 additional reports in the OpenClaw private queue. When they publish, the
+GHSA watcher matches to existing rules within 6 hours.
+
+### ATLAS Coverage
+
+```bash
+aiglos autoresearch atlas-coverage
+# 22 threats mapped, 19 full, 3 partial, 0 gaps — 93% coverage
+```
+
+OpenClaw’s own MITRE ATLAS threat model: 22 documented threats. Aiglos covers 93%.
+The 3 partial cases are documented honestly: passive fingerprinting, adversarial
+ML evasion, and semantically-appropriate-but-harmful content have no reliable
+behavioral signature at the tool call layer.
+
+### Lockdown Policy + Permission Recommender
+
+```bash
+aiglos policy lockdown               # deny-first, all tools blocked by default
+aiglos policy allow --tool web_search --authorized-by will@aiglos.dev
+aiglos policy recommend              # minimum viable allowlist from session history
+```
+
+-----
+
+## Intelligence Layers
+
+### Behavioral Baseline
+
+Per-agent statistical fingerprinting across three independent feature spaces:
+event rate (z-score), surface mix (chi-squared), rule frequency (KL-divergence).
+`BEHAVIORAL_ANOMALY` trigger fires when composite deviation exceeds threshold.
+
+### Predictive Intent Modeling
+
+Deployment-specific Markov chain. `SessionForecaster` pre-tightens
+`effective_tier()` when predicted next action is Tier 2 or Tier 3.
+`THREAT_FORECAST_ALERT` fires before the threat executes.
+
+### Federated Threat Intelligence
+
+Privacy-preserving global threat intelligence. Differential privacy with Laplace
+mechanism (epsilon=0.1). Only noisy unigram transition counts leave a deployment.
+New deployments start pre-warmed from collective intelligence.
+
+### Policy Proposals
+
+Evidence-weighted policy decisions. Four proposal types triggered by block
+frequency: LOWER_TIER, RAISE_THRESHOLD, ALLOW_LIST, SUPPRESS_PATTERN.
+
+```bash
+aiglos policy list
+aiglos policy approve prp_a1b2c3d4 will@aiglos.dev
+```
+
+### Causal Attribution
+
+Traces the causal chain from a block event back to the originating injection
+point. `CAUSAL_INJECTION_CONFIRMED` trigger fires when attribution succeeds.
+
+### Source Reputation Scoring
+
+Inbound data sources scored against reputation index. Sources that previously
+triggered injection rules receive elevated inspection in future sessions.
+
+-----
+
+## Specialized Security Modules
+
+**MemoryWriteGuard** — intercepts every structured memory write before it commits.
+38-phrase corpus covering authorization claims, endpoint redirects, instruction
+overrides, credential assertions.
+
+**RLFeedbackGuard** — intercepts binary RL reward signals before they reach the
+training loop. Prevents reward hacking via manipulated feedback.
+
+**AgentDef Guard (T36)** — monitors `~/.claude/agents/` at the subprocess layer.
+Catches the read-then-write attack sequence invisible to MCP-only tools.
+
+**Honeypot Detection (T43)** — canary tool injection. Any probe triggers T43 at
+score=1.0 before any actual attack surfaces.
+
+**Challenge-Response Override** — Tier 3 blocked calls re-authorized via signed
+challenge-response. Override events recorded in artifact with full attribution.
+
+**OutboundSecretGuard (T41)** — scans outbound HTTP content for API keys,
+credentials, and PII before transmission.
+
+**Injection Scanner** — scans every tool response before it enters the agent’s
+context. `after_tool_call()` API.
+
+**Scan Exposed** — `aiglos scan-exposed` probes for CVE-2026-25253 attack surface
+(40,214 exposed OpenClaw instances as of February 2026).
+
+**Hardening Check** — `aiglos audit --hardening-check` compares config against
+official OpenClaw hardened baseline.
+
+-----
+
+## Compliance and Attestation
+
+### Session Artifact
+
+Every session close produces a cryptographically signed audit record:
+
+```json
+{
+  "schema":          "aiglos/v1",
+  "artifact_id":     "3f9a1c2d-...",
+  "agent_name":      "my-agent",
+  "policy":          "federal",
+  "total_calls":     247,
+  "blocked_calls":   4,
+  "attestation_ready": true,
+  "phase_log":       [{"phase": 3, "operator": "will@aiglos.dev", "timestamp": ...}],
+  "memory_backends": [{"backend": "gigabrain", "paths": [...]}],
+  "signature":       "sha256:a1b2c3d4..."
+}
+```
+
+- HMAC-SHA256 on the free tier
+- RSA-2048 on Pro and Enterprise (required for C3PAO submission)
+
+### Compliance Standards
+
+|Standard             |Deadline     |Coverage                                             |
+|---------------------|-------------|-----------------------------------------------------|
+|NDAA §1513 FY2026    |June 16, 2026|`attestation_ready: true`, auto-generated per session|
+|CMMC Level 2         |Ongoing      |C3PAO-formatted evidence package, 8 controls mapped  |
+|NIST SP 800-171 Rev 2|Ongoing      |18 controls across AC, AU, IA, SC, SI                |
+|EU AI Act            |August 2026  |Pro tier and above                                   |
+|SOC 2 Type II        |Ongoing      |CC6, CC7 coverage                                    |
+
+80,000 defense contractors need the signed session artifact by June 2026.
+Nothing else in the ecosystem auto-generates it.
+
+-----
+
+## Test Coverage and Build History
+
+|Version|Tests|Rules|Campaign Patterns|Notes                                                               |
+|-------|-----|-----|-----------------|--------------------------------------------------------------------|
+|v0.1.0 |335  |36   |5                |Initial release                                                     |
+|v0.10.0|688  |39   |10               |+ Intent prediction                                                 |
+|v0.11.0|753  |39   |12               |+ Behavioral baseline                                               |
+|v0.13.0|882  |39   |15               |+ Federated intelligence                                            |
+|v0.19.0|1,300|66   |19               |+ Campaign patterns, new threat families                            |
+|v0.24.0|1,514|75   |19               |+ GOVBENCH, ATLAS coverage, T71-T75, NemoClaw                       |
+|v0.25.0|1,582|76   |20               |+ T76, NemoClaw integration, OpenShell agent-agnostic               |
+|v0.25.1|1,636|76   |20               |+ OpenShell auto-detect, 9 known agents                             |
+|v0.25.2|1,690|77   |21               |+ declare_subagent(), T77, hard_bans, AgentPhase                    |
+|v0.25.3|1,747|79   |21               |+ T78 HALLUCINATION_CASCADE, T79 PERSISTENT_MEMORY_INJECT, Gigabrain|
+
+-----
+
+## CLI Commands
+
+```bash
+# Core
+aiglos attach                        # Attach to running agent session
+aiglos check <tool> <args>           # Manual check
+aiglos attest --session SESSION_ID   # Signed attestation
+aiglos verify SESSION_ID.aiglos      # Verify integrity
+
+# Policy
+aiglos policy list / approve / reject / stats
+aiglos policy lockdown               # Deny-first mode
+aiglos policy allow --tool <n>       # Grant individual tool
+aiglos policy recommend              # Min viable allowlist from history
+
+# Memory backends
+aiglos memory status                 # List registered backends
+aiglos memory backends list
+aiglos memory scan --backend gigabrain
+
+# Sub-agents
+aiglos subagents list
+aiglos subagents declare --name <n> --tools <t>
+
+# NemoClaw / OpenShell
+aiglos nemoclaw validate --policy <path>
+aiglos nemoclaw status
+aiglos openShell detect
+
+# Intelligence
+aiglos forecast                      # Current intent prediction state
+aiglos benchmark run                 # GOVBENCH A-F grade
+aiglos autoresearch watch-ghsa       # GHSA watcher
+aiglos autoresearch atlas-coverage   # ATLAS threat model coverage
+aiglos autoresearch ghsa-coverage    # GHSA coverage report
+aiglos scan-exposed                  # Probe for CVE-2026-25253 surface
+aiglos audit --hardening-check       # Compare against hardened baseline
+
+# Daemon
+aiglos daemon start / status / stop
+
+# Compliance
+aiglos report --level 2
+aiglos report --format json
+```
+
+-----
+
+## Pricing Tiers
+
+|Tier          |Price            |What You Get                                                                                                                                                                                                                  |
+|--------------|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|**Community** |$0               |Full T01-T79 detection, three surfaces, 21 campaign patterns, GOVBENCH, GHSA watcher, ATLAS coverage, OpenShell integration, Gigabrain integration, declare_subagent(), hard_bans, AgentPhase, GitHub Actions CI. MIT license.|
+|**Pro**       |$49/dev/mo       |Community + federated intelligence, behavioral baseline, RSA-2048 artifacts, NDAA §1513 + EU AI Act mapping, policy proposals, cloud dashboard                                                                                |
+|**Teams**     |$399/mo (15 devs)|Pro + centralized policy, aggregated threat view, Tier 3 approval workflows                                                                                                                                                   |
+|**Enterprise**|Custom, annual   |Teams + private federation server, air-gap, C3PAO packages, dedicated engineering                                                                                                                                             |
+
+-----
+
+## What Makes Aiglos Structurally Differentiated
+
+1. **The only product that intercepts all three surfaces.** MCP-only tools miss
+   everything that Claude Code, Cursor, and Aider do via subprocess and HTTP.
+1. **Agent-agnostic.** OpenShell runs the sandbox. Aiglos runs behavioral
+   detection above it. Both operate outside the agent process. Neither can be
+   reasoned around.
+1. **The only product that produces a compliance artifact at session close.**
+   80,000 defense contractors need it by June 2026. Nothing else auto-generates it.
+1. **3/3 published OpenClaw GHSAs caught before disclosure.** The rules came first.
+   Every time. This is empirical validation that no competitor can replicate.
+1. **Campaign detection.** 21 named multi-step attack patterns invisible to
+   single-call rule engines. GIGABRAIN_MEMORY_POISON and NEMOCLAW_POLICY_HIJACK
+   cannot be caught by any product that evaluates calls in isolation.
+1. **Persistent memory protection.** T79 PERSISTENT_MEMORY_INJECT is the only
+   rule specifically designed for cross-session memory backends (Gigabrain, Chroma,
+   Pinecone). Adversarial content that survives session close and gets injected
+   into every future session is the highest-leverage attack in production agentic
+   systems. It is completely unguarded elsewhere.
+1. **GOVBENCH defines the benchmark.** Published before any standard body required
+   one. The company that defines the benchmark owns the compliance category for
+   a decade.
+1. **Detection that learns.** Behavioral baselines, intent prediction, and
+   federated intelligence compound with every deployment. A forked open-source
+   version stays static. The moat grows.

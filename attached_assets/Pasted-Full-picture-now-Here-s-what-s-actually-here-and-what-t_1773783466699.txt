@@ -1,0 +1,37 @@
+Full picture now. Here’s what’s actually here and what to do with it.
+
+-----
+
+**What ClawKeeper is doing well that Aiglos is not doing at all**
+
+**The Security Feed is the single most valuable thing on their site.** 88 CVE advisories. 7 Critical. Continuously updated. Free. No account required. It creates daily organic traffic, establishes authority with the exact audience you need — security engineers who are evaluating tools — and provides a reason to bookmark the site that has nothing to do with buying anything.
+
+Aiglos has 66 threat families with OWASP and MITRE ATLAS citations. You have the academic underpinning of the CVE feed without the feed itself. This is a build that takes a weekend: a public `aiglos.dev/cve` page that pulls from NVD filtered to the OpenClaw/agent security surface and maps every CVE to the Aiglos rule that detects it. T36_AGENTDEF catches CVE-2026-25253. T44 catches the inference router hijacks. Every CVE on ClawKeeper’s feed has an Aiglos rule ID that corresponds to it. That mapping is the moat. ClawKeeper shows you the vulnerability. Aiglos shows you the rule that would have caught it at runtime. Different layer, more powerful argument.
+
+**The Skills Hub numbers are working as social proof.** “2,373 skills scanned. 168 Critical.” A developer reads that and immediately wonders if the skill they installed yesterday is in the Critical bucket. That anxiety is the conversion event. ClawKeeper’s 11 deterministic signals are static — they check file structure, suspicious filenames, binary content. They cannot detect runtime behavior. But the number is visible and it creates urgency.
+
+Aiglos has `SkillReputationGraph` ingesting ClawKeeper’s badge data. The thing you don’t have is the public-facing number. `aiglos.dev/skills` showing “13,000 skills tracked. X Blocked. Y Suspicious. Updated every 6 hours.” That page should exist and it should be powered by the data you’re already ingesting from ClawKeeper. You’re already doing the work. You’re not showing it.
+
+**The compare pages are smart and Aiglos has nothing equivalent.** ClawKeeper has `vs ClawSec` and `vs OpenClaw Native`. These pages exist because the first question every evaluating engineer asks is “why not just use X?” A compare page answers that question before it gets asked and does it in writing so it can be indexed and shared. Aiglos needs `aiglos.dev/compare/clawkeeper` and `aiglos.dev/compare/openShell`. Those pages write themselves from what you already know.
+
+**Tutorial depth.** 14 tutorials. Each 5-20 minutes. Covering installation, macOS hardening, Linux hardening, Docker deployment, CI/CD integration, continuous monitoring, skills security. Aiglos has the GitHub Actions workflow and the README. That’s one point of contact. ClawKeeper has 14. The developer who finds Aiglos through the announcement post and wants to go deeper hits a wall. ClawKeeper’s developer goes deeper for 4 hours.
+
+-----
+
+**What ClawKeeper is doing that Aiglos should specifically not copy**
+
+**“No AI. No black boxes.”** This is their positioning on the Skills Hub. It’s anti-positioning against AI security theater and it’s smart for them because their product is deterministic bash checks. It would be wrong for Aiglos because the behavioral baseline, the federated Markov prior, and the KL-divergence anomaly detection are the entire moat. The correct Aiglos positioning is the inverse: “deterministic rules for known attacks, statistical learning for your specific deployment, federated intelligence for what no single deployment has seen yet.” Three layers. ClawKeeper has one.
+
+**Bash as the core.** ClawKeeper is a bash script with a styled terminal UI. That is the right architecture for a host-level scanner that runs once and exits. It is the wrong architecture for a runtime security layer that runs on every tool call for the lifetime of every agent session. The fact that Aiglos is a Python SDK with zero dependencies and under 1ms latency is not a liability — it is the architectural statement that Aiglos is doing something fundamentally different.
+
+**Their pricing is actually lower.** Pro at $30/month versus Aiglos at $49. But they’re selling host configuration scanning. You’re selling runtime behavioral intelligence, federated threat data, signed compliance artifacts, and NDAA §1513 coverage. These are not the same product. The pricing difference should be explained, not matched. If a developer is comparing on price they’re comparing the wrong things.
+
+-----
+
+**The one structural thing to build immediately**
+
+The Security Feed is the highest-leverage missing piece. ClawKeeper has 88 advisories covering the OpenClaw CVE surface. Aiglos has 66 rules that detect the attack classes those CVEs represent — but nobody can see the mapping.
+
+Build `aiglos.dev/intel` — a live page showing: current CVE feed filtered to agent security, each CVE mapped to the Aiglos rule that detects it at runtime, the GOVBENCH dimension each CVE tests, and the date the corresponding Aiglos rule was added. This page does three things simultaneously: it establishes Aiglos as the authoritative source on agent security intelligence (not just a tool), it creates daily organic traffic from developers who are monitoring CVEs, and it makes the ClawKeeper integration concrete — “ClawKeeper tells you the CVE exists. Aiglos tells you whether your agent triggered it.”
+
+That’s the page that earns the relationship with the developer before they ever run `pip install aiglos`.​​​​​​​​​​​​​​​​

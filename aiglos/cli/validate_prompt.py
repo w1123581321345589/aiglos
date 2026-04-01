@@ -553,3 +553,78 @@ if __name__ == "__main__":
     )
     # Exit non-zero if any file has grade D or F
     sys.exit(1 if any(r.grade in ("D", "F") for r in results) else 0)
+
+
+import math
+
+def score_three_layer_structure(content: str) -> dict:
+    """
+    Score a prompt against the three-layer standard:
+      1. Tool constraint (what to use)
+      2. Risk callout (what to avoid)
+      3. Output format (what the result should look like)
+
+    Uses geometric mean so balance is rewarded -- 0.7/0.7/0.7 beats 1.0/1.0/0.0.
+
+    Returns dict with layer scores, overall score, grade, weakest layer,
+    and actionable recommendation.
+    """
+    lower = content.lower()
+
+    tool_signals = [
+        "use ", "tool:", "call ", "execute ", "run ", "invoke ",
+        "allowed tools", "available tools", "must use", "should use",
+        "required tool", "tool constraint",
+    ]
+    tool_score = min(sum(1 for s in tool_signals if s in lower) / 3.0, 1.0)
+
+    risk_signals = [
+        "never", "do not", "don't", "avoid", "prohibited", "forbidden",
+        "must not", "risk", "danger", "warning", "caution",
+        "hard ban", "off-limits", "not allowed",
+    ]
+    risk_score = min(sum(1 for s in risk_signals if s in lower) / 3.0, 1.0)
+
+    format_signals = [
+        "format:", "output:", "return ", "respond with", "structure:",
+        "json", "markdown", "template", "schema", "example:",
+        "the output should", "response format",
+    ]
+    format_score = min(sum(1 for s in format_signals if s in lower) / 3.0, 1.0)
+
+    scores = [max(tool_score, 0.01), max(risk_score, 0.01), max(format_score, 0.01)]
+    geometric_mean = math.exp(sum(math.log(s) for s in scores) / 3.0)
+    overall = round(geometric_mean, 2)
+
+    layers = {
+        "tool_constraint": round(tool_score, 2),
+        "risk_callout": round(risk_score, 2),
+        "output_format": round(format_score, 2),
+    }
+
+    weakest = min(layers, key=layers.get)
+
+    if overall >= 0.8:
+        grade = "A"
+    elif overall >= 0.6:
+        grade = "B"
+    elif overall >= 0.4:
+        grade = "C"
+    elif overall >= 0.2:
+        grade = "D"
+    else:
+        grade = "F"
+
+    recommendations = {
+        "tool_constraint": "Add explicit tool constraints: which tools to use, in what order, with what parameters.",
+        "risk_callout": "Add risk callouts: what to avoid, hard bans, prohibited actions, danger zones.",
+        "output_format": "Add output format specification: expected structure, schema, examples, templates.",
+    }
+
+    return {
+        "layers": layers,
+        "overall": overall,
+        "grade": grade,
+        "weakest_layer": weakest,
+        "recommendation": recommendations[weakest],
+    }

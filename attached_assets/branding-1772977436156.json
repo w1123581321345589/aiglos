@@ -1,0 +1,162 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Helvetica Neue",
+      "role": "body"
+    },
+    {
+      "family": "Arial",
+      "role": "body"
+    },
+    {
+      "family": "CursorGothic",
+      "role": "heading"
+    }
+  ],
+  "colors": {
+    "primary": "#C08532",
+    "accent": "#F54E00",
+    "background": "#F7F7F4",
+    "textPrimary": "#26251E",
+    "link": "#F54E00"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Helvetica Neue",
+      "heading": "CursorGothic"
+    },
+    "fontStacks": {
+      "heading": [
+        "CursorGothic",
+        "system-ui",
+        "Helvetica Neue",
+        "Helvetica",
+        "Arial",
+        "sans-serif"
+      ],
+      "body": [
+        "CursorGothic",
+        "system-ui",
+        "Helvetica Neue",
+        "Helvetica",
+        "Arial",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "system-ui",
+        "-apple-system",
+        "BlinkMacSystemFont",
+        "Segoe UI",
+        "Helvetica Neue",
+        "Arial",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "26px",
+      "h2": "14px",
+      "body": "13px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "0px"
+  },
+  "components": {
+    "input": {
+      "background": "transparent",
+      "textColor": "#26251E",
+      "borderColor": null,
+      "borderRadius": "0px",
+      "borderRadiusCorners": {
+        "topLeft": "0px",
+        "topRight": "0px",
+        "bottomRight": "0px",
+        "bottomLeft": "0px"
+      },
+      "shadow": "none"
+    },
+    "buttonPrimary": {
+      "background": "#26251E",
+      "textColor": "#F7F7F4",
+      "borderColor": "#26251E",
+      "borderRadius": "33554400px",
+      "borderRadiusCorners": {
+        "topLeft": "33554400px",
+        "topRight": "33554400px",
+        "bottomRight": "33554400px",
+        "bottomLeft": "33554400px"
+      },
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "#E6E5E0",
+      "textColor": "#26251E",
+      "borderColor": "#F2F2EF",
+      "borderRadius": "33554400px",
+      "borderRadiusCorners": {
+        "topLeft": "33554400px",
+        "topRight": "33554400px",
+        "bottomRight": "33554400px",
+        "bottomLeft": "33554400px"
+      },
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.svg",
+    "favicon": "File saved at: attached_assets/favicon.png",
+    "ogImage": "https://cursor.com/public/opengraph-image.png",
+    "logoHref": "File saved at: attached_assets/logoHref.html"
+  },
+  "__llm_logo_reasoning": {
+    "selectedIndex": 0,
+    "reasoning": "Selected #0 because it is located in the header, is visible, and links to the homepage, aligning with the brand 'Cursor'.",
+    "confidence": 0.95,
+    "source": "llm"
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 7,
+      "text": "Download for Linux⤓",
+      "reasoning": "Button #0 has a dark background (#26251E) which stands out against the lighter page background, making it a strong candidate for the primary CTA. The text 'Download for Linux⤓' is action-oriented, indicating a direct call to action."
+    },
+    "secondary": {
+      "index": 0,
+      "text": "Request a demo→",
+      "reasoning": "Button #3, 'Request a demo→', has a different background color (#E6E5E0) and serves as a secondary action, offering a less direct engagement option compared to the primary download button."
+    },
+    "confidence": 0.9
+  },
+  "personality": {
+    "tone": "modern",
+    "energy": "medium",
+    "targetAudience": "developers and tech professionals"
+  },
+  "designSystem": {
+    "framework": "tailwind",
+    "componentLibrary": ""
+  },
+  "confidence": {
+    "buttons": 0.9,
+    "colors": 0.9,
+    "overall": 0.9
+  },
+  "__llm_metadata": {
+    "logoSelection": {
+      "llmCalled": true,
+      "llmSucceeded": true,
+      "finalSource": "llm",
+      "rawLogoSelection": {
+        "selectedLogoIndex": 0,
+        "selectedLogoReasoning": "Selected #0 because it is located in the header, is visible, and links to the homepage, aligning with the brand 'Cursor'.",
+        "confidence": 0.95
+      }
+    },
+    "buttonClassification": {
+      "llmCalled": true,
+      "llmSucceeded": true
+    }
+  }
+}

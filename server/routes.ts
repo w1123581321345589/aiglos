@@ -107,20 +107,23 @@ export async function registerRoutes(
   app.use(loadUser);
 
   const staticPages = new Set([
-    "landing", "aiglos", "scan", "defense", "docs",
-    "demo", "changelog", "pricing", "coding-agents",
-    "intel", "skills", "govbench-paper", "nist-submission",
+    "defense", "docs", "changelog", "coding-agents",
+    "govbench-paper", "nist-submission",
     "tutorial-openclaw-hardening", "tutorial-advanced",
   ]);
   const publicRoot = new URL("../client/public", import.meta.url).pathname;
 
-  app.get("/", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
-  app.get("/supernova-plan", (_req, res) => res.redirect(301, "/landing"));
-  app.get("/tutorial-github-actions", (_req, res) => res.redirect(301, "/landing"));
-  app.get("/atlas", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
-  app.get("/ghsa", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
-  app.get("/superpowers", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
-  app.get("/benchmark", (_req, res) => res.sendFile("landing.html", { root: publicRoot }));
+  const legacyRedirects = [
+    "supernova-plan", "tutorial-github-actions", "atlas",
+    "ghsa", "superpowers", "benchmark", "landing",
+    "aiglos", "skills", "demo", "playground",
+  ];
+  for (const slug of legacyRedirects) {
+    app.get(`/${slug}`, (_req, res) => res.redirect(301, "/"));
+  }
+
+  app.get("/tutorials", (_req, res) => res.redirect(301, "/"));
+  app.get("/tutorials/:slug", (_req, res) => res.redirect(301, "/"));
 
   app.get("/:page", (req, res, next) => {
     if (staticPages.has(req.params.page)) {

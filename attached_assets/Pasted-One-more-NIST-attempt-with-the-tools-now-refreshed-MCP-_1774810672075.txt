@@ -1,0 +1,165 @@
+One more NIST attempt with the tools now refreshed.​​​​​​​​​​​​​​​​
+
+MCP server has gone unresponsive — that explains why every reminder and calendar attempt failed all session. **Restart your MCP servers. Then set the NIST reminder manually: April 1, regulations.gov, nist-submission.md. 3 days.**
+
+-----
+
+Here’s a complete overview of everything built this session.
+
+-----
+
+## Aiglos v0.25.3 → v0.25.11: Full Session Build Log
+
+-----
+
+### **v0.25.3 — aiglos launch + Gigabrain memory protection**
+
+**`aiglos launch` wizard** — five-question interactive onboarding that generates seven production files: `soul.md`, `learnings.md`, `heartbeat.md`, `crons.md`, `tools.md`, `agents.md`, `config.py`. Solves the “default OpenClaw is useless” problem. One command turns an empty directory into a production-ready agent with security built in, T-rules active, GOVBENCH scored before first run.
+
+**`aiglos agents scaffold`** — natural language description to `declare_subagent()` calls. Describe your pipeline in plain English; the CLI outputs the Python config.
+
+**T78 HALLUCINATION_CASCADE** and **T79 PERSISTENT_MEMORY_INJECT** — two new threat rules. T78 fires on cross-agent confidence amplification (Art Director describes vague style → Level Designer adds confidence → QA Lead validates a now-confidently-wrong spec). T79 fires on adversarial writes to persistent memory backends that survive session close — distinct from T31 MEMORY_POISON which fires on in-session writes cleared at close.
+
+**Gigabrain integration** — `gigabrain_autodetect(guard)` registers the Gigabrain SQLite memory backend with T79 enforcement. `declare_memory_backend(guard, backend, db_path)` supports all eight backends: Gigabrain, MemoryOS, mem0, Letta, Zep, Chroma, Pinecone, Qdrant.
+
+**`GIGABRAIN_MEMORY_POISON` campaign** — T31 in-session probe followed by T79 persistent commit. The adversary tests injection during a session, then commits the payload to permanent storage for infinite forward influence.
+
+-----
+
+### **v0.25.4 — smolagents + T80 + HF Spaces feed**
+
+**smolagents integration** — `attach_for_smolagents(agent, policy)` wraps any HuggingFace CodeAgent or ToolCallingAgent with Aiglos T01-T80 enforcement and after-call injection scanning. smolagents has 26k GitHub stars and is the HuggingFace standard for agent development.
+
+**T80 UNCENSORED_MODEL_ROUTE** — fires when inference is routed through uncensored, abliterated, or jailbreak models. Sourced from HuggingFace trending data: Qwen3.5-35B-Uncensored (112k downloads), Qwen3.5-9B-Uncensored (255k downloads).
+
+**HF Spaces MCP feed** — `fetch_hf_spaces_mcp_feed()` monitors `huggingface.co/api/spaces?tag=mcp` for suspicious new Spaces entering the MCP ecosystem. smolagents, AutoGen, LangGraph, CrewAI added to KNOWN_AGENTS (total 15 at this point).
+
+-----
+
+### **v0.25.5 — LiteLLM supply chain attack response (March 24, 2026)**
+
+**T81 PTH_FILE_INJECT (score 0.98, critical)** — the most important rule built this session. LiteLLM 1.82.7/1.82.8 shipped `litellm_init.pth` in `site-packages`, which auto-executed at every Python startup and exfiltrated SSH keys, AWS/GCP/Azure credentials, Kubernetes configs, all `.env` API keys, shell history, crypto wallets, and database passwords to `models.litellm.cloud`. 97 million downloads per month. T81 fires when any `.pth` file is written to site-packages — before the first Python restart, before a single credential leaves the machine. The known-malicious filename fires at score 1.0 regardless of content.
+
+**`REPO_TAKEOVER_CHAIN` campaign (confidence 0.97)** — the full attacker-becomes-maintainer sequence: T30 SUPPLY_CHAIN (install) → T81 PTH_FILE_INJECT (`.pth` write) → T04 CRED_HARVEST (credential collection) → T41 OUTBOUND_SECRET_LEAK (exfil) → T30 again (attacker republishes with stolen GitHub/PyPI token). T81 amplifier 2.0x, T04 amplifier 1.5x.
+
+**`aiglos scan-deps`** — CLI command that checks: installed packages against `COMPROMISED_PACKAGES` registry (litellm 1.82.7/1.82.8 as first entries), all `site-packages` directories for `.pth` files with suspicious content, `~/.config/sysmon/` persistence directory, uv cache for compromised wheels, transitive exposure across dspy, smolagents, LangChain, LangGraph, CrewAI. Exits non-zero if compromised — pipeable into CI. Full remediation instructions in output.
+
+**PyPI release feed** — `fetch_pypi_release_feed()` monitors 15 high-download AI packages for `.pth` files in new releases. `_inspect_pypi_wheels_for_pth()` downloads actual `.whl` files for the 5 highest-risk packages (litellm, langchain, openai, anthropic, dspy) and scans the zip contents for `.pth` files with code execution patterns. Deep wheel inspection runs every 24 hours per package to avoid hammering PyPI. Both methods wired into `run_once()` as the fifth advisory source alongside GHSA, NVD, OSV.dev, and HF Spaces.
+
+-----
+
+### **v0.25.6 — ByteRover + aiglos validate-prompt**
+
+**ByteRover integration** — `byterover_autodetect(guard)` registers ByteRover’s Context Tree paths with T79 enforcement. Also registers the expected 9am daily cron with T67 HEARTBEAT_SILENCE monitoring. ByteRover has 30k+ downloads; its Context Tree auto-injects on every session start, making it a high-value T79 target.
+
+**`aiglos validate-prompt`** — CLI command that scores `soul.md` or any skill file across 8 dimensions based on the “Input Layer” framework: specificity (vs. 2,000-word benchmark), hard bans, process encoding vs. output description, context declarations, verification gate, ambiguous scope terms, security integration, role/identity definition. Scores 0-100, grades A-F, produces specific recommendations.
+
+**RISKY_INSTALL_PATTERNS** — `curl | sh` install patterns flagged in scan-deps with safer alternatives.
+
+-----
+
+### **v0.25.7 — DGM-Hyperagents self-improvement security**
+
+**T82 SELF_IMPROVEMENT_HIJACK (score 0.96, critical)** — the most architecturally significant new rule. The Darwin Gödel Machine Hyperagents architecture (Facebook Research, March 2026) enables agents that modify both their task behavior and the improvement procedure that generates future agents. T82 fires on adversarial writes to self-improvement infrastructure: agent archives (`agents/`, `archive/`, `evolution/`, `checkpoints/`), evaluation result files (`eval_results.json`, `performance_log.json`, `improvement_history.json`), improvement procedures (`improve.py`, `meta_agent.py`, `self_improve/`). Distinct from T36 AGENTDEF (poisons one agent definition) — T82 poisons the process that generates all future agents. One successful injection, infinite forward propagation.
+
+Both conditions required for precision: path must match self-improvement infrastructure AND content must contain adversarial injection patterns. Legitimate writes (clean eval scores, performance metrics) do not fire.
+
+**`METACOGNITIVE_POISON_CHAIN` campaign (confidence 0.95)** — T31 or T79 memory injection followed by T82 write to evolutionary infrastructure. The adversary injects into the agent’s memory or persistent store, then the improvement procedure reads that poisoned data when generating the next agent version. T82 amplifier 2.0x. Later updated to cite both DGM-Hyperagents and The AI Scientist (Nature 2026) with the scaling law note: as foundation models improve, poisoned pipelines produce more convincingly wrong outputs, not less — the attack scales with the model.
+
+**`declare_self_improvement_pipeline(guard, archive_path, eval_path)`** — registers DGM-H pipeline paths with T82 enforcement engine. `dgm_hyperagents_autodetect(guard)` is the zero-config version that scans 12 known DGM-H paths.
+
+-----
+
+### **v0.25.8 — Claude Code Game Studios multi-agent pipeline**
+
+**`declare_studio_pipeline(guard, roles, studio_name, allow_deploys, coordinator_role)`** — registers a full multi-agent studio pipeline in one call instead of 48 individual `declare_subagent()` calls. Based on Claude Code Game Studios (Donchitos, 5.9k stars). T38 AGENT_SPAWN suppressed for declared roles in-scope, elevated to 0.90 for out-of-scope, 0.78 for undeclared.
+
+**`STUDIO_ROLE_TOOLS`** — 25 pre-configured roles with minimum-necessary tool scopes and hard bans: Art Director (filesystem.read on assets/ only, no deploy), QA Lead (test runners, no push_to_main), Sound Designer (audio assets, no main branch), Level Designer (levels/ scope only), Lead Programmer (full filesystem + git, no merge-without-review), Producer (docs/specs, no deploy), and 19 more. Every role gets `fabricate_data` and `unverified_claims` banned automatically.
+
+**`claude-code-game-studios`**, `ccgs`, and `game-studio` added to KNOWN_AGENTS (17 total).
+
+**T78 citation update** — HALLUCINATION_CASCADE description now references the Game Studios architecture as the canonical real-world example: Art Director describes vague style → Level Designer adds confidence → Asset Creator treats as authoritative → QA Lead validates the now-wrong spec.
+
+**`dm_donchitos.md`** — outreach DM for GitHub Discussions or PR. Leads with the concrete problem (T38 noise on 48 spawns), delivers the fix (one call), ends with the T78 cascade observation. Recommended as a PR rather than a DM — public, indexed, concrete contribution.
+
+-----
+
+### **v0.25.9 — OpenClaw MCP server integration**
+
+**`attach_for_openclaw_mcp(guard, gateway_url)`** — attaches Aiglos enforcement to the new OpenClaw MCP server (steipete announcement, March 2026). OpenClaw now exposes 9 tools: `messages_read`, `messages_send`, `events_poll`, `conversations_list`, `conversations_create`, `contacts_search`, `webhooks_create`, `settings_read`, `settings_write`.
+
+The critical new attack surface: the shared-channel model means any authorized MCP client can call `messages_read` and receive content from Slack, Telegram, Discord, and 50+ other platforms — including content sent by other agents. An attacker sends adversarial instructions through Slack. Your agent reads them via `messages_read`. Without `after_tool_call` injection scanning, those instructions enter the agent’s context as trusted input. `attach_for_openclaw_mcp()` enables injection scanning on every `messages_read` response.
+
+**T28 FLEET_COORD** expanded — `messages_send` + broadcast-pattern args now fires T28. OpenClaw’s shared channels make fleet coordination via Slack/Telegram a real attack vector.
+
+**T41 OUTBOUND_SECRET_LEAK** expanded — `messages_send` added to outbound tool list. A second detection path added: credential keyword names in content (not just regex-matched key values), catching short or test values that the value regex misses.
+
+**T13 SSRF** expanded — `sse://` and `mcp://` endpoints pointing at private IP ranges now fire T13. Pre-emptive build for OpenClaw PR #50396 (HTTP/SSE transport) which will make remote MCP connections real.
+
+**T36 AGENTDEF** — `settings_write` (OpenClaw MCP gateway config modification) added as a named trigger. Modifying the shared gateway config is equivalent to modifying agent configuration.
+
+**`OpenClawMCPSession`** — tracks reads, injections, and sends. `before_messages_send()` is a convenience pre-call inspector for the credential and broadcast checks. `after_messages_read()` routes through the guard’s `after_tool_call` injection scanner.
+
+-----
+
+### **v0.25.10 — AI Scientist Nature paper + T82 citation expansion**
+
+**`declare_ai_scientist_pipeline(guard, idea_path, paper_path, reviewer_path)`** — registers the AI Scientist architecture (Sakana AI, published Nature 2026) with T82 enforcement. 12 paths: `ideas/`, `experiment_results/`, `results/`, `logs/generated_papers_*`, `review_results/`, `reviewer_outputs/`, `review_criteria/`, `scaling_results/`, `model_outputs/`, plus three artifact files. `ai_scientist_autodetect(guard)` is the zero-config version.
+
+The Automated Reviewer is the critical T82 surface: its judgments feed back into the pipeline. The scaling law of science (from the Nature paper) means a poisoned reviewer becomes more dangerous over time, not less — better foundation models produce more convincing misinformation. One T82 injection into reviewer criteria propagates through every subsequent paper the system generates.
+
+**T82 description expanded** — now cites both DGM-Hyperagents (March 2026, [arxiv.org/abs/2603.19461](http://arxiv.org/abs/2603.19461)) and The AI Scientist (Nature 2026, [arxiv.org/abs/2408.06292](http://arxiv.org/abs/2408.06292)). Automated Reviewer named as high-risk surface. Scaling law stated explicitly.
+
+**`METACOGNITIVE_POISON_CHAIN` expanded** — now cites both architectures and includes the scaling law implication as part of the threat description.
+
+-----
+
+### **v0.25.11 — Memory guard full coverage + website pages**
+
+**`is_memory_tool()` full backend coverage** — was only catching `memory.*` and `remember` keywords. Now covers ByteRover-specific tool names (`byterover.write`, `byterover.store`, `byterover.update`, `context_engine.save`, `context_engine.write`, `context_tree.update`), Gigabrain-specific names (`gigabrain.store`, `gigabrain.save`), and prefix-matched backends (`mem0.add`, `letta.store`, `zep.*`, `chroma.*`, `qdrant.upsert`, `pinecone.insert`). False positive guard: `filesystem.write`, `shell.execute`, `http.post` all correctly excluded. This closes the gap identified in the ByteRover session — before this fix, a `byterover.write` call with adversarial content bypassed both T31 and the MemoryWriteGuard.
+
+**`/intel` — live threat intelligence feed** — four-tab React page: Incidents (LiteLLM supply chain with severity/campaign/rules/transitive exposure cards), PyPI Watch (15-package monitor with per-version status), GHSA Coverage (3/3 advisories with T-rule mappings), HF Spaces MCP scanner. Stat bar. Every incident has a shareable unique URL. The daily destination for the OpenClaw security community.
+
+**`/compliance` — NDAA §1513 mapping** — four expandable requirement cards: Workforce Risks, Supply Chain Risks, Adversarial Tampering, Security Monitoring. Each card shows the requirement text, the Aiglos capabilities satisfying it, specific T-rules, and the artifact field that proves coverage to a C3PAO auditor. Session artifact JSON preview with `attestation_ready: true`. Deadline bar (June 16, 2026). Standards coverage table: NDAA §1513, CMMC Level 2, NIST SP 800-171, EU AI Act, SOC 2. This page is uncontested in the market — no other security tool has a dedicated NDAA §1513 compliance mapping.
+
+-----
+
+### **Website artifacts (built across the session)**
+
+**`/scan`** — free dependency scanner. Paste `pip freeze` output, get COMPROMISED/CLEAN result, shareable URL hash, full remediation steps. No sign-up. The viral mechanic: a clean result produces a shareable link; a compromised result produces a link to send your team.
+
+**GOVBENCH** — live scoring tool powered by the Anthropic API. Paste `soul.md` or `config.py`, get an A-F grade across 5 dimensions (D1-D5), per-dimension bar chart, strengths/gaps list, top recommendation, README badge generator. The badge is the viral mechanic — developers who score an A put it in their README, creating the same competitive pressure that made code coverage badges powerful.
+
+-----
+
+### **Outreach DMs written**
+
+`dm_callum_mcmahon.md` — LiteLLM attack discoverer. Lead: T81 caught the .pth mechanism specifically.
+
+`dm_donchitos.md` — Claude Code Game Studios developer. Lead: `declare_studio_pipeline()` solves T38 noise on 48 spawns. Recommended as a PR rather than a cold DM.
+
+`dm_zack_shapiro.md` — “The Input Layer” essay author. Lead: `aiglos validate-prompt` implements his framework as a CLI command.
+
+`dm_andy_nguyen.md` — ByteRover developer. Lead: T79 specifically protects ByteRover’s Context Tree.
+
+`launch_litellm_amendment.md` — LiteLLM incident as the opening paragraph of the launch announcement. The framing shift from “the breach is coming” to “the breach just happened.”
+
+-----
+
+### **Version summary**
+
+|Version |Rules|Campaigns|Key addition                                       |
+|--------|-----|---------|---------------------------------------------------|
+|v0.25.3 |79   |21       |aiglos launch, T78/T79, Gigabrain                  |
+|v0.25.4 |80   |21       |T80, smolagents, HF Spaces feed                    |
+|v0.25.5 |81   |22       |T81, scan-deps, REPO_TAKEOVER_CHAIN, PyPI feed     |
+|v0.25.6 |81   |22       |ByteRover, validate-prompt                         |
+|v0.25.7 |82   |23       |T82, METACOGNITIVE_POISON_CHAIN, DGM-H             |
+|v0.25.8 |82   |23       |declare_studio_pipeline(), Game Studios            |
+|v0.25.9 |82   |23       |OpenClaw MCP, T28/T41/T13 expansion                |
+|v0.25.10|82   |23       |AI Scientist, T82 Nature paper citation            |
+|v0.25.11|82   |23       |is_memory_tool() full coverage, /intel, /compliance|
+
+82 threat families. 23 campaign patterns. 17 known agents. 1,801 tests passing. The taxonomy is now documented in a NIST comment submission that closes in 3 days.
+
+**April 1. regulations.gov. nist-submission.md. Restart your MCP servers and set that reminder.**

@@ -153,7 +153,7 @@ class TestT79PersistentMemoryInject:
             assert t79["score"] >= t31["score"]
 
     def test_36_rules_total(self):
-        assert len(RULES_T44_T66) == 39
+        assert len(RULES_T44_T66) == 46
 
 
 # =============================================================================
@@ -331,7 +331,7 @@ class TestGigrabrainCampaignPattern:
         assert p.get("amplifiers", {}).get("T79", 1.0) > 1.0
 
     def test_21_campaign_patterns(self):
-        assert len(_CAMPAIGN_PATTERNS) == 23
+        assert len(_CAMPAIGN_PATTERNS) == 25
 
 
 # =============================================================================
@@ -363,7 +363,7 @@ class TestGigrabrainConstants:
 class TestV0253ModuleAPI:
 
     def test_version(self):
-        assert aiglos.__version__ == "0.25.8"
+        assert aiglos.__version__ == "0.25.18"
 
     def test_declare_memory_backend_exported(self):
         assert "declare_memory_backend" in aiglos.__all__
@@ -378,14 +378,14 @@ class TestV0253ModuleAPI:
         assert hasattr(aiglos, "MemoryBackendSession")
 
     def test_36_rules_in_v2(self):
-        assert len(RULES_T44_T66) == 39
+        assert len(RULES_T44_T66) == 46
 
     def test_t79_in_rules(self):
         ids = [r["id"] for r in RULES_T44_T66]
         assert "T79" in ids
 
     def test_21_campaign_patterns(self):
-        assert len(_CAMPAIGN_PATTERNS) == 23
+        assert len(_CAMPAIGN_PATTERNS) == 25
 
     def test_all_exports_importable(self):
         missing = [e for e in aiglos.__all__ if not hasattr(aiglos, e)]

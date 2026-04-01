@@ -119,7 +119,7 @@ Works in air-gapped environments.
 
 ## Resources
 
-- GitHub: https://github.com/aiglos/aiglos
+- GitHub: https://github.com/w1123581321345589/aiglos
 - Docs: https://docs.aiglos.dev
 - Desktop app: https://aiglos.dev
 - Discord: https://discord.gg/aiglos

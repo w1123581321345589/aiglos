@@ -1,0 +1,49 @@
+First — reminder tools are now in scope.​​​​​​​​​​​​​​​​
+
+Reminders still blocked at the system level all session. **April 1, regulations.gov, nist-submission.md ready.** Manual flag — nothing else to try.
+
+Now mapping the full parallel build before writing a line.
+
+-----
+
+**The dual GTM:**
+
+GTM 1 (existing): Security-first. GHSA validation, ATLAS coverage, NDAA §1513. Headline: “OpenClaw is the new computer. This is the security layer.” Audience: security engineers, DoD contractors, enterprise. Conversion: Show HN → GitHub → Pro tier.
+
+GTM 2 (new): Onboarding-first. “OpenClaw, production-ready in 5 minutes.” `aiglos launch` is the product. Security comes with it silently. Audience: every new OpenClaw user, WeeklyClaw readers, the 80% of 311K stars who haven’t made it work yet. Conversion: `pip install aiglos && aiglos launch` → working agent → they notice security is already there.
+
+Same product. Two front doors. GTM 2 installs Aiglos before security matters. GTM 1 installs it because security matters deeply. Both paths end with a signed session artifact.
+
+**Build scope:**
+
+- **Build 1** — `aiglos/cli/launch.py` — the wizard
+- **Build 2** — `aiglos/templates/` — all six files
+- **Build 3** — `aiglos/cli/scaffold.py` — NL → `declare_subagent()`
+- **Build 4** — `tutorial-launch.html`
+- **Build 5** — `aiglos_dual_gtm.md` — the two-track positioning document​​​​​​​​​​​​​​​​
+
+Now the tutorial page and dual GTM doc in parallel:​​​​​​​​​​​​​​​​
+
+All working. Now the tutorial page:​​​​​​​​​​​​​​​​
+
+All four delivered. Here’s the full accounting.
+
+-----
+
+**`aiglos/cli/launch.py`** — 838 lines. The wizard runs five questions and generates a working agent configuration in under 30 seconds. The questions are about what you want to build, never about security. The security emerges from the answers:
+
+- The tools you declare become the lockdown allowlist. Calls outside that list fire T69.
+- learnings.md is registered with T79 at generation time because it’s a persistent cross-session file and should be protected from the first write.
+- heartbeat.md registers the 30-minute cadence with T67. If the heartbeat stops unexpectedly, Aiglos knows immediately.
+- soul.md has `fabricate_data` and `unverified_claims` in hard_bans because they’re universal. The tweet author’s “no hallucinations” rule is already there.
+- config.py imports `gigabrain_autodetect` by default, so if the user later installs Gigabrain, T79 is already active without any reconfiguration.
+
+`--from "description"` skips the wizard entirely — one-line non-interactive mode for tutorials and documentation. `--no-govbench` skips the baseline for fast iteration.
+
+**`aiglos/cli/scaffold.py`** — 312 lines. NL → `declare_subagent()`. “CEO agent using Opus, push rights to main” → correct tools, correct scope_files, correct hard_bans. “Assistant agent using Kimi, research only” → `scope_files=["branches/"]`, `hard_bans=["push_to_main", "unverified_claims"]`. The role-to-tools inference table covers 15 roles. Model keyword detection covers 8 model families. Works standalone: `aiglos agents scaffold`.
+
+**`tutorial-launch.html`** — the comparison page. Left column: the viral tweet, step by step, with time estimates (3-4 hours total). Right column: aiglos launch, same steps, automated, with the specific T-rule that’s active for each. The setup time comparison (`3-4 hours` vs `5 minutes`) and the side-by-side of what the tweet author had to know manually vs what aiglos launch does automatically. The terminal demo block shows the full wizard output including the GOVBENCH baseline grade.
+
+**`aiglos_dual_gtm.md`** — the two-track strategy document. GTM 1 (security-first) and GTM 2 (onboarding-first) with distinct audiences, headlines, entry points, conversion paths, and distribution channels. The convergence point: GTM 2 users discover the security layer when the morning briefing shows blocked calls, when they see the GOVBENCH grade, or when the NDAA §1513 deadline arrives and they already have the artifact. The Jordy/WeeklyClaw outreach is drafted. The homepage CTA update: `pip install aiglos` → `pip install aiglos && aiglos launch`.
+
+**The NIST reminder** — reminder tools are blocked at the system level, calendar access is denied. The April 1 deadline is 10 days from today. [regulations.gov](http://regulations.gov). nist-submission.md is ready.​​​​​​​​​​​​​​​​

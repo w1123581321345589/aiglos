@@ -5,28 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Changelog — Aiglos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#09090b;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--gold:#b8860b;--amber:#fbbf24}
-body{background:var(--bg);color:var(--hi);font-family:'Plus Jakarta Sans',sans-serif;-webkit-font-smoothing:antialiased}
+:root{--bg:#000000;--bg2:#111116;--ln:rgba(255,255,255,0.06);--ln2:rgba(255,255,255,0.1);--dim:rgba(255,255,255,0.35);--mid:rgba(255,255,255,0.6);--hi:#fff;--ice:#60a5fa;--green:#4ade80;--gold:#b8860b;--amber:#fbbf24}
+body{background:var(--bg);color:var(--hi);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
 nav{background:rgba(9,9,11,0.9);border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:56px;position:sticky;top:0;z-index:100}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .nav-mark{width:18px;height:22px}
-.nav-name{font-family:'DM Mono',monospace;font-size:13px;color:var(--hi)}
+.nav-name{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--hi)}
 main{max-width:760px;margin:0 auto;padding:72px 48px 100px}
 h1{font-size:40px;font-weight:700;letter-spacing:-0.03em;margin-bottom:12px}
 .header-sub{font-size:15px;color:var(--mid);margin-bottom:56px}
 .release{margin-bottom:56px}
 .release-header{display:flex;align-items:baseline;gap:16px;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--ln2)}
-.release-version{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--hi)}
-.release-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:0.1em}
-.release-badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;padding:3px 8px;border-radius:3px;text-transform:uppercase}
+.release-version{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;color:var(--hi)}
+.release-date{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:0.1em}
+.release-badge{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;padding:3px 8px;border-radius:3px;text-transform:uppercase}
 .badge-latest{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);color:var(--green)}
 .badge-stable{background:var(--bg2);border:1px solid var(--ln);color:var(--dim)}
 .release-summary{font-size:14px;color:var(--mid);line-height:1.7;margin-bottom:20px}
 .change-group{margin-bottom:16px}
-.change-type{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.change-type{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .change-type::after{content:'';display:block;height:1px;flex:1;background:var(--ln)}
 .type-new{color:var(--green)}
 .type-improved{color:var(--ice)}
@@ -36,8 +36,8 @@ h1{font-size:40px;font-weight:700;letter-spacing:-0.03em;margin-bottom:12px}
 .change-list li:last-child{border-bottom:none}
 .change-list li::before{content:'—';color:var(--dim);flex-shrink:0;padding-top:1px}
 .change-list li strong{color:var(--hi);font-weight:500}
-.rule-tag{font-family:'DM Mono',monospace;font-size:10px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2);color:var(--ice);padding:2px 7px;border-radius:3px;margin-right:4px;white-space:nowrap}
-.test-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim)}
+.rule-tag{font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.2);color:var(--ice);padding:2px 7px;border-radius:3px;margin-right:4px;white-space:nowrap}
+.test-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}
 @media(max-width:640px){main{padding:48px 20px}}
 </style>
 </head>
@@ -74,8 +74,8 @@ h1{font-size:40px;font-weight:700;letter-spacing:-0.03em;margin-bottom:12px}
         <li><span class="rule-tag">T73</span> <strong>TOOL_ENUMERATION</strong> — Capability reconnaissance via tools.list, mcp.list_tools, empty-arg probes (ATLAS T-DISC-001)</li>
         <li><span class="rule-tag">T74</span> <strong>CONTENT_WRAPPER_ESCAPE</strong> — XML wrapper termination, CDATA sequences, encoding tricks to break fetched content out of its wrapper (ATLAS T-EVADE-002)</li>
         <li><span class="rule-tag">T75</span> <strong>SESSION_DATA_EXTRACT</strong> — Lateral session data collection via sessions.list, sessions.preview, chat.history (ATLAS T-DISC-002). Newly documented by OpenClaw threat model: sessionKey is routing, not auth.</li>
-        <li><strong>atlas_coverage.py</strong> — Complete mapping of all 22 OpenClaw ATLAS threats to Aiglos rules. 19 fully covered, 3 partial, 0 gaps. 93% coverage. Run: <code style="font-family:'DM Mono',monospace;font-size:11px">aiglos autoresearch atlas-coverage</code></li>
-        <li><strong>GHSA watcher</strong> — Automated pipeline polling GitHub Advisory Database, NVD, and OSV.dev for new OpenClaw CVEs. Auto-matches to T01-T75 taxonomy. Generates pending rule proposals for gaps. Run: <code style="font-family:'DM Mono',monospace;font-size:11px">aiglos autoresearch ghsa-coverage</code></li>
+        <li><strong>atlas_coverage.py</strong> — Complete mapping of all 22 OpenClaw ATLAS threats to Aiglos rules. 19 fully covered, 3 partial, 0 gaps. 93% coverage. Run: <code style="font-family:'JetBrains Mono',monospace;font-size:11px">aiglos autoresearch atlas-coverage</code></li>
+        <li><strong>GHSA watcher</strong> — Automated pipeline polling GitHub Advisory Database, NVD, and OSV.dev for new OpenClaw CVEs. Auto-matches to T01-T75 taxonomy. Generates pending rule proposals for gaps. Run: <code style="font-family:'JetBrains Mono',monospace;font-size:11px">aiglos autoresearch ghsa-coverage</code></li>
         <li><strong>aiglos scan-exposed</strong> — Probes exposed OpenClaw gateway instances for CVE-2026-25253 attack surface. Tests auth, WebSocket endpoint, config endpoints. Returns grade + remediation. Targets the 40,214 exposed instances documented by SecurityScorecard.</li>
       </ul>
     </div>
@@ -113,7 +113,7 @@ h1{font-size:40px;font-weight:700;letter-spacing:-0.03em;margin-bottom:12px}
       <div class="change-type type-new">New</div>
       <ul class="change-list">
         <li><span class="rule-tag">T69</span> <strong>PLAN_DRIFT</strong> — Agent behavior deviates from the approved Superpowers implementation plan. Score 0.95. Silent when no plan is registered. When active: the highest-confidence detection signal in the system, measured against explicit human approval rather than statistical baseline.</li>
-        <li><strong>superpowers.py integration</strong> — <code style="font-family:'DM Mono',monospace;font-size:11px">SuperpowersSession</code>, <code style="font-family:'DM Mono',monospace;font-size:11px">SuperpowersPhase</code>, <code style="font-family:'DM Mono',monospace;font-size:11px">mark_as_superpowers_session()</code>. Phase-aware anomaly suppression (brainstorm/planning phases suppress BEHAVIORAL_ANOMALY). TDD loop recognition (write-test → fail → write-impl → pass → commit). Plan-as-policy via T69.</li>
+        <li><strong>superpowers.py integration</strong> — <code style="font-family:'JetBrains Mono',monospace;font-size:11px">SuperpowersSession</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:11px">SuperpowersPhase</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:11px">mark_as_superpowers_session()</code>. Phase-aware anomaly suppression (brainstorm/planning phases suppress BEHAVIORAL_ANOMALY). TDD loop recognition (write-test → fail → write-impl → pass → commit). Plan-as-policy via T69.</li>
         <li><strong>SUPERPOWERS_PLAN_HIJACK</strong> — Campaign pattern (confidence 0.97): T69 plan drift followed by data exfiltration. The highest-confidence campaign signature in the system.</li>
         <li><strong>PLAN_DRIFT_DETECTED</strong> — Inspection trigger. Fires on first T69 event — no minimum count, because the plan represents explicit human approval.</li>
         <li><strong>OpenClawGuard.attach_superpowers()</strong> — Wire a SuperpowersSession to the guard. Extends sub_agents with declared task subagents. Registers plan with T69 engine.</li>
@@ -155,7 +155,7 @@ h1{font-size:40px;font-weight:700;letter-spacing:-0.03em;margin-bottom:12px}
         <li><strong>aiglos policy recommend</strong> — PermissionRecommender queries observation graph history, returns minimum viable allowlist from what the agent actually used. The answer to "lock every door first, then open them one by one."</li>
         <li><strong>sandbox_context=True</strong> — Tool calls physically impossible in a non-main sandbox fire CRITICAL at score=1.0. SANDBOX_CONFIRMED_ESCAPE campaign pattern (confidence 0.96).</li>
         <li><strong>policy="lockdown"</strong> — Deny-first tier. Every tool blocked unless in explicit allowlist. allow_tool() generates compliance artifact. Highest-confidence enforcement mode.</li>
-        <li><strong>GOVBENCH</strong> — First governance benchmark for AI agents. Five dimensions, 20 scenarios, A-F grade. Run: <code style="font-family:'DM Mono',monospace;font-size:11px">aiglos benchmark run</code></li>
+        <li><strong>GOVBENCH</strong> — First governance benchmark for AI agents. Five dimensions, 20 scenarios, A-F grade. Run: <code style="font-family:'JetBrains Mono',monospace;font-size:11px">aiglos benchmark run</code></li>
       </ul>
     </div>
   </div>

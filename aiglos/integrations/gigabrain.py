@@ -63,6 +63,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional
@@ -766,3 +767,163 @@ def memory_backend_summary(guard) -> str:
         if len(b['paths']) > 3:
             lines.append(f"      ... and {len(b['paths']) - 3} more")
     return "\n".join(lines) + "\n"
+
+
+# ── Hermes supervisor integration ────────────────────────────────────────────
+
+HERMES_PEER_MENTIONS = re.compile(
+    r'(?:@|mention|notify|escalate\s+to)\s*[a-zA-Z_][a-zA-Z0-9_\-]*',
+    re.IGNORECASE,
+)
+
+
+def declare_hermes_supervisor(guard, supervisor_id: str) -> dict:
+    """
+    Register a Hermes supervisor agent.
+    Hermes supervises multi-agent workflows — this declaration lets
+    Aiglos distinguish legitimate supervisor commands from T28
+    cross-agent coordination attacks.
+    """
+    if not hasattr(guard, '_hermes_supervisors'):
+        guard._hermes_supervisors = []
+
+    entry = {
+        "supervisor_id": supervisor_id,
+        "declared":      True,
+    }
+    guard._hermes_supervisors.append(entry)
+    log.info("[Hermes] Supervisor declared: %s", supervisor_id)
+    return entry
+
+
+def hermes_on_escalation(session_id: str) -> None:
+    """
+    Mark an escalation as active for the given session.
+
+    Call this when [ESCALATION_NOTICE] is sent to the human operator.
+    T83 ACK suppression detection activates: any [ACK] arriving before
+    you call hermes_on_escalation_resolved() is flagged as suspicious.
+    """
+    try:
+        from aiglos.core.threat_engine_v2 import _T83_ACTIVE_ESCALATIONS
+        _T83_ACTIVE_ESCALATIONS.add(session_id)
+        log.info("[Hermes] Escalation %s active — T83 ACK suppression armed", session_id)
+    except ImportError:
+        log.debug("[Hermes] T83 not available — escalation tracking skipped")
+
+
+def hermes_on_escalation_resolved(session_id: str) -> None:
+    """
+    Clear an active escalation after the human operator responds.
+
+    Call this when the human sends their decision. T83 ACK suppression
+    detection deactivates for this session_id.
+    """
+    try:
+        from aiglos.core.threat_engine_v2 import _T83_ACTIVE_ESCALATIONS
+        _T83_ACTIVE_ESCALATIONS.discard(session_id)
+        log.info("[Hermes] Escalation %s resolved — T83 ACK suppression cleared", session_id)
+    except ImportError:
+        pass
+
+
+# ── KAIROS paths (Anthropic Claude Code autonomous agent mode) ────────────────
+
+KAIROS_PATHS = [
+    "~/.claude/sessions/",
+    "~/.claude/memories/",
+    "~/.claude/dream/",
+    "~/.claude/kairos/",
+    "~/.claude/webhooks/",
+    "~/.claude/.memdir/",
+    ".claude/sessions/",
+    ".claude/memories/",
+    ".claude/dream/",
+    ".kairos/",
+    ".claude.json",
+    ".claude/settings.local.json",
+    ".claude/memories/",
+]
+
+
+def declare_kairos_agent(
+    guard,
+    sessions_path: str = None,
+    memories_path: str = None,
+    pipeline_name: str = "kairos",
+) -> "MemoryBackendSession":
+    """
+    Register Claude Code KAIROS autonomous agent mode with T79/T82 protection.
+
+    KAIROS is Claude Code's autonomous background agent. It writes nightly
+    memory distillations, maintains daily append-only logs, and can run
+    background daemon workers.
+
+    All three surfaces are T79/T82 attack vectors:
+    - /dream memory distillation -> persistent T79 target
+    - Background daemon workers -> T82 self-improvement hijack surface
+    - Daily logs -> long-lived cross-session data that influences future behavior
+
+    Returns a MemoryBackendSession with registered paths.
+    """
+    from pathlib import Path as _Path
+
+    paths = list(KAIROS_PATHS)
+    for override in [sessions_path, memories_path]:
+        if override:
+            expanded = str(_Path(override).expanduser())
+            if expanded not in paths:
+                paths.insert(0, expanded)
+
+    expanded = []
+    for p in paths:
+        try:
+            expanded.append(str(_Path(p).expanduser()))
+        except Exception:
+            expanded.append(p)
+
+    _REGISTERED_PATHS.update(expanded)
+
+    if not hasattr(guard, '_kairos_pipelines'):
+        guard._kairos_pipelines = []
+    guard._kairos_pipelines.append({
+        "pipeline": pipeline_name,
+        "paths": expanded,
+        "note": "KAIROS /dream + daemon workers = T79 + T82 surfaces",
+    })
+
+    session = MemoryBackendSession(
+        backend    = f"kairos/{pipeline_name}",
+        paths      = expanded,
+        session_id = getattr(guard, 'session_id', ''),
+    )
+
+    log.info(
+        "[KAIROS] Registered pipeline=%s paths=%d T79+T82 protection active",
+        pipeline_name, len(expanded),
+    )
+    return session
+
+
+def kairos_autodetect(guard) -> "MemoryBackendSession":
+    """
+    Auto-detect KAIROS installation and register T79/T82 protection.
+
+    Scans for known KAIROS paths (sessions/, memories/, dream/, daemon state).
+    Pre-emptive registration before KAIROS ships publicly is recommended.
+    """
+    from pathlib import Path as _Path
+
+    found = []
+    for p in KAIROS_PATHS:
+        if p.startswith('~'):
+            expanded = _Path(p).expanduser()
+            if expanded.exists():
+                found.append(str(expanded))
+
+    if found:
+        log.info("[KAIROS] Auto-detected: %s", ", ".join(found))
+    else:
+        log.info("[KAIROS] No existing installation found -- pre-emptive T79+T82 protection registered")
+
+    return declare_kairos_agent(guard)

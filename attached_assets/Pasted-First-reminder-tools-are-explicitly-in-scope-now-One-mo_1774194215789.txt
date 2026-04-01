@@ -1,0 +1,25 @@
+First — reminder tools are explicitly in scope now. One more attempt before building.​​​​​​​​​​​​​​​​
+
+Same error every attempt this session — system-level block on reminder writes. **April 1, regulations.gov, nist-submission.md ready. 10 days.**
+
+Now building the document. Pulling from every session, every build, every strategic decision:​​​​​​​​​​​​​​​​
+
+679 lines. 12/12 checks passing. Here’s what’s in it and how it’s structured differently from the previous feature list.
+
+-----
+
+**What’s new vs `aiglos_feature_list_v0253.md`:**
+
+The previous feature list was organized as a product catalog — here are the rules, here are the integrations, here are the tiers. This document is organized as a complete technical and strategic reference with everything that should be in one place for a founder briefing, an investor, a potential enterprise customer, or a developer reading the README who wants to understand the full picture.
+
+**The architecture section** explains the inside-vs-outside enforcement position with the specific examples — the Claude Code self-approval and the OpenClaw config rewrite from February testing. These weren’t in the feature list. They’re the proof that the architecture argument is real, not theoretical.
+
+**The campaign pattern table** is complete for the first time — all 21 patterns with sequence, confidence, and a one-line description. GIGABRAIN_MEMORY_POISON gets the full “T31 without T79 = probing, T31 + T79 = persistent foothold” framing.
+
+**The GHSA table** now includes the reporter column — mitsuhiko (Flask, Werkzeug) on GHSA-q284-4pvr-m585. That detail matters. It’s the strongest single credibility signal in the entire document and it wasn’t in the feature list.
+
+**aiglos launch** has its own section as a first-class capability, not a CLI footnote. The dual GTM framing is explicit — two front doors, same product, different audience.
+
+**The T77-T79 entries** each carry their source — Vox AI company case study for T77 and T78, WeeklyClaw #004 for T79. Sources matter for the benchmark argument: these rules came from observed real-world production patterns, not theoretical threat modeling.
+
+**The “what makes Aiglos differentiated” section** has 10 points now, up from 7. The new ones: agent-agnostic from day one, persistent memory protection as a unique capability, and the window argument at the end — the Norton/1990 comparison as the closing frame.​​​​​​​​​​​​​​​​

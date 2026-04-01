@@ -677,4 +677,4 @@ yet. The company that owns behavioral detection when it does owns the category.
 
 *Generated from v0.25.3 codebase — March 22, 2026*
 *1,747 tests passing*
-*github.com/aiglos/aiglos · aiglos.dev*
+*github.com/w1123581321345589/aiglos · aiglos.dev*
