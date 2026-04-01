@@ -63,6 +63,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional
@@ -766,3 +767,120 @@ def memory_backend_summary(guard) -> str:
         if len(b['paths']) > 3:
             lines.append(f"      ... and {len(b['paths']) - 3} more")
     return "\n".join(lines) + "\n"
+
+
+# ── KAIROS multi-agent orchestrator integration ──────────────────────────────
+
+KAIROS_PATHS = [
+    "~/.kairos/config.yaml",
+    "~/.kairos/agents.yaml",
+    "~/.kairos/sessions/",
+    ".kairos/config.yaml",
+    ".kairos/agents.yaml",
+]
+
+
+def declare_kairos_agent(guard, agent_id: str, role: str = "worker") -> dict:
+    """
+    Register a KAIROS-managed agent with the Aiglos guard.
+
+    KAIROS manages multi-agent pipelines. Each agent in the pipeline
+    gets its own Aiglos guard, but they share session context for
+    cross-agent coordination detection (T28).
+    """
+    if not hasattr(guard, '_kairos_agents'):
+        guard._kairos_agents = []
+
+    entry = {
+        "agent_id": agent_id,
+        "role":     role,
+        "declared": True,
+    }
+    guard._kairos_agents.append(entry)
+    log.info("[KAIROS] Agent declared: %s (role=%s)", agent_id, role)
+    return entry
+
+
+def kairos_autodetect(guard) -> bool:
+    """
+    Auto-detect KAIROS configuration files and register paths.
+    Returns True if KAIROS config was found.
+    """
+    found = False
+    for kp in KAIROS_PATHS:
+        expanded = str(Path(kp).expanduser())
+        if Path(expanded).exists():
+            if not hasattr(guard, '_kairos_paths'):
+                guard._kairos_paths = []
+            guard._kairos_paths.append(expanded)
+            found = True
+            log.info("[KAIROS] Config found: %s", expanded)
+    return found
+
+
+# ── Hermes supervisor integration ─────────────────────────────────────────────
+
+HERMES_PEER_MENTIONS = re.compile(
+    r'(?:@|mention|notify|escalate\s+to)\s*[a-zA-Z_][a-zA-Z0-9_\-]*',
+    re.IGNORECASE,
+)
+
+
+def declare_hermes_supervisor(guard, supervisor_id: str) -> dict:
+    """
+    Register a Hermes supervisor agent.
+    Hermes supervises multi-agent workflows — this declaration lets
+    Aiglos distinguish legitimate supervisor commands from T28
+    cross-agent coordination attacks.
+    """
+    if not hasattr(guard, '_hermes_supervisors'):
+        guard._hermes_supervisors = []
+
+    entry = {
+        "supervisor_id": supervisor_id,
+        "declared":      True,
+    }
+    guard._hermes_supervisors.append(entry)
+    log.info("[Hermes] Supervisor declared: %s", supervisor_id)
+    return entry
+
+
+def hermes_on_escalation(guard, from_agent: str, to_agent: str,
+                         reason: str = "") -> dict:
+    """
+    Record an escalation event between agents in a Hermes-managed workflow.
+    Returns the event dict for logging.
+    """
+    event = {
+        "type":       "escalation",
+        "from_agent": from_agent,
+        "to_agent":   to_agent,
+        "reason":     reason,
+        "declared_supervisors": [
+            s["supervisor_id"]
+            for s in getattr(guard, '_hermes_supervisors', [])
+        ],
+    }
+    if not hasattr(guard, '_hermes_events'):
+        guard._hermes_events = []
+    guard._hermes_events.append(event)
+    log.info("[Hermes] Escalation: %s -> %s (%s)", from_agent, to_agent, reason)
+    return event
+
+
+def hermes_on_escalation_resolved(guard, from_agent: str, to_agent: str,
+                                   resolution: str = "completed") -> dict:
+    """
+    Record resolution of an escalation event.
+    """
+    event = {
+        "type":       "escalation_resolved",
+        "from_agent": from_agent,
+        "to_agent":   to_agent,
+        "resolution": resolution,
+    }
+    if not hasattr(guard, '_hermes_events'):
+        guard._hermes_events = []
+    guard._hermes_events.append(event)
+    log.info("[Hermes] Resolved: %s -> %s (%s)", from_agent, to_agent, resolution)
+    return event

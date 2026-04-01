@@ -62,6 +62,9 @@ from aiglos.integrations.openclaw import (   # noqa: F401
     SessionArtifact,
     ArtifactExtensions,
     GuardResult as CheckResult,
+    normalize_shell_command,
+    extract_shell_tool_name,
+    PermissionDenialEvent,
 )
 from aiglos.integrations.openclaw import (
     attach   as _oc_attach,
@@ -178,6 +181,13 @@ from aiglos.integrations.gigabrain import (  # noqa: F401
     DGM_PIPELINE_PATHS,
     STUDIO_ROLE_TOOLS,
     AI_SCIENTIST_PATHS,
+    declare_kairos_agent,
+    kairos_autodetect,
+    KAIROS_PATHS,
+    declare_hermes_supervisor,
+    hermes_on_escalation,
+    hermes_on_escalation_resolved,
+    HERMES_PEER_MENTIONS,
 )
 from aiglos.integrations.subagent_registry import (  # noqa: F401
     SubagentRegistry,

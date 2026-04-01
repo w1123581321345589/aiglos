@@ -107,6 +107,8 @@ KNOWN_AGENTS = {
     "claude-code-game-studios": "Claude Code Game Studios (48-agent pipeline)",
     "ccgs":           "Claude Code Game Studios",
     "game-studio":    "Multi-agent game studio pipeline",
+    "kairos":         "KAIROS (multi-agent orchestrator)",
+    "hermes":         "Hermes (supervisor agent)",
 }
 
 
