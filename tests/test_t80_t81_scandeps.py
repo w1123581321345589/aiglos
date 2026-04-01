@@ -225,10 +225,10 @@ class TestExportsInInit:
 
 class TestThreatFamilyCounts:
     def test_39_rules_in_table(self):
-        assert len(RULES_T44_T66) == 45
+        assert len(RULES_T44_T66) == 46
 
     def test_82_total_threat_families(self):
         ids = {r["id"] for r in RULES_T44_T66}
-        assert len(ids) == 45
+        assert len(ids) == 46
         for n in range(44, 83):
             assert f"T{n}" in ids
