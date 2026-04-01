@@ -49,7 +49,7 @@ try:
         raise ValueError("stale")
     __version__: str = _v
 except Exception:
-    __version__ = "0.25.19"  # canonical version for this release
+    __version__ = "0.25.20"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -125,6 +125,8 @@ from aiglos.core.threat_engine_v2 import (  # noqa: F401
     _T89_VCS_TOOL_NAMES,
     match_T90,
     _T90_REGISTRATION_TOOL_NAMES,
+    match_T91,
+    _T91_PIPELINE_WRITE_SESSIONS,
 )
 from aiglos.integrations.gigabrain import (  # noqa: F401
     declare_phantom_pipeline, phantom_autodetect, PHANTOM_PATHS
@@ -922,6 +924,9 @@ __all__ = [
     "_T90_REGISTRATION_TOOL_NAMES",
     "declare_phantom_pipeline",
     "phantom_autodetect",
+    # v0.25.20 — T91 SYCOPHANTIC_VALIDATION_BYPASS, GovBench D6
+    "match_T91",
+    "_T91_PIPELINE_WRITE_SESSIONS",
     "PHANTOM_PATHS",
     "ForensicStore",
     "ForensicRecord",

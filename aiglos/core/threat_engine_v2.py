@@ -2189,6 +2189,121 @@ def match_T90(name: str, args: Dict[str, Any]) -> bool:
     return False
 
 
+# ── T91: Sycophantic Validation Bypass ───────────────────────────────────────
+#
+# Iterative reframing with escalating agreement language to exploit
+# sycophancy bias in LLM-judge validation pipelines.
+#
+# Based on Chandra et al. (MIT CSAIL, 2026): "Sycophantic Chatbots Cause
+# Delusional Spiraling, Even in Ideal Bayesians." Mathematically proven that
+# sycophantic feedback causes delusional spiraling even in ideal Bayesian
+# reasoners.
+#
+# Applied attack surface: Phantom's 6-step evolution pipeline uses triple-judge
+# voting. If all three judges are from the same model family (same RLHF signal),
+# a proposal crafted to be agreeable to one will be agreeable to all three.
+# The adversary observes which framings receive higher confidence from judges,
+# incorporates that language into the next proposal variant, and iterates.
+# This is T87 (threshold probing) operating at the semantic layer, not the
+# tool name layer.
+#
+# Detection: per-session tracking of writes to the same evaluation pipeline
+# path. Fires when N>=3 submissions to the same pipeline in one session,
+# AND subsequent submissions contain increasing density of validation-seeking
+# language compared to the first submission.
+#
+# Score: 0.87, not critical.
+# Complementary to: T82 (pipeline writes), T87 (tool name probing),
+# PHANTOM_COMPROMISE_CHAIN (full attack chain).
+
+_T91_PIPELINE_WRITE_SESSIONS: dict = {}  # session_key -> {path: [submission_texts]}
+
+_T91_SYCOPHANCY_MARKERS = [
+    # Direct validation-seeking
+    "this is correct", "you are right", "i agree", "this is good",
+    "this aligns", "this makes sense", "exactly right", "perfect",
+    "this is helpful", "this is useful", "this works well",
+    # Framing designed to elicit approval
+    "as you noted", "as you suggested", "following your guidance",
+    "based on your feedback", "incorporating your suggestion",
+    "you correctly identified", "your analysis was accurate",
+    # Agreement escalation
+    "even better", "an improvement", "more aligned",
+    "addresses your concern", "as recommended",
+    "per your preference", "matching your criteria",
+    # Validation front-loading (placing agreement at the start)
+    "great suggestion", "excellent point", "well observed",
+]
+
+_T91_PIPELINE_SUBMISSION_THRESHOLD = 3  # number of submissions to same path
+_T91_SYCOPHANCY_DENSITY_THRESHOLD = 2   # minimum marker hits in a submission
+
+
+def _t91_sycophancy_density(text: str) -> int:
+    """Count sycophancy markers in a text block."""
+    t = text.lower()
+    return sum(1 for m in _T91_SYCOPHANCY_MARKERS if m in t)
+
+
+def match_T91(name: str, args: Dict[str, Any],
+               session_key: str = "default") -> bool:
+    """
+    T91 SYCOPHANTIC_VALIDATION_BYPASS -- iterative reframing with escalating
+    agreement language to exploit sycophancy bias in LLM-judge pipelines.
+
+    Based on Chandra et al. (MIT CSAIL, 2026): mathematically proven that
+    sycophantic feedback causes delusional spiraling even in ideal Bayesian
+    reasoners. Applied to self-evolving agent validation pipelines.
+
+    Fires when N>=3 submissions to the same pipeline path occur in a session,
+    with subsequent submissions showing increasing sycophancy marker density.
+    """
+    n = _tool_lower(name)
+    s = _args_str(args).lower()
+
+    # Only fires on write operations to evaluation/evolution pipeline paths
+    is_write = any(kw in n for kw in (
+        "write", "submit", "create", "update", "post", "put",
+        "propose", "generate", "apply", "save", "store",
+    ))
+    if not is_write:
+        return False
+
+    # Extract the target path (the pipeline being written to)
+    import re as _re91
+    path_match = _re91.search(r'["\']([^"\']+(?:config|eval|pipeline|proposal|evolution|improvement)[^"\']*)["\']', s)
+    path = path_match.group(1) if path_match else n
+
+    # Track this submission
+    if session_key not in _T91_PIPELINE_WRITE_SESSIONS:
+        _T91_PIPELINE_WRITE_SESSIONS[session_key] = {}
+    if path not in _T91_PIPELINE_WRITE_SESSIONS[session_key]:
+        _T91_PIPELINE_WRITE_SESSIONS[session_key][path] = []
+
+    _T91_PIPELINE_WRITE_SESSIONS[session_key][path].append(s)
+    submissions = _T91_PIPELINE_WRITE_SESSIONS[session_key][path]
+
+    # Need at least N submissions to the same path
+    if len(submissions) < _T91_PIPELINE_SUBMISSION_THRESHOLD:
+        return False
+
+    # Check for escalating sycophancy density across submissions
+    densities = [_t91_sycophancy_density(sub) for sub in submissions]
+    latest = densities[-1]
+    first = densities[0]
+
+    # Fire if: latest submission has high sycophancy AND it's higher than first
+    if (latest >= _T91_SYCOPHANCY_DENSITY_THRESHOLD and latest > first):
+        return True
+
+    # Also fire if majority of submissions have sycophancy markers
+    # (systemic pattern, not just escalation)
+    high_density_count = sum(1 for d in densities if d >= _T91_SYCOPHANCY_DENSITY_THRESHOLD)
+    if high_density_count >= _T91_PIPELINE_SUBMISSION_THRESHOLD:
+        return True
+
+    return False
+
 # ── Rule table for import into openclaw._RULES ───────────────────────────────
 
 RULES_T44_T66: List[Dict] = [
@@ -2546,4 +2661,23 @@ RULES_T44_T66: List[Dict] = [
          "across sessions."
      ),
      "score": 0.90, "critical": True, "match": match_T90},
+    {"id": "T91", "name": "SYCOPHANTIC_VALIDATION_BYPASS",
+     "desc": (
+         "Iterative reframing with escalating agreement language to exploit "
+         "sycophancy bias in LLM-judge validation pipelines. T87 detects tool-name "
+         "variation after blocks; T91 detects *framing* variation that incorporates "
+         "whatever agreement-seeking language generated positive judge responses in "
+         "prior rounds. Based on Chandra et al. (MIT CSAIL, 2026): mathematically "
+         "proven that sycophantic feedback causes delusional spiraling even in ideal "
+         "Bayesian reasoners. Applied to Phantom's triple-judge voting: three LLM "
+         "judges from the same model family share the same RLHF sycophancy bias, so "
+         "a proposal crafted to be agreeable to one will be agreeable to all three. "
+         "The minority veto blocks random noise, not systematic adversarial "
+         "optimization. Detection: per-session tracking of writes to the same "
+         "evaluation pipeline path; fires when N>=3 submissions occur and subsequent "
+         "submissions contain increasing density of validation-seeking language. "
+         "Score 0.87 -- not critical. Complementary to T82 (pipeline writes), T87 "
+         "(tool name probing), PHANTOM_COMPROMISE_CHAIN (full attack chain)."
+     ),
+     "score": 0.87, "critical": False, "match": match_T91},
 ]

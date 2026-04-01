@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: aiglos
-Version: 0.25.19
-Summary: AI agent security runtime. 88 threat families, 26 campaign patterns, signed compliance artifacts. Zero dependencies.
+Version: 0.25.20
+Summary: AI agent security runtime. 89 threat families, 26 campaign patterns, signed compliance artifacts. Zero dependencies.
 Author-email: Aiglos <will@aiglos.io>
 License: MIT
 Project-URL: Homepage, https://aiglos.io
