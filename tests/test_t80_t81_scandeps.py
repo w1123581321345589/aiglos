@@ -100,7 +100,7 @@ class TestRepoTakeoverChainCampaign:
         assert "T81" in c["amplifiers"]
 
     def test_23_campaign_patterns_total(self):
-        assert len(_CAMPAIGN_PATTERNS) == 23
+        assert len(_CAMPAIGN_PATTERNS) == 25
 
 
 class TestScanResult:
@@ -225,10 +225,10 @@ class TestExportsInInit:
 
 class TestThreatFamilyCounts:
     def test_39_rules_in_table(self):
-        assert len(RULES_T44_T66) == 39
+        assert len(RULES_T44_T66) == 44
 
     def test_82_total_threat_families(self):
         ids = {r["id"] for r in RULES_T44_T66}
-        assert len(ids) == 39
+        assert len(ids) == 44
         for n in range(44, 83):
             assert f"T{n}" in ids

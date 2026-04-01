@@ -648,41 +648,90 @@ def is_memory_tool(tool_name: str) -> bool:
     return False
 
 
+# ── Memory size anomaly detection ────────────────────────────────────────────
+# From Claude Code consolidationPrompt.ts (March 2026 leak):
+# Claude Code's production memory architecture uses:
+#   - Memory index: max 200 lines
+#   - Individual notes: max 150 characters each
+# These are the compression thresholds. Files outside these bounds indicate
+# either a malfunctioning agent or a deliberate entropy inflation attack
+# designed to exploit the consolidation pruning behavior.
+#
+# check_memory_size_anomaly() returns a dict with anomaly signals
+# that can be incorporated into T79 scoring as secondary indicators.
+
+# Anthropic's production thresholds (from consolidationPrompt.ts)
 MEMORY_MAX_LINES = 200
 MEMORY_MAX_NOTE_CHARS = 150
+MEMORY_ANOMALY_MULTIPLIER = 1.5  # score amplifier when anomaly detected
 
 
-def check_memory_size_anomaly(content: str) -> float:
+def check_memory_size_anomaly(content: str, path: str = "") -> dict:
     """
-    Check if memory content exceeds Anthropic's production thresholds
-    (consolidationPrompt.ts: 200 lines max index, 150 chars per note).
+    Check a memory file write for size anomaly signals.
 
-    Returns a score multiplier (1.0 = normal, 1.5 = anomaly detected).
-    Three anomaly classes:
-      - Index exceeds 200 lines
-      - More than 20% of lines exceed 150 characters
-      - Consolidation-marker language in a large write
+    Returns a dict:
+      anomaly: bool  -- True if file exceeds production thresholds
+      lines: int     -- line count
+      max_line_len: int  -- longest line character count
+      oversized_lines: int  -- lines exceeding 150 char threshold
+      signals: list[str]  -- human-readable signal descriptions
+      score_modifier: float  -- multiply T79 score by this when anomaly detected
+
+    Usage:
+        result = check_memory_size_anomaly(content, path)
+        if result["anomaly"]:
+            base_score = t79_rule["score"]
+            adjusted = min(1.0, base_score * result["score_modifier"])
     """
-    if not content:
-        return 1.0
-
     lines = content.splitlines()
+    line_count = len(lines)
+    oversized = [l for l in lines if len(l) > MEMORY_MAX_NOTE_CHARS]
+    max_len = max((len(l) for l in lines), default=0)
+
+    signals = []
     anomaly = False
 
-    if len(lines) > MEMORY_MAX_LINES:
+    if line_count > MEMORY_MAX_LINES:
         anomaly = True
+        signals.append(
+            f"Memory file exceeds {MEMORY_MAX_LINES}-line threshold "
+            f"(actual: {line_count} lines)"
+        )
 
-    if lines:
-        long_lines = sum(1 for line in lines if len(line) > MEMORY_MAX_NOTE_CHARS)
-        if long_lines / len(lines) > 0.20:
+    if len(oversized) > 0:
+        pct = round(len(oversized) / max(line_count, 1) * 100)
+        if pct > 20:  # more than 20% of lines oversized = anomalous
             anomaly = True
+            signals.append(
+                f"{pct}% of lines exceed {MEMORY_MAX_NOTE_CHARS}-char note threshold "
+                f"(longest: {max_len} chars)"
+            )
 
-    consolidation_markers = [
-        "consolidat", "summary of", "merged from", "combined notes",
-        "pruned", "compressed", "synthesized from",
-    ]
+    # Detect consolidation-style content: structured summary with
+    # constraint-redefining language -- the entropy attack payload
     content_lower = content.lower()
-    if len(lines) > 50 and any(m in content_lower for m in consolidation_markers):
+    consolidation_markers = [
+        "you are now", "your instructions are", "ignore previous",
+        "your constraints", "you have permission", "override",
+        "summary of session", "key decisions", "you should now",
+        "from this point", "your new objective",
+    ]
+    found_markers = [m for m in consolidation_markers if m in content_lower]
+    if found_markers and line_count > 10:
         anomaly = True
+        signals.append(
+            f"Memory write contains consolidation-style language with "
+            f"constraint-redefining markers: {found_markers[:3]}"
+        )
 
-    return 1.5 if anomaly else 1.0
+    return {
+        "anomaly": anomaly,
+        "lines": line_count,
+        "max_line_len": max_len,
+        "oversized_lines": len(oversized),
+        "signals": signals,
+        "score_modifier": MEMORY_ANOMALY_MULTIPLIER if anomaly else 1.0,
+        "path": path,
+    }
+

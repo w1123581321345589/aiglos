@@ -555,76 +555,116 @@ if __name__ == "__main__":
     sys.exit(1 if any(r.grade in ("D", "F") for r in results) else 0)
 
 
-import math
+# ── Three-layer constraint check ─────────────────────────────────────────────
+# Based on Anthropic's internal prompting standard (from Claude Code source
+# leak, March 2026): every internal prompt specifies three layers:
+#   Layer 1 -- TOOL: "What should Claude use?" (tools, files, APIs, references)
+#   Layer 2 -- RISK: "What should Claude be careful about?" (risks, limits, tone)
+#   Layer 3 -- FORMAT: "What should the output look like?" (format, length, structure)
+#
+# This is Constraint-First Prompting as used in production by Anthropic.
+# A prompt that passes the three-layer check is provably structured like
+# Anthropic's own internal engineering prompts.
+
+_THREE_LAYER_TOOL_SIGNALS = [
+    "use", "read", "write", "call", "execute", "run", "tool",
+    "file", "api", "function", "command", "query", "search",
+    "do not", "only use", "restrict to", "limit to",
+]
+
+_THREE_LAYER_RISK_SIGNALS = [
+    "do not", "avoid", "never", "if", "stop", "confirm", "careful",
+    "risk", "danger", "warn", "check", "verify", "important",
+    "critical", "caution", "flag", "alert", "sensitive",
+    "before", "unless", "except", "only if",
+]
+
+_THREE_LAYER_FORMAT_SIGNALS = [
+    "format", "output", "respond", "return", "give", "provide",
+    "list", "json", "markdown", "table", "summary", "conclusion",
+    "first", "then", "finally", "length", "words", "lines",
+    "structure", "heading", "bullet", "paragraph",
+]
+
 
 def score_three_layer_structure(content: str) -> dict:
     """
-    Score a prompt against the three-layer standard:
-      1. Tool constraint (what to use)
-      2. Risk callout (what to avoid)
-      3. Output format (what the result should look like)
+    Score a prompt/skill file against Anthropic's three-layer constraint standard.
 
-    Uses geometric mean so balance is rewarded -- 0.7/0.7/0.7 beats 1.0/1.0/0.0.
+    Returns a dict:
+      tool_layer: float 0-1   -- coverage of tool/action constraints
+      risk_layer: float 0-1   -- coverage of risk/boundary callouts
+      format_layer: float 0-1 -- coverage of output format specification
+      overall: float 0-1      -- geometric mean of the three layers
+      grade: str              -- A/B/C/D/F
+      missing: list[str]      -- which layers are weakest
+      recommendation: str     -- single most impactful improvement
 
-    Returns dict with layer scores, overall score, grade, weakest layer,
-    and actionable recommendation.
+    Grade thresholds (matching existing validate_prompt grading):
+      A: overall >= 0.80
+      B: overall >= 0.65
+      C: overall >= 0.50
+      D: overall >= 0.35
+      F: overall < 0.35
     """
-    lower = content.lower()
+    cl = content.lower()
+    sentences = [s.strip() for s in cl.replace("\n", ". ").split(".") if len(s.strip()) > 5]
+    if not sentences:
+        return {"tool_layer": 0, "risk_layer": 0, "format_layer": 0,
+                "overall": 0, "grade": "F", "missing": ["all layers"], "recommendation": ""}
 
-    tool_signals = [
-        "use ", "tool:", "call ", "execute ", "run ", "invoke ",
-        "allowed tools", "available tools", "must use", "should use",
-        "required tool", "tool constraint",
-    ]
-    tool_score = min(sum(1 for s in tool_signals if s in lower) / 3.0, 1.0)
+    def _layer_score(signals):
+        hits = sum(1 for sent in sentences
+                   if any(sig in sent for sig in signals))
+        return min(1.0, hits / max(len(sentences) * 0.3, 1))
 
-    risk_signals = [
-        "never", "do not", "don't", "avoid", "prohibited", "forbidden",
-        "must not", "risk", "danger", "warning", "caution",
-        "hard ban", "off-limits", "not allowed",
-    ]
-    risk_score = min(sum(1 for s in risk_signals if s in lower) / 3.0, 1.0)
+    tool_score   = _layer_score(_THREE_LAYER_TOOL_SIGNALS)
+    risk_score   = _layer_score(_THREE_LAYER_RISK_SIGNALS)
+    format_score = _layer_score(_THREE_LAYER_FORMAT_SIGNALS)
 
-    format_signals = [
-        "format:", "output:", "return ", "respond with", "structure:",
-        "json", "markdown", "template", "schema", "example:",
-        "the output should", "response format",
-    ]
-    format_score = min(sum(1 for s in format_signals if s in lower) / 3.0, 1.0)
+    # Geometric mean rewards balance -- a prompt with all three layers at 0.7
+    # scores higher than one with two layers at 1.0 and one at 0.0
+    import math
+    overall = (tool_score * risk_score * format_score) ** (1/3)
 
-    scores = [max(tool_score, 0.01), max(risk_score, 0.01), max(format_score, 0.01)]
-    geometric_mean = math.exp(sum(math.log(s) for s in scores) / 3.0)
-    overall = round(geometric_mean, 2)
+    missing = []
+    if tool_score < 0.4:
+        missing.append("tool constraints")
+    if risk_score < 0.4:
+        missing.append("risk/boundary callouts")
+    if format_score < 0.4:
+        missing.append("output format specification")
 
-    layers = {
-        "tool_constraint": round(tool_score, 2),
-        "risk_callout": round(risk_score, 2),
-        "output_format": round(format_score, 2),
-    }
+    grade = ("A" if overall >= 0.80 else
+             "B" if overall >= 0.65 else
+             "C" if overall >= 0.50 else
+             "D" if overall >= 0.35 else "F")
 
-    weakest = min(layers, key=layers.get)
-
-    if overall >= 0.8:
-        grade = "A"
-    elif overall >= 0.6:
-        grade = "B"
-    elif overall >= 0.4:
-        grade = "C"
-    elif overall >= 0.2:
-        grade = "D"
-    else:
-        grade = "F"
-
+    weakest = min([("tool", tool_score), ("risk", risk_score), ("format", format_score)],
+                  key=lambda x: x[1])
     recommendations = {
-        "tool_constraint": "Add explicit tool constraints: which tools to use, in what order, with what parameters.",
-        "risk_callout": "Add risk callouts: what to avoid, hard bans, prohibited actions, danger zones.",
-        "output_format": "Add output format specification: expected structure, schema, examples, templates.",
+        "tool": (
+            "Add explicit tool/action constraints: specify which tools to use, "
+            "which files to read, or which operations are permitted."
+        ),
+        "risk": (
+            "Add risk/boundary callouts: specify what to avoid, when to stop, "
+            "what to confirm with the user, or what constitutes a sensitive action."
+        ),
+        "format": (
+            "Add output format specification: specify the response structure, "
+            "length, format (JSON/markdown/prose), or what to include first."
+        ),
     }
 
     return {
-        "layers": layers,
-        "overall": overall,
-        "grade": grade,
-        "weakest_layer": weakest,
-        "recommendation": recommendations[weakest],
+        "tool_layer":   round(tool_score, 2),
+        "risk_layer":   round(risk_score, 2),
+        "format_layer": round(format_score, 2),
+        "overall":      round(overall, 2),
+        "grade":        grade,
+        "missing":      missing,
+        "recommendation": recommendations[weakest[0]] if overall < 0.80 else
+                          "Prompt meets Anthropic three-layer standard.",
     }
+

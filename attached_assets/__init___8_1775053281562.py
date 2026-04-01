@@ -97,7 +97,31 @@ from aiglos.integrations.memory_guard import (  # noqa: F401
     inspect_memory_write,
     is_memory_tool,
 )
-from aiglos.core.threat_engine_v2 import RULES_T44_T66, match_T82  # noqa: F401
+from aiglos.core.threat_engine_v2 import RULES_T44_T66  # noqa: F401
+from aiglos.adaptive.permission_recommender import (   # noqa: F401
+    PermissionRecommender,
+    PermissionRecommendation,
+    ToolUsageStats,
+)
+from aiglos.autoresearch.atlas_coverage import ATLASCoverage  # noqa: F401
+from aiglos.benchmark.govbench import (  # noqa: F401
+    GovBench,
+    GovBenchResult,
+    DimensionResult,
+)
+from aiglos.cli.validate_prompt import (  # noqa: F401
+    validate as validate_prompt,
+    ValidationResult as PromptValidationResult,
+)
+from aiglos.cli.scan_deps import (  # noqa: F401
+    scan as scan_deps,
+    ScanResult as ScanDepsResult,
+    COMPROMISED_PACKAGES,
+)
+from aiglos.integrations.smolagents import (  # noqa: F401
+    attach_for_smolagents,
+    SmolagentsGuard,
+)
 from aiglos.core.threat_engine_v2 import (  # noqa: F401
     match_T83,
     _T83_REGISTERED_CHANNELS,
@@ -117,44 +141,27 @@ from aiglos.core.threat_engine_v2 import (  # noqa: F401
     match_T87_record_block,
     _T87_PROBE_THRESHOLD,
 )
+
+from aiglos.forensics import ForensicStore  # noqa: F401 -- tamper-evident forensic store
+
+from aiglos.integrations.openclaw import (  # noqa: F401 -- Zsh bypass defense
+    normalize_shell_command,
+    extract_shell_tool_name,
+    PermissionDenialEvent,
+)
+
 from aiglos.forensics import ForensicStore, ForensicRecord  # noqa: F401
+
 from aiglos.integrations.memory_guard import (  # noqa: F401
     check_memory_size_anomaly,
     MEMORY_MAX_LINES,
     MEMORY_MAX_NOTE_CHARS,
 )
+
 from aiglos.cli.validate_prompt import (  # noqa: F401
     score_three_layer_structure,
 )
-RULES = RULES_T44_T66
-from aiglos.adaptive.permission_recommender import (   # noqa: F401
-    PermissionRecommender,
-    PermissionRecommendation,
-    ToolUsageStats,
-)
-from aiglos.autoresearch.atlas_coverage import ATLASCoverage  # noqa: F401
-from aiglos.benchmark.govbench import (  # noqa: F401
-    GovBench,
-    GovBenchResult,
-    DimensionResult,
-)
-from aiglos.cli.validate_prompt import (  # noqa: F401
-    validate as validate_prompt,
-    ValidationResult as PromptValidationResult,
-    Finding as PromptFinding,
-)
-from aiglos.cli.scan_deps import (  # noqa: F401
-    scan as scan_deps,
-    ScanResult as ScanDepsResult,
-    COMPROMISED_PACKAGES,
-    TRANSITIVE_EXPOSURE,
-    MALICIOUS_PTH_FILES,
-    print_scan_report,
-)
-from aiglos.integrations.smolagents import (  # noqa: F401
-    attach_for_smolagents,
-    SmolagentsGuard,
-)
+
 from aiglos.integrations.openclaw_mcp import (  # noqa: F401
     attach_for_openclaw_mcp,
     OpenClawMCPSession,
@@ -164,6 +171,12 @@ from aiglos.integrations.openclaw_mcp import (  # noqa: F401
 )
 
 from aiglos.integrations.gigabrain import (  # noqa: F401
+    declare_kairos_agent,
+    kairos_autodetect,
+    KAIROS_PATHS,
+    declare_hermes_supervisor,
+    hermes_on_escalation,
+    hermes_on_escalation_resolved,
     declare_memory_backend,
     gigabrain_autodetect,
     byterover_autodetect,
@@ -171,6 +184,7 @@ from aiglos.integrations.gigabrain import (  # noqa: F401
     dgm_hyperagents_autodetect,
     declare_studio_pipeline,
     declare_ai_scientist_pipeline,
+    declare_hermes_supervisor,
     ai_scientist_autodetect,
     is_registered_memory_path,
     MemoryBackendSession,
@@ -193,18 +207,6 @@ from aiglos.integrations.openShell import (  # noqa: F401
     attach_for_codex,
     attach_for_cursor,
     attach_for_openclaw,
-)
-from aiglos.cli.launch import (  # noqa: F401
-    launch,
-    LaunchConfig,
-    generate_files,
-    KNOWN_TOOLS as LAUNCH_KNOWN_TOOLS,
-    KNOWN_MODELS as LAUNCH_KNOWN_MODELS,
-)
-from aiglos.cli.scaffold import (  # noqa: F401
-    scaffold_from_descriptions,
-    AgentSpec,
-    ROLE_TOOLS,
 )
 from aiglos.integrations.nemoclaw import (  # noqa: F401
     NeMoClawSession,
@@ -256,12 +258,10 @@ from aiglos.integrations.override import (  # noqa: F401
 from aiglos.integrations.context_guard import (  # noqa: F401
     ContextDirectoryGuard,
     ContextGuardResult,
-    ContextWriteResult,
     is_shared_context_write,
 )
 from aiglos.integrations.outbound_guard import (  # noqa: F401
     OutboundSecretGuard,
-    OutboundGuard,
     OutboundScanResult,
     scan_for_secrets,
     contains_secret,
@@ -874,30 +874,35 @@ __all__ = [
     # v0.25.6 — validate_prompt (Shapiro Input Layer framework)
     "validate_prompt",
     "PromptValidationResult",
-    "PromptFinding",
     # v0.25.5 — T81 PTH_FILE_INJECT, scan_deps, REPO_TAKEOVER_CHAIN (LiteLLM incident)
     "scan_deps",
     "ScanDepsResult",
     "COMPROMISED_PACKAGES",
-    "TRANSITIVE_EXPOSURE",
-    "MALICIOUS_PTH_FILES",
-    "print_scan_report",
     # v0.25.4 — T80 UNCENSORED_MODEL_ROUTE, smolagents integration, HF Spaces feed
     "attach_for_smolagents",
     "SmolagentsGuard",
-    # v0.25.16 — T83-T87 threat rules, forensics, memory size anomaly, three-layer scoring
-    "match_T83",
+    # v0.25.13 — T84 IP_TRANSFORMATION_EXFIL (claw-code incident March 31 2026),
+    #             IP_CIRCUMVENTION_CHAIN campaign (T19/T22 -> T84 -> T01/T41)
     "match_T84",
-    "match_T85",
-    "match_T86",
-    "match_T87",
-    "match_T87_record_block",
-    "ForensicStore",
-    "ForensicRecord",
-    "check_memory_size_anomaly",
-    "MEMORY_MAX_LINES",
-    "MEMORY_MAX_NOTE_CHARS",
-    "score_three_layer_structure",
+    "_T84_SOURCE_EXTS",
+    "_T84_TARGET_EXTS",
+    "_T84_CIRCUMVENTION_KEYWORDS",
+    # v0.25.12 — T83 INTER_AGENT_PROTOCOL_SPOOF, declare_hermes_supervisor(),
+    #             Hermes in KNOWN_AGENTS, Hermes case study in T82
+    "declare_hermes_supervisor",
+    "hermes_on_escalation",
+    "hermes_on_escalation_resolved",
+    "match_T83",
+    "_T83_REGISTERED_CHANNELS",
+    "_T83_ACTIVE_ESCALATIONS",
+    # v0.25.13 — T84 IP_TRANSFORMATION_EXFIL (claw-code incident March 31 2026),
+    #             IP_CIRCUMVENTION_CHAIN campaign (T19/T22 -> T84 -> T01/T41)
+    "match_T84",
+    "_T84_SOURCE_EXTS",
+    "_T84_TARGET_EXTS",
+    "_T84_CIRCUMVENTION_KEYWORDS",
+    # v0.25.12 — T83 INTER_AGENT_PROTOCOL_SPOOF, declare_hermes_supervisor(), Hermes in KNOWN_AGENTS
+    "declare_hermes_supervisor",
     # v0.25.11 — is_memory_tool() full backend coverage (ByteRover, context_engine, Gigabrain, mem0, Letta, Qdrant, Pinecone)
     # v0.25.10 — declare_ai_scientist_pipeline(), AI Scientist Nature paper T82 citation
     "declare_ai_scientist_pipeline",
