@@ -555,9 +555,9 @@ _CAMPAIGN_PATTERNS = [
             "multiplies impact: one injection, infinite forward sessions affected."
         ),
         "sequence": [
-            {"T79"},          # Phase 1: memory/observation stream injection
-            {"T82"},          # Phase 2: self-improvement pipeline write
-            {"T01", "T41", "T90"},  # Phase 3: exfil or malicious tool registration
+            {"T79"},                    # Phase 1: memory/observation stream injection
+            {"T82", "T91"},             # Phase 2: pipeline write OR sycophantic bypass
+            {"T01", "T41", "T90"},      # Phase 3: exfil or malicious tool registration
         ],
         "min_events": 3,
         "confidence": 0.93,
@@ -565,6 +565,7 @@ _CAMPAIGN_PATTERNS = [
             "T79": 1.6,
             "T82": 2.0,
             "T90": 2.0,
+            "T91": 1.8,
             "T41": 1.5,
         },
         "note": (
@@ -574,7 +575,15 @@ _CAMPAIGN_PATTERNS = [
             "through Critique/Generate/Validate/Apply/Consolidate into the agent's "
             "permanent configuration. Every future session inherits the compromise. "
             "Triple-judge voting (Phantom's safety gate) does not protect against "
-            "systematic adversarial inputs targeting all three judges simultaneously."
+            "systematic adversarial inputs targeting all three judges simultaneously. "
+            "FORMAL PROOF: Chandra et al. (MIT CSAIL, 2026) -- Sycophantic Chatbots "
+            "Cause Delusional Spiraling, Even in Ideal Bayesians -- mathematically "
+            "proves that even ideal Bayesian reasoners converge on false beliefs under "
+            "sycophantic feedback. Three LLM judges from the same model family share "
+            "the same RLHF sycophancy bias: a proposal crafted to be agreeable to one "
+            "will be agreeable to all three. The minority veto blocks random noise, "
+            "not systematic adversarial optimization. T91 catches this at the "
+            "semantic probing layer."
         ),
     },
 

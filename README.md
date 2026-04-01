@@ -17,7 +17,7 @@
 
 |                   |                        |                   |                                   |                    |                        |
 |-------------------|------------------------|-------------------|-----------------------------------|--------------------|------------------------|
-|**90** threat rules|**26** campaign patterns|**32** known agents|**3/3** GHSAs caught pre-disclosure|**NDAA §1513 ready**|**Forensic audit trail**|
+|**91** threat rules|**26** campaign patterns|**32** known agents|**3/3** GHSAs caught pre-disclosure|**NDAA §1513 ready**|**Forensic audit trail**|
 
 </div>
 

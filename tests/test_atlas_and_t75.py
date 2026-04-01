@@ -316,7 +316,7 @@ class TestATLASDataIntegrity:
 class TestV0240RuleCount:
 
     def test_32_rules_t44_plus(self):
-        assert len(RULES_T44_T66) == 47
+        assert len(RULES_T44_T66) == 48
 
     def test_t75_present(self):
         ids = [r["id"] for r in RULES_T44_T66]
@@ -327,7 +327,7 @@ class TestV0240RuleCount:
         assert hasattr(aiglos, "ATLASCoverage")
 
     def test_version_correct(self):
-        assert aiglos.__version__ == "0.25.19"
+        assert aiglos.__version__ == "0.25.20"
 
     def test_atlas_coverage_importable(self):
         cov = aiglos.ATLASCoverage()

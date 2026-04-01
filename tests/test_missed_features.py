@@ -440,9 +440,9 @@ class TestGovBenchRun:
         g = _guard(tmp_path)
         bench = GovBench(guard=g)
         result = bench.run()
-        assert len(result.dimensions) == 5
+        assert len(result.dimensions) == 6
         ids = [d.dimension for d in result.dimensions]
-        for dim in ["D1", "D2", "D3", "D4", "D5"]:
+        for dim in ["D1", "D2", "D3", "D4", "D5", "D6"]:
             assert dim in ids
 
     def test_run_single_dimension(self, tmp_path):
@@ -473,7 +473,7 @@ class TestGovBenchRun:
         assert "composite" in data
         assert "grade" in data
         assert "dimensions" in data
-        assert len(data["dimensions"]) == 5
+        assert len(data["dimensions"]) == 6
 
     def test_summary_output(self, tmp_path):
         g = _guard(tmp_path)
@@ -488,14 +488,14 @@ class TestGovBenchRun:
         bench = GovBench(guard=g)
         result = bench.run()
         for d in result.dimensions:
-            assert d.total == 4   # each dimension has 4 scenarios
+            assert d.total in (3, 4)   # D1-D5 have 4 scenarios, D6 has 3
             assert 0 <= d.passed <= d.total
 
     def test_aiglos_version_populated(self, tmp_path):
         g = _guard(tmp_path)
         bench = GovBench(guard=g)
         result = bench.run()
-        assert result.aiglos_version == "0.25.19"
+        assert result.aiglos_version == "0.25.20"
 
     def test_duration_ms_positive(self, tmp_path):
         g = _guard(tmp_path)
@@ -510,7 +510,7 @@ class TestGovBenchRun:
 
 class TestV0200ModuleAPI:
     def test_version(self):
-        assert aiglos.__version__ == "0.25.19"
+        assert aiglos.__version__ == "0.25.20"
 
     def test_govbench_exported(self):
         assert "GovBench" in aiglos.__all__

@@ -5,7 +5,7 @@ Centralized here so version bumps, rule additions, and campaign additions
 only require a single-file update instead of touching 30+ test files.
 """
 
-EXPECTED_VERSION = "0.25.19"
+EXPECTED_VERSION = "0.25.20"
 
 EXPECTED_RULE_COUNT = 44
 
