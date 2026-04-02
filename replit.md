@@ -3,13 +3,13 @@
 ## Overview
 Enterprise-grade web dashboard for the Aiglos AI Agent Security Runtime. Provides real-time monitoring, event logging, trust management, policy configuration, CMMC compliance tracking, autonomous threat scanning. Serves marketing/static pages and an authenticated dashboard.
 
-## Python Package (aiglos/ v0.25.20)
-The `aiglos/` directory contains the Python security runtime package covering threat families T01-T91 (91 total). 2,016 tests passing. 26 campaign patterns, 32 known agents. GovBench 6-dimension governance benchmark.
+## Python Package (aiglos/ v0.25.21)
+The `aiglos/` directory contains the Python security runtime package covering threat families T01-T93 (93 total). 2,064 tests passing. 27 campaign patterns, 32 known agents. GovBench 6-dimension governance benchmark.
 
 ### Package Structure
-- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.25.20. Exports T44-T91 match functions, Phantom integration, ForensicStore.
+- `aiglos/__init__.py` -- Module-level API (attach, check, close, adaptive_run, etc.), version 0.25.21. Exports T44-T93 match functions, Phantom integration, ForensicStore.
 - `aiglos/integrations/openclaw.py` -- OpenClaw guard with threat detection (T01-T91), lockdown policy, sandbox_context, allow_tool/tool_grants, normalize_shell_command
-- `aiglos/core/threat_engine_v2.py` -- T44-T91 threat rule library (48 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS + T76-T82 NemoClaw/memory/uncensored + T83-T89 protocol/identity/VCS + T90 dynamic tool registration + T91 sycophancy)
+- `aiglos/core/threat_engine_v2.py` -- T44-T93 threat rule library (50 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS + T76-T82 NemoClaw/memory/uncensored + T83-T89 protocol/identity/VCS + T90 dynamic tool registration + T91 sycophancy + T92 scanner compromise + T93 credential in tool args)
 - `aiglos/core/behavioral_baseline.py` -- AgentBaseline, BaselineScore, set_hardening_mode, is_suppressed
 - `aiglos/autoresearch/atlas_coverage.py` -- ATLASCoverage, ATLAS_THREAT_MAP (22 threats, 93% coverage)
 - `aiglos/autoresearch/ghsa_watcher.py` -- GHSAWatcher, KNOWN_ADVISORIES (3/3 covered)
@@ -23,7 +23,7 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/integrations/outbound_guard.py` -- T41 OUTBOUND_SECRET_LEAK
 - `aiglos/integrations/honeypot.py` -- T43 HONEYPOT_ACCESS
 - `aiglos/integrations/override.py` -- OverrideManager (6-char codes, 120s expiry, 3 attempts)
-- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (26 patterns including PHANTOM_COMPROMISE_CHAIN)
+- `aiglos/adaptive/campaign.py` -- CampaignAnalyzer (27 patterns including PHANTOM_COMPROMISE_CHAIN, MERCOR_BREACH_CHAIN)
 - `aiglos/adaptive/skill_reputation.py` -- SkillReputationGraph
 - `aiglos/benchmark/govbench.py` -- GovBench, GovBenchResult (6-dimension: campaign detection, agentdef resistance, memory belief, RL exploitation, outbound leakage, anti-sycophancy)
 - `aiglos/audit/scanner.py` -- AuditScanner (5-phase, 50+ checks, A-F grade)
@@ -72,7 +72,7 @@ Engine methods: start(), stop(), runScan(), runIntel(), getStatus(), getFindings
 - **Design**: Dark theme (#09090b bg), Plus Jakarta Sans + DM Mono fonts, blue (#2563eb) accent
 - **Routes**: Static HTML pages served from `client/public/`
   - `/landing` and `/aiglos` -- hero with live interceptor feed, pricing
-  - `/changelog` -- v0.19 through v0.25.20 changelog
+  - `/changelog` -- v0.19 through v0.25.21 changelog
   - `/govbench-paper` -- GOVBENCH 6-dimension governance benchmark paper
   - `/compare/clawkeeper` -- competitive comparison
   - `/tutorial-github-actions` -- CI integration tutorial
