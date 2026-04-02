@@ -24,7 +24,7 @@
 -----
 
 ```
-pip install aiglos && aiglos launch
+pip install aiglos & aiglos launch
 ```
 
 Five questions. Working agent. Security built in by default.
