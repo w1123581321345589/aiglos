@@ -17,7 +17,7 @@
 
 |                   |                        |                   |                                   |                    |                        |
 |-------------------|------------------------|-------------------|-----------------------------------|--------------------|------------------------|
-|**91** threat rules|**26** campaign patterns|**32** known agents|**3/3** GHSAs caught pre-disclosure|**NDAA §1513 ready**|**Forensic audit trail**|
+|**93** threat rules|**27** campaign patterns|**32** known agents|**3/3** GHSAs caught pre-disclosure|**NDAA §1513 ready**|**Forensic audit trail**|
 
 </div>
 
@@ -112,7 +112,7 @@ aiglos forensics query --date 2026-03-12 --agent reporting-pipeline --threat T86
 
 ## What Aiglos is
 
-Runtime security enforcement for every AI agent. One import intercepts every tool call before execution, classifies it against 91 threat rules, and produces a signed audit artifact that auto-persists to a tamper-evident forensic store.
+Runtime security enforcement for every AI agent. One import intercepts every tool call before execution, classifies it against 93 threat rules, and produces a signed audit artifact that auto-persists to a tamper-evident forensic store.
 
 **The architectural fact nobody says directly:** guardrails inside the agent can be reasoned around. Guardrails outside the agent cannot. Aiglos enforces outside the agent process. The agent cannot reason around a rule it does not know exists.
 
@@ -133,13 +133,13 @@ Under 1ms per call. Zero network dependency. No proxy. No sidecar. No port.
 
 -----
 
-## 91 Threat Rules
+## 93 Threat Rules
 
 Mapped to MITRE ATLAS. Citation-verified. No rule enters production without a citation anchor.
 
 **T01-T66** cover exfiltration, infrastructure abuse, supply chain, agentic threats, and infrastructure-to-agent attacks.
 
-**T67-T91** — rules added in v0.20.0-v0.25.20:
+**T67-T93** — rules added in v0.20.0-v0.25.21:
 
 |Rule|Name                                |Score|What it catches                                                                                                          |
 |----|-------------------------------------|-----|-------------------------------------------------------------------------------------------------------------------------|
@@ -168,6 +168,12 @@ Mapped to MITRE ATLAS. Citation-verified. No rule enters production without a ci
 |T89 |CONTRIBUTION_PROVENANCE_SUPPRESSION |0.78 |VCS operation (commit/push/PR) while undercover mode suppresses AI attribution — the action side of T85                  |
 |T90 |DYNAMIC_TOOL_REGISTRATION           |0.90 |Agent creates and registers new MCP tool definitions at runtime — persistent backdoor vector across sessions and fleet   |
 |T91 |SYCOPHANTIC_VALIDATION_BYPASS       |0.87 |Iterative reframing with escalating agreement language to exploit sycophancy bias in LLM-judge validation pipelines      |
+|T92 |SECURITY_SCANNER_COMPROMISE         |0.93 |Security scanner (Trivy, Snyk, Grype) compromised as credential harvesting vector — the Mercor breach pattern            |
+|T93 |CREDENTIAL_IN_TOOL_ARGS             |0.85 |Credentials, API keys, tokens passed as plaintext in MCP tool call arguments                                             |
+
+**T93 note:** 12 regex patterns plus 8 keyword patterns covering AWS access keys, GitHub tokens, JWT tokens, bearer tokens, database connection strings, private keys, Slack tokens, Stripe keys, and generic secret patterns. Fires on any MCP tool call where arguments contain credential material that should be passed via environment variables or secret stores instead.
+
+**T92 note:** Based on the Mercor breach pattern. Tracks known security scanner processes (_T92_KNOWN_SCANNERS frozenset: trivy, snyk, grype, anchore, clair, etc.) and vendor endpoints (_T92_VENDOR_ENDPOINTS). Per-session _T92_SCANNER_CRED_READS dict escalates score on repeated credential access by scanner-associated processes. Score 0.93 (critical severity).
 
 **T91 note:** Based on Chandra et al. (MIT CSAIL, 2026): *"Sycophantic Chatbots Cause Delusional Spiraling, Even in Ideal Bayesians."* Mathematically proven that sycophantic feedback defeats triple-judge voting when all judges share the same RLHF sycophancy bias. T87 detects tool-name probing; T91 detects *framing* probing — the semantic layer. Per-session tracking of writes to the same evaluation pipeline path; fires when N≥3 submissions with escalating validation-seeking language.
 
@@ -187,9 +193,11 @@ Mapped to MITRE ATLAS. Citation-verified. No rule enters production without a ci
 
 -----
 
-## 26 Campaign Patterns
+## 27 Campaign Patterns
 
 Multi-step attack detection invisible to single-call rule engines.
+
+**MERCOR_BREACH_CHAIN** (confidence 0.96) — T92 scanner compromise -> T30/T93 credential harvest -> T81 lateral movement -> T04/T41 exfiltration. Models the full Mercor-style breach lifecycle where a trusted security scanner is compromised to harvest credentials. 27th campaign pattern.
 
 **REPO_TAKEOVER_CHAIN** (confidence 0.97) — T30 supply chain install -> T81 `.pth` write -> T04 credential harvest -> T41 exfil -> T30 again with stolen tokens.
 
@@ -205,7 +213,7 @@ Multi-step attack detection invisible to single-call rule engines.
 
 **SUPERPOWERS_PLAN_HIJACK** (confidence 0.97) — Approved plan deviation -> exfil. Highest confidence in the taxonomy.
 
-Full list of 26 patterns in [`aiglos/adaptive/campaign.py`](aiglos/adaptive/campaign.py).
+Full list of 27 patterns in [`aiglos/adaptive/campaign.py`](aiglos/adaptive/campaign.py).
 
 -----
 
@@ -651,7 +659,7 @@ aiglos openShell detect
 
 |Tier          |Price            |What you get                                                                                                                                                                                                                                                                                     |
 |--------------|-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|**Community** |$0 / Apache 2.0  |Full T01-T91 detection, 3 surfaces, 26 campaign patterns, GOVBENCH D1-D6, GHSA watcher, ATLAS coverage, all integrations (OpenShell, KAIROS, Phantom, Gigabrain, ByteRover, smolagents, Hermes), ForensicStore, PermissionDenialEvent, declare_subagent(), AgentPhase, aiglos launch, scan-deps, validate-prompt|
+|**Community** |$0 / Apache 2.0  |Full T01-T93 detection, 3 surfaces, 27 campaign patterns, GOVBENCH D1-D6, GHSA watcher, ATLAS coverage, all integrations (OpenShell, KAIROS, Phantom, Gigabrain, ByteRover, smolagents, Hermes), ForensicStore, PermissionDenialEvent, declare_subagent(), AgentPhase, aiglos launch, scan-deps, validate-prompt|
 |**Pro**       |$49/dev/mo       |Community + federated intelligence, behavioral baseline, RSA-2048 artifacts, NDAA §1513 + EU AI Act compliance export, policy proposals, cloud dashboard                                                                                                                                         |
 |**Teams**     |$399/mo (15 devs)|Pro + centralized policy, aggregated threat view, Tier 3 approval workflows                                                                                                                                                                                                                      |
 |**Enterprise**|Custom, annual   |Teams + private federation, air-gap deployment, C3PAO packages, dedicated engineering                                                                                                                                                                                                            |
@@ -685,6 +693,7 @@ aiglos openShell detect
 |v0.25.18|89   |25       |T89 CONTRIBUTION_PROVENANCE_SUPPRESSION (undercover mode VCS compliance), T85 extended with undercover mode vocabulary, README compliance section                                                        |
 |v0.25.19|90   |26       |T90 DYNAMIC_TOOL_REGISTRATION, PHANTOM_COMPROMISE_CHAIN, phantom/ghostwright agents, declare_phantom_pipeline(), PHANTOM_PATHS (10 monitored paths)                                                     |
 |v0.25.20|91   |26       |T91 SYCOPHANTIC_VALIDATION_BYPASS (MIT CSAIL 2026), GOVBENCH D6 Anti-Sycophancy Mechanisms, PCC updated with T91 + 1.8x amplifier                                                                      |
+|v0.25.21|93   |27       |T92 SECURITY_SCANNER_COMPROMISE (Mercor breach pattern), T93 CREDENTIAL_IN_TOOL_ARGS, MERCOR_BREACH_CHAIN campaign, PyPI-only version detection in scan-deps                                           |
 
 -----
 
@@ -710,7 +719,7 @@ let artifact = guard.close_session(); // signed, attestation_ready
 
 **1. The only product that intercepts all three surfaces.** MCP-only tools miss everything Claude Code, Cursor, and Aider do via subprocess and HTTP.
 
-**2. Agent-agnostic.** Same 91 rules, same signed artifact, whether the agent is Claude Code, Cursor, smolagents, or OpenClaw.
+**2. Agent-agnostic.** Same 93 rules, same signed artifact, whether the agent is Claude Code, Cursor, smolagents, or OpenClaw.
 
 **3. 3/3 GHSAs caught before disclosure.** Empirical validation no competitor can replicate.
 

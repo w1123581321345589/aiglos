@@ -1,13 +1,13 @@
 """
 aiglos/cli/scan_deps.py
 =========================
-aiglos scan-deps — check your Python environment for compromised packages.
+aiglos scan-deps  -  check your Python environment for compromised packages.
 
 Immediate answer to "am I affected by the LiteLLM supply chain attack?"
 
 WHAT IT CHECKS
 ==============
-1. Compromised package versions (litellm 1.82.7, 1.82.8 — and future entries)
+1. Compromised package versions (litellm 1.82.7, 1.82.8  -  and future entries)
 2. Malicious .pth files in site-packages (litellm_init.pth signature)
 3. Persistence mechanisms (~/.config/sysmon/sysmon.py, systemd service)
 4. Kubernetes cluster compromise indicators
@@ -30,7 +30,7 @@ The .pth file executed on every Python startup, collecting and exfiltrating:
 
 Exfiltration endpoint: https://models.litellm.cloud/ (NOT legitimate litellm)
 
-The GitHub repository has been compromised — the security issue was closed
+The GitHub repository has been compromised  -  the security issue was closed
 as "not planned" using the stolen maintainer GitHub token. Treat ALL litellm
 versions as suspect until official verification of maintainer control.
 
@@ -57,7 +57,7 @@ COMPROMISED_PACKAGES: Dict[str, Dict] = {
     "litellm": {
         "1.82.7": {
             "description": (
-                "Contains litellm_init.pth — malicious .pth file that exfiltrates "
+                "Contains litellm_init.pth  -  malicious .pth file that exfiltrates "
                 "SSH keys, AWS/GCP/Azure credentials, Kubernetes configs, database "
                 "passwords, .env files, shell history, crypto wallets, and all "
                 "environment variables to https://models.litellm.cloud/"
@@ -71,7 +71,7 @@ COMPROMISED_PACKAGES: Dict[str, Dict] = {
         },
         "1.82.8": {
             "description": (
-                "Contains litellm_init.pth — same payload as 1.82.7. "
+                "Contains litellm_init.pth  -  same payload as 1.82.7. "
                 "Fork bomb bug caused by .pth file spawning child processes "
                 "that re-trigger the same .pth. Discovered when a machine ran out "
                 "of RAM with 11,000+ Python processes."
@@ -82,6 +82,42 @@ COMPROMISED_PACKAGES: Dict[str, Dict] = {
             "discovered":  "2026-03-24",
             "discoverer":  "Callum McMahon / FutureSearch",
             "lateral":     "Kubernetes cluster compromise via service account tokens",
+        },
+    },
+    "axios": {
+        "1.14.1": {
+            "description": (
+                "Contains Remote Access Trojan (RAT) via plain-crypto-js dependency. "
+                "Bundled in @anthropic-ai/claude-code npm update March 31, 2026 "
+                "between 00:21-03:29 UTC. Treat host as fully compromised if found. "
+                "Rotate all secrets immediately. Clean OS reinstall recommended. "
+                "Source: Anthropic security advisory March 31, 2026."
+            ),
+            "severity":    "CRITICAL",
+            "exfil_endpoint": "via plain-crypto-js RAT",
+            "mechanism":   "Remote Access Trojan bundled as transitive npm dependency",
+            "incident_date": "2026-03-31",
+            "related_packages": ["plain-crypto-js"],
+            "remediation": (
+                "1. Search lockfiles for axios==1.14.1, axios==0.30.4, plain-crypto-js. "
+                "2. If found: treat host as fully compromised. "
+                "3. Rotate all credentials, API keys, SSH keys, database passwords. "
+                "4. Clean OS reinstallation recommended. "
+                "5. Migrate claude-code from npm to native installer: "
+                "curl -fsSL https://claude.ai/install.sh | bash"
+            ),
+        },
+        "0.30.4": {
+            "description": (
+                "Contains Remote Access Trojan (RAT) via plain-crypto-js dependency. "
+                "Same incident as axios 1.14.1 (March 31, 2026 claude-code npm update)."
+            ),
+            "severity":    "CRITICAL",
+            "exfil_endpoint": "via plain-crypto-js RAT",
+            "mechanism":   "Remote Access Trojan bundled as transitive npm dependency",
+            "incident_date": "2026-03-31",
+            "related_packages": ["plain-crypto-js"],
+            "remediation": "See axios 1.14.1 remediation.",
         },
     }
 }
@@ -94,9 +130,9 @@ TRANSITIVE_EXPOSURE: Dict[str, Dict] = {
     "langchain":  {"exposure": "litellm (optional)", "check_litellm": True},
     "langgraph":  {"exposure": "langchain dependency", "check_litellm": True},
     "crewai":     {"exposure": "litellm (optional)", "check_litellm": True},
-    # ByteRover: file-based Context Tree memory — T79 protects write path
+    # ByteRover: file-based Context Tree memory  -  T79 protects write path
     # Not a litellm dependency, but flagged for T79 awareness
-    "@byterover/byterover": {"exposure": "OpenClaw plugin — T79/T67 apply", "check_litellm": False},
+    "@byterover/byterover": {"exposure": "OpenClaw plugin  -  T79/T67 apply", "check_litellm": False},
     "litellm-proxy": {"exposure": "litellm itself", "check_litellm": True},
 }
 
@@ -112,7 +148,7 @@ PERSISTENCE_INDICATORS = [
     ("~/.config/sysmon/",                       "LiteLLM sysmon directory"),
 ]
 
-# Risky install patterns — curl|sh bypasses package integrity verification
+# Risky install patterns  -  curl|sh bypasses package integrity verification
 RISKY_INSTALL_PATTERNS = {
     "curl -fsSL https://byterover.dev/openclaw-setup.sh | sh": {
         "description": (
@@ -127,7 +163,7 @@ RISKY_INSTALL_PATTERNS = {
     },
 }
 
-# The exfiltration endpoint — block at firewall level
+# Known exfiltration# Known exfiltration endpoints - block at firewall level
 KNOWN_EXFIL_ENDPOINTS = [
     "models.litellm.cloud",
 ]
@@ -239,7 +275,7 @@ def _scan_pth_files(site_dirs: List[Path]) -> List[dict]:
                         found.append({
                             "path":        str(pth_file),
                             "filename":    pth_file.name,
-                            "description": "Suspicious .pth content — code execution patterns",
+                            "description": "Suspicious .pth content  -  code execution patterns",
                             "severity":    "HIGH",
                             "snippet":     content[:200],
                         })
@@ -276,7 +312,7 @@ def _check_uv_cache() -> List[dict]:
         for pth in uv_cache.rglob("litellm_init.pth"):
             found.append({
                 "path":        str(pth),
-                "description": "Compromised litellm wheel in uv cache — purge with: uv cache clean",
+                "description": "Compromised litellm wheel in uv cache  -  purge with: uv cache clean",
                 "severity":    "CRITICAL",
             })
         # Search for compromised litellm wheels
@@ -373,6 +409,77 @@ def scan(
     return result
 
 
+
+# ── PyPI-only version detection ────────────────────────────────────────────────
+# Packages where a version appeared on PyPI without a corresponding GitHub
+# release, tag, or commit -- the litellm 1.82.8 supply chain attack signature.
+# Source: the poisoned litellm was uploaded to PyPI on March 24, 2026 with
+# no matching GitHub release, no tag, no review process.
+# A PyPI version with no GitHub release is either a maintenance release (rare)
+# or a supply chain attack (common).
+#
+# This check does NOT require network access -- it flags known offenders.
+# For live version hash checking, use: aiglos scan-deps --verify-hashes
+
+PYPI_ONLY_VERSIONS: dict = {
+    # package -> {version -> {"reason": str, "severity": str}}
+    "litellm": {
+        "1.82.8": {
+            "reason": (
+                "Uploaded to PyPI March 24 2026 with NO corresponding GitHub release, "
+                "tag, or commit. Contains litellm_init.pth malware. "
+                "MERCOR BREACH: vector in 4TB exfil of biometrics and source code "
+                "from AI hiring platform serving Amazon, Meta, Apple contractors. "
+                "Lapsus$ auctioning data including face/voice KYC records."
+            ),
+            "severity": "CRITICAL",
+            "github_tag": None,        # confirmed absent
+            "pypi_upload": "2026-03-24",
+            "related_incident": "MERCOR_BREACH",
+        },
+    },
+    "axios": {
+        "1.14.1": {
+            "reason": (
+                "Bundled in @anthropic-ai/claude-code npm March 31 2026. "
+                "No corresponding upstream axios GitHub release."
+            ),
+            "severity": "CRITICAL",
+            "github_tag": None,
+            "related_incident": "CLAUDE_CODE_AXIOS_RAT",
+        },
+    },
+}
+
+
+def check_pypi_only_versions(installed: dict) -> list:
+    """
+    Check installed packages for known PyPI-only versions (supply chain red flag).
+
+    Returns list of findings: packages where the installed version appeared on
+    PyPI without a corresponding GitHub release or tag.
+
+    This catches the litellm 1.82.8 pattern: attacker uploads to PyPI
+    bypassing GitHub review process entirely.
+    """
+    findings = []
+    for pkg, version in installed.items():
+        pkg_lower = pkg.lower().replace("-","_").replace(".","_")
+        for known_pkg, versions in PYPI_ONLY_VERSIONS.items():
+            known_lower = known_pkg.lower().replace("-","_")
+            if pkg_lower == known_lower and version in versions:
+                entry = versions[version]
+                findings.append({
+                    "package":   pkg,
+                    "version":   version,
+                    "severity":  entry["severity"],
+                    "reason":    entry["reason"],
+                    "type":      "PYPI_ONLY_VERSION",
+                    "incident":  entry.get("related_incident", ""),
+                })
+    return findings
+
+
 def print_scan_report(result: ScanResult) -> None:
     """Print a human-readable scan report."""
     RED    = "\033[31m"
@@ -382,7 +489,7 @@ def print_scan_report(result: ScanResult) -> None:
     RESET  = "\033[0m"
 
     print()
-    print(f"  {BOLD}aiglos scan-deps{RESET}  —  Dependency Security Scanner")
+    print(f"  {BOLD}aiglos scan-deps{RESET}   -   Dependency Security Scanner")
     print(f"  {'─' * 52}")
     print()
 
@@ -446,7 +553,7 @@ def print_scan_report(result: ScanResult) -> None:
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="aiglos scan-deps — dependency security scanner")
+    parser = argparse.ArgumentParser(description="aiglos scan-deps  -  dependency security scanner")
     parser.add_argument("--package", help="Check a specific package")
     parser.add_argument("--quick", action="store_true", help="Only check known-bad versions")
     parser.add_argument("--json", action="store_true", dest="json_output",

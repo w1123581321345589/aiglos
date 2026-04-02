@@ -484,22 +484,35 @@ _CAMPAIGN_PATTERNS = [
             "Phase 3: agent writes or commits the transformed code to an external "
             "repository (T01 EXFIL or T41 OUTBOUND_SECRET_LEAK). "
             "Based on the claw-code incident (March 31, 2026): Codex rewrote "
-            "Anthropic's Claude Code TypeScript source to Python."
+            "Anthropic's Claude Code TypeScript source to Python, potentially "
+            "circumventing copyright on derived works. "
+            "The attack exploits a legal gap: copyright may not protect derived "
+            "works in a new implementation language, but trade secrets and patents "
+            "are still violated. Agents can perform this autonomously at scale "
+            "in trivial time — the claw-code rewrite took hours, not weeks. "
+            "Enterprise impact: a compromised coding agent with read access to "
+            "proprietary source could silently produce a working competitor product. "
+            "Confidence 0.90 — high precision when all three phases detected."
         ),
         "sequence": [
-            {"T19", "T22"},
-            {"T84"},
-            {"T01", "T41"},
+            {"T19", "T22"},  # Phase 1: enumeration + bulk file reads
+            {"T84"},          # Phase 2: IP transformation / code rewrite
+            {"T01", "T41"},   # Phase 3: exfiltration / commit to external repo
         ],
         "min_events": 3,
         "confidence": 0.90,
-        "surfaces":   None,
         "amplifiers": {
-            "T84": 1.5,
+            "T84": 1.5,   # IP transformation is the signal; amplify
             "T01": 1.3,
             "T41": 1.3,
         },
+        "note": (
+            "claw-code incident — github.com/instructkr/claw-code. "
+            "Copyright does not protect derived works; patents do. "
+            "This campaign is the reason Aiglos files patents, not just copyright."
+        ),
     },
+
     {
         "name": "MEMORY_ENTROPY_ATTACK",
         "description": (
@@ -509,20 +522,36 @@ _CAMPAIGN_PATTERNS = [
             "Mechanism: Claude Code's autoDream consolidation prunes memory to <200 "
             "lines with <150 chars per note (documented in consolidationPrompt.ts, "
             "March 2026 leak). An attacker floods the memory store with borderline "
-            "T79 writes (individually below block threshold) to create context entropy."
+            "T79 writes (individually below block threshold) to create context entropy. "
+            "When the consolidation pass runs, the agent synthesizes the noisy context "
+            "with a single authoritative-looking malicious instruction embedded at the "
+            "end. The consolidation agent, seeing 'recent' high-signal content, "
+            "preserves the malicious instruction while pruning the legitimate constraints "
+            "it was designed to displace. "
+            "Phase 1: volume of weak T79 hits (memory writes, individually borderline). "
+            "Phase 2: structured consolidation write -- longer, authoritative format, "
+            "contains embedded instruction redefining agent constraints or permissions. "
+            "Detection: T79 fires N>=3 times in session -> subsequent write to memory "
+            "store with content resembling a summary or consolidation (longer than prior "
+            "writes, contains constraint-redefining language). "
+            "Confidence 0.88 -- high because the combination is specifically adversarial."
         ),
         "sequence": [
-            {"T79"},
-            {"T79"},
-            {"T31", "T79"},
+            {"T79"},  # Phase 1: repeated memory writes (volume)
+            {"T79"},  # Phase 1 continues: more writes
+            {"T31", "T79"},  # Phase 2: consolidation write with embedded instruction
         ],
         "min_events": 3,
         "confidence": 0.88,
-        "surfaces":   None,
         "amplifiers": {
-            "T79": 1.4,
-            "T31": 1.5,
+            "T79": 1.4,   # Volume of memory writes is itself suspicious
+            "T31": 1.5,   # Constraint/permission modification amplifies strongly
         },
+        "note": (
+            "Based on autoDream consolidation architecture from Claude Code source "
+            "leak (March 2026). Memory index <200 lines, notes <150 chars -- these "
+            "are the compression thresholds the attack exploits."
+        ),
     },
 
     {
@@ -562,10 +591,10 @@ _CAMPAIGN_PATTERNS = [
         "min_events": 3,
         "confidence": 0.93,
         "amplifiers": {
-            "T79": 1.6,
-            "T82": 2.0,
-            "T90": 2.0,
-            "T91": 1.8,
+            "T79": 1.6,   # Observation stream injection is the entry point
+            "T82": 2.0,   # Evolution write propagates forward permanently
+            "T90": 2.0,   # Dynamic tool registration = persistent backdoor
+            "T91": 1.8,   # Sycophantic bypass defeats validation gate entirely
             "T41": 1.5,
         },
         "note": (
@@ -584,6 +613,71 @@ _CAMPAIGN_PATTERNS = [
             "will be agreeable to all three. The minority veto blocks random noise, "
             "not systematic adversarial optimization. T91 catches this at the "
             "semantic probing layer."
+        ),
+    },
+
+    {
+        "name": "MERCOR_BREACH_CHAIN",
+        "description": (
+            "Full kill chain from the Mercor AI breach (March 2026). "
+            "Lapsus$ exfiltrated 4TB from a 10B-dollar AI hiring platform: "
+            "939GB source code, 211GB database records, 3TB files including "
+            "video interviews, face scans, and KYC documents for contractors "
+            "at Amazon, Meta, Apple, and the major AI labs. "
+            "Phase 1 (T92 SECURITY_SCANNER_COMPROMISE): "
+            "TeamPCP compromised Trivy -- an open-source vulnerability scanner "
+            "with broad legitimate read access to every environment it scans. "
+            "The trusted tool became the highest-privilege exfil agent. "
+            "Phase 2 (T30 SUPPLY_CHAIN + T93 CREDENTIAL_IN_TOOL_ARGS): "
+            "Stolen credentials used to gain PyPI write access. "
+            "Developers reportedly passed production credentials to AI coding "
+            "assistant (Claude) with unrestricted system permissions -- "
+            "credentials visible in litellm proxy logging layer. "
+            "Phase 3 (T81 PTH_FILE_INJECT): "
+            "Poisoned litellm 1.82.8 uploaded to PyPI with no GitHub release, "
+            "no tag, no review. .pth file executes on Python startup -- no import "
+            "required. Fires before any user code runs. "
+            "Phase 4 (T04 CRED_HARVEST + T41 OUTBOUND_SECRET_LEAK): "
+            "Harvest SSH keys, cloud tokens, Kubernetes secrets, crypto wallets, "
+            ".env files. Encrypt with hardcoded 4096-bit RSA key. "
+            "Exfiltrate to models.litellm.cloud (domain designed to appear legitimate). "
+            "Phase 5: Deploy privileged containers across every cluster node. "
+            "Install persistent backdoor. TailScale VPN fully compromised. "
+            "Permanent consequence: biometric data (face/voice for identity "
+            "verification) cannot be reset. Thousands of professionals have "
+            "permanent identity compromise. Data auctioned by Lapsus$. "
+            "The incident confirms every major Aiglos thesis: "
+            "T81+REPO_TAKEOVER_CHAIN catches Phase 3 before .pth executes; "
+            "T92 catches Phase 1 when scanner makes unexpected outbound call; "
+            "T93 catches Phase 2 credential exposure at ingestion; "
+            "ForensicStore provides post-incident timeline. "
+            "Confidence 0.96 -- highest-confidence supply chain campaign."
+        ),
+        "sequence": [
+            {"T92"},            # Phase 1: security scanner compromised
+            {"T30", "T93"},     # Phase 2: supply chain install + cred in args
+            {"T81"},            # Phase 3: .pth file injection (critical)
+            {"T04", "T41"},     # Phase 4: harvest + exfil
+        ],
+        "min_events": 3,
+        "confidence": 0.96,
+        "amplifiers": {
+            "T92": 2.0,   # Security scanner as entry point -- highest privilege
+            "T81": 2.0,   # PTH file inject -- executes before user code
+            "T93": 1.5,   # Credentials exposed at ingestion
+            "T04": 1.4,
+            "T41": 1.5,
+        },
+        "note": (
+            "Real-world validation: Mercor AI breach March 2026. "
+            "The REPO_TAKEOVER_CHAIN campaign covers the PyPI hijack (T30->T81->T04->T41). "
+            "MERCOR_BREACH_CHAIN covers the full kill chain including the initial "
+            "security scanner compromise (T92) and developer credential handoff (T93). "
+            "Both T81 and REPO_TAKEOVER_CHAIN existed in the taxonomy BEFORE this "
+            "incident occurred -- the rules predicted the attack pattern. "
+            "T92 and T93 were added as direct lessons from the incident. "
+            "The biometric exfil is the consequence that validates the urgency: "
+            "unlike passwords, faces and voices cannot be reset."
         ),
     },
 
@@ -859,20 +953,6 @@ class CampaignAnalyzer:
                 "and clear any saved URLs from persistent memory (T31). "
                 "Do not allow external domains to become recurring instruction sources "
                 "unless they are explicitly in allow_http."
-            ),
-            "IP_CIRCUMVENTION_CHAIN": (
-                "AI-agent-assisted intellectual property circumvention detected. "
-                "The agent read proprietary source code, generated functionally "
-                "equivalent code in a different language, and attempted to commit "
-                "or transmit the transformed code. Review the session artifact for "
-                "specific file reads and writes. Block T84 IP_TRANSFORMATION_EXFIL."
-            ),
-            "MEMORY_ENTROPY_ATTACK": (
-                "High-volume memory writes followed by a consolidation-style write "
-                "detected. This pattern exploits autoDream-style memory compression: "
-                "flood with borderline writes, then embed a malicious instruction "
-                "that survives pruning. Clear the memory store and review the final "
-                "write for embedded constraint-redefining language."
             ),
         }
         return recs.get(pattern_id, "Review the session artifact for this event sequence.")
