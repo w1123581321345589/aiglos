@@ -55,14 +55,34 @@ h1{font-size:40px;font-weight:700;letter-spacing:-0.03em;margin-bottom:12px}
 
 <main>
   <h1>Changelog</h1>
-  <p class="header-sub">All notable changes to Aiglos. Current release: v0.25.20 · 2,016 tests passing.</p>
+  <p class="header-sub">All notable changes to Aiglos. Current release: v0.25.21 · 2,064 tests passing.</p>
+
+  <!-- v0.25.21 -->
+  <div class="release">
+    <div class="release-header">
+      <span class="release-version">v0.25.21</span>
+      <span class="release-date">April 2026</span>
+      <span class="release-badge badge-latest">Latest</span>
+      <span class="test-count">2,064 tests</span>
+    </div>
+    <p class="release-summary">T92 SECURITY_SCANNER_COMPROMISE and T93 CREDENTIAL_IN_TOOL_ARGS. MERCOR_BREACH_CHAIN campaign pattern. PyPI-only version detection in scan-deps. 93 rules, 27 campaigns.</p>
+    <div class="change-group">
+      <div class="change-type type-new">New</div>
+      <ul class="change-list">
+        <li><span class="rule-tag">T92</span> <strong>SECURITY_SCANNER_COMPROMISE</strong> — Detects when security scanning tools (Trivy, Snyk, Grype, etc.) are compromised as credential harvesting vectors. Score 0.93 (critical). Tracks scanner credential reads per session with known scanner process list and vendor endpoint patterns. Based on the Mercor breach pattern.</li>
+        <li><span class="rule-tag">T93</span> <strong>CREDENTIAL_IN_TOOL_ARGS</strong> — Detects credentials, API keys, tokens, and secrets passed as plaintext in MCP tool call arguments. Score 0.85. 12 regex patterns plus 8 keyword patterns covering AWS keys, GitHub tokens, JWT tokens, database connection strings, and more.</li>
+        <li><strong>MERCOR_BREACH_CHAIN</strong> (confidence 0.96) — T92 scanner compromise → T30/T93 credential harvest → T81 lateral movement → T04/T41 exfiltration. 27th campaign pattern. Models the full Mercor-style breach lifecycle.</li>
+        <li><strong>PyPI-only version detection</strong> — <code style="font-family:'DM Mono',monospace;font-size:11px">scan-deps</code> now detects packages with versions that only exist on PyPI and not in source repositories. PYPI_ONLY_VERSIONS dictionary with known suspicious entries including axios RAT packages.</li>
+      </ul>
+    </div>
+  </div>
 
   <!-- v0.25.20 -->
   <div class="release">
     <div class="release-header">
       <span class="release-version">v0.25.20</span>
       <span class="release-date">April 2026</span>
-      <span class="release-badge badge-latest">Latest</span>
+      <span class="release-badge badge-stable">Stable</span>
       <span class="test-count">2,016 tests</span>
     </div>
     <p class="release-summary">T91 SYCOPHANTIC_VALIDATION_BYPASS. GOVBENCH D6 Anti-Sycophancy dimension. PHANTOM_COMPROMISE_CHAIN updated with MIT CSAIL formal proof citation. 91 rules, 26 campaigns, 32 known agents, 6 GOVBENCH dimensions.</p>

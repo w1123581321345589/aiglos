@@ -90,13 +90,13 @@ footer a{color:var(--ice);text-decoration:none}
       <tbody>
         <tr><td>What it watches</td><td class="yes">Tool calls, HTTP, subprocess — runtime</td><td>Host config, file permissions, CVE versions</td></tr>
         <tr><td>When it runs</td><td class="yes">Every tool call, &lt;1ms per call</td><td>On-demand scan or scheduled (6hr cadence)</td></tr>
-        <tr><td>Campaign detection</td><td class="yes">18 multi-step attack patterns</td><td class="no">Single-point checks only</td></tr>
+        <tr><td>Campaign detection</td><td class="yes">27 multi-step attack patterns</td><td class="no">Single-point checks only</td></tr>
         <tr><td>Behavioral baseline</td><td class="yes">Per-agent statistical fingerprint</td><td class="no">Not applicable</td></tr>
         <tr><td>Signed audit artifact</td><td class="yes">HMAC-SHA256 / RSA-2048 per session</td><td class="no">Not produced</td></tr>
         <tr><td>NDAA §1513 compliance</td><td class="yes">Signed artifact is the required evidence</td><td class="partial">Partial — config evidence only</td></tr>
         <tr><td>Federation intelligence</td><td class="yes">Differential-privacy shared priors</td><td class="no">Not available</td></tr>
         <tr><td>GOVBENCH scoring</td><td class="yes">6 dimensions, A-F grade</td><td class="no">Not available</td></tr>
-        <tr><td>CVE tracking</td><td class="partial">T01-T91 covers CVE attack classes</td><td class="yes">Live CVE feed, version checking</td></tr>
+        <tr><td>CVE tracking</td><td class="partial">T01-T93 covers CVE attack classes</td><td class="yes">Live CVE feed, version checking</td></tr>
         <tr><td>Host hardening guidance</td><td class="partial">aiglos audit --hardening-check</td><td class="yes">44 automated hardening checks</td></tr>
         <tr><td>Skills marketplace scan</td><td class="partial">SkillReputationGraph + badge ingestion</td><td class="yes">2,373 skills scanned, 168 critical</td></tr>
         <tr><td>Install</td><td class="yes">pip install aiglos — zero deps</td><td class="yes">curl install, bash script</td></tr>
