@@ -55,14 +55,33 @@ h1{font-size:40px;font-weight:700;letter-spacing:-0.03em;margin-bottom:12px}
 
 <main>
   <h1>Changelog</h1>
-  <p class="header-sub">All notable changes to Aiglos. Current release: v0.25.21 · 2,064 tests passing.</p>
+  <p class="header-sub">All notable changes to Aiglos. Current release: v0.25.22 · 2,064 tests passing.</p>
+
+  <!-- v0.25.22 -->
+  <div class="release">
+    <div class="release-header">
+      <span class="release-version">v0.25.22</span>
+      <span class="release-date">April 2026</span>
+      <span class="release-badge badge-latest">Latest</span>
+      <span class="test-count">2,064 tests</span>
+    </div>
+    <p class="release-summary">T94 PROVIDER_POLICY_REJECTION and T95 CROSS_TRUST_BOUNDARY_INJECT. Ollama/LM Studio integration for local model security monitoring. 95 rules, 27 campaigns.</p>
+    <div class="change-group">
+      <div class="change-type type-new">New</div>
+      <ul class="change-list">
+        <li><span class="rule-tag">T94</span> <strong>PROVIDER_POLICY_REJECTION</strong> — Fires when an agent's LLM API call returns a policy rejection signal: 403s, usage policy violations, account suspensions, model deprecations, quota exhaustion. Score 0.80. Surfaces provider-side pipeline disruption as a named governance event before silent failure. Based on the OpenClaw ban incident.</li>
+        <li><span class="rule-tag">T95</span> <strong>CROSS_TRUST_BOUNDARY_INJECT</strong> — Fires when a lower-trust executor's output contains instruction-like content before reaching the orchestrator context window. Score 0.88 (critical). Covers the Opus-orchestrator + local-executor architecture where Qwen/Gemma models process untrusted data without provider-side alignment enforcement.</li>
+        <li><strong>Ollama integration</strong> — <code style="font-family:'DM Mono',monospace;font-size:11px">OllamaGuard</code> mirrors the OpenClawGuard interface for local model deployments. <code style="font-family:'DM Mono',monospace;font-size:11px">attach_for_ollama()</code> wraps an Ollama client in two lines. <code style="font-family:'DM Mono',monospace;font-size:11px">lmstudio_guard()</code> covers LM Studio port 1234. Session artifacts include local_models_used, orchestrator_model, and provider_dependency_risk assessment.</li>
+      </ul>
+    </div>
+  </div>
 
   <!-- v0.25.21 -->
   <div class="release">
     <div class="release-header">
       <span class="release-version">v0.25.21</span>
       <span class="release-date">April 2026</span>
-      <span class="release-badge badge-latest">Latest</span>
+      <span class="release-badge badge-stable">Stable</span>
       <span class="test-count">2,064 tests</span>
     </div>
     <p class="release-summary">T92 SECURITY_SCANNER_COMPROMISE and T93 CREDENTIAL_IN_TOOL_ARGS. MERCOR_BREACH_CHAIN campaign pattern. PyPI-only version detection in scan-deps. 93 rules, 27 campaigns.</p>

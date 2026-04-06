@@ -38,20 +38,18 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
-_CANONICAL_VERSION = "0.25.22"
 try:
     from importlib.metadata import version as _pkg_version
     _v = _pkg_version("aiglos")
+    # importlib.metadata may return stale egg-info in dev installs;
+    # if it looks stale (< 0.10), trust the hardcoded value instead.
     import re as _re
     _parts = [int(x) for x in _re.findall(r"\d+", _v)]
     if _parts and _parts[0] == 0 and (len(_parts) < 2 or _parts[1] < 10):
         raise ValueError("stale")
-    _cv = [int(x) for x in _re.findall(r"\d+", _CANONICAL_VERSION)]
-    if _parts < _cv:
-        raise ValueError("stale egg-info behind canonical")
     __version__: str = _v
 except Exception:
-    __version__ = _CANONICAL_VERSION
+    __version__ = "0.25.22"  # canonical version for this release
 __author__  = "Aiglos"
 __email__   = "will@aiglos.io"
 __license__ = "MIT"
@@ -154,22 +152,6 @@ from aiglos.core.threat_engine_v2 import (  # noqa: F401
     _T92_KNOWN_SCANNERS,
     match_T93,
     _T93_CREDENTIAL_PATTERNS,
-    match_T94,
-    _T94_POLICY_REJECTION_PATTERNS,
-    _T94_PROVIDER_API_TOOLS,
-    match_T95,
-    _T95_EXECUTOR_BACKENDS,
-    _T95_INJECTION_PATTERNS,
-)
-
-from aiglos.integrations.ollama import (  # noqa: F401
-    OllamaGuard,
-    OllamaGuardResult,
-    attach_for_ollama,
-    lmstudio_guard,
-    LOCAL_MODEL_FAMILIES,
-    OLLAMA_ENDPOINTS,
-    LMSTUDIO_ENDPOINTS,
 )
 
 from aiglos.forensics import ForensicStore
@@ -1025,18 +1007,4 @@ __all__ = [
     "VerifiedRunResult",
     "ComplianceReportGenerator",
     "ComplianceReport",
-    # v0.25.22 — T94 PROVIDER_POLICY_REJECTION, T95 CROSS_TRUST_BOUNDARY_INJECT, Ollama integration
-    "match_T94",
-    "_T94_POLICY_REJECTION_PATTERNS",
-    "_T94_PROVIDER_API_TOOLS",
-    "match_T95",
-    "_T95_EXECUTOR_BACKENDS",
-    "_T95_INJECTION_PATTERNS",
-    "OllamaGuard",
-    "OllamaGuardResult",
-    "attach_for_ollama",
-    "lmstudio_guard",
-    "LOCAL_MODEL_FAMILIES",
-    "OLLAMA_ENDPOINTS",
-    "LMSTUDIO_ENDPOINTS",
 ]

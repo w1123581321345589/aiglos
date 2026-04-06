@@ -112,7 +112,7 @@ aiglos forensics query --date 2026-03-12 --agent reporting-pipeline --threat T86
 
 ## What Aiglos is
 
-Runtime security enforcement for every AI agent. One import intercepts every tool call before execution, classifies it against 93 threat rules, and produces a signed audit artifact that auto-persists to a tamper-evident forensic store.
+Runtime security enforcement for every AI agent. One import intercepts every tool call before execution, classifies it against 95 threat rules, and produces a signed audit artifact that auto-persists to a tamper-evident forensic store.
 
 **The architectural fact nobody says directly:** guardrails inside the agent can be reasoned around. Guardrails outside the agent cannot. Aiglos enforces outside the agent process. The agent cannot reason around a rule it does not know exists.
 
@@ -139,7 +139,7 @@ Mapped to MITRE ATLAS. Citation-verified. No rule enters production without a ci
 
 **T01-T66** cover exfiltration, infrastructure abuse, supply chain, agentic threats, and infrastructure-to-agent attacks.
 
-**T67-T93** — rules added in v0.20.0-v0.25.21:
+**T67-T95** — rules added in v0.20.0-v0.25.22:
 
 |Rule|Name                                |Score|What it catches                                                                                                          |
 |----|-------------------------------------|-----|-------------------------------------------------------------------------------------------------------------------------|
@@ -170,6 +170,12 @@ Mapped to MITRE ATLAS. Citation-verified. No rule enters production without a ci
 |T91 |SYCOPHANTIC_VALIDATION_BYPASS       |0.87 |Iterative reframing with escalating agreement language to exploit sycophancy bias in LLM-judge validation pipelines      |
 |T92 |SECURITY_SCANNER_COMPROMISE         |0.93 |Security scanner (Trivy, Snyk, Grype) compromised as credential harvesting vector — the Mercor breach pattern            |
 |T93 |CREDENTIAL_IN_TOOL_ARGS             |0.85 |Credentials, API keys, tokens passed as plaintext in MCP tool call arguments                                             |
+|T94 |PROVIDER_POLICY_REJECTION           |0.80 |Provider-side policy enforcement causing agent access revocation or capability restriction — the OpenClaw ban pattern     |
+|T95 |CROSS_TRUST_BOUNDARY_INJECT         |0.88 |Adversarial content from lower-trust executor model injected into higher-trust orchestrator context window                |
+
+**T95 note:** The Opus-orchestrator + local-executor architecture creates a new attack surface: local models (Qwen, Gemma, Llama on DGX Spark) process untrusted data without provider-side alignment enforcement. If that data contains prompt injection, the local model may pass it through as tool output to the orchestrator's trusted context. T95 fires on instruction-like patterns in executor responses: system prompt language, tool invocation directives, authority claims, ignore-previous-instructions patterns.
+
+**T94 note:** Based on the OpenClaw ban (April 2026). Every enterprise running OpenClaw-based agent pipelines experienced silent failure when Anthropic revoked API access. T94 catches 403s, usage policy violations, account suspensions, model deprecations, quota exhaustion as named governance events. GOVBENCH D1 penalty for single-provider dependency with no fallback configuration.
 
 **T93 note:** 12 regex patterns plus 8 keyword patterns covering AWS access keys, GitHub tokens, JWT tokens, bearer tokens, database connection strings, private keys, Slack tokens, Stripe keys, and generic secret patterns. Fires on any MCP tool call where arguments contain credential material that should be passed via environment variables or secret stores instead.
 
@@ -659,7 +665,7 @@ aiglos openShell detect
 
 |Tier          |Price            |What you get                                                                                                                                                                                                                                                                                     |
 |--------------|-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|**Community** |$0 / Apache 2.0  |Full T01-T93 detection, 3 surfaces, 27 campaign patterns, GOVBENCH D1-D6, GHSA watcher, ATLAS coverage, all integrations (OpenShell, KAIROS, Phantom, Gigabrain, ByteRover, smolagents, Hermes), ForensicStore, PermissionDenialEvent, declare_subagent(), AgentPhase, aiglos launch, scan-deps, validate-prompt|
+|**Community** |$0 / Apache 2.0  |Full T01-T95 detection, 3 surfaces, 27 campaign patterns, GOVBENCH D1-D6, GHSA watcher, ATLAS coverage, all integrations (OpenShell, KAIROS, Phantom, Gigabrain, ByteRover, smolagents, Hermes, Ollama), ForensicStore, PermissionDenialEvent, declare_subagent(), AgentPhase, aiglos launch, scan-deps, validate-prompt|
 |**Pro**       |$49/dev/mo       |Community + federated intelligence, behavioral baseline, RSA-2048 artifacts, NDAA §1513 + EU AI Act compliance export, policy proposals, cloud dashboard                                                                                                                                         |
 |**Teams**     |$399/mo (15 devs)|Pro + centralized policy, aggregated threat view, Tier 3 approval workflows                                                                                                                                                                                                                      |
 |**Enterprise**|Custom, annual   |Teams + private federation, air-gap deployment, C3PAO packages, dedicated engineering                                                                                                                                                                                                            |
@@ -693,6 +699,7 @@ aiglos openShell detect
 |v0.25.18|89   |25       |T89 CONTRIBUTION_PROVENANCE_SUPPRESSION (undercover mode VCS compliance), T85 extended with undercover mode vocabulary, README compliance section                                                        |
 |v0.25.19|90   |26       |T90 DYNAMIC_TOOL_REGISTRATION, PHANTOM_COMPROMISE_CHAIN, phantom/ghostwright agents, declare_phantom_pipeline(), PHANTOM_PATHS (10 monitored paths)                                                     |
 |v0.25.20|91   |26       |T91 SYCOPHANTIC_VALIDATION_BYPASS (MIT CSAIL 2026), GOVBENCH D6 Anti-Sycophancy Mechanisms, PCC updated with T91 + 1.8x amplifier                                                                      |
+|v0.25.22|95   |27       |T94 PROVIDER_POLICY_REJECTION (OpenClaw ban pattern), T95 CROSS_TRUST_BOUNDARY_INJECT (critical), Ollama/LM Studio integration (OllamaGuard, attach_for_ollama, lmstudio_guard)                        |
 |v0.25.21|93   |27       |T92 SECURITY_SCANNER_COMPROMISE (Mercor breach pattern), T93 CREDENTIAL_IN_TOOL_ARGS, MERCOR_BREACH_CHAIN campaign, PyPI-only version detection in scan-deps                                           |
 
 -----
@@ -719,7 +726,7 @@ let artifact = guard.close_session(); // signed, attestation_ready
 
 **1. The only product that intercepts all three surfaces.** MCP-only tools miss everything Claude Code, Cursor, and Aider do via subprocess and HTTP.
 
-**2. Agent-agnostic.** Same 93 rules, same signed artifact, whether the agent is Claude Code, Cursor, smolagents, or OpenClaw.
+**2. Agent-agnostic.** Same 95 rules, same signed artifact, whether the agent is Claude Code, Cursor, smolagents, or OpenClaw.
 
 **3. 3/3 GHSAs caught before disclosure.** Empirical validation no competitor can replicate.
 
