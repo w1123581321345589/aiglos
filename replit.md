@@ -12,6 +12,9 @@ The `aiglos/` directory contains the Python security runtime package covering th
 - `aiglos/core/threat_engine_v2.py` -- T44-T95 threat rule library (52 rules: T44-T68 infrastructure + T69-T70 GHSA + T71-T75 ATLAS + T76-T82 NemoClaw/memory/uncensored + T83-T89 protocol/identity/VCS + T90 dynamic tool registration + T91 sycophancy + T92 scanner compromise + T93 credential in tool args + T94 provider policy rejection + T95 cross-trust-boundary inject)
 - `aiglos/integrations/ollama.py` -- OllamaGuard runtime security for Ollama/LM Studio local model deployments (attach_for_ollama, lmstudio_guard, provider_dependency_risk)
 - `aiglos/core/behavioral_baseline.py` -- AgentBaseline, BaselineScore, set_hardening_mode, is_suppressed
+- `aiglos/autoresearch/wiki.py` -- ThreatWiki engine: INGEST, PROPOSE, LINT, EVOLVE (999 lines). Compiles raw intel into wiki pages and machine-readable T-rule proposals
+- `aiglos/autoresearch/feeds.py` -- Feed connectors: NVD CVE, GHSA, MITRE ATLAS, RSS (656 lines). Normalizes sources to RawItem envelope
+- `aiglos/autoresearch/SCHEMA.md` -- Governing schema for wiki page types, operations, cross-referencing, proposal promotion workflow
 - `aiglos/autoresearch/atlas_coverage.py` -- ATLASCoverage, ATLAS_THREAT_MAP (22 threats, 93% coverage)
 - `aiglos/autoresearch/ghsa_watcher.py` -- GHSAWatcher, KNOWN_ADVISORIES (3/3 covered)
 - `aiglos/integrations/hermes.py` -- Hermes integration guard with trajectory signing
