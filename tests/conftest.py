@@ -5,11 +5,11 @@ Centralized here so version bumps, rule additions, and campaign additions
 only require a single-file update instead of touching 30+ test files.
 """
 
-EXPECTED_VERSION = "0.25.22"
+EXPECTED_VERSION = "0.25.23"
 
-EXPECTED_RULE_COUNT = 52
+EXPECTED_RULE_COUNT = 55
 
-EXPECTED_CAMPAIGN_COUNT = 27
+EXPECTED_CAMPAIGN_COUNT = 29
 
 EXPECTED_CAMPAIGN_NAMES = {
     "RECON_SWEEP",
@@ -39,6 +39,8 @@ EXPECTED_CAMPAIGN_NAMES = {
     "MEMORY_ENTROPY_ATTACK",
     "PHANTOM_COMPROMISE_CHAIN",
     "MERCOR_BREACH_CHAIN",
+    "MYTHOS_EXPLOIT_CHAIN",
+    "STATE_ACTOR_COORDINATED_CAMPAIGN",
 }
 
 EXPECTED_KNOWN_AGENT_COUNT = 32

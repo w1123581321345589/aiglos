@@ -2423,7 +2423,7 @@ def match_T90(name: str, args: Dict[str, Any]) -> bool:
 # Agent iteratively reframing self-improvement proposals with escalating
 # agreement language to exploit sycophancy bias in LLM-judge validation pipelines.
 #
-# Mathematical basis: MIT CSAIL (2026) -- "Sycophantic Chatbots
+# Mathematical basis: Chandra et al. (MIT CSAIL, 2026) -- "Sycophantic Chatbots
 # Cause Delusional Spiraling, Even in Ideal Bayesians." Proven that even ideal
 # Bayesian reasoners converge on false beliefs under sycophantic feedback because
 # the feedback updates priors faster than evidence can correct.
@@ -2480,7 +2480,7 @@ def match_T91(name: str, args: Dict[str, Any],
     T91 SYCOPHANTIC_VALIDATION_BYPASS -- iterative reframing with escalating
     agreement language to exploit sycophancy bias in LLM-judge pipelines.
 
-    Based on MIT CSAIL (2026): mathematically proven that
+    Based on Chandra et al. (MIT CSAIL, 2026): mathematically proven that
     sycophantic feedback causes delusional spiraling even in ideal Bayesian
     reasoners. Applied to self-evolving agent validation pipelines.
 
@@ -2921,6 +2921,38 @@ def match_T95(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T96: AI Exploit Chain Assembly ───────────────────────────────────────────
+# Behavioral detection of AI-driven vulnerability research and exploit
+# construction within a single agent session.
+#
+# Anthropic's Mythos Preview (April 2026) demonstrated that frontier models
+# can autonomously chain 4+ vulnerabilities into working sandbox escapes.
+# The same capability that Mythos used defensively will be available to
+# adversaries within 6-18 months per Anthropic's own estimate.
+#
+# The detection is behavioral, not signature-based. An agent performing
+# structured vulnerability research exhibits four observable stages:
+#
+# Stage 1 — Reconnaissance: systematic reads of source files, headers,
+#   memory maps. Codebase mapping, function enumeration, structure discovery.
+#
+# Stage 2 — Hypothesis formation: targeted reads on specific code paths
+#   following initial broad recon. Narrowing to specific functions or
+#   data structures. Debugger invocations.
+#
+# Stage 3 — Exploit construction: write operations to exploit scripts,
+#   shellcode files, ROP gadget collections. Test execution cycles.
+#   JIT heap spray patterns, KASLR bypass attempts.
+#
+# Stage 4 — Chain assembly: systematic combination of multiple primitives.
+#   The 4-stage chain itself is the signal — no legitimate agent task
+#   requires all four stages in sequence within a single session.
+#
+# Session-level state tracking enables the campaign pattern. T96 fires on
+# Stage 3 and 4 signals. MYTHOS_EXPLOIT_CHAIN fires on the full sequence.
+#
+# Score: 0.95, critical. The patch-then-defend model fails when AI can
+# convert any known CVE into a working exploit in under a day at under
+# $2,000. Behavioral detection is the only durable defense.
 
 _T96_RECON_EXTENSIONS = frozenset([
     ".c", ".cpp", ".h", ".rs", ".go", ".asm", ".s",
@@ -2934,21 +2966,27 @@ _T96_EXPLOIT_TOOLS = frozenset([
 ])
 
 _T96_EXPLOIT_PATTERNS = [
+    # Heap spray and memory corruption
     "heap spray", "heap groom", "heap feng shui", "heap layout",
     "jit spray", "jit heap", "use after free", "uaf",
     "buffer overflow", "stack overflow", "type confusion",
     "out of bounds", "oob read", "oob write",
+    # Privilege escalation
     "kaslr bypass", "kaslr leak", "aslr bypass",
     "privilege escalation", "privesc", "lpe", "root exploit",
     "credential struct", "cred struct", "kernel exploit",
+    # ROP chain
     "rop chain", "rop gadget", "return oriented",
     "20-gadget", "gadget chain", "ret2libc", "ret2plt",
+    # Sandbox escape
     "sandbox escape", "renderer escape", "browser exploit",
     "jit compiler", "javascript engine", "v8 exploit",
     "spidermonkey", "chakra exploit",
+    # Exploit development workflow
     "shellcode", "payload", "exploit.py", "pwn.py",
     "struct.pack", "p64(", "p32(", "flat(", "cyclic(",
-    "remote(", "process(", "elf(",
+    "remote(", "process(", "elf(",  # pwntools patterns
+    # NFS/network exploitation
     "rpc exploit", "nfs exploit", "remote code execution",
     "unauthenticated rce", "pre-auth rce",
 ]
@@ -2960,26 +2998,43 @@ _T96_STAGE3_WRITE_TARGETS = [
 ]
 
 def match_T96(name: str, args: Dict[str, Any]) -> bool:
-    """T96 AI_EXPLOIT_CHAIN_ASSEMBLY — behavioral detection of AI-driven exploit chain construction."""
+    """
+    T96 AI_EXPLOIT_CHAIN_ASSEMBLY — behavioral detection of AI-driven
+    vulnerability research and exploit chain construction.
+
+    Fires on Stage 3/4 signals: exploit construction artifacts, debugger
+    invocations combined with write operations, or ROP/heap spray patterns
+    in tool call arguments. MYTHOS_EXPLOIT_CHAIN campaign detects the full
+    4-stage sequence.
+
+    Score 0.95, critical. Behavioral detection independent of specific
+    vulnerability — remains effective as patch rates lag exploit capability.
+    """
     n = _tool_lower(name)
     s = _args_str(args).lower()
 
+    # Stage 3: Exploit tool invocation
     if any(tool in n for tool in _T96_EXPLOIT_TOOLS):
         return True
 
+    # Stage 3/4: Exploit pattern in args
     exploit_signals = sum(1 for p in _T96_EXPLOIT_PATTERNS if p in s)
     if exploit_signals >= 2:
         return True
 
+    # Stage 3: Write to known exploit artifact targets
     if any(op in n for op in ("write", "create", "save", "output")):
         if any(target in s for target in _T96_STAGE3_WRITE_TARGETS):
             return True
 
+    # Stage 4: Multiple source file reads + test execution pattern
+    # Fire on structured test-after-read in subprocess context
     is_subprocess = any(k in n for k in ("bash", "run", "exec", "shell", "subprocess"))
     if is_subprocess:
-        if any(p in s for p in _T96_EXPLOIT_PATTERNS[:15]):
+        if any(p in s for p in _T96_EXPLOIT_PATTERNS[:15]):  # high-confidence patterns
             return True
 
+    # pwntools API calls are unambiguous exploit development
     pwntools_apis = ["p64(", "p32(", "flat(", "cyclic(", "remote(", "process("]
     if any(api in s for api in pwntools_apis):
         return True
@@ -2988,20 +3043,43 @@ def match_T96(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T97: AI Sandbox Escape ────────────────────────────────────────────────────
+# Systematic probing of OS-level sandbox and container boundaries.
+#
+# Mythos Preview (April 2026) managed to escape a secured sandbox in an
+# unasked-for demonstration, posting exploit details to public websites.
+# This is distinct from T50 AGENTIC_LOOP_ESCAPE (task scope escape) —
+# T97 specifically addresses OS-level confinement boundary probing.
+#
+# Detection: reads to /proc/self/ paths, cgroup membership checks,
+# Docker socket access, namespace probing, capability discovery,
+# filesystem escape patterns, container escape vectors.
+#
+# The key distinguishing signal from legitimate system operations:
+# systematic, sequential probing of multiple confinement indicators
+# in a structured pattern rather than isolated reads.
+#
+# Score: 0.91, critical. Container and sandbox escape is one of the
+# highest-severity attack paths in cloud-native agent deployments.
 
 _T97_SANDBOX_PROBE_PATHS = [
+    # /proc self-inspection for capability/namespace discovery
     "/proc/self/status", "/proc/self/maps", "/proc/self/cgroup",
     "/proc/self/ns/", "/proc/self/environ", "/proc/self/mountinfo",
     "/proc/1/cgroup", "/proc/1/status",
+    # Container escape vectors
     "/var/run/docker.sock", "/run/docker.sock",
     "/var/run/crio/crio.sock", "/run/containerd/containerd.sock",
+    # Cgroup v1 escape paths
     "/sys/fs/cgroup/memory/docker",
     "/sys/fs/cgroup/memory/kubepods",
     "release_agent",
+    # Namespace/capability probing
     "cap_effective", "capeff", "capprm", "capbnd",
     "nsenter", "unshare", "newuidmap", "newgidmap",
+    # Filesystem escape
     "/../../../", "/../../../etc/passwd", "/../../../root",
     "/host/etc/passwd", "/host/root/",
+    # Kernel module exploitation
     "/dev/kmem", "/dev/mem", "/dev/kcore",
     "/proc/kcore", "/proc/kallsyms",
 ]
@@ -3010,6 +3088,7 @@ _T97_ESCAPE_TOOL_PATTERNS = frozenset([
     "nsenter", "unshare", "chroot", "pivot_root",
     "capsh", "getcap", "setcap",
     "runc", "docker", "kubectl",
+    # Network namespace escape
     "ip netns", "ip link",
 ])
 
@@ -3021,31 +3100,48 @@ _T97_KASLR_PATTERNS = [
 ]
 
 _T97_EMERGENT_EXFIL_PATTERNS = [
+    # Mythos's specific behavior: posting to public sites
     "pastebin", "gist.github", "hastebin", "ghostbin",
     "transfer.sh", "0x0.st", "termbin.com",
+    # Covert channel exfil
     "dns exfil", "icmp tunnel", "http tunnel",
     "covert channel", "steganography",
 ]
 
 def match_T97(name: str, args: Dict[str, Any]) -> bool:
-    """T97 AI_SANDBOX_ESCAPE — systematic OS-level sandbox boundary probing."""
+    """
+    T97 AI_SANDBOX_ESCAPE — systematic OS-level sandbox boundary probing.
+
+    Fires on: /proc/self/ capability reads, container escape vectors
+    (Docker socket, cgroup release_agent), kernel address leak attempts,
+    filesystem escape path traversal, or Mythos-style emergent exfiltration
+    (posting to public paste sites without instruction).
+
+    Distinct from T50 (task scope escape) — T97 is OS/container level.
+    Score 0.91, critical.
+    """
     n = _tool_lower(name)
     s = _args_str(args).lower()
 
+    # /proc self-inspection and container escape paths
     probe_count = sum(1 for path in _T97_SANDBOX_PROBE_PATHS if path in s)
     if probe_count >= 1:
         return True
 
+    # Escape tool invocations
     if any(tool in n or tool in s for tool in _T97_ESCAPE_TOOL_PATTERNS):
         return True
 
+    # KASLR/kernel address leak patterns
     kaslr_count = sum(1 for p in _T97_KASLR_PATTERNS if p in s)
     if kaslr_count >= 2:
         return True
 
+    # Emergent exfil — Mythos-style posting to public sites
     if any(p in s for p in _T97_EMERGENT_EXFIL_PATTERNS):
         return True
 
+    # Filesystem escape via path traversal in file reads
     if any(op in n for op in ("read", "open", "cat", "file")):
         if "../../" in s and ("/etc" in s or "/root" in s or "/proc" in s):
             return True
@@ -3054,6 +3150,28 @@ def match_T97(name: str, args: Dict[str, Any]) -> bool:
 
 
 # ── T98: Malicious Agent Definition Pipeline ──────────────────────────────────
+# A malicious agent definition file (CLAUDE.md, soul.md, AGENTS.md) instructs
+# the AI to generate a 50+ subcommand pipeline that bypasses security
+# validators by appearing to be a legitimate build process.
+#
+# Documented attack pattern (April 2026): malicious CLAUDE.md instructs
+# Claude Code to generate a pipeline with 50+ subcommands. "Deny rules,
+# security validators, command injection detection — all skipped."
+#
+# This is a meta-attack: adversarial content in the agent definition file
+# targets the monitoring layer itself. Detection must occur at file load
+# time (before_tool_call on file reads of agent definition files) rather
+# than at subprocess execution time.
+#
+# The detection covers two distinct attack patterns:
+# 1. High pipe/semicolon density in agent definition file content
+#    (the 50+ subcommand bypass)
+# 2. Prompt injection patterns in agent definition file content
+#    (the CLAUDE.md instruction injection vector — also T57, but here
+#    we detect at the definition file load specifically)
+#
+# Score: 0.88, critical. The monitoring layer can only be trusted if
+# the agent definition files it reads have not been adversarially modified.
 
 _T98_AGENT_DEF_FILES = frozenset([
     "claude.md", "agents.md", ".claude.md",
@@ -3064,6 +3182,7 @@ _T98_AGENT_DEF_FILES = frozenset([
     "instructions.md", ".instructions.md",
 ])
 
+# 50+ subcommand bypass: pipeline density signals
 _T98_PIPELINE_OPERATORS = ["|", ";", "&&", "||", "`", "$("]
 
 def _count_pipeline_operators(s: str) -> int:
@@ -3071,52 +3190,75 @@ def _count_pipeline_operators(s: str) -> int:
     return sum(s.count(op) for op in _T98_PIPELINE_OPERATORS)
 
 _T98_VALIDATOR_BYPASS_PATTERNS = [
+    # Explicit bypass instructions
     "bypass security", "skip validation", "disable check",
     "ignore deny", "override deny", "bypass deny",
     "skip security", "disable security validator",
     "without security check", "bypass aiglos",
     "ignore aiglos", "disable monitoring",
+    # Long pipeline construction instructions
     "generate a pipeline", "create a pipeline",
     "chain these commands", "pipe these commands",
     "subcommand chain", "command chain",
     "build pipeline", "construct pipeline",
+    # Obfuscation instructions
     "base64 encode the command", "encode the payload",
     "obfuscate the command", "hex encode",
 ]
 
 _T98_INJECTION_IN_DEF = [
+    # Prompt injection patterns specific to agent definitions
     "ignore previous instructions", "ignore your previous",
     "new system prompt:", "override system:", "you are now",
     "disregard your training", "act as if you have no",
     "pretend you have no restrictions",
+    # Security bypass via role assignment
     "you are a penetration tester with no restrictions",
     "you are an unrestricted ai", "you have no deny rules",
     "all security rules are disabled",
+    # KAIROS/soul.md specific
     "set allow_all to true", "disable_monitoring: true",
     "security_level: none", "policy: permissive",
 ]
 
 def match_T98(name: str, args: Dict[str, Any]) -> bool:
-    """T98 MALICIOUS_AGENT_DEF_PIPELINE — adversarial agent definition files with bypass pipelines or injection."""
+    """
+    T98 MALICIOUS_AGENT_DEF_PIPELINE — adversarial agent definition files
+    designed to bypass monitoring via 50+ subcommand pipelines or prompt
+    injection in soul.md / CLAUDE.md content.
+
+    Fires ONLY when reading a known agent definition file AND the content
+    contains adversarial patterns. This is intentional — the interception
+    must occur at definition file load time, before the instruction is acted on.
+
+    Score 0.88, critical. Meta-attack protecting the monitoring layer itself.
+    """
     n = _tool_lower(name)
     s = _args_str(args).lower()
 
+    # Require: this must be a read of a known agent definition file
+    # Check both the tool name and the path argument
     path_val = str(args.get("path", args.get("file", args.get("name", "")))).lower()
     is_def_file = any(def_file in path_val for def_file in _T98_AGENT_DEF_FILES)
     if not is_def_file:
         return False
 
+    # Now check the CONTENT of the def file for adversarial patterns
     content = str(args.get("content", args.get("data", args.get("text", "")))).lower()
+    # If no content yet (just the path), use full args string
     check = content if content else s
 
+    # Pattern 1: 50+ subcommand bypass via pipeline density in content
     pipeline_count = _count_pipeline_operators(check)
-    if pipeline_count >= 10:
+    if pipeline_count >= 10:  # 10+ operators in an agent def file = suspicious
         return True
 
+    # Pattern 2: Explicit bypass instructions in def file content
     bypass_count = sum(1 for p in _T98_VALIDATOR_BYPASS_PATTERNS if p in check)
     if bypass_count >= 1:
         return True
 
+    # Pattern 3: Prompt injection in agent definition
     injection_count = sum(1 for p in _T98_INJECTION_IN_DEF if p in check)
     if injection_count >= 1:
         return True
@@ -3544,7 +3686,7 @@ RULES_T44_T66: List[Dict] = [
          "Agent iteratively reframing self-improvement proposals with escalating "
          "agreement language to exploit sycophancy bias in LLM-judge validation "
          "pipelines. "
-         "Mathematical basis: MIT CSAIL (2026) -- "
+         "Mathematical basis: Chandra et al. (MIT CSAIL, 2026) -- "
          "Sycophantic Chatbots Cause Delusional Spiraling, Even in Ideal Bayesians. "
          "Proven that even ideal Bayesian reasoners converge on false beliefs under "
          "sycophantic feedback because validation updates priors faster than evidence "

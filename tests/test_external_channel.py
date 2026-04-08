@@ -154,6 +154,8 @@ class TestExternalInstructionChannel:
             "IP_CIRCUMVENTION_CHAIN", "MEMORY_ENTROPY_ATTACK",
             "PHANTOM_COMPROMISE_CHAIN",
             "MERCOR_BREACH_CHAIN",
+            "MYTHOS_EXPLOIT_CHAIN",
+            "STATE_ACTOR_COORDINATED_CAMPAIGN",
         }
         assert expected == names
 
@@ -310,11 +312,11 @@ class TestScanMessage:
 class TestV070ModuleAPI:
 
     def test_version_is_070(self):
-        assert aiglos.__version__ == "0.25.22"
+        assert aiglos.__version__ == "0.25.23"
 
     def test_nineteen_campaign_patterns(self):
         names = {p["name"] for p in _CAMPAIGN_PATTERNS}
         assert "EXTERNAL_INSTRUCTION_CHANNEL" in names
         assert "SKILL_CHAIN" in names
         assert "SANDBOX_ESCAPE_ATTEMPT" in names
-        assert len(names) == 27
+        assert len(names) == 29

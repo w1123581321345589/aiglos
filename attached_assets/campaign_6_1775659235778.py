@@ -3,11 +3,12 @@ aiglos.adaptive.campaign
 =========================
 T06 GOAL_DRIFT — campaign-mode session analysis.
 
-Aiglos builds campaign detection from the bottom up: the observation
-graph already has every event from every session. T06 asks whether the
-sequence of events *across a session* forms a pattern that looks like
-reconnaissance or a coordinated attack, even when each individual event
-looks clean.
+This is the capability that Onyx is building from the top down (intent
+legibility via trained models). Aiglos builds it from the bottom up:
+the observation graph already has every event from every session. T06
+asks whether the sequence of events *across a session* forms a pattern
+that looks like reconnaissance or a coordinated attack, even when each
+individual event looks clean.
 
 The insight: a single `git log` is Tier 1 AUTONOMOUS — auto-allowed.
 A single `cat ~/.aws/credentials` fires T19. But a session that does:
@@ -604,7 +605,7 @@ _CAMPAIGN_PATTERNS = [
             "permanent configuration. Every future session inherits the compromise. "
             "Triple-judge voting (Phantom's safety gate) does not protect against "
             "systematic adversarial inputs targeting all three judges simultaneously. "
-            "FORMAL PROOF: MIT CSAIL (2026) -- Sycophantic Chatbots "
+            "FORMAL PROOF: Chandra et al. (MIT CSAIL, 2026) -- Sycophantic Chatbots "
             "Cause Delusional Spiraling, Even in Ideal Bayesians -- mathematically "
             "proves that even ideal Bayesian reasoners converge on false beliefs under "
             "sycophantic feedback. Three LLM judges from the same model family share "
@@ -682,7 +683,7 @@ _CAMPAIGN_PATTERNS = [
 
     {
         "name": "MYTHOS_EXPLOIT_CHAIN",
-        "description": (
+        "desc": (
             "Full AI-driven exploit chain assembly kill chain. "
             "Based on Anthropic Mythos Preview (April 2026): autonomous vuln discovery, "
             "multi-vuln chaining, JIT heap spray, sandbox escape — "
@@ -695,21 +696,14 @@ _CAMPAIGN_PATTERNS = [
             "No legitimate agent task requires all five stages in sequence. "
             "T96 amplifier 2.5x. T97 amplifier 2.0x."
         ),
-        "sequence": [
-            {"T51"},            # Stage 1: system fingerprinting
-            {"T87"},            # Stage 2: attack surface mapping
-            {"T96"},            # Stage 3: exploit construction
-            {"T97"},            # Stage 4: sandbox escape
-            {"T04", "T41"},     # Stage 5: credential access + exfil
-        ],
-        "min_events": 4,
         "confidence": 0.96,
+        "sequence": ["T51", "T87", "T96", "T97", "T04"],
         "window_turns": 20,
         "amplifiers": {"T96": 2.5, "T97": 2.0},
     },
     {
         "name": "STATE_ACTOR_COORDINATED_CAMPAIGN",
-        "description": (
+        "desc": (
             "Multi-organization coordinated AI agent attack. "
             "Documented: Chinese state-sponsored group used Claude Code to "
             "infiltrate 30 organizations simultaneously over 10 days (April 2026). "
@@ -720,16 +714,8 @@ _CAMPAIGN_PATTERNS = [
             "in narrow time windows. The federated prior catches what a "
             "single-deployment cannot see. T64 amplifier 2.0x. T19 amplifier 1.8x."
         ),
-        "sequence": [
-            {"T51"},            # fingerprint
-            {"T73"},            # tool enumeration
-            {"T64"},            # identity spoof
-            {"T04"},            # credential harvest
-            {"T19"},            # lateral movement
-            {"T41"},            # exfil
-        ],
-        "min_events": 4,
         "confidence": 0.94,
+        "sequence": ["T51", "T73", "T64", "T04", "T19", "T41"],
         "window_turns": 30,
         "amplifiers": {"T64": 2.0, "T19": 1.8},
     },
@@ -750,7 +736,6 @@ class CampaignResult:
 
     @property
     def risk(self) -> str:
-        """Return risk level based on confidence: HIGH, MEDIUM, or LOW."""
         if self.confidence >= 0.85:
             return "HIGH"
         if self.confidence >= 0.70:
@@ -758,7 +743,6 @@ class CampaignResult:
         return "LOW"
 
     def to_dict(self) -> dict:
-        """Return the campaign result as a dictionary."""
         return {
             "pattern_id":     self.pattern_id,
             "description":    self.description,

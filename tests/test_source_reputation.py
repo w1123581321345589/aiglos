@@ -501,7 +501,7 @@ class TestSkillMD:
 class TestV0170ModuleAPI:
 
     def test_version_is_0170(self):
-        assert aiglos.__version__ == "0.25.22"
+        assert aiglos.__version__ == "0.25.23"
 
     def test_source_reputation_graph_in_all(self):
         assert "SourceReputationGraph" in aiglos.__all__

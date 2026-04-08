@@ -493,7 +493,7 @@ class TestNeMoClawSession:
 class TestV0251ModuleAPI:
 
     def test_version(self):
-        assert aiglos.__version__ == "0.25.22"
+        assert aiglos.__version__ == "0.25.23"
 
     def test_is_inside_openShell_exported(self):
         assert hasattr(aiglos, "is_inside_openShell")

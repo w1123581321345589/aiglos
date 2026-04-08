@@ -112,7 +112,7 @@ aiglos forensics query --date 2026-03-12 --agent reporting-pipeline --threat T86
 
 ## What Aiglos is
 
-Runtime security enforcement for every AI agent. One import intercepts every tool call before execution, classifies it against 95 threat rules, and produces a signed audit artifact that auto-persists to a tamper-evident forensic store.
+Runtime security enforcement for every AI agent. One import intercepts every tool call before execution, classifies it against 98 threat rules, and produces a signed audit artifact that auto-persists to a tamper-evident forensic store.
 
 **The architectural fact nobody says directly:** guardrails inside the agent can be reasoned around. Guardrails outside the agent cannot. Aiglos enforces outside the agent process. The agent cannot reason around a rule it does not know exists.
 
@@ -665,7 +665,7 @@ aiglos openShell detect
 
 |Tier          |Price            |What you get                                                                                                                                                                                                                                                                                     |
 |--------------|-----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|**Community** |$0 / Apache 2.0  |Full T01-T95 detection, 3 surfaces, 27 campaign patterns, GOVBENCH D1-D6, GHSA watcher, ATLAS coverage, all integrations (OpenShell, KAIROS, Phantom, Gigabrain, ByteRover, smolagents, Hermes, Ollama), ForensicStore, PermissionDenialEvent, declare_subagent(), AgentPhase, aiglos launch, scan-deps, validate-prompt|
+|**Community** |$0 / Apache 2.0  |Full T01-T95 detection, 3 surfaces, 29 campaign patterns, GOVBENCH D1-D6, GHSA watcher, ATLAS coverage, all integrations (OpenShell, KAIROS, Phantom, Gigabrain, ByteRover, smolagents, Hermes, Ollama), ForensicStore, PermissionDenialEvent, declare_subagent(), AgentPhase, aiglos launch, scan-deps, validate-prompt|
 |**Pro**       |$49/dev/mo       |Community + federated intelligence, behavioral baseline, RSA-2048 artifacts, NDAA §1513 + EU AI Act compliance export, policy proposals, cloud dashboard                                                                                                                                         |
 |**Teams**     |$399/mo (15 devs)|Pro + centralized policy, aggregated threat view, Tier 3 approval workflows                                                                                                                                                                                                                      |
 |**Enterprise**|Custom, annual   |Teams + private federation, air-gap deployment, C3PAO packages, dedicated engineering                                                                                                                                                                                                            |

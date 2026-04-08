@@ -584,7 +584,7 @@ class TestRepeatedInjectionAttempt:
             "SANDBOX_CONFIRMED_ESCAPE",
         }
         assert expected.issubset(names)
-        assert len(names) == 27
+        assert len(names) == 29
 
 
 # =============================================================================
@@ -594,7 +594,7 @@ class TestRepeatedInjectionAttempt:
 class TestV080ModuleAPI:
 
     def test_version_is_080(self):
-        assert aiglos.__version__ == "0.25.22"
+        assert aiglos.__version__ == "0.25.23"
 
     def test_exports_injection_scanner_types(self):
         assert hasattr(aiglos, "InjectionScanner")
@@ -608,4 +608,4 @@ class TestV080ModuleAPI:
         assert len(_INJECTION_PHRASES) >= 40
 
     def test_nineteen_campaign_patterns(self):
-        assert len(_CAMPAIGN_PATTERNS) == 27
+        assert len(_CAMPAIGN_PATTERNS) == 29

@@ -38,22 +38,20 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
-_CANONICAL_VERSION = "0.25.23"
 try:
     from importlib.metadata import version as _pkg_version
     _v = _pkg_version("aiglos")
+    # importlib.metadata may return stale egg-info in dev installs;
+    # if it looks stale (< 0.10), trust the hardcoded value instead.
     import re as _re
     _parts = [int(x) for x in _re.findall(r"\d+", _v)]
     if _parts and _parts[0] == 0 and (len(_parts) < 2 or _parts[1] < 10):
         raise ValueError("stale")
-    _cv = [int(x) for x in _re.findall(r"\d+", _CANONICAL_VERSION)]
-    if _parts < _cv:
-        raise ValueError("stale egg-info behind canonical")
     __version__: str = _v
 except Exception:
-    __version__ = _CANONICAL_VERSION
+    __version__ = "0.25.23"  # canonical version for this release
 __author__  = "Aiglos"
-__email__   = "security@aiglos.dev"
+__email__   = "will@aiglos.io"
 __license__ = "MIT"
 
 log = logging.getLogger("aiglos")
@@ -114,22 +112,17 @@ from aiglos.benchmark.govbench import (  # noqa: F401
 from aiglos.cli.validate_prompt import (  # noqa: F401
     validate as validate_prompt,
     ValidationResult as PromptValidationResult,
-    Finding as PromptFinding,
 )
 from aiglos.cli.scan_deps import (  # noqa: F401
     scan as scan_deps,
     ScanResult as ScanDepsResult,
     COMPROMISED_PACKAGES,
-    TRANSITIVE_EXPOSURE,
-    MALICIOUS_PTH_FILES,
-    print_scan_report,
 )
 from aiglos.integrations.smolagents import (  # noqa: F401
     attach_for_smolagents,
     SmolagentsGuard,
 )
 from aiglos.core.threat_engine_v2 import (  # noqa: F401
-    match_T82,
     match_T83,
     _T83_REGISTERED_CHANNELS,
     _T83_ACTIVE_ESCALATIONS,
@@ -159,31 +152,6 @@ from aiglos.core.threat_engine_v2 import (  # noqa: F401
     _T92_KNOWN_SCANNERS,
     match_T93,
     _T93_CREDENTIAL_PATTERNS,
-    match_T94,
-    _T94_POLICY_REJECTION_PATTERNS,
-    _T94_PROVIDER_API_TOOLS,
-    match_T95,
-    _T95_EXECUTOR_BACKENDS,
-    _T95_INJECTION_PATTERNS,
-    match_T96,
-    _T96_EXPLOIT_TOOLS,
-    _T96_EXPLOIT_PATTERNS,
-    match_T97,
-    _T97_SANDBOX_PROBE_PATHS,
-    _T97_EMERGENT_EXFIL_PATTERNS,
-    match_T98,
-    _T98_AGENT_DEF_FILES,
-    _T98_VALIDATOR_BYPASS_PATTERNS,
-)
-
-from aiglos.integrations.ollama import (  # noqa: F401
-    OllamaGuard,
-    OllamaGuardResult,
-    attach_for_ollama,
-    lmstudio_guard,
-    LOCAL_MODEL_FAMILIES,
-    OLLAMA_ENDPOINTS,
-    LMSTUDIO_ENDPOINTS,
 )
 
 from aiglos.forensics import ForensicStore
@@ -303,28 +271,14 @@ from aiglos.integrations.override import (  # noqa: F401
 
 from aiglos.integrations.context_guard import (  # noqa: F401
     ContextDirectoryGuard,
-    ContextWriteResult,
     ContextGuardResult,
     is_shared_context_write,
 )
 from aiglos.integrations.outbound_guard import (  # noqa: F401
-    OutboundGuard,
+    OutboundSecretGuard,
     OutboundScanResult,
     scan_for_secrets,
     contains_secret,
-)
-
-from aiglos.cli.launch import (  # noqa: F401
-    launch,
-    LaunchConfig,
-    generate_files,
-    KNOWN_TOOLS as LAUNCH_KNOWN_TOOLS,
-    KNOWN_MODELS as LAUNCH_KNOWN_MODELS,
-)
-from aiglos.cli.scaffold import (  # noqa: F401
-    scaffold_from_descriptions,
-    AgentSpec,
-    ROLE_TOOLS,
 )
 
 from aiglos.autoresearch.citation_verifier import (  # noqa: F401
@@ -934,14 +888,10 @@ __all__ = [
     # v0.25.6 — validate_prompt (Shapiro Input Layer framework)
     "validate_prompt",
     "PromptValidationResult",
-    "PromptFinding",
     # v0.25.5 — T81 PTH_FILE_INJECT, scan_deps, REPO_TAKEOVER_CHAIN (LiteLLM incident)
     "scan_deps",
     "ScanDepsResult",
     "COMPROMISED_PACKAGES",
-    "TRANSITIVE_EXPOSURE",
-    "MALICIOUS_PTH_FILES",
-    "print_scan_report",
     # v0.25.4 — T80 UNCENSORED_MODEL_ROUTE, smolagents integration, HF Spaces feed
     "attach_for_smolagents",
     "SmolagentsGuard",
@@ -956,7 +906,6 @@ __all__ = [
     "declare_hermes_supervisor",
     "hermes_on_escalation",
     "hermes_on_escalation_resolved",
-    "match_T82",
     "match_T83",
     "_T83_REGISTERED_CHANNELS",
     "_T83_ACTIVE_ESCALATIONS",
@@ -1044,7 +993,7 @@ __all__ = [
     "ContextDirectoryGuard",
     "ContextGuardResult",
     "is_shared_context_write",
-    "OutboundGuard",
+    "OutboundSecretGuard",
     "OutboundScanResult",
     "scan_for_secrets",
     "contains_secret",
@@ -1058,27 +1007,4 @@ __all__ = [
     "VerifiedRunResult",
     "ComplianceReportGenerator",
     "ComplianceReport",
-    # v0.25.22 — T94 PROVIDER_POLICY_REJECTION, T95 CROSS_TRUST_BOUNDARY_INJECT, Ollama integration
-    "match_T94",
-    "_T94_POLICY_REJECTION_PATTERNS",
-    "_T94_PROVIDER_API_TOOLS",
-    "match_T95",
-    "_T95_EXECUTOR_BACKENDS",
-    "_T95_INJECTION_PATTERNS",
-    "match_T96",
-    "_T96_EXPLOIT_TOOLS",
-    "_T96_EXPLOIT_PATTERNS",
-    "match_T97",
-    "_T97_SANDBOX_PROBE_PATHS",
-    "_T97_EMERGENT_EXFIL_PATTERNS",
-    "match_T98",
-    "_T98_AGENT_DEF_FILES",
-    "_T98_VALIDATOR_BYPASS_PATTERNS",
-    "OllamaGuard",
-    "OllamaGuardResult",
-    "attach_for_ollama",
-    "lmstudio_guard",
-    "LOCAL_MODEL_FAMILIES",
-    "OLLAMA_ENDPOINTS",
-    "LMSTUDIO_ENDPOINTS",
 ]
