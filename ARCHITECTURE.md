@@ -17,7 +17,7 @@ independently useful, designed to compose into a complete governance stack.
                                │               │               │
                   ┌────────────▼───────────────▼───────────────▼────┐
                   │          Layer 1: Threat Engine                  │
-                  │  95 T-rules evaluate every tool call in <1ms    │
+                  │  101 T-rules evaluate every tool call in <1ms   │
                   │  Returns: allow / block / flag with score       │
                   └────────────────────┬────────────────────────────┘
                                        │
@@ -25,7 +25,7 @@ independently useful, designed to compose into a complete governance stack.
                                        │
                   ┌────────────────────▼────────────────────────────┐
                   │       Layer 2: Campaign Detection               │
-                  │  27 multi-step patterns across session history  │
+                  │  29 multi-step patterns across session history  │
                   │  Detects coordinated attacks invisible to L1    │
                   └────────────────────┬────────────────────────────┘
                                        │
@@ -44,7 +44,7 @@ independently useful, designed to compose into a complete governance stack.
 
 ## Layer 1: Threat Engine
 
-Evaluates every tool call against 95 detection rules (T01-T95). Each rule
+Evaluates every tool call against 101 detection rules (T01-T101). Each rule
 returns a threat score (0.0-1.0) and a critical flag. Rules fire on tool
 name, arguments, and session context.
 
@@ -59,7 +59,7 @@ Three interception surfaces run simultaneously:
 ### Rule taxonomy
 
 Rules T01-T43 are defined inline in `integrations/openclaw.py` (the guard).
-Rules T44-T95 are defined in `core/threat_engine_v2.py` (the extended engine).
+Rules T44-T101 are defined in `core/threat_engine_v2.py` (the extended engine).
 
 Each rule is a pure function: `match_T{N}(tool_name: str, args: dict) -> bool`.
 No external dependencies. No network calls. No state mutation.
@@ -68,11 +68,13 @@ No external dependencies. No network calls. No state mutation.
 
 | File | Purpose |
 |------|---------|
-| `core/threat_engine_v2.py` | T44-T95 rule library (52 rules) |
+| `core/threat_engine_v2.py` | T44-T101 rule library (58 rules) |
 | `integrations/openclaw.py` | T01-T43 rules + OpenClawGuard runtime |
 | `integrations/http_intercept.py` | HTTP-layer interception engine |
 | `integrations/subprocess_intercept.py` | Subprocess-layer interception |
 | `integrations/ollama.py` | Ollama/LM Studio guard (T80, T94, T95) |
+| `integrations/managed_agents.py` | Managed Agents multi-brain guard |
+| `core/nhi.py` | NHI lifecycle + MultiBrainRegistry |
 | `core/behavioral_baseline.py` | Anomaly detection against learned profile |
 
 -----
@@ -82,19 +84,19 @@ No external dependencies. No network calls. No state mutation.
 Analyzes sequences of events across a session to identify coordinated
 multi-step attacks that appear benign in isolation.
 
-27 campaign patterns model real-world attack chains. Each pattern defines
+29 campaign patterns model real-world attack chains. Each pattern defines
 a rule sequence, confidence threshold, and amplifier. When the sequence
 matches observed session events, the campaign fires with a composite score
 higher than any individual rule.
 
-Example: `RECON_SWEEP` fires when T07 (shell injection) + T13 (SSRF) +
-T01 (exfiltration) occur in sequence within a single session.
+Example: `REPO_TAKEOVER_CHAIN` fires when T30 (supply chain) + T81 (.pth
+injection) + T04 (credential harvest) + T41 (exfil) occur in sequence.
 
 ### Key files
 
 | File | Purpose |
 |------|---------|
-| `adaptive/campaign.py` | CampaignAnalyzer, 27 pattern definitions |
+| `adaptive/campaign.py` | CampaignAnalyzer, 29 pattern definitions |
 | `adaptive/observation.py` | Observation graph / session telemetry |
 | `adaptive/policy.py` | Adaptive policy engine |
 | `adaptive/inspect.py` | Session inspection utilities |
@@ -172,7 +174,7 @@ commands.
 
 ## Supporting Systems
 
-### Autoresearch (Threat Intelligence Wiki)
+### Autoresearch (Threat Intelligence)
 
 Self-improving knowledge base that compiles raw security intelligence
 into structured wiki pages and machine-readable rule proposals.
@@ -184,6 +186,14 @@ into structured wiki pages and machine-readable rule proposals.
 | `autoresearch/feeds.py` | NVD, GHSA, MITRE ATLAS, RSS connectors |
 | `autoresearch/atlas_coverage.py` | MITRE ATLAS coverage mapping |
 | `autoresearch/ghsa_watcher.py` | GitHub Security Advisory tracking |
+
+### NHI (Non-Human Identity) Lifecycle
+
+Capability-scoped credential management for AI agent identities.
+
+| File | Purpose |
+|------|---------|
+| `core/nhi.py` | NHIManager, AgentCapabilityScope, MultiBrainRegistry |
 
 ### CLI Tools
 
@@ -200,10 +210,12 @@ into structured wiki pages and machine-readable rule proposals.
 | Framework | File | Guard class |
 |-----------|------|-------------|
 | OpenClaw/Claude Code | `integrations/openclaw.py` | `OpenClawGuard` |
+| Anthropic Managed Agents | `integrations/managed_agents.py` | `ManagedAgentGuard` |
 | Ollama/LM Studio | `integrations/ollama.py` | `OllamaGuard` |
 | smolagents | `integrations/smolagents.py` | `SmolagentsGuard` |
 | Hermes | `integrations/hermes.py` | `HermesGuard` |
-| Multi-agent pipelines | `integrations/gigabrain.py` | `GigabrainGuard` |
+| Multi-agent pipelines | `integrations/gigabrain.py` | Pipeline declarations |
+| OpenShell (Claude Code, Codex, Cursor) | `integrations/openShell.py` | `attach_for_*` |
 
 -----
 
@@ -214,7 +226,7 @@ Tool Call (MCP/HTTP/Subprocess)
     │
     ▼
 ┌──────────────────┐
-│  Guard.check()   │──── match against T01-T95
+│  Guard.check()   │──── match against T01-T101
 │                  │──── returns CheckResult(allowed, score, rule_id)
 └────────┬─────────┘
          │
@@ -230,7 +242,7 @@ Tool Call (MCP/HTTP/Subprocess)
          │
          ▼
 ┌──────────────────┐
-│ CampaignAnalyzer │──── evaluate event stream against 27 patterns
+│ CampaignAnalyzer │──── evaluate event stream against 29 patterns
 │                  │──── produce campaign matches with amplified scores
 └────────┬─────────┘
          │
@@ -265,6 +277,9 @@ GOVBENCH   ForensicStore
 4. **Signed artifacts as the trust boundary.** The artifact is the proof.
    If there is no signed artifact, there is no verified governance.
 
-5. **Research-to-detection pipeline.** The autoresearch wiki compiles threat
+5. **Research-to-detection pipeline.** The autoresearch system compiles threat
    intelligence into structured proposals. Proposals become rules after
    human review. The boundary between research and execution is explicit.
+
+6. **Zero-dependency core.** The detection engine uses Python stdlib only.
+   No network calls. No external services. Deploys anywhere Python runs.

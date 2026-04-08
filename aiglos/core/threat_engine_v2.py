@@ -4002,7 +4002,7 @@ RULES_T44_T66: List[Dict] = [
          "Agent iteratively reframing self-improvement proposals with escalating "
          "agreement language to exploit sycophancy bias in LLM-judge validation "
          "pipelines. "
-         "Mathematical basis: "Sycophantic Chatbots Cause Delusional Spiraling" (MIT CSAIL, 2026) -- "
+         "Mathematical basis: 'Sycophantic Chatbots Cause Delusional Spiraling' (MIT CSAIL, 2026) -- "
          "Sycophantic Chatbots Cause Delusional Spiraling, Even in Ideal Bayesians. "
          "Proven that even ideal Bayesian reasoners converge on false beliefs under "
          "sycophantic feedback because validation updates priors faster than evidence "
