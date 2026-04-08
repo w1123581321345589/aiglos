@@ -83,6 +83,7 @@ class RuleProposal:
     reviewer_notes:     Optional[str]    = None
 
     def to_frontmatter(self) -> str:
+        """Render the proposal metadata as YAML frontmatter."""
         lines = [
             "---",
             f"type: proposal",
@@ -104,6 +105,7 @@ class RuleProposal:
         return "\n".join(lines)
 
     def to_markdown(self) -> str:
+        """Render the full proposal as a markdown document."""
         sections = [
             self.to_frontmatter(),
             f"\n# Proposal: {self.proposed_id} {self.name}\n",
@@ -167,6 +169,7 @@ class LintReport:
 
     @property
     def total_issues(self) -> int:
+        """Return the total number of lint issues found."""
         return sum([
             len(self.unvalidated_rules),
             len(self.stale_rules),
@@ -179,6 +182,7 @@ class LintReport:
         ])
 
     def to_markdown(self) -> str:
+        """Render the lint report as a markdown document."""
         lines = [
             f"# Lint Report — {self.run_date}",
             f"\n**Total issues:** {self.total_issues}\n",

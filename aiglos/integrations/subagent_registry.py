@@ -122,6 +122,7 @@ class DeclaredSubagent:
         return any(h.lower() in host_lower for h in self.scope_hosts + ["localhost", "127.0.0.1"])
 
     def to_dict(self) -> dict:
+        """Return the declared sub-agent as a dictionary."""
         return {
             "name":        self.name,
             "tools":       self.tools,
@@ -277,6 +278,7 @@ class SubagentRegistry:
         log.info("[SubagentRegistry] Cleared")
 
     def summary(self) -> str:
+        """Return a human-readable summary of all declared sub-agents."""
         if not self._agents:
             return "  No sub-agents declared.\n"
         lines = [f"  Declared sub-agents ({len(self._agents)}):"]
@@ -303,12 +305,15 @@ class SpawnCheckResult:
 
     @property
     def is_clean(self) -> bool:
+        """Return True if the spawn was declared and within scope."""
         return self.status == "DECLARED_IN_SCOPE"
 
     @property
     def is_undeclared(self) -> bool:
+        """Return True if the sub-agent was not declared."""
         return self.status == "UNDECLARED"
 
     @property
     def is_out_of_scope(self) -> bool:
+        """Return True if the sub-agent was declared but exceeded its scope."""
         return self.status == "DECLARED_OUT_OF_SCOPE"

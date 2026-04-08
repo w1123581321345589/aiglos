@@ -709,7 +709,7 @@ class TestUnverifiedRuleTrigger:
 class TestV0140ModuleAPI:
 
     def test_version_is_0140(self):
-        assert aiglos.__version__ == "0.25.20"
+        assert aiglos.__version__ == "0.25.22"
 
     def test_citation_verifier_in_all(self):
         assert "CitationVerifier" in aiglos.__all__

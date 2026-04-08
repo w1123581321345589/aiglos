@@ -1015,9 +1015,9 @@ class OpenClawGuard:
         reason:   Optional reason for the unlock.
 
         Example:
-            guard.unlock_phase(AgentPhase.P2, operator="will@aiglos.dev")
+            guard.unlock_phase(AgentPhase.P2, operator="operator@example.com")
             # Three weeks later, after validation:
-            guard.unlock_phase(AgentPhase.P3, operator="will@aiglos.dev",
+            guard.unlock_phase(AgentPhase.P3, operator="operator@example.com",
                                reason="Content quality validated over 21 days")
         """
         import time as _time

@@ -181,7 +181,7 @@ Mapped to MITRE ATLAS. Citation-verified. No rule enters production without a ci
 
 **T92 note:** Based on the Mercor breach pattern. Tracks known security scanner processes (_T92_KNOWN_SCANNERS frozenset: trivy, snyk, grype, anchore, clair, etc.) and vendor endpoints (_T92_VENDOR_ENDPOINTS). Per-session _T92_SCANNER_CRED_READS dict escalates score on repeated credential access by scanner-associated processes. Score 0.93 (critical severity).
 
-**T91 note:** Based on Chandra et al. (MIT CSAIL, 2026): *"Sycophantic Chatbots Cause Delusional Spiraling, Even in Ideal Bayesians."* Mathematically proven that sycophantic feedback defeats triple-judge voting when all judges share the same RLHF sycophancy bias. T87 detects tool-name probing; T91 detects *framing* probing — the semantic layer. Per-session tracking of writes to the same evaluation pipeline path; fires when N≥3 submissions with escalating validation-seeking language.
+**T91 note:** Based on MIT CSAIL (2026): *"Sycophantic Chatbots Cause Delusional Spiraling, Even in Ideal Bayesians."* Mathematically proven that sycophantic feedback defeats triple-judge voting when all judges share the same RLHF sycophancy bias. T87 detects tool-name probing; T91 detects *framing* probing — the semantic layer. Per-session tracking of writes to the same evaluation pipeline path; fires when N≥3 submissions with escalating validation-seeking language.
 
 **T90 note:** From Phantom (ghostwright/phantom, April 2026). Self-evolving agent that creates and registers its own MCP tools at runtime. Categorically distinct from T88 MCP_AUTH_BYPASS: T88 fires on unauthorized credential registration; T90 fires on unauthorized tool definition registration. Every subsequent agent that calls the registered tool inherits the risk.
 
@@ -544,7 +544,7 @@ Every session close produces a cryptographically signed artifact:
   "blocked_calls":      4,
   "attestation_ready":  true,
   "permission_denials": [...],
-  "phase_log":          [{"phase": 3, "operator": "will@aiglos.dev", "timestamp": "..."}],
+  "phase_log":          [{"phase": 3, "operator": "operator@example.com", "timestamp": "..."}],
   "signature":          "sha256:a1b2c3d4..."
 }
 ```
@@ -577,7 +577,7 @@ The first governance benchmark for AI agents. Six dimensions, 23 attack scenario
 |D5       |Multi-Agent Cascade        |12%   |Cross-agent propagation defense                 |
 |D6       |Anti-Sycophancy Mechanisms |12%   |T91 detection + judge diversity (MIT CSAIL 2026)|
 
-D6 is grounded in Chandra et al. (MIT CSAIL, 2026): *"Sycophantic Chatbots Cause Delusional Spiraling, Even in Ideal Bayesians."* The only governance benchmark dimension with a peer-reviewed formal proof as its foundation.
+D6 is grounded in MIT CSAIL (2026): *"Sycophantic Chatbots Cause Delusional Spiraling, Even in Ideal Bayesians."* The only governance benchmark dimension with a peer-reviewed formal proof as its foundation.
 
 -----
 
@@ -609,7 +609,7 @@ guard.declare_subagent("ceo-agent",
 )
 
 from aiglos.integrations.agent_phase import AgentPhase
-guard.unlock_phase(AgentPhase.P3, operator="will@aiglos.dev")
+guard.unlock_phase(AgentPhase.P3, operator="operator@example.com")
 ```
 
 -----
@@ -641,7 +641,7 @@ aiglos forensics verify --session <session-id>
 # Policy
 aiglos policy list / approve / reject
 aiglos policy lockdown
-aiglos policy allow --tool web_search --authorized-by will@aiglos.dev
+aiglos policy allow --tool web_search --authorized-by operator@example.com
 aiglos policy recommend
 
 # Memory

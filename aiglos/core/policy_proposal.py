@@ -72,7 +72,7 @@ Usage:
     pending = engine.list_proposals(status="pending")
 
     # CLI: approve
-    engine.approve_proposal(proposal_id, approved_by="will@aiglos.dev")
+    engine.approve_proposal(proposal_id, approved_by="operator@example.com")
 """
 
 

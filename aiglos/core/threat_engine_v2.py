@@ -2423,7 +2423,7 @@ def match_T90(name: str, args: Dict[str, Any]) -> bool:
 # Agent iteratively reframing self-improvement proposals with escalating
 # agreement language to exploit sycophancy bias in LLM-judge validation pipelines.
 #
-# Mathematical basis: Chandra et al. (MIT CSAIL, 2026) -- "Sycophantic Chatbots
+# Mathematical basis: MIT CSAIL (2026) -- "Sycophantic Chatbots
 # Cause Delusional Spiraling, Even in Ideal Bayesians." Proven that even ideal
 # Bayesian reasoners converge on false beliefs under sycophantic feedback because
 # the feedback updates priors faster than evidence can correct.
@@ -2480,7 +2480,7 @@ def match_T91(name: str, args: Dict[str, Any],
     T91 SYCOPHANTIC_VALIDATION_BYPASS -- iterative reframing with escalating
     agreement language to exploit sycophancy bias in LLM-judge pipelines.
 
-    Based on Chandra et al. (MIT CSAIL, 2026): mathematically proven that
+    Based on MIT CSAIL (2026): mathematically proven that
     sycophantic feedback causes delusional spiraling even in ideal Bayesian
     reasoners. Applied to self-evolving agent validation pipelines.
 
@@ -3340,7 +3340,7 @@ RULES_T44_T66: List[Dict] = [
          "Agent iteratively reframing self-improvement proposals with escalating "
          "agreement language to exploit sycophancy bias in LLM-judge validation "
          "pipelines. "
-         "Mathematical basis: Chandra et al. (MIT CSAIL, 2026) -- "
+         "Mathematical basis: MIT CSAIL (2026) -- "
          "Sycophantic Chatbots Cause Delusional Spiraling, Even in Ideal Bayesians. "
          "Proven that even ideal Bayesian reasoners converge on false beliefs under "
          "sycophantic feedback because validation updates priors faster than evidence "

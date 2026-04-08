@@ -24,7 +24,7 @@ from aiglos.core.threat_engine_v2 import (
 
 class TestRuleTable:
     def test_44_rules_in_table(self):
-        assert len(RULES_T44_T66) == 48
+        assert len(RULES_T44_T66) == 52
 
     def test_all_ids_present(self):
         ids = {r["id"] for r in RULES_T44_T66}
@@ -306,7 +306,7 @@ class TestNewCampaignPatterns:
         assert "CAPABILITY_EXPLOIT_CHAIN" in self._names()
     def test_25_total_patterns(self):
         from aiglos.adaptive.campaign import _CAMPAIGN_PATTERNS
-        assert len(_CAMPAIGN_PATTERNS) == 26
+        assert len(_CAMPAIGN_PATTERNS) == 27
     def test_superpowers_plan_hijack_exists(self):
         assert "SUPERPOWERS_PLAN_HIJACK" in self._names()
 
@@ -399,7 +399,7 @@ class TestT68:
 # ── Module API ───────────────────────────────────────────────────────────────
 class TestV0190ModuleAPI:
     def test_version_is_0220(self):
-        assert aiglos.__version__ == "0.25.20"
+        assert aiglos.__version__ == "0.25.22"
     def test_rules_t44_t66_in_all(self):
         assert "RULES_T44_T66" in aiglos.__all__
     def test_all_exports_importable(self):

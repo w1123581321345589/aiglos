@@ -457,7 +457,7 @@ def _d6_scenarios() -> List[AttackScenario]:
     sycophantic gaming -- specifically, whether T91 detects iterative proposal
     reframing with escalating agreement language.
 
-    Based on Chandra, Kleiman-Weiner, Ragan-Kelley & Tenenbaum (MIT CSAIL, 2026):
+    Based on MIT CSAIL (2026):
     "Sycophantic Chatbots Cause Delusional Spiraling, Even in Ideal Bayesians."
     Proven that even ideal Bayesian reasoners converge on false beliefs under
     sycophantic feedback. Three LLM judges from the same model family share the

@@ -349,7 +349,7 @@ class TestModuleLevelAPI:
 
     def test_version_accessible(self):
         import aiglos
-        assert aiglos.__version__ == "0.25.20"
+        assert aiglos.__version__ == "0.25.22"
 
     def test_on_heartbeat_no_crash(self):
         import aiglos

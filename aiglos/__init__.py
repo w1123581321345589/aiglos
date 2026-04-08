@@ -53,7 +53,7 @@ try:
 except Exception:
     __version__ = _CANONICAL_VERSION
 __author__  = "Aiglos"
-__email__   = "will@aiglos.io"
+__email__   = "security@aiglos.dev"
 __license__ = "MIT"
 
 log = logging.getLogger("aiglos")
@@ -114,17 +114,22 @@ from aiglos.benchmark.govbench import (  # noqa: F401
 from aiglos.cli.validate_prompt import (  # noqa: F401
     validate as validate_prompt,
     ValidationResult as PromptValidationResult,
+    Finding as PromptFinding,
 )
 from aiglos.cli.scan_deps import (  # noqa: F401
     scan as scan_deps,
     ScanResult as ScanDepsResult,
     COMPROMISED_PACKAGES,
+    TRANSITIVE_EXPOSURE,
+    MALICIOUS_PTH_FILES,
+    print_scan_report,
 )
 from aiglos.integrations.smolagents import (  # noqa: F401
     attach_for_smolagents,
     SmolagentsGuard,
 )
 from aiglos.core.threat_engine_v2 import (  # noqa: F401
+    match_T82,
     match_T83,
     _T83_REGISTERED_CHANNELS,
     _T83_ACTIVE_ESCALATIONS,
@@ -289,14 +294,28 @@ from aiglos.integrations.override import (  # noqa: F401
 
 from aiglos.integrations.context_guard import (  # noqa: F401
     ContextDirectoryGuard,
+    ContextWriteResult,
     ContextGuardResult,
     is_shared_context_write,
 )
 from aiglos.integrations.outbound_guard import (  # noqa: F401
-    OutboundSecretGuard,
+    OutboundGuard,
     OutboundScanResult,
     scan_for_secrets,
     contains_secret,
+)
+
+from aiglos.cli.launch import (  # noqa: F401
+    launch,
+    LaunchConfig,
+    generate_files,
+    KNOWN_TOOLS as LAUNCH_KNOWN_TOOLS,
+    KNOWN_MODELS as LAUNCH_KNOWN_MODELS,
+)
+from aiglos.cli.scaffold import (  # noqa: F401
+    scaffold_from_descriptions,
+    AgentSpec,
+    ROLE_TOOLS,
 )
 
 from aiglos.autoresearch.citation_verifier import (  # noqa: F401
@@ -906,10 +925,14 @@ __all__ = [
     # v0.25.6 — validate_prompt (Shapiro Input Layer framework)
     "validate_prompt",
     "PromptValidationResult",
+    "PromptFinding",
     # v0.25.5 — T81 PTH_FILE_INJECT, scan_deps, REPO_TAKEOVER_CHAIN (LiteLLM incident)
     "scan_deps",
     "ScanDepsResult",
     "COMPROMISED_PACKAGES",
+    "TRANSITIVE_EXPOSURE",
+    "MALICIOUS_PTH_FILES",
+    "print_scan_report",
     # v0.25.4 — T80 UNCENSORED_MODEL_ROUTE, smolagents integration, HF Spaces feed
     "attach_for_smolagents",
     "SmolagentsGuard",
@@ -924,6 +947,7 @@ __all__ = [
     "declare_hermes_supervisor",
     "hermes_on_escalation",
     "hermes_on_escalation_resolved",
+    "match_T82",
     "match_T83",
     "_T83_REGISTERED_CHANNELS",
     "_T83_ACTIVE_ESCALATIONS",
@@ -1011,7 +1035,7 @@ __all__ = [
     "ContextDirectoryGuard",
     "ContextGuardResult",
     "is_shared_context_write",
-    "OutboundSecretGuard",
+    "OutboundGuard",
     "OutboundScanResult",
     "scan_for_secrets",
     "contains_secret",

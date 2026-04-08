@@ -336,7 +336,7 @@ DGM_PIPELINE_PATHS = [
 
 # ── Studio role → default tools + hard bans ──────────────────────────────────
 # Maps common game studio / multi-agent studio roles to sensible tool scopes.
-# Based on Claude Code Game Studios hierarchy (48 agents, github.com/Donchitos).
+# Based on Claude Code Game Studios hierarchy (48-agent multi-agent pipeline).
 # Each role gets minimum necessary tool access — principle of least privilege.
 # Override any role with explicit declare_subagent() calls after declare_studio_pipeline().
 
@@ -393,7 +393,7 @@ def declare_studio_pipeline(
     Register a multi-agent studio pipeline with the Aiglos guard.
 
     Replaces 48 individual declare_subagent() calls with one call.
-    Based on Claude Code Game Studios hierarchy (github.com/Donchitos/Claude-Code-Game-Studios).
+    Based on Claude Code Game Studios hierarchy (48-agent multi-agent pipeline).
 
     roles:         List of role names to register. Defaults to all STUDIO_ROLE_TOOLS.
                    Use shortened names: "art-director", "qa-lead", "sound-designer".

@@ -208,4 +208,4 @@ class TestV0258Exports:
 
     def test_version(self):
         import aiglos
-        assert aiglos.__version__ == "0.25.20"
+        assert aiglos.__version__ == "0.25.22"

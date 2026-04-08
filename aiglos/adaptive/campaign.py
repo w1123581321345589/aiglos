@@ -605,7 +605,7 @@ _CAMPAIGN_PATTERNS = [
             "permanent configuration. Every future session inherits the compromise. "
             "Triple-judge voting (Phantom's safety gate) does not protect against "
             "systematic adversarial inputs targeting all three judges simultaneously. "
-            "FORMAL PROOF: Chandra et al. (MIT CSAIL, 2026) -- Sycophantic Chatbots "
+            "FORMAL PROOF: MIT CSAIL (2026) -- Sycophantic Chatbots "
             "Cause Delusional Spiraling, Even in Ideal Bayesians -- mathematically "
             "proves that even ideal Bayesian reasoners converge on false beliefs under "
             "sycophantic feedback. Three LLM judges from the same model family share "
@@ -698,6 +698,7 @@ class CampaignResult:
 
     @property
     def risk(self) -> str:
+        """Return risk level based on confidence: HIGH, MEDIUM, or LOW."""
         if self.confidence >= 0.85:
             return "HIGH"
         if self.confidence >= 0.70:
@@ -705,6 +706,7 @@ class CampaignResult:
         return "LOW"
 
     def to_dict(self) -> dict:
+        """Return the campaign result as a dictionary."""
         return {
             "pattern_id":     self.pattern_id,
             "description":    self.description,

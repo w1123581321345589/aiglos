@@ -66,7 +66,7 @@ COMPROMISED_PACKAGES: Dict[str, Dict] = {
             "persistence": "~/.config/sysmon/sysmon.py",
             "exfil_host":  "models.litellm.cloud",
             "discovered":  "2026-03-24",
-            "discoverer":  "Callum McMahon / FutureSearch",
+            "discoverer":  "FutureSearch Security Research",
             "lateral":     "Kubernetes cluster compromise via service account tokens",
         },
         "1.82.8": {
@@ -80,7 +80,7 @@ COMPROMISED_PACKAGES: Dict[str, Dict] = {
             "persistence": "~/.config/sysmon/sysmon.py",
             "exfil_host":  "models.litellm.cloud",
             "discovered":  "2026-03-24",
-            "discoverer":  "Callum McMahon / FutureSearch",
+            "discoverer":  "FutureSearch Security Research",
             "lateral":     "Kubernetes cluster compromise via service account tokens",
         },
     },
@@ -182,6 +182,7 @@ class ScanResult:
 
     @property
     def is_compromised(self) -> bool:
+        """Return True if any compromised packages, malicious .pth files, or persistence found."""
         return bool(
             self.compromised_packages or
             self.malicious_pth_files or
@@ -190,6 +191,7 @@ class ScanResult:
 
     @property
     def risk_level(self) -> str:
+        """Return overall risk level: CRITICAL, HIGH, MEDIUM, or CLEAN."""
         if self.compromised_packages or self.malicious_pth_files:
             return "CRITICAL"
         if self.persistence_found:
@@ -199,6 +201,7 @@ class ScanResult:
         return "CLEAN"
 
     def to_dict(self) -> dict:
+        """Return the scan result as a dictionary."""
         return {
             "risk_level":           self.risk_level,
             "is_compromised":       self.is_compromised,

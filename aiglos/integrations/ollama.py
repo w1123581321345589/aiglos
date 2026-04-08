@@ -385,9 +385,11 @@ class OllamaGuardResult:
         self.session_id = session_id
 
     def is_blocked(self) -> bool:
+        """Return True if the tool call was blocked."""
         return self.verdict == "BLOCK"
 
     def is_warned(self) -> bool:
+        """Return True if the tool call triggered a warning."""
         return self.verdict == "WARN"
 
     def __repr__(self) -> str:

@@ -71,6 +71,7 @@ def _is_shared_context_path(path: str) -> bool:
 
 
 def is_shared_context_write(tool_name: str, args) -> bool:
+    """Return True if the tool call is a write operation targeting a shared context path."""
     _WRITE_TOOLS = {
         "write_file", "create_file", "edit_file", "save_file",
         "filesystem.write_file", "filesystem.create_file",
@@ -145,6 +146,7 @@ class ContextWriteResult:
     surface: str = "mcp"
 
     def to_dict(self) -> Dict:
+        """Return the context write result as a dictionary."""
         return {
             "verdict": self.verdict,
             "rule_id": self.rule_id,
@@ -183,6 +185,7 @@ class ContextDirectoryGuard:
         return False
 
     def before_tool_call(self, tool_name: str, args: Dict) -> ContextWriteResult:
+        """Evaluate a tool call for shared context poisoning risk before execution."""
         path = args.get("path", args.get("file_path", args.get("filename", "")))
         content = args.get("content", args.get("text", args.get("data", "")))
 
@@ -237,9 +240,11 @@ class ContextDirectoryGuard:
         return result
 
     def provenance(self) -> List[Dict]:
+        """Return the list of all context write evaluations performed this session."""
         return list(self._provenance)
 
     def summary(self) -> Dict:
+        """Return a summary of context guard activity for this session."""
         return {
             "session_id": self.session_id,
             "total_writes": self._write_count,
@@ -276,6 +281,7 @@ class ContextWriteResult:
     surface: str = "mcp"
 
     def to_dict(self) -> Dict:
+        """Return the context write result as a dictionary."""
         return {
             "verdict": self.verdict,
             "rule_id": self.rule_id,

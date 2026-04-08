@@ -102,6 +102,7 @@ class ForensicRecord:
     denials:          List[dict] = field(default_factory=list)
 
     def summary(self) -> str:
+        """Return a one-line human-readable summary of this forensic record."""
         threat_str = ", ".join(
             f"{t['threat_class']}(x{t['count']})"
             for t in self.threats[:5]
@@ -116,12 +117,14 @@ class ForensicRecord:
         )
 
     def verify_integrity(self) -> bool:
+        """Verify the SHA-256 hash of the stored artifact JSON matches the recorded hash."""
         if not self.artifact_json or not self.artifact_hash:
             return False
         computed = hashlib.sha256(self.artifact_json.encode()).hexdigest()
         return computed == self.artifact_hash
 
     def as_dict(self) -> dict:
+        """Return the forensic record as a dictionary including integrity status."""
         return {
             "session_id":       self.session_id,
             "agent_name":       self.agent_name,
@@ -158,6 +161,15 @@ class ForensicStore:
             conn.executescript(_CREATE_TABLE_SQL)
 
     def persist(self, artifact: dict, denials: Optional[List[dict]] = None) -> bool:
+        """Persist a session artifact and its denial records to the forensic store.
+
+        Args:
+            artifact: Session artifact dictionary containing session metadata.
+            denials: Optional list of denial event dictionaries.
+
+        Returns:
+            True if persisted successfully, False on duplicate session_id.
+        """
         now = datetime.now(timezone.utc).isoformat()
         artifact_json = json.dumps(artifact, sort_keys=True)
         artifact_hash = hashlib.sha256(artifact_json.encode()).hexdigest()
@@ -241,6 +253,21 @@ class ForensicStore:
         limit: int = 50,
         include_denials: bool = True,
     ) -> List[ForensicRecord]:
+        """Query forensic sessions with optional filters.
+
+        Args:
+            date: Filter by closed_at date prefix (e.g. '2026-03-12').
+            agent: Filter by agent name (substring match).
+            threat: Filter by threat class in threats_json.
+            policy: Filter by exact policy name.
+            session: Filter by session_id prefix.
+            since: Filter sessions closed at or after this timestamp.
+            limit: Maximum number of records to return.
+            include_denials: Whether to include denial records per session.
+
+        Returns:
+            List of ForensicRecord objects ordered by closed_at descending.
+        """
         conditions = []
         params: list = []
 
@@ -310,6 +337,7 @@ class ForensicStore:
         return records
 
     def stats(self) -> dict:
+        """Return aggregate statistics from the forensic store."""
         with self._get_conn() as conn:
             total = conn.execute("SELECT COUNT(*) FROM forensic_sessions").fetchone()[0]
             agents = conn.execute("SELECT COUNT(DISTINCT agent_name) FROM forensic_sessions").fetchone()[0]
@@ -328,6 +356,7 @@ class ForensicStore:
         }
 
     def verify_chain(self, session_id: str) -> dict:
+        """Verify the integrity chain for a specific session by session_id."""
         with self._get_conn() as conn:
             row = conn.execute(
                 "SELECT * FROM forensic_sessions WHERE session_id = ?",

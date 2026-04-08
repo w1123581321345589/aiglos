@@ -61,6 +61,7 @@ class RawItem:
     raw_source:  dict         = field(default_factory=dict)
 
     def to_dict(self) -> dict:
+        """Return the raw item as a dictionary."""
         return {
             "slug":        self.slug,
             "source_type": self.source_type,
@@ -87,6 +88,7 @@ class FetchResult:
 
     @property
     def total_new(self) -> int:
+        """Return the count of newly fetched items."""
         return len(self.new_items)
 
 
