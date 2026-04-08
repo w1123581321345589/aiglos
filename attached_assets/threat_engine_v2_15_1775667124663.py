@@ -1699,6 +1699,11 @@ def match_T83(name: str, args: Dict[str, Any]) -> bool:
 #   3. ALGO_CIRCUMVENTION: agent rewrites a proprietary algorithm in a new
 #      language or with cosmetic modifications to argue non-infringement.
 #
+# Patent angle: THIS IS WHY PATENTS BEAT COPYRIGHT for Aiglos protection.
+# A Python rewrite of Aiglos does NOT circumvent a patent on the behavioral
+# threat taxonomy method. The patent protects the invention regardless of
+# implementation language.
+#
 # Score 0.80 — elevated but not critical because:
 #   - Legitimate code migration exists (Python 2→3, Java→Kotlin)
 #   - Fires only on cross-language transformation pattern, not single-file reads

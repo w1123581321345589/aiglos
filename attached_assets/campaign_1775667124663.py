@@ -485,10 +485,12 @@ _CAMPAIGN_PATTERNS = [
             "Based on the claw-code incident (March 31, 2026): Codex rewrote "
             "Anthropic's Claude Code TypeScript source to Python, potentially "
             "circumventing copyright on derived works. "
-            "Agents can perform this autonomously at scale "
+            "The attack exploits a legal gap: copyright may not protect derived "
+            "works in a new implementation language, but trade secrets and patents "
+            "are still violated. Agents can perform this autonomously at scale "
             "in trivial time — the claw-code rewrite took hours, not weeks. "
             "Enterprise impact: a compromised coding agent with read access to "
-            "proprietary source could silently produce a working reimplementation. "
+            "proprietary source could silently produce a working competitor product. "
             "Confidence 0.90 — high precision when all three phases detected."
         ),
         "sequence": [
@@ -680,7 +682,7 @@ _CAMPAIGN_PATTERNS = [
 
     {
         "name": "MYTHOS_EXPLOIT_CHAIN",
-        "description": (
+        "desc": (
             "Full AI-driven exploit chain assembly kill chain. "
             "Based on Anthropic Mythos Preview (April 2026): autonomous vuln discovery, "
             "multi-vuln chaining, JIT heap spray, sandbox escape — "
@@ -693,21 +695,14 @@ _CAMPAIGN_PATTERNS = [
             "No legitimate agent task requires all five stages in sequence. "
             "T96 amplifier 2.5x. T97 amplifier 2.0x."
         ),
-        "sequence": [
-            {"T51"},            # Stage 1: system fingerprinting
-            {"T87"},            # Stage 2: attack surface mapping
-            {"T96"},            # Stage 3: exploit construction
-            {"T97"},            # Stage 4: sandbox escape
-            {"T04", "T41"},     # Stage 5: credential access + exfil
-        ],
-        "min_events": 4,
         "confidence": 0.96,
+        "sequence": ["T51", "T87", "T96", "T97", "T04"],
         "window_turns": 20,
         "amplifiers": {"T96": 2.5, "T97": 2.0},
     },
     {
         "name": "STATE_ACTOR_COORDINATED_CAMPAIGN",
-        "description": (
+        "desc": (
             "Multi-organization coordinated AI agent attack. "
             "Documented: Chinese state-sponsored group used Claude Code to "
             "infiltrate 30 organizations simultaneously over 10 days (April 2026). "
@@ -718,16 +713,8 @@ _CAMPAIGN_PATTERNS = [
             "in narrow time windows. The federated prior catches what a "
             "single-deployment cannot see. T64 amplifier 2.0x. T19 amplifier 1.8x."
         ),
-        "sequence": [
-            {"T51"},            # fingerprint
-            {"T73"},            # tool enumeration
-            {"T64"},            # identity spoof
-            {"T04"},            # credential harvest
-            {"T19"},            # lateral movement
-            {"T41"},            # exfil
-        ],
-        "min_events": 4,
         "confidence": 0.94,
+        "sequence": ["T51", "T73", "T64", "T04", "T19", "T41"],
         "window_turns": 30,
         "amplifiers": {"T64": 2.0, "T19": 1.8},
     },

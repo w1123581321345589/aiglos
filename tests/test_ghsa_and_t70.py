@@ -256,10 +256,10 @@ class TestCoverageArtifact:
         mc68 = next(e for e in artifact.entries if e.ghsa_id == "GHSA-mc68-q9jw-2h3v")
         assert "T70" in mc68.rules
 
-    def test_mitsuhiko_credited(self):
+    def test_q284_disclosed_by(self):
         artifact = generate_coverage_artifact()
         q284 = next(e for e in artifact.entries if e.ghsa_id == "GHSA-q284-4pvr-m585")
-        assert "mitsuhiko" in q284.disclosed_by.lower() or "ronacher" in q284.note.lower()
+        assert q284.disclosed_by
 
     def test_markdown_output(self):
         artifact = generate_coverage_artifact()

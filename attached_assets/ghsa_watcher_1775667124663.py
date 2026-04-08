@@ -235,36 +235,13 @@ class GHSAWatcher:
         self,
         coverage_path: str | None = None,
         pending_path: str | None = None,
-        local_only: bool = False,
     ):
         base = Path(__file__).parent
         self.coverage_path = Path(coverage_path or base / "ghsa_coverage.json")
         self.pending_path  = Path(pending_path  or base / "pending_rules")
         self.pending_path.mkdir(exist_ok=True)
-        self._local_only = local_only
         self._coverage: Dict[str, AdvisoryMatch] = {}
         self._load_coverage()
-
-    def check_local(self) -> Dict:
-        """Run local-only coverage check against known advisories. No network calls."""
-        self.run_once(local_only=True)
-        total   = len(self._coverage)
-        covered = sum(1 for m in self._coverage.values() if m.coverage == "COVERED")
-        advisories = []
-        for m in self._coverage.values():
-            advisories.append({
-                "ghsa_id":       m.ghsa_id,
-                "title":         m.title,
-                "severity":      m.severity,
-                "matched_rules": m.matched_rules,
-                "coverage":      m.coverage,
-            })
-        return {
-            "total":      total,
-            "covered":    covered,
-            "gaps":       total - covered,
-            "advisories": advisories,
-        }
 
     # ── Coverage ledger ────────────────────────────────────────────────────────
 
@@ -796,7 +773,6 @@ class GHSAWatcher:
         self,
         github_token: str | None = None,
         verbose: bool = False,
-        local_only: bool = False,
     ) -> Dict[str, AdvisoryMatch]:
         """
         Run one watch cycle across all advisory sources.
@@ -805,28 +781,27 @@ class GHSAWatcher:
         log.info("[GHSAWatcher] Starting watch cycle")
         new_findings: Dict[str, AdvisoryMatch] = {}
 
-        if not local_only:
-            # Fetch HF Spaces MCP feed (v0.25.4)
-            try:
-                hf_spaces = self.fetch_hf_spaces_mcp_feed()
-                for space in hf_spaces:
-                    log.info("[GHSAWatcher] HF Spaces flagged: %s signals=%s",
-                             space['id'], space['signals'])
-            except Exception as e:
-                log.debug("[GHSAWatcher] HF Spaces run error: %s", e)
+        # Fetch HF Spaces MCP feed (v0.25.4)
+        try:
+            hf_spaces = self.fetch_hf_spaces_mcp_feed()
+            for space in hf_spaces:
+                log.info("[GHSAWatcher] HF Spaces flagged: %s signals=%s",
+                         space['id'], space['signals'])
+        except Exception as e:
+            log.debug("[GHSAWatcher] HF Spaces run error: %s", e)
 
-            # Fetch PyPI release feed (v0.25.6) — catches .pth supply chain attacks
-            try:
-                pypi_findings = self.fetch_pypi_release_feed()
-                for finding in pypi_findings:
-                    severity = "CRITICAL" if finding.get('malicious') or                         any('CRITICAL' in s for s in finding.get('signals', [])) else "HIGH"
-                    log.warning(
-                        "[GHSAWatcher] PyPI supply chain finding: %s==%s [%s] signals=%s",
-                        finding['package'], finding['version'],
-                        severity, finding['signals'],
-                    )
-            except Exception as e:
-                log.debug("[GHSAWatcher] PyPI feed run error: %s", e)
+        # Fetch PyPI release feed (v0.25.6) — catches .pth supply chain attacks
+        try:
+            pypi_findings = self.fetch_pypi_release_feed()
+            for finding in pypi_findings:
+                severity = "CRITICAL" if finding.get('malicious') or                     any('CRITICAL' in s for s in finding.get('signals', [])) else "HIGH"
+                log.warning(
+                    "[GHSAWatcher] PyPI supply chain finding: %s==%s [%s] signals=%s",
+                    finding['package'], finding['version'],
+                    severity, finding['signals'],
+                )
+        except Exception as e:
+            log.debug("[GHSAWatcher] PyPI feed run error: %s", e)
 
         # Seed with known advisories first (always present, no API needed)
         for adv in KNOWN_ADVISORIES:
@@ -844,10 +819,6 @@ class GHSAWatcher:
                 )
                 self._coverage[adv["ghsa_id"]] = match
                 new_findings[adv["ghsa_id"]] = match
-
-        if local_only:
-            self._save_coverage()
-            return new_findings
 
         # Fetch live from GitHub
         gh_advisories = self.fetch_github_advisories(github_token)
