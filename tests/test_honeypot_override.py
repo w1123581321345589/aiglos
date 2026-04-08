@@ -22,6 +22,7 @@ import time
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 import aiglos
 from aiglos.adaptive.observation import ObservationGraph
@@ -501,7 +502,7 @@ class TestOpenClawGuardHoneypotOverride:
 class TestV0160ModuleAPI:
 
     def test_version_is_0160(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_honeypot_manager_in_all(self):
         assert "HoneypotManager" in aiglos.__all__

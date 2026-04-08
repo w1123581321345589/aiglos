@@ -13,6 +13,7 @@ import os
 import types
 
 import pytest
+from conftest import EXPECTED_RULE_COUNT
 
 from aiglos.core.threat_engine_v2 import RULES_T44_T66
 from aiglos.adaptive.campaign import _CAMPAIGN_PATTERNS
@@ -225,10 +226,10 @@ class TestExportsInInit:
 
 class TestThreatFamilyCounts:
     def test_39_rules_in_table(self):
-        assert len(RULES_T44_T66) == 55
+        assert len(RULES_T44_T66) == EXPECTED_RULE_COUNT
 
     def test_82_total_threat_families(self):
         ids = {r["id"] for r in RULES_T44_T66}
-        assert len(ids) == 55
+        assert len(ids) == EXPECTED_RULE_COUNT
         for n in range(44, 99):
             assert f"T{n}" in ids

@@ -25,6 +25,7 @@ from unittest.mock import MagicMock
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 import aiglos
 from aiglos.core.policy_proposal import (
@@ -708,7 +709,7 @@ class TestRepeatedTier3Trigger:
 class TestV0120ModuleAPI:
 
     def test_version_is_0120(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_policy_proposal_engine_in_all(self):
         assert "PolicyProposalEngine" in aiglos.__all__

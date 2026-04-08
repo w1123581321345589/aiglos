@@ -19,6 +19,7 @@ import pytest
 # Ensure the package is importable from the repo root
 # ---------------------------------------------------------------------------
 sys.path.insert(0, str(Path(__file__).parent.parent))
+from conftest import EXPECTED_VERSION
 
 
 # ===========================================================================
@@ -349,7 +350,7 @@ class TestModuleLevelAPI:
 
     def test_version_accessible(self):
         import aiglos
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_on_heartbeat_no_crash(self):
         import aiglos

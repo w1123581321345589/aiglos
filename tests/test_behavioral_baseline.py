@@ -29,6 +29,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 from aiglos.core.behavioral_baseline import (
     AgentBaseline,
@@ -836,7 +837,7 @@ class TestV0110ModuleAPI:
 
     def test_version_is_0110(self):
         import aiglos
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_baseline_engine_in_all(self):
         import aiglos

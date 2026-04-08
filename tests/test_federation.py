@@ -28,6 +28,7 @@ from urllib.error import HTTPError, URLError
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 import aiglos
 from aiglos.core.federation import (
@@ -646,7 +647,7 @@ class TestGlobalPriorMatchTrigger:
 class TestV0130ModuleAPI:
 
     def test_version_is_0130(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_federation_client_in_all(self):
         assert "FederationClient" in aiglos.__all__

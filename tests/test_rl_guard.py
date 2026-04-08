@@ -21,6 +21,7 @@ from unittest.mock import MagicMock
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 from aiglos.integrations.rl_guard import (
     RLFeedbackGuard,
@@ -653,7 +654,7 @@ class TestRewardManipulationPattern:
 class TestV060ModuleAPI:
 
     def test_version_is_060(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_exports_rl_guard_types(self):
         assert hasattr(aiglos, "RLFeedbackGuard")

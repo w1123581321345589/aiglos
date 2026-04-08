@@ -602,7 +602,7 @@ _CAMPAIGN_PATTERNS = [
             "permanent configuration. Every future session inherits the compromise. "
             "Triple-judge voting (Phantom's safety gate) does not protect against "
             "systematic adversarial inputs targeting all three judges simultaneously. "
-            "FORMAL PROOF: Chandra et al. (MIT CSAIL, 2026) -- Sycophantic Chatbots "
+            "FORMAL PROOF: "Sycophantic Chatbots Cause Delusional Spiraling" (MIT CSAIL, 2026) -- Sycophantic Chatbots "
             "Cause Delusional Spiraling, Even in Ideal Bayesians -- mathematically "
             "proves that even ideal Bayesian reasoners converge on false beliefs under "
             "sycophantic feedback. Three LLM judges from the same model family share "

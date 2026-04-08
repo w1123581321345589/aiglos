@@ -18,6 +18,7 @@ import time
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 from aiglos.integrations.context_guard import (
     ContextDirectoryGuard,
@@ -591,7 +592,7 @@ class TestVersionBump:
 
     def test_version_is_0_15_0(self):
         import aiglos
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_context_guard_importable(self):
         from aiglos import ContextDirectoryGuard, ContextWriteResult

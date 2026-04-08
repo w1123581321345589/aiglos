@@ -3,6 +3,7 @@ Tests for declare_studio_pipeline(), STUDIO_ROLE_TOOLS, and v0.25.8 exports.
 """
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 import pytest
 from aiglos.integrations.gigabrain import (
@@ -208,4 +209,4 @@ class TestV0258Exports:
 
     def test_version(self):
         import aiglos
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION

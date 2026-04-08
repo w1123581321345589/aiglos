@@ -25,6 +25,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 from aiglos.adaptive.observation import ObservationGraph, RuleStats
 from aiglos.adaptive.inspect import InspectionEngine, InspectionTrigger
@@ -756,7 +757,7 @@ class TestAgentDefGuardSemantic:
 class TestV040ModuleAPI:
 
     def test_version_is_040(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_adaptive_run_without_init(self):
         # Reset global state

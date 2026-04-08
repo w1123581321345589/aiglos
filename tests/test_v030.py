@@ -24,6 +24,7 @@ import pytest
 
 # --- path setup ---
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 from aiglos.integrations.subprocess_intercept import (
     inspect_subprocess, SubprocVerdict, SubprocTier,
@@ -579,7 +580,7 @@ class TestMultiAgentRegistry:
 class TestV030Version:
 
     def test_version_is_030(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_module_exports_multiagent_types(self):
         assert hasattr(aiglos, "MultiAgentRegistry")

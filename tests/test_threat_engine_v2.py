@@ -10,6 +10,8 @@ import os, sys
 import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from conftest import EXPECTED_RULE_COUNT, EXPECTED_VERSION
+
 import aiglos
 from aiglos.core.threat_engine_v2 import (
     RULES_T44_T66,
@@ -24,11 +26,11 @@ from aiglos.core.threat_engine_v2 import (
 
 class TestRuleTable:
     def test_44_rules_in_table(self):
-        assert len(RULES_T44_T66) == 55
+        assert len(RULES_T44_T66) == EXPECTED_RULE_COUNT
 
     def test_all_ids_present(self):
         ids = {r["id"] for r in RULES_T44_T66}
-        for n in range(44, 88):
+        for n in range(44, 102):
             assert f"T{n}" in ids
 
     def test_all_rules_have_required_fields(self):
@@ -399,7 +401,7 @@ class TestT68:
 # ── Module API ───────────────────────────────────────────────────────────────
 class TestV0190ModuleAPI:
     def test_version_is_0220(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
     def test_rules_t44_t66_in_all(self):
         assert "RULES_T44_T66" in aiglos.__all__
     def test_all_exports_importable(self):

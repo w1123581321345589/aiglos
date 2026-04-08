@@ -3,6 +3,7 @@ Tests for T82 SELF_IMPROVEMENT_HIJACK and DGM-Hyperagents integration.
 """
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 import pytest
 from aiglos.core.threat_engine_v2 import match_T82
@@ -213,4 +214,4 @@ class TestDGMIntegration:
 
     def test_version_is_0258(self):
         import aiglos
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION

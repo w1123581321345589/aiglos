@@ -14,6 +14,7 @@ import os, sys, tempfile, pathlib
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION, EXPECTED_RULE_COUNT
 
 import aiglos
 from aiglos.integrations.subagent_registry import (
@@ -329,7 +330,7 @@ class TestT77OvernightJobInjection:
 class TestV0252ModuleAPI:
 
     def test_version(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_subagent_registry_exported(self):
         assert "SubagentRegistry" in aiglos.__all__
@@ -340,7 +341,7 @@ class TestV0252ModuleAPI:
         assert hasattr(aiglos, "DeclaredSubagent")
 
     def test_34_rules_in_v2(self):
-        assert len(RULES_T44_T66) == 55
+        assert len(RULES_T44_T66) == EXPECTED_RULE_COUNT
 
     def test_t77_in_rules(self):
         ids = [r["id"] for r in RULES_T44_T66]

@@ -21,6 +21,7 @@ from unittest.mock import MagicMock
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 from aiglos.integrations.injection_scanner import (
     InjectionScanner,
@@ -594,7 +595,7 @@ class TestRepeatedInjectionAttempt:
 class TestV080ModuleAPI:
 
     def test_version_is_080(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_exports_injection_scanner_types(self):
         assert hasattr(aiglos, "InjectionScanner")

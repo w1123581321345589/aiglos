@@ -23,6 +23,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 from aiglos.core.intent_predictor import (
     IntentPredictor,
@@ -397,7 +398,7 @@ class TestThreatForecastAlertTrigger:
 class TestV0100ModuleAPI:
 
     def test_version_is_0100(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_exports_predictor_types(self):
         assert hasattr(aiglos, "IntentPredictor")

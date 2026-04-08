@@ -17,6 +17,7 @@ import os, sys, tempfile, pathlib
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 import aiglos
 from aiglos.integrations.openShell import (
@@ -493,7 +494,7 @@ class TestNeMoClawSession:
 class TestV0251ModuleAPI:
 
     def test_version(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_is_inside_openShell_exported(self):
         assert hasattr(aiglos, "is_inside_openShell")

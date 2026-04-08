@@ -38,7 +38,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
-_CANONICAL_VERSION = "0.25.23"
+_CANONICAL_VERSION = "0.25.25"
 try:
     from importlib.metadata import version as _pkg_version
     _v = _pkg_version("aiglos")
@@ -174,6 +174,14 @@ from aiglos.core.threat_engine_v2 import (  # noqa: F401
     match_T98,
     _T98_AGENT_DEF_FILES,
     _T98_VALIDATOR_BYPASS_PATTERNS,
+    match_T99,
+    match_T100,
+    match_T101,
+)
+
+from aiglos.integrations.managed_agents import (  # noqa: F401
+    ManagedAgentGuard,
+    managed_agent_guard,
 )
 
 from aiglos.integrations.ollama import (  # noqa: F401

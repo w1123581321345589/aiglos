@@ -15,6 +15,7 @@ import os, sys, time, json, tempfile
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 import aiglos
 from aiglos.adaptive.observation import ObservationGraph
@@ -495,7 +496,7 @@ class TestGovBenchRun:
         g = _guard(tmp_path)
         bench = GovBench(guard=g)
         result = bench.run()
-        assert result.aiglos_version == "0.25.23"
+        assert result.aiglos_version == EXPECTED_VERSION
 
     def test_duration_ms_positive(self, tmp_path):
         g = _guard(tmp_path)
@@ -510,7 +511,7 @@ class TestGovBenchRun:
 
 class TestV0200ModuleAPI:
     def test_version(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_govbench_exported(self):
         assert "GovBench" in aiglos.__all__

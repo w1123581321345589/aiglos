@@ -22,6 +22,7 @@ from unittest.mock import MagicMock
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 from aiglos.core.causal_tracer import (
     CausalTracer,
@@ -507,7 +508,7 @@ class TestCausalInjectionConfirmedTrigger:
 class TestV090ModuleAPI:
 
     def test_version_is_090(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_exports_causal_tracer_types(self):
         assert hasattr(aiglos, "CausalTracer")

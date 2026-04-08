@@ -22,6 +22,7 @@ import tempfile
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 import aiglos
 from aiglos.audit.scanner import AuditScanner, AuditResult, CheckResult, _grade
@@ -425,7 +426,7 @@ class TestSandboxCampaignPattern:
 class TestV0180ModuleAPI:
 
     def test_version_is_0180(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_audit_scanner_in_all(self):
         assert "AuditScanner" in aiglos.__all__

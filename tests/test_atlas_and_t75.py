@@ -14,6 +14,7 @@ import os, sys, json
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION, EXPECTED_RULE_COUNT
 
 import aiglos
 from aiglos.core.threat_engine_v2 import (
@@ -316,7 +317,7 @@ class TestATLASDataIntegrity:
 class TestV0240RuleCount:
 
     def test_32_rules_t44_plus(self):
-        assert len(RULES_T44_T66) == 55
+        assert len(RULES_T44_T66) == EXPECTED_RULE_COUNT
 
     def test_t75_present(self):
         ids = [r["id"] for r in RULES_T44_T66]
@@ -327,7 +328,7 @@ class TestV0240RuleCount:
         assert hasattr(aiglos, "ATLASCoverage")
 
     def test_version_correct(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_atlas_coverage_importable(self):
         cov = aiglos.ATLASCoverage()

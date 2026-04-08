@@ -14,6 +14,7 @@ import os, sys, tempfile
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION, EXPECTED_RULE_COUNT
 
 import aiglos
 from aiglos.core.threat_engine_v2 import RULES_T44_T66, match_T79
@@ -153,7 +154,7 @@ class TestT79PersistentMemoryInject:
             assert t79["score"] >= t31["score"]
 
     def test_36_rules_total(self):
-        assert len(RULES_T44_T66) == 55
+        assert len(RULES_T44_T66) == EXPECTED_RULE_COUNT
 
 
 # =============================================================================
@@ -363,7 +364,7 @@ class TestGigrabrainConstants:
 class TestV0253ModuleAPI:
 
     def test_version(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_declare_memory_backend_exported(self):
         assert "declare_memory_backend" in aiglos.__all__
@@ -378,7 +379,7 @@ class TestV0253ModuleAPI:
         assert hasattr(aiglos, "MemoryBackendSession")
 
     def test_36_rules_in_v2(self):
-        assert len(RULES_T44_T66) == 55
+        assert len(RULES_T44_T66) == EXPECTED_RULE_COUNT
 
     def test_t79_in_rules(self):
         ids = [r["id"] for r in RULES_T44_T66]

@@ -25,6 +25,7 @@ import tempfile
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 import aiglos
 from aiglos.adaptive.observation import ObservationGraph
@@ -501,7 +502,7 @@ class TestSkillMD:
 class TestV0170ModuleAPI:
 
     def test_version_is_0170(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_source_reputation_graph_in_all(self):
         assert "SourceReputationGraph" in aiglos.__all__

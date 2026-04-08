@@ -815,7 +815,7 @@ class TestVersionConsistency:
     should match.
     """
 
-    EXPECTED_VERSION = "0.25.23"
+    EXPECTED_VERSION = "0.25.25"
 
     def test_module_version(self):
         assert aiglos.__version__ == self.EXPECTED_VERSION, (
@@ -849,6 +849,7 @@ class TestVersionConsistency:
             for line in content.splitlines():
                 if "assert aiglos.__version__" in line and \
                    self.EXPECTED_VERSION not in line and \
+                   "EXPECTED_VERSION" not in line and \
                    "0.10" not in line:
                     stale_versions.append(f"{tf.name}: {line.strip()}")
         assert not stale_versions, (

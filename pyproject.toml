@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aiglos"
-version = "0.25.23"
-description = "AI agent security runtime. 98 threat families, 29 campaign patterns, signed compliance artifacts. Zero dependencies."
+version = "0.25.25"
+description = "AI agent security runtime. 101 threat families, 29 campaign patterns, signed compliance artifacts. Zero dependencies."
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Aiglos", email = "will@aiglos.io"}
+    {name = "Aiglos", email = "security@aiglos.dev"}
 ]
 keywords = [
     "ai", "security", "agents", "mcp", "llm", "agentic", "runtime",

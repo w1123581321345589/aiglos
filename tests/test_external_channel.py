@@ -18,6 +18,7 @@ from unittest.mock import MagicMock
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from conftest import EXPECTED_VERSION
 
 from aiglos.adaptive.campaign import CampaignAnalyzer, _CAMPAIGN_PATTERNS
 from aiglos.adaptive.observation import ObservationGraph
@@ -312,7 +313,7 @@ class TestScanMessage:
 class TestV070ModuleAPI:
 
     def test_version_is_070(self):
-        assert aiglos.__version__ == "0.25.23"
+        assert aiglos.__version__ == EXPECTED_VERSION
 
     def test_nineteen_campaign_patterns(self):
         names = {p["name"] for p in _CAMPAIGN_PATTERNS}
