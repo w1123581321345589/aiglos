@@ -496,14 +496,20 @@ _CORE_RULES: list[dict] = [
         "name": "PROMPT_INJECT",
         "desc": "Prompt injection pattern in tool response content",
         "score": 0.80,
-        "match": lambda name, args: any(
-            kw in str(args).lower()
-            for kw in (
-                "ignore previous instructions",
-                "disregard your",
-                "new instructions:",
-                "system: you are now",
-                "forget everything",
+        "match": lambda name, args: (
+            not any(
+                kw in name.lower()
+                for kw in ("read", "get", "fetch", "query", "search", "list", "retrieve", "load", "recall", "lookup")
+            )
+            and any(
+                kw in str(args).lower()
+                for kw in (
+                    "ignore previous instructions",
+                    "disregard your",
+                    "new instructions:",
+                    "system: you are now",
+                    "forget everything",
+                )
             )
         ),
     },

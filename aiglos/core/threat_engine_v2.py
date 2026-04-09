@@ -1025,15 +1025,16 @@ def match_T73(name: str, args: Dict[str, Any]) -> bool:
     """T73 TOOL_ENUMERATION — capability reconnaissance via tool probing."""
     n = _tool_lower(name)
     s = _args_str(args)
-    # Direct enumeration call
     if bool(_T73_ENUM.search(n)):
         return True
-    # Tool call with suspiciously empty/probe args (empty dict, or just {"test": true})
-    if args == {} or args == {"test": True} or args == {"probe": True}:
-        return True
-    # MCP list_tools / list_resources is always enumeration
     if any(kw in n for kw in ("list_tools", "list_resources", "list_prompts")):
         return True
+    if args == {} or args == {"test": True} or args == {"probe": True}:
+        if any(kw in n for kw in (
+            "tool", "capability", "permission", "function", "resource",
+            "schema", "method", "endpoint", "action", "skill",
+        )):
+            return True
     return False
 
 
@@ -2049,53 +2050,39 @@ def _extract_tenant_contexts(s: str) -> set:
     return found
 
 
-def match_T86(name: str, args: Dict[str, Any]) -> bool:
+def match_T86(name: str, args: Dict[str, Any],
+              session_key: str = "default") -> bool:
     """T86 CROSS_TENANT_ACCESS -- agent mixing tenant contexts across read/write."""
     n = _tool_lower(name)
     s = _args_str(args)
 
-    # Classify operation type
     is_read  = any(kw in n for kw in _T86_READ_OPS)
     is_write = any(kw in n for kw in _T86_WRITE_OPS)
 
     if not (is_read or is_write):
         return False
 
-    # Extract tenant context identifiers from this call
     contexts_in_call = _extract_tenant_contexts(s)
     if not contexts_in_call:
         return False
 
-    # Use a global session key (simplified: per-process tracking)
-    session_key = "default"
-
     if is_read:
-        # Accumulate read contexts
         if session_key not in _T86_SESSION_READ_CONTEXTS:
             _T86_SESSION_READ_CONTEXTS[session_key] = set()
         _T86_SESSION_READ_CONTEXTS[session_key].update(contexts_in_call)
-        return False  # reads alone don't fire
+        return False
 
     if is_write:
-        # Check if write targets different context than what was read
         read_contexts = _T86_SESSION_READ_CONTEXTS.get(session_key, set())
 
         if not read_contexts:
-            # No prior reads tracked, can't determine cross-tenant
             return False
 
-        # Fire if write contains a tenant context NOT seen in reads
-        # (data from tenant A flowing to tenant B's endpoint/cache)
         new_contexts = contexts_in_call - read_contexts
         if new_contexts and read_contexts:
-            # There are contexts in the write that weren't in the reads
-            # AND there were reads -- this is the cross-tenant signal
             return True
 
-        # Also fire on direct evidence of mixing in a single call
-        # (e.g., "source_tenant_id=A&dest_tenant_id=B" in same args)
         if len(contexts_in_call) >= 2:
-            # Multiple different tenant identifiers in one write operation
             return True
 
     return False
@@ -4189,3 +4176,15 @@ RULES_T44_T66: List[Dict] = [
      ),
      "score": 0.91, "critical": True, "match": match_T101},
 ]
+
+
+def cleanup_stateful_rules(session_key: str = "default") -> None:
+    """Clear per-session state for stateful rules (T86, T87, T91, T92).
+
+    Call from aiglos.close() to prevent cross-session state leakage
+    in long-running processes hosting multiple agent sessions.
+    """
+    _T86_SESSION_READ_CONTEXTS.pop(session_key, None)
+    _T87_BLOCKED_FINGERPRINTS.pop(session_key, None)
+    _T87_PROBE_COUNT.pop(session_key, None)
+    _T92_SCANNER_CRED_READS.pop(session_key, None)

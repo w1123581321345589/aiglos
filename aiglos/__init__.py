@@ -38,7 +38,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
-_CANONICAL_VERSION = "0.25.25"
+_CANONICAL_VERSION = "0.25.26"
 try:
     from importlib.metadata import version as _pkg_version
     _v = _pkg_version("aiglos")
@@ -666,6 +666,14 @@ def close() -> "SessionArtifact":
             identity_header = _session_identity.header()
         except Exception:
             pass
+
+    # Clean up stateful rule tracking for this session
+    sid = _session_identity.session_id if _session_identity else "default"
+    try:
+        from aiglos.core.threat_engine_v2 import cleanup_stateful_rules
+        cleanup_stateful_rules(session_key=sid)
+    except Exception:
+        pass
 
     # Close the MCP guard and get base artifact
     artifact = _oc_close()

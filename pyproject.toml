@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aiglos"
-version = "0.25.25"
+version = "0.25.26"
 description = "AI agent security runtime. 101 threat families, 29 campaign patterns, signed compliance artifacts. Zero dependencies."
 readme = "README.md"
 license = {text = "MIT"}
