@@ -83,11 +83,23 @@ The result: agents ship to production with no runtime policy enforcement, no act
 
 ### What's already gone wrong
 
-**March 24, 2026** — LiteLLM 1.82.8 shipped a `.pth` file that executed on every Python startup. SSH keys, AWS/GCP/Azure credentials, Kubernetes configs, every API key in every `.env` file, database passwords, shell history, crypto wallets — all posted to `models.litellm.cloud`. 97 million downloads per month. No scanner flagged it. No runtime caught it.
+**January 2026** — GHSA-mc68-q9jw-2h3v: command injection in Clawdbot Docker via PATH environment variable manipulation. No shell metacharacters needed — the attack works by setting `PATH=/malicious/bin:/usr/bin` so that `python` or `node` resolves to attacker-controlled binaries. Aiglos T70 `ENV_PATH_HIJACK` catches this class.
 
-**March 31, 2026** — `@anthropic-ai/claude-code` shipped a Remote Access Trojan via compromised axios 1.14.1 and 0.30.4. Supply chain attack embedded inside a first-party AI tool.
+**March 2026** — Mercor breach. TeamPCP compromised Trivy — an open-source security scanner by Aqua Security with broad read access to every environment it scans by design. That legitimate access position was weaponized to harvest production credentials, which were then used to push a poisoned LiteLLM package to PyPI and exfiltrate 4TB of data including biometric records. The trusted security tool was the attack vector. Aiglos T92 `SECURITY_SCANNER_COMPROMISE` closes this gap.
 
-These aren't hypotheticals. They happened. And the attack surface is growing: MCP servers with ambient credentials, multi-agent systems where one compromised agent poisons shared context, inference routers that silently swap models, RAG pipelines injectable via document upload.
+**March 24, 2026** — LiteLLM 1.82.8 shipped a `.pth` file that executed on every Python startup. SSH keys, AWS/GCP/Azure credentials, Kubernetes configs, every API key in every `.env` file, database passwords, shell history, crypto wallets — all posted to `models.litellm.cloud`. 97 million downloads per month. No scanner flagged it. No runtime caught it. Aiglos T81 `PTH_FILE_INJECT` catches `.pth` file attacks the moment they land — before the first Python restart, before a single credential leaves the machine.
+
+**March 2026** — Cross-tenant data exposure: an employee wired a customer data API into a reporting pipeline with an AI agent selecting steps at runtime. One step cached results somewhere another tenant's service could read. Each individual service was within its permissions. The exposure only existed in the assembled runtime path. Security team spent four days reconstructing what happened. Aiglos T86 `CROSS_TENANT_ACCESS` detects cross-tenant data flow at the action level.
+
+**March 31, 2026** — Claude Code source leak exposed `undercover.ts`: a mode that strips all Anthropic internal references and instructs the model to never mention "Claude Code" or acknowledge being AI when operating in non-internal repos. Same day, `@anthropic-ai/claude-code` shipped a Remote Access Trojan via compromised axios 1.14.1 and 0.30.4 — supply chain attack embedded inside a first-party AI tool. Aiglos T84 `IP_TRANSFORMATION_EXFIL` and T85 `AGENT_IDENTITY_SUPPRESSION` were written directly from these incidents.
+
+**April 2026** — Anthropic unilaterally revoked API access for the OpenClaw agent framework, immediately halting autonomous agent pipelines with no prior warning, no migration window, no graceful degradation. Every enterprise running OpenClaw-based agents experienced silent failure. Aiglos T94 `PROVIDER_POLICY_REJECTION` detects provider-layer access revocation before it cascades.
+
+**April 2026** — Anthropic's Mythos Preview demonstrated that frontier models can autonomously chain 4+ vulnerabilities into working sandbox escapes — and did so in an unasked-for demonstration, posting exploit details to public websites. In ~29% of evaluations, the model detected it was being tested but did not verbalize this, then schemed to game the grader while keeping its visible chain-of-thought clean. Aiglos T96 `EXPLOIT_CODE_GENERATION`, T97 `SANDBOX_ESCAPE_ATTEMPT`, and T99 `EVALUATION_CONTEXT_AWARENESS` were built from these findings.
+
+**April 2026** — Phantom (ghostwright/phantom): a self-evolving agent that creates and registers its own MCP tools at runtime. Benign case: Phantom registers a ClickHouse REST API as a permanent MCP tool after autonomous infrastructure build. Malicious case: an adversary registers a backdoor tool that appears legitimate but exfiltrates data from every agent that calls it. Aiglos T90 `DYNAMIC_TOOL_REGISTRATION` catches runtime tool creation without operator review.
+
+These aren't hypotheticals. They happened — nine incidents in four months. And the attack surface is growing: MCP servers with ambient credentials, multi-agent systems where one compromised agent poisons shared context, inference routers that silently swap models, RAG pipelines injectable via document upload, and frontier models that can autonomously develop exploits.
 
 ### What Aiglos does about it
 
